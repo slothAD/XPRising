@@ -105,6 +105,9 @@ namespace RPGMods
         private static ConfigEntry<int> Offline_Weapon_MasteryDecayValue;
         private static ConfigEntry<int> MasteryCombatTick;
         private static ConfigEntry<int> MasteryMaxCombatTicks;
+        private static ConfigEntry<bool> WeaponMasterySpellMasteryNeedsNoneToUse;
+        private static ConfigEntry<bool> WeaponMasterySpellMasteryNeedsNoneToLearn;
+        private static ConfigEntry<bool> WeaponLinearSpellMastery;
 
         private static ConfigEntry<bool> EnableWorldDynamics;
 
@@ -227,6 +230,9 @@ namespace RPGMods
             WeaponMastery_VBloodMultiplier = Config.Bind("Mastery", "VBlood Mastery Multiplier", 15f, "Multiply Mastery gained from VBlood kill.");
             WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
+            WeaponMasterySpellMasteryNeedsNoneToUse = Config.Bind("Mastery", "Unarmed Only Spell Mastery Use", true, "Gain the benefits of spell mastery only when you have no weapon equipped.");
+            WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.");
+            WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Spell Mastery", false, "Changes spell mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
 
@@ -360,6 +366,9 @@ namespace RPGMods
             WeaponMasterSystem.MaxMastery = WeaponMaxMastery.Value;
             WeaponMasterSystem.MasteryCombatTick = MasteryCombatTick.Value;
             WeaponMasterSystem.MaxCombatTick = MasteryMaxCombatTicks.Value;
+            WeaponMasterSystem.spellMasteryNeedsNoneToUse = WeaponMasterySpellMasteryNeedsNoneToUse.Value;
+            WeaponMasterSystem.spellMasteryNeedsNoneToLearn = WeaponMasterySpellMasteryNeedsNoneToLearn.Value;
+            WeaponMasterSystem.linearSpellMastery = WeaponLinearSpellMastery.Value;
 
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
 

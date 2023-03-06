@@ -25,6 +25,10 @@ namespace RPGMods.Systems
         public static int Offline_DecayValue = 1;
         public static int MaxMastery = 100000;
         public static float VBloodMultiplier = 15;
+        // Shou Change - make options for spell mastery with weapons active.
+        public static Boolean spellMasteryNeedsNoneToUse = true;
+        public static Boolean spellMasteryNeedsNoneToLearn = true;
+        public static Boolean linearSpellMastery = false;
 
         private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
 
@@ -251,20 +255,30 @@ namespace RPGMods.Systems
                             ModificationType = ModificationType.Add,
                             Id = ModificationId.NewId(0)
                         });
-                        if (SMastery > 0)
-                        {
-                            Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                            {
-                                StatType = UnitStatType.CooldownModifier,
-                                Value = (float)(1 - SMastery * 0.01 * 0.5),
-                                ModificationType = ModificationType.Set,
-                                Id = ModificationId.NewId(0)
-                            });
+                        if (spellMasteryNeedsNoneToUse){
+                            if (SMastery > 0){
+                                Buffer.Add(new ModifyUnitStatBuff_DOTS(){
+                                    StatType = UnitStatType.CooldownModifier,
+                                    Value = (float)(1 - SMastery * 0.01 * 0.5),
+                                    ModificationType = ModificationType.Set,
+                                    Id = ModificationId.NewId(0)
+                                });
+                            }
                         }
                         break;
                     default:
                         break;
                     //-- Nothing for Fishing Pole
+                }
+                if (!spellMasteryNeedsNoneToUse){
+                    if (SMastery > 0){
+                        Buffer.Add(new ModifyUnitStatBuff_DOTS(){
+                            StatType = UnitStatType.CooldownModifier,
+                            Value = (float)(1 - SMastery * 0.01 * 0.5),
+                            ModificationType = ModificationType.Set,
+                            Id = ModificationId.NewId(0)
+                        });
+                    }
                 }
             }
         }
@@ -285,7 +299,10 @@ namespace RPGMods.Systems
                     MasteryValue = Mastery.Spear; break;
                 case WeaponType.None:
                     MasteryValue = Mastery.None;
-                    MasterySpellValue = Mastery.Spell; break;
+                    if (spellMasteryNeedsNoneToLearn){
+                        MasterySpellValue = Mastery.Spell;
+                    }
+                    break;
                 case WeaponType.Scythe:
                     MasteryValue = Mastery.Scythe; break;
                 case WeaponType.Axes:
@@ -298,6 +315,9 @@ namespace RPGMods.Systems
                     MasteryValue = Mastery.Slashers; break;
                 case WeaponType.FishingPole:
                     MasteryValue = Mastery.FishingPole; break;
+            }
+            if (!spellMasteryNeedsNoneToLearn){
+                MasterySpellValue = Mastery.Spell;
             }
             if (MasteryValue > 0) MasteryValue = (float)(MasteryValue * 0.001);
             if (MasterySpellValue > 0) MasterySpellValue = (float)(MasterySpellValue * 0.001);
@@ -331,9 +351,11 @@ namespace RPGMods.Systems
                         if (Mastery.None + NoneExpertise > MaxMastery) Mastery.None = MaxMastery;
                         else if (Mastery.None + NoneExpertise < 0) Mastery.None = 0;
                         else Mastery.None += NoneExpertise;
-                        if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
-                        else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
-                        else Mastery.Spell += Value;
+                        if (spellMasteryNeedsNoneToLearn){
+                            if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
+                            else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
+                            else Mastery.Spell += Value;
+                        }
                         break;
                     case WeaponType.Scythe:
                         if (Mastery.Scythe + Value >= MaxMastery) Mastery.Scythe = MaxMastery;
@@ -366,6 +388,11 @@ namespace RPGMods.Systems
                         else Mastery.FishingPole += Value;
                         break;
                 }
+                if (spellMasteryNeedsNoneToLearn){
+                    if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
+                    else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
+                    else Mastery.Spell += Value;
+                }
             }
             else
             {
@@ -382,7 +409,10 @@ namespace RPGMods.Systems
                         Mastery.Spear += Value; break;
                     case WeaponType.None:
                         Mastery.None += NoneExpertise;
-                        Mastery.Spell += Value; break;
+                        if (spellMasteryNeedsNoneToLearn){
+                            Mastery.Spell += Value;
+                        }
+                        break;
                     case WeaponType.Scythe:
                         Mastery.Scythe += Value; break;
                     case WeaponType.Axes:
@@ -395,6 +425,9 @@ namespace RPGMods.Systems
                         Mastery.Slashers += Value; break;
                     case WeaponType.FishingPole:
                         Mastery.FishingPole += Value; break;
+                }
+                if (!spellMasteryNeedsNoneToLearn){
+                    Mastery.Spell += Value;
                 }
             }
             Database.player_weaponmastery[SteamID] = Mastery;
