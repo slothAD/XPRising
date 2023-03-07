@@ -29,6 +29,7 @@ namespace RPGMods.Systems
         public static Boolean spellMasteryNeedsNoneToUse = true;
         public static Boolean spellMasteryNeedsNoneToLearn = true;
         public static Boolean linearSpellMastery = false;
+        public static Boolean spellMasteryStacks = false;
 
         private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
 
@@ -257,10 +258,18 @@ namespace RPGMods.Systems
                         });
                         if (spellMasteryNeedsNoneToUse){
                             if (SMastery > 0){
+                                float cdr = 0;
+                                if (linearSpellMastery){
+                                    cdr = SMastery / 100.0f;
+                                    cdr = cdr / (cdr + 100.0f);
+                                }
+                                else{
+                                    cdr = SMastery / 200.0f;
+                                }
                                 Buffer.Add(new ModifyUnitStatBuff_DOTS(){
                                     StatType = UnitStatType.CooldownModifier,
-                                    Value = (float)(1 - SMastery * 0.01 * 0.5),
-                                    ModificationType = ModificationType.Set,
+                                    Value = (float)(1 - cdr),
+                                    ModificationType = (spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set),
                                     Id = ModificationId.NewId(0)
                                 });
                             }
@@ -272,10 +281,18 @@ namespace RPGMods.Systems
                 }
                 if (!spellMasteryNeedsNoneToUse){
                     if (SMastery > 0){
+                        float cdr = 0;
+                        if (linearSpellMastery){
+                            cdr = SMastery / 100.0f;
+                            cdr = cdr/(cdr + 100.0f);
+                        }
+                        else{
+                            cdr = SMastery / 200.0f;
+                        }
                         Buffer.Add(new ModifyUnitStatBuff_DOTS(){
                             StatType = UnitStatType.CooldownModifier,
-                            Value = (float)(1 - SMastery * 0.01 * 0.5),
-                            ModificationType = ModificationType.Set,
+                            Value = (float)(1-cdr),
+                            ModificationType = (spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set),
                             Id = ModificationId.NewId(0)
                         });
                     }
@@ -388,7 +405,7 @@ namespace RPGMods.Systems
                         else Mastery.FishingPole += Value;
                         break;
                 }
-                if (spellMasteryNeedsNoneToLearn){
+                if (!spellMasteryNeedsNoneToLearn){
                     if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
                     else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
                     else Mastery.Spell += Value;

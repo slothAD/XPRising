@@ -108,6 +108,7 @@ namespace RPGMods
         private static ConfigEntry<bool> WeaponMasterySpellMasteryNeedsNoneToUse;
         private static ConfigEntry<bool> WeaponMasterySpellMasteryNeedsNoneToLearn;
         private static ConfigEntry<bool> WeaponLinearSpellMastery;
+        private static ConfigEntry<bool> WeaponSpellMasteryCDRStacks;
 
         private static ConfigEntry<bool> EnableWorldDynamics;
 
@@ -231,8 +232,9 @@ namespace RPGMods
             WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
             WeaponMasterySpellMasteryNeedsNoneToUse = Config.Bind("Mastery", "Unarmed Only Spell Mastery Use", true, "Gain the benefits of spell mastery only when you have no weapon equipped.");
-            WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.");
+            WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped."); 
             WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Spell Mastery", false, "Changes spell mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
+            WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Spell Mastery CDR stacks", false, "Allows spell mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
 
@@ -369,6 +371,7 @@ namespace RPGMods
             WeaponMasterSystem.spellMasteryNeedsNoneToUse = WeaponMasterySpellMasteryNeedsNoneToUse.Value;
             WeaponMasterSystem.spellMasteryNeedsNoneToLearn = WeaponMasterySpellMasteryNeedsNoneToLearn.Value;
             WeaponMasterSystem.linearSpellMastery = WeaponLinearSpellMastery.Value;
+            WeaponMasterSystem.spellMasteryStacks = WeaponSpellMasteryCDRStacks.Value;
 
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
 
