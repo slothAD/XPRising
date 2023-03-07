@@ -79,14 +79,20 @@ namespace RPGMods.Systems
             else EXPGained = UnitLevel.Level;
 
             int level_diff = UnitLevel.Level - player_level;
-            if (level_diff > 10) level_diff = 10;
+            //if (level_diff > 10) level_diff = 10;
 
             if (level_diff > 0) EXPGained = (int)(EXPGained * (1 + level_diff * 0.1) * EXPMultiplier);
+            else{
+                float xpMult = level_diff * -1.0f;
+                xpMult = xpMult / (xpMult + 10.0f);
+                EXPGained = (int)(EXPGained * xpMult);
+            }
+            /*
             else if (level_diff <= -20) EXPGained = (int) Math.Ceiling(EXPGained * 0.10 * EXPMultiplier);
             else if (level_diff <= -15) EXPGained = (int) Math.Ceiling(EXPGained * 0.25 * EXPMultiplier);
             else if (level_diff <= -10) EXPGained = (int) Math.Ceiling(EXPGained * 0.50 * EXPMultiplier);
             else if (level_diff <= -5) EXPGained = (int) Math.Ceiling(EXPGained * 0.75 * EXPMultiplier);
-            else EXPGained = (int)(EXPGained * EXPMultiplier);
+            else EXPGained = (int)(EXPGained * EXPMultiplier);*/
 
             if (PlayerGroup.AllyCount > 0)
             {
