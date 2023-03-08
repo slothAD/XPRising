@@ -112,6 +112,7 @@ namespace RPGMods
         private static ConfigEntry<bool> DetailedMasteryInfo;
 
         private static ConfigEntry<bool> EnableWorldDynamics;
+        private static ConfigEntry<bool> WDGrowOnKill;
 
         public static bool isInitialized = false;
 
@@ -239,6 +240,7 @@ namespace RPGMods
             DetailedMasteryInfo = Config.Bind("Mastery", "Detailed Mastery Info", false, "Shows the current mastery benefits when you use the .mastery command.");
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
+            WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
 
             if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
             if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
@@ -377,6 +379,7 @@ namespace RPGMods
             Mastery.detailedStatements = DetailedMasteryInfo.Value;
 
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
+            WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
 
             isInitialized = true;
         }

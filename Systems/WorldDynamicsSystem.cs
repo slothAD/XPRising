@@ -16,6 +16,7 @@ namespace RPGMods.Systems
         public static bool isFactionDynamic = false;
 
         private static bool loopInProgress = false;
+        public static bool growOnKill = false;
         public static void OnDayCycle()
         {
             if (Plugin.isInitialized == false || loopInProgress == true) return;
@@ -26,30 +27,42 @@ namespace RPGMods.Systems
                 if (faction.Value.Active == false) continue;
 
                 var factionStats = faction.Value;
-                //-- Calculate total stored power.
-                factionStats.StoredPower += factionStats.ActivePower;
-                //-- Reset the active power.
-                factionStats.ActivePower = factionStats.DailyPower;
+                if (growOnKill){
+                    factionStats.StoredPower -= factionStats.DailyPower;
+                }
+                else{
+                    //-- Calculate total stored power.
+                    factionStats.StoredPower += factionStats.ActivePower;
+                    //-- Reset the active power.
+                    factionStats.ActivePower = factionStats.DailyPower;
+                }
 
                 //-- Calculate if faction level should change.
-                if (factionStats.StoredPower >= factionStats.RequiredPower)
-                {
-                    factionStats.Level += 1;
-                    factionStats.StoredPower = 0;
+                checkForLevelup(factionStats, faction.Key);
 
-                    if (factionStats.Level > factionStats.MaxLevel) factionStats.Level = factionStats.MaxLevel;
-                }
-                else if (factionStats.StoredPower < 0)
-                {
-                    factionStats.Level -= 1;
-                    factionStats.StoredPower = 0;
-
-                    if (factionStats.Level < factionStats.MinLevel) factionStats.Level = factionStats.MinLevel;
-                }
-
-                Database.FactionStats[faction.Key] = factionStats;
+                //Database.FactionStats[faction.Key] = factionStats;
             }
             loopInProgress = false;
+        }
+
+        public static void checkForLevelup(FactionData factionStats, int factionKey){
+            if (factionStats.StoredPower >= factionStats.RequiredPower){
+                factionStats.Level += 1;
+                factionStats.StoredPower = 0;
+                if (factionStats.Level > factionStats.MaxLevel) factionStats.Level = factionStats.MaxLevel;
+            }
+            else if (factionStats.StoredPower < 0){
+                factionStats.Level -= 1;
+                if (growOnKill){
+                    factionStats.StoredPower = factionStats.RequiredPower + factionStats.StoredPower;
+                }
+                else{
+                    factionStats.StoredPower = 0;
+                }
+                if (factionStats.Level < factionStats.MinLevel) factionStats.Level = factionStats.MinLevel;
+                Database.FactionStats[factionKey] = factionStats;
+            }
+
         }
 
         public static void MobKillMonitor(Entity entity)
@@ -61,8 +74,14 @@ namespace RPGMods.Systems
 
             if (factionStats.Active == false) return;
 
-            factionStats.ActivePower -= 1;
-            Database.FactionStats[factionID] = factionStats;
+            if (growOnKill){
+                factionStats.StoredPower += 1;
+            }
+            else{
+                factionStats.ActivePower -= 1;
+            }
+            checkForLevelup(factionStats, factionID);
+            //Database.FactionStats[factionID] = factionStats;
         }
 
         public static void MobReceiver(Entity entity)
