@@ -258,18 +258,10 @@ namespace RPGMods.Systems
                         });
                         if (spellMasteryNeedsNoneToUse){
                             if (SMastery > 0){
-                                float cdr = 0;
-                                if (linearSpellMastery){
-                                    cdr = SMastery / 100.0f;
-                                    cdr = cdr / (cdr + 100.0f);
-                                }
-                                else{
-                                    cdr = SMastery / 200.0f;
-                                }
                                 Buffer.Add(new ModifyUnitStatBuff_DOTS(){
                                     StatType = UnitStatType.CooldownModifier,
-                                    Value = (float)(1 - cdr),
-                                    ModificationType = (spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set),
+                                    Value = 1.0f - (linearSpellMastery ? (SMastery / (SMastery + 100.0f)) : (SMastery / 200.0f)),
+                                    ModificationType = spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set,
                                     Id = ModificationId.NewId(0)
                                 });
                             }
@@ -277,26 +269,19 @@ namespace RPGMods.Systems
                         break;
                     default:
                         break;
-                    //-- Nothing for Fishing Pole
+                        //-- Nothing for Fishing Pole
                 }
                 if (!spellMasteryNeedsNoneToUse){
                     if (SMastery > 0){
-                        float cdr = 0;
-                        if (linearSpellMastery){
-                            cdr = SMastery / 100.0f;
-                            cdr = cdr/(cdr + 100.0f);
-                        }
-                        else{
-                            cdr = SMastery / 200.0f;
-                        }
                         Buffer.Add(new ModifyUnitStatBuff_DOTS(){
                             StatType = UnitStatType.CooldownModifier,
-                            Value = (float)(1-cdr),
-                            ModificationType = (spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set),
+                            Value = 1.0f - (linearSpellMastery ? (SMastery / (SMastery + 100.0f)) : (SMastery / 200.0f)),
+                            ModificationType = spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set,
                             Id = ModificationId.NewId(0)
                         });
                     }
                 }
+                 
             }
         }
 
@@ -316,7 +301,7 @@ namespace RPGMods.Systems
                     MasteryValue = Mastery.Spear; break;
                 case WeaponType.None:
                     MasteryValue = Mastery.None;
-                    if (spellMasteryNeedsNoneToLearn){
+                    if (spellMasteryNeedsNoneToUse){
                         MasterySpellValue = Mastery.Spell;
                     }
                     break;
@@ -333,7 +318,7 @@ namespace RPGMods.Systems
                 case WeaponType.FishingPole:
                     MasteryValue = Mastery.FishingPole; break;
             }
-            if (!spellMasteryNeedsNoneToLearn){
+            if (!spellMasteryNeedsNoneToUse){
                 MasterySpellValue = Mastery.Spell;
             }
             if (MasteryValue > 0) MasteryValue = (float)(MasteryValue * 0.001);

@@ -109,6 +109,7 @@ namespace RPGMods
         private static ConfigEntry<bool> WeaponMasterySpellMasteryNeedsNoneToLearn;
         private static ConfigEntry<bool> WeaponLinearSpellMastery;
         private static ConfigEntry<bool> WeaponSpellMasteryCDRStacks;
+        private static ConfigEntry<bool> DetailedMasteryInfo;
 
         private static ConfigEntry<bool> EnableWorldDynamics;
 
@@ -235,6 +236,7 @@ namespace RPGMods
             WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped."); 
             WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Spell Mastery", false, "Changes spell mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
             WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Spell Mastery CDR stacks", false, "Allows spell mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
+            DetailedMasteryInfo = Config.Bind("Mastery", "Detailed Mastery Info", false, "Shows the current mastery benefits when you use the .mastery command.");
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
 
@@ -372,6 +374,7 @@ namespace RPGMods
             WeaponMasterSystem.spellMasteryNeedsNoneToLearn = WeaponMasterySpellMasteryNeedsNoneToLearn.Value;
             WeaponMasterSystem.linearSpellMastery = WeaponLinearSpellMastery.Value;
             WeaponMasterSystem.spellMasteryStacks = WeaponSpellMasteryCDRStacks.Value;
+            Mastery.detailedStatements = DetailedMasteryInfo.Value;
 
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
 
