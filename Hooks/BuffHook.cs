@@ -6,7 +6,7 @@ using ProjectM;
 using RPGMods.Utils;
 using RPGMods.Systems;
 
-using RPGMods.Hooks;
+namespace RPGMods.Hooks;
 [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Spawn), nameof(ModifyUnitStatBuffSystem_Spawn.OnUpdate))]
 public class ModifyUnitStatBuffSystem_Spawn_Patch
 {
