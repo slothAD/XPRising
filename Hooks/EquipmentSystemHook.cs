@@ -8,7 +8,7 @@ using RPGMods.Systems;
 using RPGMods.Utils;
 using System;
 
-namespace RPGMods.Hooks;
+using RPGMods.Hooks;
 
 [HarmonyPatch(typeof(ArmorLevelSystem_Spawn), nameof(ArmorLevelSystem_Spawn.OnUpdate))]
 public class ArmorLevelSystem_Spawn_Patch

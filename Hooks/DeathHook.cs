@@ -7,7 +7,7 @@ using RPGMods.Utils;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace RPGMods.Hooks;
+using RPGMods.Hooks;
 [HarmonyPatch]
 public class DeathEventListenerSystem_Patch
 {
@@ -62,7 +62,7 @@ public class DeathEventListenerSystem_Patch
 
                         if (doRespawn)
                         {
-                            Utils.RespawnCharacter.Respawn(ev.Died, player, userEntity);
+                            //Utils.RespawnCharacter.Respawn(ev.Died, player, userEntity);
                         }
                     }
                     //-- ---------------------

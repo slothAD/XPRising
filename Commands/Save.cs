@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace RPGMods.Commands
 {
-    [Command("save", Usage = "save [<name>]", Description = "Force the server to save the game as well as write RPGMods DB to a json file.")]
+    [Command("save", Usage = "save [<name>]", Description = "Force the server to save the game as well as write RPGMods DB to a json file. Currently non functional as I cannot compile with it.")]
     public static class Save
     {
         public static void Initialize(Context ctx)
@@ -28,8 +28,8 @@ namespace RPGMods.Commands
 
             Output.SendSystemMessage(ctx, $"Saving data....");
             //AutoSaveSystem.SaveDatabase();
-            Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name);
-            Output.SendSystemMessage(ctx, $"Data save complete.");
+            //Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name);
+            Output.SendSystemMessage(ctx, $"Data save failed, command disabled due to not having appropriate library to compile.");
         }
     }
 }
