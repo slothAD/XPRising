@@ -112,8 +112,13 @@ namespace RPGMods.Commands
                     Output.SendSystemMessage(ctx, $"Slashers:<color=#fffffffe> {(double)MasteryData.Slashers * 0.001}%</color> (CRIT <color=#75FF33>{(MasteryData.Slashers * 0.001 * 0.125).ToString("N2")}%</color>, MOV <color=#75FF33>{(MasteryData.Slashers * 0.001 * 0.005).ToString("N2")}</color>)");
                     Output.SendSystemMessage(ctx, $"Mace:<color=#fffffffe> {(double)MasteryData.Mace * 0.001}%</color> (HP <color=#75FF33>{(MasteryData.Mace * 0.001).ToString("N2")}</color>)");
                     Output.SendSystemMessage(ctx, $"Unarmed:<color=#fffffffe> {(double)MasteryData.None * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.None * 0.001 *0.25).ToString("N2")}</color>, MOV <color=#75FF33>{(MasteryData.None * 0.001*0.01).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Spell:<color=#fffffffe> {(double)MasteryData.Spell * 0.001}%</color> (CDR <color=#75FF33>{(WeaponMasterSystem.linearSpellMastery ? ((MasteryData.Spell * 0.001 / 100.0f)/((MasteryData.Spell * 0.001 / 100.0f)+100.0f)*100.0f).ToString("N2") : ((MasteryData.Spell * 0.001 / 200.0f)*100.0f).ToString("N2"))}%</color>)");
+                    Output.SendSystemMessage(ctx, $"Spell:<color=#fffffffe> {(double)MasteryData.Spell * 0.001}%</color> (CDR <color=#75FF33>{(WeaponMasterSystem.linearSpellMastery ? (((MasteryData.Spell * 0.001)/((MasteryData.Spell * 0.001)+100.0))*100.0).ToString("N2") : ((MasteryData.Spell * 0.000005)*100.0).ToString("N2"))}%</color>)");
                     Output.SendSystemMessage(ctx, $"Crossbow:<color=#fffffffe> {(double)MasteryData.Crossbow * 0.001}%</color> (CRIT <color=#75FF33>{(MasteryData.Crossbow * 0.001 * 0.25).ToString("N2")}%</color>)");
+                    /*
+                    if(Helper.FindPlayer(ctx.Event.User.CharacterName.ToString(), true, out var targetEntity, out var targetUserEntity)){
+                        Blood bloodData = entityManager.GetComponentData <Blood> (targetUserEntity);
+                        Output.SendSystemMessage(ctx, $"Bloodtype -<color=#fffffffe>{bloodData.BloodType} - {bloodData.Quality}%</color>");
+                    }*/
                 }
                 else{
                     Output.SendSystemMessage(ctx, $"Sword:<color=#fffffffe> {(double)MasteryData.Sword * 0.001}%</color> (ATK <color=#75FF33>↑</color>, SPL <color=#75FF33>↑</color>)");

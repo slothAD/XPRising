@@ -7,7 +7,7 @@ using RPGMods.Utils;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace RPGMods.Hooks;
+namespace RPGMods.Hooks {
 [HarmonyPatch]
 public class DeathEventListenerSystem_Patch
 {
@@ -30,6 +30,12 @@ public class DeathEventListenerSystem_Patch
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerUpdateHeat(ev.Killer, ev.Died);
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(ev.Killer, ev.Died);
                     if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(ev.Killer, ev.Died);
+
+                    /*
+                    Blood bloodData = __instance.EntityManager.GetComponentData<Blood>(ev.Killer);
+                        PlayerCharacter p = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Killer);
+                        bloodData = __instance.EntityManager.GetComponentData<Blood>(p.UserEntity.GetEntityOnServer());
+                    Output.SendLore(ev.Killer, $"Bloodtype -<color=#fffffffe>{bloodData.BloodType} - {bloodData.Quality}%</color>");*/
                 }
                 //-- ----------------------
 
@@ -71,4 +77,5 @@ public class DeathEventListenerSystem_Patch
             }
         }
     }
+}
 }
