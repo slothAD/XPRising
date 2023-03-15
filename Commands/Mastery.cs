@@ -57,7 +57,7 @@ namespace RPGMods.Commands
                         else if (MasteryType.Equals("fishingpole")) WeaponMasterSystem.SetMastery(SteamID, WeaponType.FishingPole, value);
                         else if (MasteryType.Equals("mace")) WeaponMasterSystem.SetMastery(SteamID, WeaponType.Mace, value);
                         else if (MasteryType.Equals("axes")) WeaponMasterSystem.SetMastery(SteamID, WeaponType.Axes, value);
-                        else 
+                        else
                         {
                             Output.InvalidArguments(ctx);
                             return;
@@ -65,7 +65,7 @@ namespace RPGMods.Commands
                         Output.SendSystemMessage(ctx, $"{ctx.Args[1].ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{value * 0.001}%</color>");
                         Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
                         return;
-                        
+
                     }
                     else
                     {
@@ -104,34 +104,62 @@ namespace RPGMods.Commands
                 }
 
                 Output.SendSystemMessage(ctx, "-- <color=#ffffffff>Weapon Mastery</color> --");
-                if (detailedStatements){
-                    Output.SendSystemMessage(ctx, $"Sword:<color=#fffffffe> {(double)MasteryData.Sword * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Sword * 0.001 * 0.125).ToString("N2")}</color>, SPL <color=#75FF33>{(MasteryData.Sword * 0.001 * 0.125).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Spear:<color=#fffffffe> {(double)MasteryData.Spear * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Spear * 0.001 * 0.25).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Axes:<color=#fffffffe> {(double)MasteryData.Axes * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Axes * 0.001 * 0.125).ToString("N2")}</color>, HP <color=#75FF33>{(MasteryData.Axes * 0.001 * 0.5).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Scythe:<color=#fffffffe> {(double)MasteryData.Scythe * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Scythe * 0.001 * 0.125).ToString("N2")}</color>, CRIT <color=#75FF33>{(MasteryData.Scythe * 0.001 * 0.125).ToString("N2")}%</color>)");
-                    Output.SendSystemMessage(ctx, $"Slashers:<color=#fffffffe> {(double)MasteryData.Slashers * 0.001}%</color> (CRIT <color=#75FF33>{(MasteryData.Slashers * 0.001 * 0.125).ToString("N2")}%</color>, MOV <color=#75FF33>{(MasteryData.Slashers * 0.001 * 0.005).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Mace:<color=#fffffffe> {(double)MasteryData.Mace * 0.001}%</color> (HP <color=#75FF33>{(MasteryData.Mace * 0.001).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Unarmed:<color=#fffffffe> {(double)MasteryData.None * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.None * 0.001 *0.25).ToString("N2")}</color>, MOV <color=#75FF33>{(MasteryData.None * 0.001*0.01).ToString("N2")}</color>)");
-                    Output.SendSystemMessage(ctx, $"Spell:<color=#fffffffe> {(double)MasteryData.Spell * 0.001}%</color> (CDR <color=#75FF33>{(WeaponMasterSystem.linearSpellMastery ? (((MasteryData.Spell * 0.001)/((MasteryData.Spell * 0.001)+100.0))*100.0).ToString("N2") : ((MasteryData.Spell * 0.000005)*100.0).ToString("N2"))}%</color>)");
-                    Output.SendSystemMessage(ctx, $"Crossbow:<color=#fffffffe> {(double)MasteryData.Crossbow * 0.001}%</color> (CRIT <color=#75FF33>{(MasteryData.Crossbow * 0.001 * 0.25).ToString("N2")}%</color>)");
-                    /*
-                    if(Helper.FindPlayer(ctx.Event.User.CharacterName.ToString(), true, out var targetEntity, out var targetUserEntity)){
-                        Blood bloodData = entityManager.GetComponentData <Blood> (targetUserEntity);
-                        Output.SendSystemMessage(ctx, $"Bloodtype -<color=#fffffffe>{bloodData.BloodType} - {bloodData.Quality}%</color>");
-                    }*/
+
+
+                if (ctx.Event.SenderCharacterEntity != null)
+                {
+                    int weapon = (int)WeaponMasterSystem.GetWeaponType(ctx.Event.SenderCharacterEntity);
+                    if(weapon >= WeaponMasterSystem.masteryStats.Length)
+                        Output.SendSystemMessage(ctx, $"Weapon type {weapon} beyond mastery stats weapon type limit of {WeaponMasterSystem.masteryStats.Length-1}");
+                    string name = WeaponMasterSystem.typeToName((WeaponType)weapon);
+                    double masteryPercent = WeaponMasterSystem.masteryDataByType((WeaponType)weapon, SteamID) * 0.001;
+                    float effectiveness = 1;
+                    if (Database.playerWeaponEffectiveness.TryGetValue(SteamID, out WeaponMasterEffectivenessData effectivenessData))
+                        effectiveness = effectivenessData.data[weapon];
+                    string print = $"{name}:<color=#fffffffe> {masteryPercent}%</color> (";
+                    for (int i = 0; i < WeaponMasterSystem.masteryStats[weapon].Length; i++)
+                    {
+                        if (i > 0)
+                            print += ",";
+                        print += Helper.statTypeToString((UnitStatType)WeaponMasterSystem.masteryStats[weapon][i]);
+                        print += " <color=#75FF33>";
+                        print += WeaponMasterSystem.calcBuffValue(weapon, (float)masteryPercent, SteamID, i);
+                        print += "</color>";
+                    }
+                    print += $") Effectiveness: {effectiveness * 100}%";
+                    Output.SendSystemMessage(ctx, print);
+
                 }
-                else{
-                    Output.SendSystemMessage(ctx, $"Sword:<color=#fffffffe> {(double)MasteryData.Sword * 0.001}%</color> (ATK <color=#75FF33>↑</color>, SPL <color=#75FF33>↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Spear:<color=#fffffffe> {(double)MasteryData.Spear * 0.001}%</color> (ATK <color=#75FF33>↑↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Axes:<color=#fffffffe> {(double)MasteryData.Axes * 0.001}%</color> (ATK <color=#75FF33>↑</color>, HP <color=#75FF33>↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Scythe:<color=#fffffffe> {(double)MasteryData.Scythe * 0.001}%</color> (ATK <color=#75FF33>↑</color>, CRIT <color=#75FF33>↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Slashers:<color=#fffffffe> {(double)MasteryData.Slashers * 0.001}%</color> (CRIT <color=#75FF33>↑</color>, MOV <color=#75FF33>↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Mace:<color=#fffffffe> {(double)MasteryData.Mace * 0.001}%</color> (HP <color=#75FF33>↑↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Unarmed:<color=#fffffffe> {(double)MasteryData.None * 0.001}%</color> (ATK <color=#75FF33>↑↑</color>, MOV <color=#75FF33>↑↑</color>)");
-                    Output.SendSystemMessage(ctx, $"Spell:<color=#fffffffe> {(double)MasteryData.Spell * 0.001}%</color> (CD <color=#75FF33>↓↓</color>)");
-                    Output.SendSystemMessage(ctx, $"Crossbow:<color=#fffffffe> {(double)MasteryData.Crossbow * 0.001}%</color> (CRIT <color=#75FF33>↑↑</color>)");
+                else { 
+                    if (detailedStatements)
+                    {
+                        Output.SendSystemMessage(ctx, $"Sword:<color=#fffffffe> {(double)MasteryData.Sword * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Sword * 0.001 * 0.125).ToString("N2")}</color>, SPL <color=#75FF33>{(MasteryData.Sword * 0.001 * 0.125).ToString("N2")}</color>)");
+                        Output.SendSystemMessage(ctx, $"Spear:<color=#fffffffe> {(double)MasteryData.Spear * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Spear * 0.001 * 0.25).ToString("N2")}</color>)");
+                        Output.SendSystemMessage(ctx, $"Axes:<color=#fffffffe> {(double)MasteryData.Axes * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Axes * 0.001 * 0.125).ToString("N2")}</color>, HP <color=#75FF33>{(MasteryData.Axes * 0.001 * 0.5).ToString("N2")}</color>)");
+                        Output.SendSystemMessage(ctx, $"Scythe:<color=#fffffffe> {(double)MasteryData.Scythe * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.Scythe * 0.001 * 0.125).ToString("N2")}</color>, CRIT <color=#75FF33>{(MasteryData.Scythe * 0.001 * 0.125).ToString("N2")}%</color>)");
+                        Output.SendSystemMessage(ctx, $"Slashers:<color=#fffffffe> {(double)MasteryData.Slashers * 0.001}%</color> (CRIT <color=#75FF33>{(MasteryData.Slashers * 0.001 * 0.125).ToString("N2")}%</color>, MOV <color=#75FF33>{(MasteryData.Slashers * 0.001 * 0.005).ToString("N2")}</color>)");
+                        Output.SendSystemMessage(ctx, $"Mace:<color=#fffffffe> {(double)MasteryData.Mace * 0.001}%</color> (HP <color=#75FF33>{(MasteryData.Mace * 0.001).ToString("N2")}</color>)");
+                        Output.SendSystemMessage(ctx, $"Unarmed:<color=#fffffffe> {(double)MasteryData.None * 0.001}%</color> (ATK <color=#75FF33>{(MasteryData.None * 0.001 * 0.25).ToString("N2")}</color>, MOV <color=#75FF33>{(MasteryData.None * 0.001 * 0.01).ToString("N2")}</color>)");
+                        Output.SendSystemMessage(ctx, $"Spell:<color=#fffffffe> {(double)MasteryData.Spell * 0.001}%</color> (CDR <color=#75FF33>{(WeaponMasterSystem.linearCDR ? (((MasteryData.Spell * 0.001) / ((MasteryData.Spell * 0.001) + 100.0)) * 100.0).ToString("N2") : ((MasteryData.Spell * 0.000005) * 100.0).ToString("N2"))}%</color>)");
+                        Output.SendSystemMessage(ctx, $"Crossbow:<color=#fffffffe> {(double)MasteryData.Crossbow * 0.001}%</color> (CRIT <color=#75FF33>{(MasteryData.Crossbow * 0.001 * 0.25).ToString("N2")}%</color>)");
+
+                    }
+                    else
+                    {
+
+
+                        Output.SendSystemMessage(ctx, $"Sword:<color=#fffffffe> {(double)MasteryData.Sword * 0.001}%</color> (ATK <color=#75FF33>↑</color>, SPL <color=#75FF33>↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Spear:<color=#fffffffe> {(double)MasteryData.Spear * 0.001}%</color> (ATK <color=#75FF33>↑↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Axes:<color=#fffffffe> {(double)MasteryData.Axes * 0.001}%</color> (ATK <color=#75FF33>↑</color>, HP <color=#75FF33>↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Scythe:<color=#fffffffe> {(double)MasteryData.Scythe * 0.001}%</color> (ATK <color=#75FF33>↑</color>, CRIT <color=#75FF33>↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Slashers:<color=#fffffffe> {(double)MasteryData.Slashers * 0.001}%</color> (CRIT <color=#75FF33>↑</color>, MOV <color=#75FF33>↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Mace:<color=#fffffffe> {(double)MasteryData.Mace * 0.001}%</color> (HP <color=#75FF33>↑↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Unarmed:<color=#fffffffe> {(double)MasteryData.None * 0.001}%</color> (ATK <color=#75FF33>↑↑</color>, MOV <color=#75FF33>↑↑</color>)");
+                        Output.SendSystemMessage(ctx, $"Spell:<color=#fffffffe> {(double)MasteryData.Spell * 0.001}%</color> (CD <color=#75FF33>↓↓</color>)");
+                        Output.SendSystemMessage(ctx, $"Crossbow:<color=#fffffffe> {(double)MasteryData.Crossbow * 0.001}%</color> (CRIT <color=#75FF33>↑↑</color>)");
+                    }
+                    //Output.SendSystemMessage(ctx, $"Fishing Pole: <color=#ffffffff>{(double)MasteryData.FishingPole * 0.001}%</color> (??? ↑↑)");
                 }
-                //Output.SendSystemMessage(ctx, $"Fishing Pole: <color=#ffffffff>{(double)MasteryData.FishingPole * 0.001}%</color> (??? ↑↑)");
             }
         }
     }

@@ -224,6 +224,27 @@ namespace RPGMods.Utils
         }
     }
 
+    public struct WeaponMasterEffectivenessData
+    {
+        public float[] data { get; set; }
+
+        public WeaponMasterEffectivenessData(float spear = 1, float sword = 1, float scythe = 1, float crossbow = 1, float mace = 1, float slashers = 1, float axes = 1, float none = 1, float fishingpole = 1, float spell = 1)
+        {
+            data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
+        }
+    }
+
+
+    public struct WeaponMasterGrowthData
+    {
+        public float[] data { get; set; }
+
+        public WeaponMasterGrowthData(float spear = 1, float sword = 1, float scythe = 1, float crossbow = 1, float mace = 1, float slashers = 1, float axes = 1, float none = 1, float fishingpole = 1, float spell = 1)
+        {
+            data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
+        }
+    }
+
     public struct BanData
     {
         public DateTime BanUntil { get; set; }

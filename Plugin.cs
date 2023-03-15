@@ -110,6 +110,24 @@ namespace RPGMods
         private static ConfigEntry<bool> WeaponLinearSpellMastery;
         private static ConfigEntry<bool> WeaponSpellMasteryCDRStacks;
         private static ConfigEntry<bool> DetailedMasteryInfo;
+        private static ConfigEntry<int[]> UnarmedStats;
+        private static ConfigEntry<float[]> UnarmedRates;
+        private static ConfigEntry<int[]> SpearStats;
+        private static ConfigEntry<float[]> SpearRates;
+        private static ConfigEntry<int[]> SwordStats;
+        private static ConfigEntry<float[]> SwordRates;
+        private static ConfigEntry<int[]> ScytheStats;
+        private static ConfigEntry<float[]> ScytheRates;
+        private static ConfigEntry<int[]> CrossbowStats;
+        private static ConfigEntry<float[]> CrossbowRates;
+        private static ConfigEntry<int[]> MaceStats;
+        private static ConfigEntry<float[]> MaceRates;
+        private static ConfigEntry<int[]> SlasherStats;
+        private static ConfigEntry<float[]> SlasherRates;
+        private static ConfigEntry<int[]> AxeStats;
+        private static ConfigEntry<float[]> AxeRates;
+        private static ConfigEntry<int[]> FishingPoleStats;
+        private static ConfigEntry<float[]> FishingPoleRates;
 
         private static ConfigEntry<bool> EnableWorldDynamics;
         private static ConfigEntry<bool> WDGrowOnKill;
@@ -235,9 +253,28 @@ namespace RPGMods
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
             WeaponMasterySpellMasteryNeedsNoneToUse = Config.Bind("Mastery", "Unarmed Only Spell Mastery Use", true, "Gain the benefits of spell mastery only when you have no weapon equipped.");
             WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped."); 
-            WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Spell Mastery", false, "Changes spell mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
-            WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Spell Mastery CDR stacks", false, "Allows spell mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
+            WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Mastery CDR", false, "Changes CDR from mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
+            WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Mastery CDR stacks", false, "Allows mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
             DetailedMasteryInfo = Config.Bind("Mastery", "Detailed Mastery Info", false, "Shows the current mastery benefits when you use the .mastery command.");
+
+            UnarmedStats = Config.Bind("Mastery", "Unarmed Stats", new int[] { 0, 5 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Unarmed Rates", new float[] { 0.25f, 0.01f }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Spear Stats", new int[] { 0 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Spear Rates", new float[] { 0.25f}, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Sword Stats", new int[] { 0, 25 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Sword Rates", new float[] { 0.125f, 0.125f }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Scythe Stats", new int[] { 0, 29 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Scythe Rates", new float[] { 0.125f, 0.00125f }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Crossbow Stats", new int[] { 29 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Crossbow Rates", new float[] { 0.0025f}, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Mace Stats", new int[] { 4 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Mace Rates", new float[] { 1f }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Slasher Stats", new int[] { 29, 5 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Slasher Rates", new float[] { 0.00125f, 0.005f }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Axe Stats", new int[] { 0, 4 }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Axe Rates", new float[] { 0.125f, 0.5f }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery", "Fishing Pole Stats", new int[] {  }, "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery", "Fishing Pole Rates", new float[] {  }, "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, so configure appropriately.");
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
@@ -374,8 +411,8 @@ namespace RPGMods
             WeaponMasterSystem.MaxCombatTick = MasteryMaxCombatTicks.Value;
             WeaponMasterSystem.spellMasteryNeedsNoneToUse = WeaponMasterySpellMasteryNeedsNoneToUse.Value;
             WeaponMasterSystem.spellMasteryNeedsNoneToLearn = WeaponMasterySpellMasteryNeedsNoneToLearn.Value;
-            WeaponMasterSystem.linearSpellMastery = WeaponLinearSpellMastery.Value;
-            WeaponMasterSystem.spellMasteryStacks = WeaponSpellMasteryCDRStacks.Value;
+            WeaponMasterSystem.linearCDR = WeaponLinearSpellMastery.Value;
+            WeaponMasterSystem.CDRStacks = WeaponSpellMasteryCDRStacks.Value;
             Mastery.detailedStatements = DetailedMasteryInfo.Value;
 
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
