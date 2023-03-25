@@ -133,8 +133,17 @@ namespace RPGMods
         private static ConfigEntry<string> SpellStats;
         private static ConfigEntry<string> SpellRates;
 
+
+        private static ConfigEntry<bool> effectivenessSubSystemEnabled;
+        private static ConfigEntry<bool> growthSubSystemEnabled;
+        private static ConfigEntry<float> maxEffectiveness;
+        private static ConfigEntry<float> minGrowth;
+        private static ConfigEntry<float> maxGrowth;
+        private static ConfigEntry<float> growthPerEfficency;
+
         private static ConfigEntry<bool> EnableWorldDynamics;
         private static ConfigEntry<bool> WDGrowOnKill;
+
 
         public static bool isInitialized = false;
 
@@ -262,26 +271,40 @@ namespace RPGMods
             DetailedMasteryInfo = Config.Bind("Mastery", "Detailed Mastery Info", false, "Shows all mastery benefits when you use the .mastery command.");
 
             UnarmedStats = Config.Bind("Mastery", "Unarmed Stats", " 0, 5 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            UnarmedRates = Config.Bind("Mastery", "Unarmed Rates", " 0.25f, 0.01f ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            UnarmedRates = Config.Bind("Mastery", "Unarmed Rates", " 0.25, 0.01 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             SpearStats = Config.Bind("Mastery", "Spear Stats", " 0 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SpearRates = Config.Bind("Mastery", "Spear Rates", " 0.25f", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SpearRates = Config.Bind("Mastery", "Spear Rates", " 0.25", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             SwordStats = Config.Bind("Mastery", "Sword Stats", " 0, 25 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SwordRates = Config.Bind("Mastery", "Sword Rates", " 0.125f, 0.125f ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SwordRates = Config.Bind("Mastery", "Sword Rates", " 0.125, 0.125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             ScytheStats = Config.Bind("Mastery", "Scythe Stats", " 0, 29 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            ScytheRates = Config.Bind("Mastery", "Scythe Rates", " 0.125f, 0.00125f ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            ScytheRates = Config.Bind("Mastery", "Scythe Rates", " 0.125, 0.00125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             CrossbowStats = Config.Bind("Mastery", "Crossbow Stats", " 29 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            CrossbowRates = Config.Bind("Mastery", "Crossbow Rates", " 0.0025f", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            CrossbowRates = Config.Bind("Mastery", "Crossbow Rates", " 0.0025", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             MaceStats = Config.Bind("Mastery", "Mace Stats", " 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            MaceRates = Config.Bind("Mastery", "Mace Rates", " 1f ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            MaceRates = Config.Bind("Mastery", "Mace Rates", " 1 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             SlasherStats = Config.Bind("Mastery", "Slasher Stats", " 29, 5 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SlasherRates = Config.Bind("Mastery", "Slasher Rates", " 0.00125f, 0.005f ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SlasherRates = Config.Bind("Mastery", "Slasher Rates", " 0.00125, 0.005 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             AxeStats = Config.Bind("Mastery", "Axe Stats", " 0, 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            AxeRates = Config.Bind("Mastery", "Axe Rates", " 0.125f, 0.5f ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            AxeRates = Config.Bind("Mastery", "Axe Rates", " 0.125, 0.5 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             FishingPoleStats = Config.Bind("Mastery", "Fishing Pole Stats", " ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
             FishingPoleRates = Config.Bind("Mastery", "Fishing Pole Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             SpellStats = Config.Bind("Mastery", "Spell Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
             SpellRates = Config.Bind("Mastery", "Spell Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
 
+            effectivenessSubSystemEnabled = Config.Bind("Mastery", "Enable Effectiveness Subsystem", false, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
+            maxEffectiveness = Config.Bind("Mastery", "Maximum Effectiveness", 10f, "The maximum mastery effectiveness where 1 is 100%.");
+            growthSubSystemEnabled = Config.Bind("Mastery", "Enable Growth Subsystem", false, "Enables the growth subsystem, when you reset mastery either increases or decreases your matching mastery growth rate, depending on config.");
+            minGrowth = Config.Bind("Mastery", "Minimum Growth Rate", 0.1f, "The minimum growth rate, where 1 is 100%");
+            maxGrowth = Config.Bind("Mastery", "Maximum Growth Rate", 10f, "the maximum growth rate where 1 is 100%");
+            growthPerEfficency = Config.Bind("Mastery", "Growth per efficency", 10f, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
+
+            WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
+            Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
+            WeaponMasterySpellMasteryNeedsNoneToUse = Config.Bind("Mastery", "Unarmed Only Spell Mastery Use", true, "Gain the benefits of spell mastery only when you have no weapon equipped.");
+            WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.");
+            WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Mastery CDR", false, "Changes CDR from mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
+            WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Mastery CDR stacks", false, "Allows mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
+            
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
@@ -442,6 +465,14 @@ namespace RPGMods
             WeaponMasterSystem.SpellStats = parseIntArrayConifg(SpellStats.Value);
             WeaponMasterSystem.SpellRates = parseFloatArrayConifg(SpellRates.Value);
 
+            WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
+            WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;
+            WeaponMasterSystem.growthSubSystemEnabled = effectivenessSubSystemEnabled.Value;
+            WeaponMasterSystem.minGrowth = minGrowth.Value;
+            WeaponMasterSystem.maxGrowth = maxGrowth.Value;
+            WeaponMasterSystem.growthPerEfficency = growthPerEfficency.Value;
+
+
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
             WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
 
@@ -452,17 +483,28 @@ namespace RPGMods
             var match = Regex.Match(data, "([0-9]+)");
             List<int> list = new List<int>();
             while (match.Success) {
-                list.Add(int.Parse(match.Value));
+                try {
+                    list.Add(int.Parse(match.Value));
+                }
+                catch {
+                    Plugin.Logger.LogWarning("Error interperting integer value: " + match.ToString());
+                }
                 match = match.NextMatch();
             }
             int[] result = list.ToArray();
             return result;
         }
         public static float[] parseFloatArrayConifg(string data) {
-            var match = Regex.Match(data, "[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)");
+            var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<float> list = new List<float>();
             while (match.Success) {
-                list.Add(float.Parse(match.Value));
+                try {
+                    list.Add(float.Parse(match.Value));
+                }
+                catch {
+                    Plugin.Logger.LogWarning("Error interperting float value: " + match.ToString());
+                }
+                
                 match = match.NextMatch();
             }
             float[] result = list.ToArray();

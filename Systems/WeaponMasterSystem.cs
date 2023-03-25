@@ -70,8 +70,11 @@ namespace RPGMods.Systems
         public static float[][] masteryRates = { SpellRates, UnarmedRates, SpearRates, SwordRates, ScytheRates, CrossbowRates, MaceRates, SlasherRates, AxeRates, FishingPoleRates };
 
         public static float maxEffectiveness = 10;
+        public static bool effectivenessSubSystemEnabled = false;
+        public static bool growthSubSystemEnabled = false;
         public static float minGrowth = 0.1f;
         public static float maxGrowth = 10;
+        public static float growthPerEfficency = 1;
 
         public static void UpdateMastery(Entity Killer, Entity Victim)
         {
@@ -89,14 +92,21 @@ namespace RPGMods.Systems
             MasteryValue = (int)VictimStats.PhysicalPower;
             spellMasteryValue = (int)VictimStats.SpellPower;
 
-            bool isGrowthFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
-            if (!isGrowthFound) {
-                growth = new WeaponMasterGrowthData();
-                Database.playerWeaponGrowth[SteamID] = growth;
+            float weaponGrowth = 1;
+            float spellGrowth = 1;
+
+            if (growthSubSystemEnabled) {
+                bool isGrowthFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
+                if (!isGrowthFound) {
+                    growth = new WeaponMasterGrowthData();
+                    Database.playerWeaponGrowth[SteamID] = growth;
+                }
+                weaponGrowth = growth.data[weapon];
+                spellGrowth = growth.data[0];
             }
 
-            MasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01) * growth.data[weapon]);
-            spellMasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01) * growth.data[0]);
+            MasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01) * weaponGrowth);
+            spellMasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01) * spellGrowth);
 
             bool isVBlood;
             if (em.HasComponent<BloodConsumeSource>(Victim))
@@ -153,18 +163,27 @@ namespace RPGMods.Systems
             if (Cache.player_combat_ticks[SteamID] > MaxCombatTick) return;
             WeaponType WeaponType = GetWeaponType(Player);
 
-            bool isGrowthFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
-            if (!isGrowthFound) {
-                growth = new WeaponMasterGrowthData();
-                growth.data = new float[masteryStats.Length];
-                for(int i = 0; i < growth.data.Length; i++) {
-                    growth.data[i] = 1.0f;
+
+
+            float weaponGrowth = 1;
+            float spellGrowth = 1;
+
+            if (growthSubSystemEnabled) {
+                bool isGrowthFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
+                if (!isGrowthFound) {
+                    growth = new WeaponMasterGrowthData();
+                    growth.data = new float[masteryStats.Length];
+                    for (int i = 0; i < growth.data.Length; i++) {
+                        growth.data[i] = 1.0f;
+                    }
+                    Database.playerWeaponGrowth[SteamID] = growth;
                 }
-                Database.playerWeaponGrowth[SteamID] = growth;
+                weaponGrowth = growth.data[(int)WeaponType+1];
+                spellGrowth = growth.data[0];
             }
 
-            int MasteryValue = (int)(MasteryCombatTick * MasteryMultiplier * growth.data[(int)WeaponType + 1]);
-            int spellMasteryValue = (int)(MasteryCombatTick * MasteryMultiplier * growth.data[0]);
+            int MasteryValue = (int)(MasteryCombatTick * MasteryMultiplier * weaponGrowth);
+            int spellMasteryValue = (int)(MasteryCombatTick * MasteryMultiplier * spellGrowth);
             Cache.player_combat_ticks[SteamID] += 1;
             
             SetMastery(SteamID, (int)WeaponType+1, MasteryValue);
@@ -253,7 +272,7 @@ namespace RPGMods.Systems
 
         public static float calcBuffValue(int type, float mastery, ulong SteamID, int stat){
             float effectiveness = 1;
-            if (Database.playerWeaponEffectiveness.TryGetValue(SteamID, out WeaponMasterEffectivenessData effectivenessData))
+            if (Database.playerWeaponEffectiveness.TryGetValue(SteamID, out WeaponMasterEffectivenessData effectivenessData) && effectivenessSubSystemEnabled)
                 effectiveness = effectivenessData.data[type];
             if (type >= masteryRates.Length){
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
@@ -329,21 +348,66 @@ namespace RPGMods.Systems
 
 
         public static void resetMastery(ulong SteamID, int type) {
+            if (!effectivenessSubSystemEnabled) {
+                if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)) {
+                    Output.SendLore(targetUserEntity, $"Effectiveness Subsystem disabled, not resetting mastery.");
+                }
+                return;
+            }
             bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
             if (isPlayerFound) {
                 if (type < 0) {
                     for (int i = 0; i < Mastery.data.Length; i++) {
                         addMasteryEffectiveness(SteamID, i, (float)Mastery.data[i] / 100000.0f);
+                        adjustGrowth(SteamID, i, (float)Mastery.data[i] / 100000.0f);
                         Mastery.data[i] = 0;
                     }
                     
                 }
                 else {
                     addMasteryEffectiveness(SteamID, type, (float)Mastery.data[type] / 100000.0f);
+                    adjustGrowth(SteamID, type, (float)Mastery.data[type] / 100000.0f);
                     Mastery.data[type] = 0;
                 }
                 Database.player_weaponmastery[SteamID] = Mastery;
             }
+            return;
+        }
+
+
+        public static void adjustGrowth(ulong SteamID, int type, float value) {
+            bool isPlayerFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
+            if (isPlayerFound) {
+                if (type >= 0 && type < growth.data.Length) {
+                    if(growthPerEfficency >= 0) {
+                        growth.data[type] = Math.Min(maxGrowth, growth.data[type] + (value*growthPerEfficency));
+                    }
+                    else {
+                        float gpe = -1 * growthPerEfficency;
+                        value = value / (value + growthPerEfficency);
+                        growth.data[type] = Math.Max(minGrowth, growth.data[type] * value );
+                    }
+                }
+            }
+            else {
+                growth = new WeaponMasterGrowthData();
+                growth.data = new float[masteryStats.Length];
+                for (int i = 0; i < growth.data.Length; i++) {
+                    growth.data[i] = 1;
+                }
+                if (type >= 0 && type < growth.data.Length) {
+                    if (growthPerEfficency >= 0) {
+                        growth.data[type] = Math.Min(maxGrowth, growth.data[type] + (value * growthPerEfficency));
+                    }
+                    else {
+                        float gpe = -1 * growthPerEfficency;
+                        value = value / (value + growthPerEfficency);
+                        growth.data[type] = Math.Max(minGrowth, growth.data[type] * value);
+                    }
+                }
+
+            }
+            Database.playerWeaponGrowth[SteamID] = growth;
             return;
         }
 

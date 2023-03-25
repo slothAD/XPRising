@@ -6,7 +6,7 @@ using Unity.Entities;
 
 namespace RPGMods.Commands
 {
-    [Command("mastery, m", Usage = "mastery [<log> <on>|<off>]", Description = "Display your current mastery progression, or toggle the gain notification.")]
+    [Command("mastery, m", Usage = "mastery [<log> <on>|<off>] [<reset> all|(mastery type)]", Description = "Display your current mastery progression, toggle the gain notification, or reset your mastery to gain effectiveness.")]
     public static class Mastery
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
@@ -132,7 +132,7 @@ namespace RPGMods.Commands
                             name = WeaponMasterSystem.typeToName(weapon);
                             masteryPercent = WeaponMasterSystem.masteryDataByType(weapon, SteamID) * 0.001;
                             effectiveness = 1;
-                            if (ed)
+                            if (ed && WeaponMasterSystem.effectivenessSubSystemEnabled)
                                 effectiveness = effectivenessData.data[weapon];
                             print = $"{name}:<color=#fffffffe> {masteryPercent}%</color> (";
                             for (int i = 0; i < WeaponMasterSystem.masteryStats[weapon].Length; i++) {
