@@ -196,7 +196,7 @@ namespace RPGMods.Utils
         }
     }
 
-    public struct WeaponMasterData
+    public struct WeaponMasterDataOld
     {
         public int Spear { get; set; }
         public int Sword { get; set; }
@@ -209,7 +209,7 @@ namespace RPGMods.Utils
         public int FishingPole { get; set; }
         public int Spell { get; set; }
 
-        public WeaponMasterData(int spear = 0, int sword = 0, int scythe = 0, int crossbow = 0, int mace = 0, int slashers = 0, int axes = 0, int none = 0, int fishingpole = 0, int spell = 0)
+        public WeaponMasterDataOld(int spear = 0, int sword = 0, int scythe = 0, int crossbow = 0, int mace = 0, int slashers = 0, int axes = 0, int none = 0, int fishingpole = 0, int spell = 0)
         {
             Spear = spear;
             Sword = sword;
@@ -224,6 +224,15 @@ namespace RPGMods.Utils
         }
     }
 
+
+    public struct WeaponMasterData {
+        public int[] data { get; set; }
+
+        public WeaponMasterData(int spear = 0, int sword = 0, int scythe = 0, int crossbow = 0, int mace = 0, int slashers = 0, int axes = 0, int none = 0, int fishingpole = 0, int spell = 0) {
+            data = new int[] { spell, none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole };
+        }
+    }
+
     public struct WeaponMasterEffectivenessData
     {
         public float[] data { get; set; }
@@ -233,7 +242,6 @@ namespace RPGMods.Utils
             data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
         }
     }
-
 
     public struct WeaponMasterGrowthData
     {

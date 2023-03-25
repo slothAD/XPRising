@@ -60,12 +60,18 @@ namespace RPGMods.Systems
         public static int[] AxeStats = { 0, 4 };
         public static float[] AxeRates = { 0.125f, 0.5f };
 
-        public static int[] FishingPoleStats = {  };
-        public static float[] FishingPoleRates = {  };
+        public static int[] FishingPoleStats = { };
+        public static float[] FishingPoleRates = { };
 
-        public static int[][] masteryStats = { UnarmedStats, SpearStats, SwordStats, ScytheStats, CrossbowStats, MaceStats, SlasherStats, AxeStats, FishingPoleStats };
-        public static float[][] masteryRates = { UnarmedRates, SpearRates, SwordRates, ScytheRates, CrossbowRates, MaceRates, SlasherRates, AxeRates, FishingPoleRates };
+        public static int[] SpellStats = { 7 };
+        public static float[] SpellRates = { 100 };
 
+        public static int[][] masteryStats = { SpellStats, UnarmedStats, SpearStats, SwordStats, ScytheStats, CrossbowStats, MaceStats, SlasherStats, AxeStats, FishingPoleStats };
+        public static float[][] masteryRates = { SpellRates, UnarmedRates, SpearRates, SwordRates, ScytheRates, CrossbowRates, MaceRates, SlasherRates, AxeRates, FishingPoleRates };
+
+        public static float maxEffectiveness = 10;
+        public static float minGrowth = 0.1f;
+        public static float maxGrowth = 10;
 
         public static void UpdateMastery(Entity Killer, Entity Victim)
         {
@@ -75,14 +81,22 @@ namespace RPGMods.Systems
             Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity._Entity;
             User User = em.GetComponentData<User>(userEntity);
             ulong SteamID = User.PlatformId;
-            WeaponType WeaponType = GetWeaponType(Killer);
+            int weapon = (int)GetWeaponType(Killer)+1;
 
             int MasteryValue;
+            int spellMasteryValue;
             var VictimStats = em.GetComponentData<UnitStats>(Victim);
-            if (WeaponType == WeaponType.None) MasteryValue = (int)VictimStats.SpellPower;
-            else MasteryValue = (int)VictimStats.PhysicalPower;
+            MasteryValue = (int)VictimStats.PhysicalPower;
+            spellMasteryValue = (int)VictimStats.SpellPower;
 
-            MasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01));
+            bool isGrowthFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
+            if (!isGrowthFound) {
+                growth = new WeaponMasterGrowthData();
+                Database.playerWeaponGrowth[SteamID] = growth;
+            }
+
+            MasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01) * growth.data[weapon]);
+            spellMasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01) * growth.data[0]);
 
             bool isVBlood;
             if (em.HasComponent<BloodConsumeSource>(Victim))
@@ -95,17 +109,25 @@ namespace RPGMods.Systems
                 isVBlood = false;
             }
 
-            if (isVBlood) MasteryValue = (int)(MasteryValue * VBloodMultiplier);
+            if (isVBlood) {
+                MasteryValue = (int)(MasteryValue * VBloodMultiplier);
+                spellMasteryValue = (int)(spellMasteryValue * VBloodMultiplier);
+            }
 
             if (em.HasComponent<PlayerCharacter>(Victim))
             {
                 Equipment VictimGear = em.GetComponentData<Equipment>(Victim);
                 var BonusMastery = VictimGear.ArmorLevel + VictimGear.WeaponLevel + VictimGear.SpellLevel;
                 MasteryValue *= (int)(1 + (BonusMastery * 0.01));
+                spellMasteryValue *= (int)(1 + (BonusMastery * 0.01));
             }
 
             MasteryValue = (int)(MasteryValue * MasteryMultiplier);
-            SetMastery(SteamID, WeaponType, MasteryValue);
+            spellMasteryValue = (int)(spellMasteryValue * MasteryMultiplier);
+            SetMastery(SteamID, weapon, MasteryValue);
+            if (weapon == (((int)WeaponType.None) + 1) || !spellMasteryNeedsNoneToLearn) {
+                SetMastery(SteamID, 0, spellMasteryValue);
+            }
 
             if (Database.player_log_mastery.TryGetValue(SteamID, out bool isLogging))
             {
@@ -131,10 +153,25 @@ namespace RPGMods.Systems
             if (Cache.player_combat_ticks[SteamID] > MaxCombatTick) return;
             WeaponType WeaponType = GetWeaponType(Player);
 
-            int MasteryValue = (int)(MasteryCombatTick * MasteryMultiplier);
+            bool isGrowthFound = Database.playerWeaponGrowth.TryGetValue(SteamID, out WeaponMasterGrowthData growth);
+            if (!isGrowthFound) {
+                growth = new WeaponMasterGrowthData();
+                growth.data = new float[masteryStats.Length];
+                for(int i = 0; i < growth.data.Length; i++) {
+                    growth.data[i] = 1.0f;
+                }
+                Database.playerWeaponGrowth[SteamID] = growth;
+            }
+
+            int MasteryValue = (int)(MasteryCombatTick * MasteryMultiplier * growth.data[(int)WeaponType + 1]);
+            int spellMasteryValue = (int)(MasteryCombatTick * MasteryMultiplier * growth.data[0]);
             Cache.player_combat_ticks[SteamID] += 1;
             
-            SetMastery(SteamID, WeaponType, MasteryValue);
+            SetMastery(SteamID, (int)WeaponType+1, MasteryValue);
+            if(WeaponType == WeaponType.None || !spellMasteryNeedsNoneToLearn) {
+                SetMastery(SteamID, 0, spellMasteryValue);
+
+            }
         }
 
         public static void DecayMastery(Entity userEntity)
@@ -152,9 +189,8 @@ namespace RPGMods.Systems
 
                     Output.SendLore(userEntity, $"You've been sleeping for {(int)elapsed_time.TotalMinutes} minute(s). Your mastery has decayed by {DecayValue * 0.001}%");
 
-                    foreach (WeaponType type in Enum.GetValues(typeof(WeaponType)))
-                    {
-                        SetMastery(SteamID, type, DecayValue);
+                    for(int i = 0; i < masteryStats.Length; i++){
+                        SetMastery(SteamID, i, DecayValue);
                     }
                 }
             }
@@ -184,10 +220,9 @@ namespace RPGMods.Systems
             
             if (isMastered)
             {
-                applyBuff(Buffer, (int)WeaponType, PMastery, SteamID);
-                if((spellMasteryNeedsNoneToUse && WeaponType == WeaponType.None) || !spellMasteryNeedsNoneToUse)
-                {
-                    applyBuff(Buffer, masteryStats.Length-1, SMastery, SteamID);
+                applyBuff(Buffer, (int)WeaponType+1, PMastery, SteamID);
+                if(WeaponType == WeaponType.None || !spellMasteryNeedsNoneToUse){
+                    applyBuff(Buffer, 0, SMastery, SteamID);
                 }                 
             }
         }
@@ -216,157 +251,69 @@ namespace RPGMods.Systems
             }
         }
 
-        public static float calcBuffValue(int type, float mastery, ulong SteamID, int stat)
-        {
+        public static float calcBuffValue(int type, float mastery, ulong SteamID, int stat){
             float effectiveness = 1;
             if (Database.playerWeaponEffectiveness.TryGetValue(SteamID, out WeaponMasterEffectivenessData effectivenessData))
                 effectiveness = effectivenessData.data[type];
-            if (type >= masteryRates.Length)
-            {
+            if (type >= masteryRates.Length){
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
                     Output.SendLore(targetUserEntity, $"Type {type} out of bounds for masteryRates, max of {masteryRates.Length - 1}");
                 return 0.0f;
             }
-            if (stat >= masteryRates[type].Length)
-            {
+            if (stat >= masteryRates[type].Length){
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
                     Output.SendLore(targetUserEntity, $"stat {stat} out of bounds for masteryRates for type {type}, max of {masteryRates[type].Length - 1}");
                 return 0.0f;
             }
-            if (type >= masteryStats.Length)
-            {
+            if (type >= masteryStats.Length){
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
                     Output.SendLore(targetUserEntity, $"Type {type} out of bounds for masteryStats, max of {masteryStats.Length - 1}");
                 return 0.0f;
             }
-            if (stat >= masteryStats[type].Length)
-            {
+            if (stat >= masteryStats[type].Length){
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
                     Output.SendLore(targetUserEntity, $"stat {stat} out of bounds for masteryStats for type {type}, max of {masteryStats[type].Length - 1}");
                 return 0.0f;
             }
             float value = mastery * masteryRates[type][stat] * effectiveness;
-            if ((UnitStatType)masteryStats[type][stat] == UnitStatType.CooldownModifier)
-            {
-                if (linearCDR)
-                {
+            if ((UnitStatType)masteryStats[type][stat] == UnitStatType.CooldownModifier){
+                if (linearCDR){
                     value = mastery * effectiveness;
                     value = value / (value + masteryRates[type][stat]);
+                }
+                else{
+                    value = (mastery*effectiveness)/(masteryRates[type][stat]*2);
                 }
             }
             return value;
         }
 
-        public static bool ConvertMastery(ulong SteamID, WeaponType weaponType, out float MasteryValue, out float MasterySpellValue)
-        {
+        public static bool ConvertMastery(ulong SteamID, WeaponType weaponType, out float MasteryValue, out float MasterySpellValue){
             MasteryValue = 0;
             MasterySpellValue = 0;
 
             bool isFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
             if (!isFound) return false;
 
-            switch (weaponType)
-            {
-                case WeaponType.Sword:
-                    MasteryValue = Mastery.Sword; break;
-                case WeaponType.Spear:
-                    MasteryValue = Mastery.Spear; break;
-                case WeaponType.None:
-                    MasteryValue = Mastery.None;
-                    if (spellMasteryNeedsNoneToUse){
-                        MasterySpellValue = Mastery.Spell;
-                    }
-                    break;
-                case WeaponType.Scythe:
-                    MasteryValue = Mastery.Scythe; break;
-                case WeaponType.Axes:
-                    MasteryValue = Mastery.Axes; break;
-                case WeaponType.Mace:
-                    MasteryValue = Mastery.Mace; break;
-                case WeaponType.Crossbow:
-                    MasteryValue = Mastery.Crossbow; break;
-                case WeaponType.Slashers:
-                    MasteryValue = Mastery.Slashers; break;
-                case WeaponType.FishingPole:
-                    MasteryValue = Mastery.FishingPole; break;
-            }
-            if (!spellMasteryNeedsNoneToUse){
-                MasterySpellValue = Mastery.Spell;
-            }
+            MasteryValue = Mastery.data[(int)weaponType + 1];
+            MasterySpellValue = Mastery.data[0];
+
             if (MasteryValue > 0) MasteryValue = (float)(MasteryValue * 0.001);
             if (MasterySpellValue > 0) MasterySpellValue = (float)(MasterySpellValue * 0.001);
             return true;
         }
 
-        public static void SetMastery(ulong SteamID, WeaponType Type, int Value)
+        public static void SetMastery(ulong SteamID, int Type, int Value)
         {
             int NoneExpertise = 0;
-            if (Type == WeaponType.None)
-            {
-                if (Value > 0) NoneExpertise = Value * 2;
-                else NoneExpertise = Value;
+            if (Type == (int)WeaponType.None+1){
+                if (Value > 0) Value = Value * 2;
             }
             bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
-            if (isPlayerFound)
-            {
-                switch (Type)
-                {
-                    case WeaponType.Sword:
-                        if (Mastery.Sword + Value > MaxMastery) Mastery.Sword = MaxMastery;
-                        else if (Mastery.Sword + Value < 0) Mastery.Sword = 0;
-                        else Mastery.Sword += Value;
-                        break;
-                    case WeaponType.Spear:
-                        if (Mastery.Spear + Value >= MaxMastery) Mastery.Spear = MaxMastery;
-                        else if (Mastery.Spear + Value < 0) Mastery.Spear = 0;
-                        else Mastery.Spear += Value;
-                        break;
-                    case WeaponType.None:
-                        if (Mastery.None + NoneExpertise > MaxMastery) Mastery.None = MaxMastery;
-                        else if (Mastery.None + NoneExpertise < 0) Mastery.None = 0;
-                        else Mastery.None += NoneExpertise;
-                        if (spellMasteryNeedsNoneToLearn){
-                            if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
-                            else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
-                            else Mastery.Spell += Value;
-                        }
-                        break;
-                    case WeaponType.Scythe:
-                        if (Mastery.Scythe + Value >= MaxMastery) Mastery.Scythe = MaxMastery;
-                        else if (Mastery.Scythe + Value < 0) Mastery.Scythe = 0;
-                        else Mastery.Scythe += Value;
-                        break;
-                    case WeaponType.Axes:
-                        if (Mastery.Axes + Value >= MaxMastery) Mastery.Axes = MaxMastery;
-                        else if (Mastery.Axes + Value < 0) Mastery.Axes = 0;
-                        else Mastery.Axes += Value;
-                        break;
-                    case WeaponType.Mace:
-                        if (Mastery.Mace + Value >= MaxMastery) Mastery.Mace = MaxMastery;
-                        else if (Mastery.Mace + Value < 0) Mastery.Mace = 0;
-                        else Mastery.Mace += Value;
-                        break;
-                    case WeaponType.Crossbow:
-                        if (Mastery.Crossbow + Value >= MaxMastery) Mastery.Crossbow = MaxMastery;
-                        else if (Mastery.Crossbow + Value < 0) Mastery.Crossbow = 0;
-                        else Mastery.Crossbow += Value;
-                        break;
-                    case WeaponType.Slashers:
-                        if (Mastery.Slashers + Value >= MaxMastery) Mastery.Slashers = MaxMastery;
-                        else if (Mastery.Slashers + Value < 0) Mastery.Slashers = 0;
-                        else Mastery.Slashers += Value;
-                        break;
-                    case WeaponType.FishingPole:
-                        if (Mastery.FishingPole + Value >= MaxMastery) Mastery.FishingPole = MaxMastery;
-                        else if (Mastery.FishingPole + Value < 0) Mastery.FishingPole = 0;
-                        else Mastery.FishingPole += Value;
-                        break;
-                }
-                if (!spellMasteryNeedsNoneToLearn){
-                    if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
-                    else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
-                    else Mastery.Spell += Value;
-                }
+
+            if (isPlayerFound){
+                
+                Mastery.data[Type] += Value;
             }
             else
             {
@@ -374,37 +321,51 @@ namespace RPGMods.Systems
 
                 if (NoneExpertise < 0) NoneExpertise = 0;
                 if (Value < 0) Value = 0;
-
-                switch (Type)
-                {
-                    case WeaponType.Sword:
-                        Mastery.Sword += Value; break;
-                    case WeaponType.Spear:
-                        Mastery.Spear += Value; break;
-                    case WeaponType.None:
-                        Mastery.None += NoneExpertise;
-                        if (spellMasteryNeedsNoneToLearn){
-                            Mastery.Spell += Value;
-                        }
-                        break;
-                    case WeaponType.Scythe:
-                        Mastery.Scythe += Value; break;
-                    case WeaponType.Axes:
-                        Mastery.Axes += Value; break;
-                    case WeaponType.Mace:
-                        Mastery.Mace += Value; break;
-                    case WeaponType.Crossbow:
-                        Mastery.Crossbow += Value; break;
-                    case WeaponType.Slashers:
-                        Mastery.Slashers += Value; break;
-                    case WeaponType.FishingPole:
-                        Mastery.FishingPole += Value; break;
-                }
-                if (!spellMasteryNeedsNoneToLearn){
-                    Mastery.Spell += Value;
-                }
+                Mastery.data[Type] += Value;
             }
             Database.player_weaponmastery[SteamID] = Mastery;
+            return;
+        }
+
+
+        public static void resetMastery(ulong SteamID, int type) {
+            bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
+            if (isPlayerFound) {
+                if (type < 0) {
+                    for (int i = 0; i < Mastery.data.Length; i++) {
+                        addMasteryEffectiveness(SteamID, i, (float)Mastery.data[i] / 100000.0f);
+                        Mastery.data[i] = 0;
+                    }
+                    
+                }
+                else {
+                    addMasteryEffectiveness(SteamID, type, (float)Mastery.data[type] / 100000.0f);
+                    Mastery.data[type] = 0;
+                }
+                Database.player_weaponmastery[SteamID] = Mastery;
+            }
+            return;
+        }
+
+        public static void addMasteryEffectiveness(ulong SteamID, int type, float value) {
+            bool isPlayerFound = Database.playerWeaponEffectiveness.TryGetValue(SteamID, out WeaponMasterEffectivenessData effectiveness);
+            if (isPlayerFound) {
+                if (type >= 0 && type < effectiveness.data.Length) {
+                    effectiveness.data[type] = Math.Min(maxEffectiveness, effectiveness.data[type] + value);
+                }
+            }
+            else {
+                effectiveness = new WeaponMasterEffectivenessData();
+                effectiveness.data = new float[masteryStats.Length];
+                for(int i = 0; i < effectiveness.data.Length; i++) {
+                    effectiveness.data[i] = 1;
+                }
+                if (type >= 0 && type < effectiveness.data.Length) {
+                    effectiveness.data[type] = Math.Min(maxEffectiveness, effectiveness.data[type] + value);
+                }
+
+            }
+            Database.playerWeaponEffectiveness[SteamID] = effectiveness;
             return;
         }
 
@@ -420,98 +381,82 @@ namespace RPGMods.Systems
             return WeaponType;
         }
 
-        public static string typeToName(WeaponType type)
+        public static string typeToName(int type)
         {
-
+            type -= 1;
             string weaponName = "Unknown";
             switch (type)
             {
-                case WeaponType.None:
+                case (int)WeaponType.None:
                     weaponName = "Unarmed";
                     break;
-                case WeaponType.Spear:
+                case (int)WeaponType.Spear:
                     weaponName = "Spear";
                     break;
-                case WeaponType.Sword:
+                case (int)WeaponType.Sword:
                     weaponName = "Sword";
                     break;
-                case WeaponType.Scythe:
+                case (int)WeaponType.Scythe:
                     weaponName = "Scythe";
                     break;
-                case WeaponType.Crossbow:
+                case (int)WeaponType.Crossbow:
                     weaponName = "Crossbow";
                     break;
-                case WeaponType.Mace:
+                case (int)WeaponType.Mace:
                     weaponName = "Mace";
                     break;
-                case WeaponType.Slashers:
+                case (int)WeaponType.Slashers:
                     weaponName = "Slashers";
                     break;
-                case WeaponType.Axes:
+                case (int)WeaponType.Axes:
                     weaponName = "Axes";
                     break;
-                case WeaponType.FishingPole:
+                case (int)WeaponType.FishingPole:
                     weaponName = "Fishing Rod";
+                    break;
+                case -1:
+                    weaponName = "Spell";
+                    break;
+                case -2:
+                    weaponName = "All";
                     break;
             }
             return weaponName;
         }
 
-        public static int masteryDataByType(WeaponType type, ulong SteamID)
+        public static int masteryDataByType(int type, ulong SteamID)
         {
-            int mastery = 0;
             bool isFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
             if (!isFound) return (MaxMastery*-10);
-            switch (type)
-            {
-                case WeaponType.None:
-                    mastery = Mastery.None;
-                    break;
-                case WeaponType.Spear:
-                    mastery = Mastery.Spear;
-                    break;
-                case WeaponType.Sword:
-                    mastery = Mastery.Sword;
-                    break;
-                case WeaponType.Scythe:
-                    mastery = Mastery.Scythe;
-                    break;
-                case WeaponType.Crossbow:
-                    mastery = Mastery.Crossbow;
-                    break;
-                case WeaponType.Mace:
-                    mastery = Mastery.Mace;
-                    break;
-                case WeaponType.Slashers:
-                    mastery = Mastery.Slashers;
-                    break;
-                case WeaponType.Axes:
-                    mastery = Mastery.Axes;
-                    break;
-                case WeaponType.FishingPole:
-                    mastery = Mastery.FishingPole;
-                    break;
-            }
-            return mastery;
+            return Mastery.data[type];
         }
 
         public static void SaveWeaponMastery()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/RPGMods/Saves/weapon_mastery_array.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/weapon_Mastery_Effectiveness.json", JsonSerializer.Serialize(Database.playerWeaponEffectiveness, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/weapon_Mastery_Growth.json", JsonSerializer.Serialize(Database.playerWeaponGrowth, Database.JSON_options));
         }
 
-        public static void LoadWeaponMastery()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/weapon_mastery.json"))
+        public static void LoadWeaponMastery() {
+            bool update = false;
+            bool updateGrowth = false;
+            bool updateEfficency = false;
+            if (!File.Exists("BepInEx/config/RPGMods/Saves/weapon_mastery_array.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/weapon_mastery_array.json");
+                if (File.Exists("BepInEx/config/RPGMods/Saves/weapon_mastery.json")) {
+                    update = true;
+                    String temp = File.ReadAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+                    Plugin.Logger.LogWarning("WeaponMastery DB needs updating, is as follows:");
+                    Plugin.Logger.LogWarning(temp);
+                    Database.player_weaponmasteryOld = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterDataOld>>(temp);
+                }
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/weapon_mastery_array.json");
             try
             {
                 Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
@@ -568,6 +513,9 @@ namespace RPGMods.Systems
             {
                 Database.playerWeaponEffectiveness = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterEffectivenessData>>(json);
                 Plugin.Logger.LogWarning("WeaponMasteryEffectiveness DB Populated.");
+                if (update) {
+                    updateEfficency = true;
+                }
             }
             catch
             {
@@ -586,13 +534,66 @@ namespace RPGMods.Systems
             {
                 Database.playerWeaponGrowth = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterGrowthData>>(json);
                 Plugin.Logger.LogWarning("WeaponMasteryGrowth DB Populated.");
+                if (update) {
+                    updateGrowth = true;
+                }
             }
             catch
             {
                 Database.playerWeaponGrowth = new Dictionary<ulong, WeaponMasterGrowthData>();
                 Plugin.Logger.LogWarning("WeaponMasteryGrowth DB Created.");
             }
-
+            if (update) {
+                Plugin.Logger.LogWarning("WeaponMastery DB needs updating");
+                
+                foreach (var entry in Database.player_weaponmasteryOld) {
+                    if (!Object.ReferenceEquals(entry, null)) {
+                        if (!Object.ReferenceEquals(entry.Value, null)) {
+                            WeaponMasterData mastery = new WeaponMasterData();
+                            if (!Object.ReferenceEquals(mastery, null)) {
+                                if (Object.ReferenceEquals(mastery.data, null)) {
+                                    mastery.data = new int[masteryStats.Length];
+                                }
+                                mastery.data[0] = entry.Value.Spell;
+                                mastery.data[1] = entry.Value.None;
+                                mastery.data[2] = entry.Value.Spear;
+                                mastery.data[3] = entry.Value.Sword;
+                                mastery.data[4] = entry.Value.Scythe;
+                                mastery.data[5] = entry.Value.Crossbow;
+                                mastery.data[6] = entry.Value.Mace;
+                                mastery.data[7] = entry.Value.Slashers;
+                                mastery.data[8] = entry.Value.Axes;
+                                mastery.data[9] = entry.Value.FishingPole;
+                                Database.player_weaponmastery[entry.Key] = mastery;
+                            }
+                            Plugin.Logger.LogWarning("WeaponMastery DB transitioned for " + entry.Key);
+                        }
+                    }
+                }
+            }
+            if (updateEfficency) {
+                foreach (var entry in Database.playerWeaponEffectiveness) {
+                    float spell = entry.Value.data[entry.Value.data.Length-1];
+                    for(int i = entry.Value.data.Length-1; i > 0; i--) {
+                        entry.Value.data[i] = entry.Value.data[i-1];
+                    }
+                    entry.Value.data[0] = spell;
+                    Plugin.Logger.LogWarning("mastery efficency DB transitioned for " + entry.Key);
+                }
+            }
+            if (updateGrowth) {
+                foreach (var entry in Database.playerWeaponGrowth) {
+                    float spell = entry.Value.data[entry.Value.data.Length - 1];
+                    for (int i = entry.Value.data.Length-1; i > 0; i--) {
+                        entry.Value.data[i] = entry.Value.data[i - 1];
+                    }
+                    entry.Value.data[0] = spell;
+                    Plugin.Logger.LogWarning("mastery growth DB transitioned for " + entry.Key);
+                }
+            }
+            if (update) {
+                SaveWeaponMastery();
+            }
         }
     }
 }
