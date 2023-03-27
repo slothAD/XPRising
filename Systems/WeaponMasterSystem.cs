@@ -337,6 +337,10 @@ namespace RPGMods.Systems
             else
             {
                 Mastery = new WeaponMasterData();
+                Mastery.data = new int[masteryStats.Length];
+                for(int i = 0; i < Mastery.data.Length; i++) {
+                    Mastery.data[i] = 0;
+                }
 
                 if (NoneExpertise < 0) NoneExpertise = 0;
                 if (Value < 0) Value = 0;

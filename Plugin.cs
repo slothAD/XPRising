@@ -465,7 +465,10 @@ namespace RPGMods
             WeaponMasterSystem.SpellStats = parseIntArrayConifg(SpellStats.Value);
             WeaponMasterSystem.SpellRates = parseFloatArrayConifg(SpellRates.Value);
 
-            WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
+            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats };
+            WeaponMasterSystem.masteryRates = new float[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates };
+
+        WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
             WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;
             WeaponMasterSystem.growthSubSystemEnabled = effectivenessSubSystemEnabled.Value;
             WeaponMasterSystem.minGrowth = minGrowth.Value;
