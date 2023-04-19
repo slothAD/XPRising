@@ -14,6 +14,7 @@ using Unity.Entities;
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Globalization;
 
 #if WETSTONE
 using Wetstone.API;
@@ -468,7 +469,7 @@ namespace RPGMods
             WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats };
             WeaponMasterSystem.masteryRates = new float[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates };
 
-        WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
+            WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
             WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;
             WeaponMasterSystem.growthSubSystemEnabled = effectivenessSubSystemEnabled.Value;
             WeaponMasterSystem.minGrowth = minGrowth.Value;
@@ -483,26 +484,35 @@ namespace RPGMods
         }
 
         public static int[] parseIntArrayConifg(string data) {
+            Plugin.Logger.LogInfo(">>>parsing int array: " + data);
             var match = Regex.Match(data, "([0-9]+)");
             List<int> list = new List<int>();
             while (match.Success) {
                 try {
-                    list.Add(int.Parse(match.Value));
+                    Plugin.Logger.LogInfo(">>>got int: " + match.Value);
+                    int temp = int.Parse(match.Value, CultureInfo.InvariantCulture);
+                    Plugin.Logger.LogInfo(">>>int parsed into: " + temp);
+                    list.Add(temp);
                 }
                 catch {
                     Plugin.Logger.LogWarning("Error interperting integer value: " + match.ToString());
                 }
                 match = match.NextMatch();
             }
+            Plugin.Logger.LogInfo(">>>done parsing int array");
             int[] result = list.ToArray();
             return result;
         }
         public static float[] parseFloatArrayConifg(string data) {
+            Plugin.Logger.LogInfo(">>>parsing float array: " + data);
             var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<float> list = new List<float>();
             while (match.Success) {
                 try {
-                    list.Add(float.Parse(match.Value));
+                    Plugin.Logger.LogInfo(">>>got float: " + match.Value);
+                    float temp = float.Parse(match.Value, CultureInfo.InvariantCulture);
+                    Plugin.Logger.LogInfo(">>>float parsed into: " + temp);
+                    list.Add(temp);
                 }
                 catch {
                     Plugin.Logger.LogWarning("Error interperting float value: " + match.ToString());
@@ -510,6 +520,8 @@ namespace RPGMods
                 
                 match = match.NextMatch();
             }
+
+            Plugin.Logger.LogInfo(">>>done parsing float array");
             float[] result = list.ToArray();
             return result;
         }

@@ -274,6 +274,7 @@ namespace RPGMods.Systems
             float effectiveness = 1;
             if (Database.playerWeaponEffectiveness.TryGetValue(SteamID, out WeaponMasterEffectivenessData effectivenessData) && effectivenessSubSystemEnabled)
                 effectiveness = effectivenessData.data[type];
+            effectiveness = Math.Max(1.0f, effectiveness);
             if (type >= masteryRates.Length){
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
                     Output.SendLore(targetUserEntity, $"Type {type} out of bounds for masteryRates, max of {masteryRates.Length - 1}");
@@ -328,17 +329,16 @@ namespace RPGMods.Systems
             if (Type == (int)WeaponType.None+1){
                 if (Value > 0) Value = Value * 2;
             }
-            bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
-
-            if (isPlayerFound){
-                
+            WeaponMasterData Mastery;
+            try {
+                bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out Mastery);
                 Mastery.data[Type] += Value;
+                Mastery.data[Type] = Math.Min(Mastery.data[Type], MaxMastery);
             }
-            else
-            {
+            catch (NullReferenceException e) {
                 Mastery = new WeaponMasterData();
                 Mastery.data = new int[masteryStats.Length];
-                for(int i = 0; i < Mastery.data.Length; i++) {
+                for (int i = 0; i < Mastery.data.Length; i++) {
                     Mastery.data[i] = 0;
                 }
 

@@ -81,7 +81,7 @@ namespace RPGMods.Systems
             int level_diff = UnitLevel.Level - player_level;
             //if (level_diff > 10) level_diff = 10;
 
-            if (level_diff > 0) EXPGained = (int)(EXPGained * (1 + level_diff * 0.1) * EXPMultiplier);
+            if (level_diff >= 0) EXPGained = (int)(EXPGained * (1 + level_diff * 0.1) * EXPMultiplier);
             else{
                 float xpMult = level_diff * -1.0f;
                 xpMult = xpMult / (xpMult + 10.0f);
