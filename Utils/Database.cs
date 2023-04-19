@@ -96,6 +96,11 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, DateTime> player_decaymastery_logout { get; set; }
         public static Dictionary<ulong, bool> player_log_mastery { get; set; }
 
+        //-- -- Bloodline System
+        public static Dictionary<ulong, BloodlineData> playerBloodline { get; set; }
+        public static Dictionary<ulong, DateTime> playerDecayBloodlineLogout { get; set; }
+        public static Dictionary<ulong, bool> playerLogBloodline { get; set; }
+
         //-- -- World Event System
         public static ConcurrentDictionary<int, FactionData> FactionStats { get; set; }
         public static HashSet<string> IgnoredMonsters { get; set; }

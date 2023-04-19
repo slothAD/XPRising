@@ -29,13 +29,9 @@ public class DeathEventListenerSystem_Patch
                     if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(ev.Killer, ev.Died);
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerUpdateHeat(ev.Killer, ev.Died);
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(ev.Killer, ev.Died);
+                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(ev.Killer, ev.Died);
                     if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(ev.Killer, ev.Died);
 
-                    /*
-                    Blood bloodData = __instance.EntityManager.GetComponentData<Blood>(ev.Killer);
-                        PlayerCharacter p = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Killer);
-                        bloodData = __instance.EntityManager.GetComponentData<Blood>(p.UserEntity.GetEntityOnServer());
-                    Output.SendLore(ev.Killer, $"Bloodtype -<color=#fffffffe>{bloodData.BloodType} - {bloodData.Quality}%</color>");*/
                 }
                 //-- ----------------------
 
