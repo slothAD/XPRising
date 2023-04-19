@@ -590,5 +590,117 @@ namespace RPGMods.Utils
             Scholar = -586506765,
             Worker = -540707191
         }
+
+        public static String statTypeToString(UnitStatType type)
+        {
+            String name = "Unknown";
+            if (type == UnitStatType.PhysicalPower)
+                name = "Physical Power";
+            if (type == UnitStatType.ResourcePower)
+                name = "Resource Power";
+            if (type == UnitStatType.SiegePower)
+                name = "Siege Power";
+            if (type == UnitStatType.ResourceYield)
+                name = "Resource Yield";
+            if (type == UnitStatType.MaxHealth)
+                name = "Max Health";
+            if (type == UnitStatType.MovementSpeed)
+                name = "MovementSpeed";
+            if (type == UnitStatType.CooldownModifier)
+                name = "CooldownModifier";
+            if (type == UnitStatType.PhysicalResistance)
+                name = "PhysicalResistance";
+            if (type == UnitStatType.FireResistance)
+                name = "FireResistance";
+            if (type == UnitStatType.HolyResistance)
+                name = "HolyResistance";
+            if (type == UnitStatType.SilverResistance)
+                name = "SilverResistance";
+            if (type == UnitStatType.SunChargeTime)
+                name = "SunChargeTime";
+            if (type == UnitStatType.EnergyGain)
+                name = "EnergyGain";
+            if (type == UnitStatType.MaxEnergy)
+                name = "MaxEnergy";
+            if (type == UnitStatType.SunResistance)
+                name = "SunResistance";
+            if (type == UnitStatType.GarlicResistance)
+                name = "GarlicResistance";
+            if (type == UnitStatType.Vision)
+                name = "Vision";
+            if (type == UnitStatType.SpellResistance)
+                name = "SpellResistance";
+            if (type == UnitStatType.Radial_SpellResistance)
+                name = "Radial_SpellResistance";
+            if (type == UnitStatType.SpellPower)
+                name = "SpellPower";
+            if (type == UnitStatType.PassiveHealthRegen)
+                name = "PassiveHealthRegen";
+            if (type == UnitStatType.PhysicalLifeLeech)
+                name = "PhysicalLifeLeech";
+            if (type == UnitStatType.SpellLifeLeech)
+                name = "SpellLifeLeech";
+            if (type == UnitStatType.PhysicalCriticalStrikeChance)
+                name = "PhysicalCriticalStrikeChance";
+            if (type == UnitStatType.PhysicalCriticalStrikeDamage)
+                name = "PhysicalCriticalStrikeDamage";
+            if (type == UnitStatType.SpellCriticalStrikeChance)
+                name = "SpellCriticalStrikeChance";
+            if (type == UnitStatType.SpellCriticalStrikeDamage)
+                name = "SpellCriticalStrikeDamage";
+            if (type == UnitStatType.AttackSpeed)
+                name = "AttackSpeed";
+            if (type == UnitStatType.DamageVsUndeads)
+                name = "DamageVsUndead";
+            if (type == UnitStatType.DamageVsHumans)
+                name = "DamageVsHumans";
+            if (type == UnitStatType.DamageVsDemons)
+                name = "DamageVsDemons";
+            if (type == UnitStatType.DamageVsMechanical)
+                name = "DamageVsMechanical";
+            if (type == UnitStatType.DamageVsBeasts)
+                name = "DamageVsBeasts";
+            if (type == UnitStatType.DamageVsCastleObjects)
+                name = "DamageVsCastleObjects";
+            if (type == UnitStatType.DamageVsPlayerVampires)
+                name = "DamageVsPlayerVampires";
+            if (type == UnitStatType.ResistVsUndeads)
+                name = "ResistVsUndead";
+            if (type == UnitStatType.ResistVsHumans)
+                name = "ResistVsHumans";
+            if (type == UnitStatType.ResistVsDemons)
+                name = "ResistVsDemons";
+            if (type == UnitStatType.ResistVsMechanical)
+                name = "ResistVsMechanical";
+            if (type == UnitStatType.ResistVsBeasts)
+                name = "ResistVsBeasts";
+            if (type == UnitStatType.ResistVsCastleObjects)
+                name = "ResistVsCastleObjects";
+            if (type == UnitStatType.ResistVsPlayerVampires)
+                name = "ResistVsPlayerVampires";
+            if (type == UnitStatType.DamageVsWood)
+                name = "DamageVsWood";
+            if (type == UnitStatType.DamageVsMineral)
+                name = "DamageVsMineral";
+            if (type == UnitStatType.DamageVsVegetation)
+                name = "DamageVsVegetation";
+            if (type == UnitStatType.DamageVsLightArmor)
+                name = "DamageVsLightArmor";
+            if (type == UnitStatType.DamageVsHeavyArmor)
+                name = "DamageVsHeavyArmor";
+            if (type == UnitStatType.DamageVsMagic)
+                name = "DamageVsMagic";
+            if (type == UnitStatType.ReducedResourceDurabilityLoss)
+                name = "ReducedResourceDurabilityLoss";
+            if (type == UnitStatType.PrimaryAttackSpeed)
+                name = "PrimaryAttackSpeed";
+            if (type == UnitStatType.ImmuneToHazards)
+                name = "ImmuneToHazards";
+            if (type == UnitStatType.PrimaryLifeLeech)
+                name = "PrimaryLifeLeech";
+            if (type == UnitStatType.HealthRecovery)
+                name = "HealthRecovery";
+            return name;
+        }
     }
 }

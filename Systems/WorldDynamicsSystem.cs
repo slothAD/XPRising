@@ -22,11 +22,17 @@ namespace RPGMods.Systems
             if (Plugin.isInitialized == false || loopInProgress == true) return;
 
             loopInProgress = true;
+            if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
             foreach (var faction in Database.FactionStats)
             {
                 if (faction.Value.Active == false) continue;
 
                 var factionStats = faction.Value;
+                if(factionStats.RequiredPower < 0) {
+                    Plugin.Logger.LogWarning(factionStats.Name + "'s required power to levelup is negative, fixing it now.");
+                    factionStats.RequiredPower *= -1;
+                    Database.FactionStats[faction.Key] = factionStats;
+                }
                 if (growOnKill){
                     factionStats.StoredPower -= factionStats.DailyPower;
                 }
@@ -60,24 +66,24 @@ namespace RPGMods.Systems
                     factionStats.StoredPower = 0;
                 }
                 if (factionStats.Level < factionStats.MinLevel) factionStats.Level = factionStats.MinLevel;
-                Database.FactionStats[factionKey] = factionStats;
             }
+            Database.FactionStats[factionKey] = factionStats;
 
         }
 
-        public static void MobKillMonitor(Entity entity)
-        {
+        public static void MobKillMonitor(Entity entity){
             if (!em.HasComponent<FactionReference>(entity)) return;
 
             var factionID = em.GetComponentData<FactionReference>(entity).FactionGuid._Value.GetHashCode();
-            if (!Database.FactionStats.TryGetValue(factionID, out var factionStats)) return;
+            if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
+            if (!Database.FactionStats.TryGetValue(factionID, out FactionData factionStats)) return;
 
             if (factionStats.Active == false) return;
 
-            if (growOnKill){
+            if (growOnKill) {
                 factionStats.StoredPower += 1;
             }
-            else{
+            else {
                 factionStats.ActivePower -= 1;
             }
             checkForLevelup(factionStats, factionID);
@@ -92,6 +98,7 @@ namespace RPGMods.Systems
             if (Database.IgnoredMonstersGUID.Contains(mobGUID)) return;
 
             var factionID = em.GetComponentData<FactionReference>(entity).FactionGuid._Value.GetHashCode();
+            if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
             if (!Database.FactionStats.TryGetValue(factionID, out var factionStats)) return;
 
             if (factionStats.Active == false) return;
