@@ -84,7 +84,7 @@ namespace RPGMods.Systems
             if (level_diff >= 0) EXPGained = (int)(EXPGained * (1 + level_diff * 0.1) * EXPMultiplier);
             else{
                 float xpMult = level_diff * -1.0f;
-                xpMult = xpMult / (xpMult + 10.0f);
+                xpMult = 1.0f - (xpMult / (xpMult + 10.0f));
                 EXPGained = (int)(EXPGained * xpMult);
             }
             /*
