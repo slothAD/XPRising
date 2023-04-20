@@ -6,16 +6,18 @@ using Unity.Entities;
 
 namespace RPGMods.Commands
 {
-    [Command("mastery, m", Usage = "mastery [<log> <on>|<off>] [<reset> all|(mastery type)]", Description = "Display your current mastery progression, toggle the gain notification, or reset your mastery to gain effectiveness.")]
-    public static class Mastery
+    [Command("bloodline, bl", Usage = "bloodline [<log> <on>|<off>] [<reset> all|(bloodline)]", Description = "Display your current bloodline progression, toggle the gain notification, or reset your bloodline to gain effectiveness.")]
+    public static class Bloodline
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
         public static bool detailedStatements = true;
-        public static void Initialize(Context ctx)
-        {
-            if (!WeaponMasterSystem.isMasteryEnabled)
-            {
-                Output.CustomErrorMessage(ctx, "Weapon Mastery system is not enabled.");
+        public static void Initialize(Context ctx) {
+            if (!Bloodlines.areBloodlinesEnabled) {
+                Output.CustomErrorMessage(ctx, "Bloodline system is not enabled.");
+                return;
+            }
+            else {
+                Output.CustomErrorMessage(ctx, "The Bloodline system command is not yet coded.");
                 return;
             }
             var SteamID = ctx.Event.User.PlatformId;

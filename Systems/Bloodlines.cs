@@ -33,6 +33,42 @@ namespace RPGMods.Systems
         public static Boolean mercilessBloodlines = false;
         public static int MaxBloodlineStrength = 100000;
 
+        // Idk how to do this elegantly and allow it to be bound to a config.
+        public static int[] draculaStats = { };
+        public static int[] draculaMinStrength = { };
+        public static float[] draculaRates = { };
+
+        public static int[] arwenStats = { };
+        public static int[] arwenMinStrength = { };
+        public static float[] arwenRates = { };
+
+        public static int[] ilvrisStats = { };
+        public static int[] ilvrisMinStrength = { };
+        public static float[] ilvrisRates = { };
+
+        public static int[] ayaStats = { };
+        public static int[] ayaMinStrength = { };
+        public static float[] ayaRates = { };
+
+        public static int[] nytheriaStats = { };
+        public static int[] nytheriaMinStrength = { };
+        public static float[] nytheriaRates = { };
+
+        public static int[] hadubertStats = { };
+        public static int[] hadubertMinStrength = { };
+        public static float[] hadubertRates = { };
+
+        public static int[] reiStats = { };
+        public static int[] reiMinStrength = { };
+        public static float[] reiRates = { };
+
+
+        public static int[][] bloodlineStats = { draculaStats, arwenStats, ilvrisStats, ayaStats, nytheriaStats, hadubertStats, reiStats };
+        public static int[][] bloodlineMinStrengths = { draculaMinStrength, arwenMinStrength, ilvrisMinStrength, ayaMinStrength, nytheriaMinStrength, hadubertMinStrength, reiMinStrength };
+        public static float[][] bloodlineRates = { draculaRates, arwenRates, ilvrisRates, ayaRates, nytheriaRates, hadubertRates, reiRates };
+
+
+
         private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
 
         private static readonly Random rand = new Random();

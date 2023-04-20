@@ -580,8 +580,7 @@ namespace RPGMods.Utils
             public bool has_value;
         }
 
-        public enum BloodType
-        {
+        public enum BloodType {
             Frailed = -899826404,
             Creature = -77658840,
             Warrior = -1094467405,
@@ -589,6 +588,15 @@ namespace RPGMods.Utils
             Brute = 581377887,
             Scholar = -586506765,
             Worker = -540707191
+        }
+        public enum BloodCategory {
+            Frailed = 0,
+            Creature = 1,
+            Warrior = 2,
+            Rogue = 3,
+            Brute = 4,
+            Scholar = 5,
+            Worker = 6
         }
 
         public static String statTypeToString(UnitStatType type)
