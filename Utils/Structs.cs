@@ -225,23 +225,14 @@ namespace RPGMods.Utils
     }
 
 
-    public struct BloodlineData
-    {
-        public int warrior { get; set; }
-        public int brute { get; set; }
-        public int rogue { get; set; }
-        public int scholar { get; set; }
-        public int worker { get; set; }
-        public int creature { get; set; }
-
-        public BloodlineData(int warriorIn = 0, int bruteIn = 0, int rogueIn = 0, int scholarIn = 0, int workerIn = 0, int creatureIn = 0)
-        {
-            warrior = warriorIn;
-            brute = bruteIn;
-            rogue = rogueIn;
-            scholar = scholarIn;
-            worker = workerIn;
-            creature = creatureIn;
+    public struct BloodlineData{
+        public int[] strength { get; set; }
+        public int[] efficency { get; set; }
+        public int[] growth { get; set; }
+        public BloodlineData(int[] strengthIn, int[] efficencyIn, int[] growthIn){
+            strength = strengthIn;
+            efficency = efficencyIn;
+            growth = growthIn;
 		}
 	}
 	
