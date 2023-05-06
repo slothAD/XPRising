@@ -5,6 +5,7 @@ using ProjectM.Network;
 using ProjectM;
 using RPGMods.Utils;
 using RPGMods.Systems;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace RPGMods.Hooks
 {
@@ -174,16 +175,16 @@ namespace RPGMods.Hooks
 
             foreach (var entity in entities)
             {
-                PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+                PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);                
                 if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose))
                 {
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
-
+                    
                     PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
                     Entity User = playerCharacter.UserEntity._Entity;
                     User Data = entityManager.GetComponentData<User>(User);
-
+                    
                     var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
 
                     Buffer.Clear();
@@ -232,6 +233,7 @@ namespace RPGMods.Hooks
                     }
 
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+                    if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
 
                     if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
                     {

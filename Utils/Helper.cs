@@ -16,6 +16,22 @@ using System.Collections.Generic;
 
 namespace RPGMods.Utils
 {
+    public class LazyDictionary<TKey,TValue> : Dictionary<TKey,TValue> where TValue : new()
+    {
+        public new TValue this[TKey key]
+        {
+            get 
+            {
+                if (!base.ContainsKey(key)) base.Add(key, new TValue());
+                return base[key];
+            }
+            set 
+            {
+                if (!base.ContainsKey(key)) base.Add(key, value);
+                else base[key] = value;
+            }
+        }
+    }
     public static class Helper
     {
         private static Entity empty_entity = new Entity();
@@ -26,7 +42,7 @@ namespace RPGMods.Utils
         public static UserActivityGridSystem UAGS = default;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
-
+        
         public static bool GetUserActivityGridSystem(out UserActivityGridSystem uags)
         {
             uags = Plugin.Server.GetExistingSystem<AiPrioritizationSystem>()?._UserActivityGridSystem;

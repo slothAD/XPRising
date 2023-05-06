@@ -42,6 +42,8 @@ namespace RPGMods
         private static ConfigEntry<bool> EnableVIPSystem;
         private static ConfigEntry<bool> EnableVIPWhitelist;
         private static ConfigEntry<int> VIP_Permission;
+        private static ConfigEntry<bool> ShouldAllowGearLevel;
+        private static ConfigEntry<bool> EnableLevelRewards;
 
         private static ConfigEntry<double> VIP_InCombat_ResYield;
         private static ConfigEntry<double> VIP_InCombat_DurabilityLoss;
@@ -243,6 +245,8 @@ namespace RPGMods
 
 
             EnableExperienceSystem = Config.Bind("Experience", "Enable", true, "Enable/disable the the Experience System.");
+            ShouldAllowGearLevel = Config.Bind("Experience", "Allow Gear Level", true, "Enable/disable gear level adjustment.");
+            EnableLevelRewards = Config.Bind("Experience", "Enable Level Rewards", true, "Enable rewards per level.");
             MaxLevel = Config.Bind("Experience", "Max Level", 80, "Configure the experience system max level.");
             EXPMultiplier = Config.Bind("Experience", "Multiplier", 1.0f, "Multiply the EXP gained by player.\n" +
                 "Ex.: 0.7f -> Will reduce the EXP gained by 30%\nFormula: UnitKilledLevel * EXPMultiplier");
@@ -423,6 +427,8 @@ namespace RPGMods
             SiegeSystem.GolemSDef.Value = GolemSpellReduction.Value;
 
             ExperienceSystem.isEXPActive = EnableExperienceSystem.Value;
+            ExperienceSystem.ShouldAllowGearLevel = ShouldAllowGearLevel.Value;
+            ExperienceSystem.LevelRewardsOn = EnableLevelRewards.Value;
             ExperienceSystem.MaxLevel = MaxLevel.Value;
             ExperienceSystem.EXPMultiplier = EXPMultiplier.Value;
             ExperienceSystem.VBloodMultiplier = VBloodEXPMultiplier.Value;

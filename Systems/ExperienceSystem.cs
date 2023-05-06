@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
+using Unity.Entities.UniversalDelegates;
 
 namespace RPGMods.Systems
 {
@@ -28,6 +29,8 @@ namespace RPGMods.Systems
         public static int MaxLevel = 80;
         public static double GroupModifier = 0.75;
         public static float GroupMaxDistance = 50;
+        public static bool ShouldAllowGearLevel = true;
+        public static bool LevelRewardsOn = true;
 
         public static double EXPLostOnDeath = 0.10;
 
@@ -182,6 +185,8 @@ namespace RPGMods.Systems
         public static void SetLevel(Entity entity, Entity user, ulong SteamID)
         {
             if (!Database.player_experience.ContainsKey(SteamID)) Database.player_experience[SteamID] = 0;
+            if (!Database.player_abilityIncrease.ContainsKey(SteamID)) Database.player_abilityIncrease[SteamID] = 0;
+
             float level = convertXpToLevel(Database.player_experience[SteamID]);
             if (level < 0) return;
             if (level > MaxLevel)
@@ -197,6 +202,28 @@ namespace RPGMods.Systems
                 {
                     Cache.player_level[SteamID] = level;
                     Helper.ApplyBuff(user, entity, Database.Buff.LevelUp_Buff);
+
+                    if (LevelRewardsOn)
+                    {
+                        //increases by level
+                        for (var i = level_+1; i <= level; i++)
+                        {
+                            //default rewards for leveling up
+                            Database.player_abilityIncrease[SteamID] += 1;
+                            Database.player_level_stats[SteamID][UnitStatType.MaxHealth] += .5f;
+
+                            Helper.ApplyBuff(user, entity, Database.Buff.Buff_VBlood_Perk_Moose);
+
+                            //extra ability point rewards to spend for achieve certain level milestones
+                            switch (i)
+                            {
+                                case 1:
+                                    Database.player_abilityIncrease[SteamID] += 1;
+                                    break;
+                            }
+                        }
+                    }
+
                     if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging))
                     {
                         if (isLogging) 
@@ -213,10 +240,44 @@ namespace RPGMods.Systems
                 Cache.player_level[SteamID] = level;
             }
             Equipment eq_comp = entityManager.GetComponentData<Equipment>(entity);
-            level = level - eq_comp.WeaponLevel._Value - eq_comp.ArmorLevel._Value;
+            
             eq_comp.SpellLevel._Value = level;
 
             entityManager.SetComponentData(entity, eq_comp);
+        }
+
+        /// <summary>
+        /// For use with the LevelUpRewards buffing system.
+        /// </summary>
+        /// <param name="Buffer"></param>
+        /// <param name="Owner"></param>
+        /// <param name="SteamID"></param>
+        public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, Entity Owner, ulong SteamID)
+        {
+            if (!LevelRewardsOn) return;
+            float multiplier = 1;
+            try
+            {
+                foreach (var gearType in Database.player_level_stats[SteamID])
+                {
+                    //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
+                    //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
+                    //Maybe im just dumb, but I checked the array and tried that approach thinking i was double buffing due to logical error                    
+                    if (WeaponMasterSystem.GetWeaponType(Owner) == WeaponType.None) multiplier = 2; 
+
+                    Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                    {
+                        StatType = gearType.Key,
+                        Value = gearType.Value * multiplier,
+                        ModificationType = ModificationType.AddToBase,
+                        Id = ModificationId.NewId(0)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger.LogError($"Could not apply buff, I'm sad for you! {ex.ToString()} ");
+            }
         }
 
         public static int convertXpToLevel(int xp)
@@ -258,6 +319,8 @@ namespace RPGMods.Systems
         {
             File.WriteAllText("BepInEx/config/RPGMods/Saves/player_experience.json", JsonSerializer.Serialize(Database.player_experience, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_exp.json", JsonSerializer.Serialize(Database.player_log_exp, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_abilitypoints.json", JsonSerializer.Serialize(Database.player_abilityIncrease, Database.JSON_options));
+            File.WriteAllText($"BepInEx/config/RPGMods/Saves/player_level_stats.json", JsonSerializer.Serialize(Database.player_level_stats, Database.JSON_options));
         }
 
         public static void LoadEXPData()
@@ -277,6 +340,40 @@ namespace RPGMods.Systems
             {
                 Database.player_experience = new Dictionary<ulong, int>();
                 Plugin.Logger.LogWarning("PlayerEXP DB Created.");
+            }
+
+            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_abilitypoints.json"))
+            {
+                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_abilitypoints.json");
+                stream.Dispose();
+            }
+            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_abilitypoints.json");
+            try
+            {
+                Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
+                Plugin.Logger.LogWarning("PlayerAbilities DB Populated.");
+            }
+            catch
+            {
+                Database.player_abilityIncrease = new Dictionary<ulong, int>();
+                Plugin.Logger.LogWarning("PlayerAbilities DB Created.");
+            }
+
+            if (!File.Exists($"BepInEx/config/RPGMods/Saves/player_level_stats.json"))
+            {
+                FileStream stream = File.Create($"BepInEx/config/RPGMods/Saves/player_level_stats.json");
+                stream.Dispose();
+            }
+            json = File.ReadAllText($"BepInEx/config/RPGMods/Saves/player_level_stats.json");
+            try
+            {
+                Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(json);
+                Plugin.Logger.LogWarning("Player level Stats DB Populated.");
+            }
+            catch
+            {
+                Database.player_level_stats = new LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>();
+                Plugin.Logger.LogWarning("Player level stats DB Created.");
             }
 
             if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_exp.json"))
