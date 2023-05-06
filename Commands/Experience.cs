@@ -76,7 +76,8 @@ namespace RPGMods.Commands
 
                         if (!Database.player_abilityIncrease.ContainsKey(SteamID)) Database.player_abilityIncrease[SteamID] = 0;
 
-                        if (Database.player_abilityIncrease[SteamID] < spendPoints && ctx.Args[1].ToLower() != "show")
+                        if (Database.player_abilityIncrease[SteamID] < spendPoints &&
+                            ctx.Args[1].ToLower() != "show" && ctx.Args[1].ToLower() != "reset")
                         {
                             Output.SendSystemMessage(ctx, "Not enough points!");
                             return;
