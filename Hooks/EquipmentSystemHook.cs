@@ -7,6 +7,7 @@ using ProjectM;
 using RPGMods.Systems;
 using RPGMods.Utils;
 using System;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace RPGMods.Hooks
 {
@@ -24,8 +25,21 @@ namespace RPGMods.Hooks
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities)
                 {
+                    Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                     ArmorLevel level = entityManager.GetComponentData<ArmorLevel>(entity);
-                    level.Level = 0;
+                    if (!ExperienceSystem.ShouldAllowGearLevel)
+                    {
+                        level.Level = 0;
+                    }
+                    else
+                    {
+                        Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                        ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
+
+                        float levelEfficiency = (level.Level / 10 - ExperienceSystem.getLevel(SteamID) / 3) / 2;
+                        if (levelEfficiency > 0) level.Level = levelEfficiency * 10;
+                    }
+
                     entityManager.SetComponentData(entity, level);
                 }
             }
@@ -63,22 +77,39 @@ namespace RPGMods.Hooks
 
                 foreach (var entity in entities)
                 {
+                    Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
+                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
                     if (ExperienceSystem.isEXPActive)
                     {
                         WeaponLevel level = entityManager.GetComponentData<WeaponLevel>(entity);
-                        level.Level = 0;
+                        if (!ExperienceSystem.ShouldAllowGearLevel)
+                        {
+                            level.Level = 0;                            
+                        }
+                        else
+                        {                            
+                            ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
+
+                            float levelEfficiency = (level.Level * .3f - ExperienceSystem.getLevel(SteamID) / 3) / 2;
+                            if (levelEfficiency > 0) level.Level = levelEfficiency / .3f;
+
+                            if (ExperienceSystem.ShouldAllowGearLevel)
+                            {
+                                if (!Cache.player_geartypedonned.ContainsKey(SteamID) || Cache.player_geartypedonned[SteamID] == null)
+                                    Cache.player_geartypedonned[SteamID] = new System.Collections.Generic.Dictionary<UnitStatType, float>();
+                                //if (!Cache.player_geartypedonned[SteamID].ContainsKey(UnitStatType.PhysicalPower)) 
+                                //    Cache.player_geartypedonned[SteamID].Add(UnitStatType.PhysicalPower, ExperienceSystem.convertXpToLevel(Database.player_experience[SteamID]) * 10);
+                                
+                            }
+                        }                      
                         entityManager.SetComponentData(entity, level);
                     }
                     if (WeaponMasterSystem.isMasteryEnabled)
-                    {
-                        Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                        if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
-
-                        PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-                        Entity User = playerCharacter.UserEntity._Entity;
-
-                        Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
+                    {                        
+                        if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;                       
                     }
+                    if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn) 
+                        Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
                 }
             }
         }
@@ -100,7 +131,37 @@ namespace RPGMods.Hooks
         }
     }
 
-    [HarmonyPatch(typeof(SpellLevelSystem_Spawn), nameof(SpellLevelSystem_Spawn.OnUpdate))]
+    [HarmonyPatch(typeof(WeaponLevelSystem_Destroy), nameof(WeaponLevelSystem_Destroy.OnUpdate))]
+    public class WeaponLevelSystem_Destroy_Patch
+    {
+        private static void Prefix(WeaponLevelSystem_Destroy __instance)
+        {
+            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+
+            if (ExperienceSystem.isEXPActive && (ExperienceSystem.LevelRewardsOn || ExperienceSystem.ShouldAllowGearLevel))
+            {
+                EntityManager entityManager = __instance.EntityManager;
+                NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+                foreach (var entity in entities)
+                {
+                    Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
+                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                    ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
+                    if (ExperienceSystem.ShouldAllowGearLevel) //experiment with buffing for equipment based on level.
+                    {
+                        if (!Cache.player_geartypedonned.ContainsKey(SteamID) || Cache.player_geartypedonned[SteamID] == null)
+                            Cache.player_geartypedonned[SteamID] = new System.Collections.Generic.Dictionary<UnitStatType, float>();
+                        //we can accomplish gear bonuses per level using a similar buffing system approach as ability point buffs for leveling.
+                        //might need a better data structure...but should be fine in the cache only.
+                    }
+                    //reset buffs for being unarmed
+                    Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
+                }
+            }
+        }
+    }
+
+        [HarmonyPatch(typeof(SpellLevelSystem_Spawn), nameof(SpellLevelSystem_Spawn.OnUpdate))]
     public class SpellLevelSystem_Spawn_Patch
     {
         private static void Prefix(SpellLevelSystem_Spawn __instance)
