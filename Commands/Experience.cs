@@ -83,95 +83,133 @@ namespace RPGMods.Commands
                             return;
                         }
 
-                        switch (abilityName.ToLower())
+                        if (Database.experience_class_stats.ContainsKey(abilityName.ToLower()))
                         {
-                            case "health":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.MaxHealth] += 0.5f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on MaxHealth. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "ppower":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.PhysicalPower] += .25f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on PhysicalPower. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "spower":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.SpellPower] += .25f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on SpellPower. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "presist":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.PhysicalResistance] += 0.05f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on PhysicalResistance. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "sresist":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.SpellResistance] += 0.05f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on SpellResistance. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "beasthunter":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsBeasts] += .25f * spendPoints;
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsBeasts] += 0.025f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on BeastHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "demonhunter":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsDemons] += .25f * spendPoints;
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsDemons] += 0.025f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on DemonHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "manhunter":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsHumans] += 0.025f * spendPoints;
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsHumans] += .25f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on ManHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "undeadhunter":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsUndeads] += 0.25f * spendPoints;
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsUndeads] += .025f * spendPoints;
-                                Database.player_abilityIncrease[SteamID] -= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on UndeadHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "farmer":
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResourceYield] += .1f * spendPoints;
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.PhysicalPower] -= .5f * spendPoints;
-                                Database.player_level_stats[SteamID][ProjectM.UnitStatType.SpellPower] -= .25f * spendPoints;
-                                Database.player_abilityIncrease[SteamID]-= spendPoints;
-                                Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                                Output.SendSystemMessage(ctx, $"Spent {spendPoints} on Farmer. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                break;
-                            case "show":
-                                foreach (var buff in Database.player_level_stats[SteamID])
-                                {                                    
-                                    Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
-                                }
-                                break;
-                            case "reset":
-                                if (!isAllowed) return;
-                                Database.player_level_stats[SteamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
-                                Database.player_abilityIncrease[SteamID] = 0;
-                                Cache.player_level[SteamID] = 0;
-                                ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
-                                Output.SendSystemMessage(ctx, "Ability level up points reset.");
-                                break;
-                            default:
-                                Output.SendSystemMessage(ctx, "Type \".xp ability show\" to see current buffs.");
-                                Output.SendSystemMessage(ctx, $"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                Output.SendSystemMessage(ctx, "You can spend ability points on:");
-                                Output.SendSystemMessage(ctx, "health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
-                                break;
+                            foreach (var buff in Database.experience_class_stats[abilityName.ToLower()])
+                            {
+                                Database.player_level_stats[SteamID][buff.Key] += buff.Value * spendPoints;
+                            }
+
+                            Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                            Output.SendSystemMessage(ctx, $"Spent {spendPoints}. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                            foreach (var buff in Database.player_level_stats[SteamID])
+                            {
+                                Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
+                            }
                         }
+                        else switch(abilityName.ToLower())
+                            {
+                                case "show":
+                                    foreach (var buff in Database.player_level_stats[SteamID])
+                                    {
+                                        Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
+                                    }
+                                    break;
+                                case "reset":
+                                    if (!isAllowed) return;
+                                    Database.player_level_stats[SteamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
+                                    Database.player_abilityIncrease[SteamID] = 0;
+                                    Cache.player_level[SteamID] = 0;
+                                    ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
+                                    Output.SendSystemMessage(ctx, "Ability level up points reset.");
+                                    break;
+                                default:
+                                    Output.SendSystemMessage(ctx, "Type \".xp ability show\" to see current buffs.");
+                                    Output.SendSystemMessage(ctx, $"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                                    Output.SendSystemMessage(ctx, "You can spend ability points on:");
+                                    Output.SendSystemMessage(ctx, "health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
+                                    break;
+                            }
+
+                        //switch (abilityName.ToLower())
+                        //{
+                        //    case "health":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.MaxHealth] += 0.5f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on MaxHealth. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "ppower":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.PhysicalPower] += .5f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on PhysicalPower. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "spower":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.SpellPower] += .5f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on SpellPower. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "presist":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.PhysicalResistance] += 0.05f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on PhysicalResistance. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "sresist":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.SpellResistance] += 0.05f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on SpellResistance. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "beasthunter":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsBeasts] += .1f * spendPoints;
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsBeasts] += 0.025f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on BeastHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "demonhunter":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsDemons] += .1f * spendPoints;
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsDemons] += 0.025f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on DemonHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "manhunter":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsHumans] += 0.025f * spendPoints;
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsHumans] += .1f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on ManHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "undeadhunter":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.DamageVsUndeads] += 0.1f * spendPoints;
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResistVsUndeads] += .025f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID] -= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on UndeadHunter. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "farmer":
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.ResourceYield] += .1f * spendPoints;
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.PhysicalPower] -= 1f * spendPoints;
+                        //        Database.player_level_stats[SteamID][ProjectM.UnitStatType.SpellPower] -= .5f * spendPoints;
+                        //        Database.player_abilityIncrease[SteamID]-= spendPoints;
+                        //        Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                        //        Output.SendSystemMessage(ctx, $"Spent {spendPoints} on Farmer. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        break;
+                        //    case "show":
+                        //        foreach (var buff in Database.player_level_stats[SteamID])
+                        //        {                                    
+                        //            Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
+                        //        }
+                        //        break;
+                        //    case "reset":
+                        //        if (!isAllowed) return;
+                        //        Database.player_level_stats[SteamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
+                        //        Database.player_abilityIncrease[SteamID] = 0;
+                        //        Cache.player_level[SteamID] = 0;
+                        //        ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
+                        //        Output.SendSystemMessage(ctx, "Ability level up points reset.");
+                        //        break;
+                        //    default:
+                        //        Output.SendSystemMessage(ctx, "Type \".xp ability show\" to see current buffs.");
+                        //        Output.SendSystemMessage(ctx, $"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        //        Output.SendSystemMessage(ctx, "You can spend ability points on:");
+                        //        Output.SendSystemMessage(ctx, "health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
+                        //        break;
+                        //}
                     }
                     catch (System.Exception ex)
                     {

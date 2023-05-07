@@ -88,7 +88,13 @@ namespace RPGMods.Utils
         /// <summary>
         /// Buff stat bonuses from leveling
         /// </summary>
-        public static LazyDictionary<ulong, LazyDictionary<UnitStatType,float>> player_level_stats { get; set; }        
+        public static LazyDictionary<ulong, LazyDictionary<UnitStatType,float>> player_level_stats { get; set; }   
+        /// <summary>
+        /// A configuration database of class stats per ability point spent.
+        /// </summary>
+        public static Dictionary<string, Dictionary<UnitStatType, float>> experience_class_stats { get; set; }
+        public static bool ErrorOnLoadingExperienceClasses = false;
+
         public static Dictionary<ulong, bool> player_log_exp { get; set; }
 
         //-- -- PvP System

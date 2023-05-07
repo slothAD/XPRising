@@ -321,6 +321,7 @@ namespace RPGMods.Systems
             File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_exp.json", JsonSerializer.Serialize(Database.player_log_exp, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/player_abilitypoints.json", JsonSerializer.Serialize(Database.player_abilityIncrease, Database.JSON_options));
             File.WriteAllText($"BepInEx/config/RPGMods/Saves/player_level_stats.json", JsonSerializer.Serialize(Database.player_level_stats, Database.JSON_options));
+            if (!Database.ErrorOnLoadingExperienceClasses) File.WriteAllText($"BepInEx/config/RPGMods/Saves/experience_class_stats.json", JsonSerializer.Serialize(Database.experience_class_stats, Database.JSON_options));
         }
 
         public static void LoadEXPData()
@@ -342,6 +343,33 @@ namespace RPGMods.Systems
                 Plugin.Logger.LogWarning("PlayerEXP DB Created.");
             }
 
+            //we have to know the difference here between a deserialization failure or initialization since if the file is there we don't 
+            //want to overwrite it in case we typoed a unitstattype or some other typo in the experience class config file.
+            var wasExperienceClassesCreated = false;
+            if (!File.Exists("BepInEx/config/RPGMods/Saves/experience_class_stats.json"))
+            {
+                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/experience_class_stats.json");
+                wasExperienceClassesCreated = true;
+                stream.Dispose();
+            }
+            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/experience_class_stats.json");
+            try
+            {
+                Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
+                Plugin.Logger.LogWarning("Experience class stats DB Populated.");
+                Database.ErrorOnLoadingExperienceClasses = false;
+            }
+            catch (Exception ex)
+            {
+                initializeClassData();
+                if (wasExperienceClassesCreated) Plugin.Logger.LogWarning("Experience class stats DB Created.");
+                else
+                {
+                    Plugin.Logger.LogError($"Problem loading experience classes from file. {ex.Message}");
+                    Database.ErrorOnLoadingExperienceClasses = true;
+                }
+            }
+
             if (!File.Exists("BepInEx/config/RPGMods/Saves/player_abilitypoints.json"))
             {
                 FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_abilitypoints.json");
@@ -355,7 +383,7 @@ namespace RPGMods.Systems
             }
             catch
             {
-                Database.player_abilityIncrease = new Dictionary<ulong, int>();
+                Database.player_abilityIncrease = new Dictionary<ulong, int>();                
                 Plugin.Logger.LogWarning("PlayerAbilities DB Created.");
             }
 
@@ -392,6 +420,12 @@ namespace RPGMods.Systems
                 Database.player_log_exp = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Created.");
             }
+        }
+
+        private static void initializeClassData()
+        {
+            Database.experience_class_stats = new Dictionary<string, Dictionary<UnitStatType, float>>();
+            //maybe someday we'll have a default
         }
     }
 }
