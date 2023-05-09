@@ -1,23 +1,42 @@
 # RPGMods
 ### Server Only Mod
-Server only mod for RPG systems, which also includes ChatCommands with bug fixes.\
+Server only mod for RPG systems, which also includes ChatCommands with bug fixes.
 Read the changelog for extra details.
+My Fork adds a number of config options to mastery and allows you to invert the dynamic faction system, making them stronger when killed.
 #### [Video Demo of Experience & Mastery](https://streamable.com/k2p3bm)
 
 ## Experience System
+<details>
+<summary>Experience System</summary>
 Disable the VRising Gear Level system and replace it with a traditional RPG experience system,\
 complete with exp sharing between clan members or other players designated as allies.
+</details>
+Now with a class system, currently undocumented.
 
 ## Mastery System
+<details>
+<summary>Mastery System</summary>
 > ### Weapon Mastery
-Mastering a weapon will now progressively give extra bonuses to the character's stats.\
+Mastering a weapon will now progressively give extra bonuses to the character's stats, all of which are configurable.\
 Weapon mastery will increase when the weapon is used to kill a creature, and while in combat to a maximum of 60 seconds. (0.001%/Sec)\
-Spell mastery can only increase and take effect when no weapon is equipped.
+Spell mastery can only increase and take effect when no weapon is equipped. Unless changed in the configuration options. \
+New Growth Subsystem. Off by default, but turn it on with efficency, and when you reset a mastery it will be faster to level up, or slower, however you configure it.
+
 > ### Mastery Decay
 When the vampire goes to sleep (offline), all their mastery will continuously decay per minute passed while offline.\
 This decay will keep on counting even while the server is offline.
 
+> ### Efficency System
+Off by default, when a vampire feels ready, they can type .mastery reset all, or .mastery reset sword or any other weapon type, to reset their mastery values to 0, but make their mastery that much more effective in the future. Thus a vampire who reaches 100% mastery in sword, then types .mastery reset sword will be reset back to 0% mastery, but when calculating the bonus from mastery, will now be considered to have twice as much mastery as they currently do, so if they reach 100% mastery, they will get a bonus like they have 200%, if they reset again at this point, it will go up to 300% efficency, thus a mastery of 50% would now be like 150% and 10% would be 30% and so on. The Efficency is specifc to each weapon type, so you could have 1000% efficency with swords, 250% with unarmed and 100% with axes.
+
+> ### Growth System
+Off by default, and only works if efficency is also on, but when you reset, the Growth system will change how fast you get mastery in the future based on what you reset at, so if the growth is set to 1, and you reset with 50% mastery, you will now gain new mastery 50% faster, if you were instead to then reset with another 50% mastery, you would now gain mastery twice as fast. The growth is specific for each weapon, same as with efficency. If the config for growth is set to -1, then it will act as a divisior on the amount gained, so if you reset with 100% mastery and growth config at -1, you would gain half as much mastery, if you reset again at 100% mastery, it would be a third, and so on.
+
+</details>
+
 ## HunterHunted System
+<details>
+<summary>Heat System</summary>
 A new system where every NPC you kill contributes to a heat system,\
 if you kill too many NPCs from that faction, eventually your heat level will rise higher and higher.\
 
@@ -31,8 +50,11 @@ Note:
 - Ambush may only occur when the player is in combat.
 - All mobs spawned by this system is assigned to Faction_VampireHunters
 ```
+</details>
 
 ## PvP System
+<details>
+<summary>PvP System</summary>
 Configurable PvP kill serverwide announcement.\
 Kill/Death will also be recorded, and a ladder board for the Top 10 K/D on the server.
 > ### Toggle PvP Commnd
@@ -53,6 +75,7 @@ Punishment will apply a debuff that reduces player combat efficiency.
 * -25% Physical & spell power
 * -15 Physical, spell, holy, and fire resistance
 * Gear level down (Overridden by EXP system if active)
+</details>
 > ### Honor System
 All vampires start with Neutral honor rank.\
 Killing a vampire with a neutral or positive honor rank will deduct some honor points,\
@@ -185,6 +208,13 @@ and 100 as the highest permission (admin).
 ## Custom Ban System
 You can now ban a player for the specified duration in days using the .ban/.unban command.\
 `WARNING` If you remove RPGMods, all the banned users via the command will no longer be banned!
+
+## Localization System
+Removed as it was causing issues in some other localities... Isn't programming for a global audience fun?
+<details>
+<summary>Old Description</summary>
+Now allows all text from RPGMods to be customized to your language, a Language.Json file will be generated in the Bepinex/Config/RPGMods subfolder, to provide a translation, where it has something like {"\" not found.", "\" not found."} change it to something like {\" not found.", "\" 見つけありません"} to change the displayed text.
+</details>
 
 ## Config
 <details>
@@ -368,6 +398,65 @@ Multiply Mastery gained from VBlood kill.
 Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.
 - `Decay Value` [default `1`]\
 Mastery will decay by this amount for every decay tick. (1 -> 0.001%)
+- `X Stats`
+The stat IDs that the mastery of a given weapon should boost, as shown on the table below. the amount of entries here MUST match the amount in the paired X Rates
+- `X Rates`
+The amount of a stat per mastery percentage, except in the case of CDR where it is the amount of mastery percentage to be 50% cdr
+
+Stat IDs copied from the code.
+PhysicalPower = 0,
+ResourcePower = 1,
+SiegePower = 2,
+ResourceYield = 3,
+MaxHealth = 4,
+MovementSpeed = 5,
+CooldownModifier = 7,
+PhysicalResistance = 8,
+FireResistance = 9,
+HolyResistance = 10,
+SilverResistance = 11,
+SunChargeTime = 12,
+EnergyGain = 17,
+MaxEnergy = 18,
+SunResistance = 19,
+GarlicResistance = 20,
+Vision = 22,
+SpellResistance = 23,
+Radial_SpellResistance = 24,
+SpellPower = 25,
+PassiveHealthRegen = 26,
+PhysicalLifeLeech = 27,
+SpellLifeLeech = 28,
+PhysicalCriticalStrikeChance = 29,
+PhysicalCriticalStrikeDamage = 30,
+SpellCriticalStrikeChance = 31,
+SpellCriticalStrikeDamage = 32,
+AttackSpeed = 33,
+DamageVsUndeads = 38,
+DamageVsHumans = 39,
+DamageVsDemons = 40,
+DamageVsMechanical = 41,
+DamageVsBeasts = 42,
+DamageVsCastleObjects = 43,
+DamageVsPlayerVampires = 44,
+ResistVsUndeads = 45,
+ResistVsHumans = 46,
+ResistVsDemons = 47,
+ResistVsMechanical = 48,
+ResistVsBeasts = 49,
+ResistVsCastleObjects = 50,
+ResistVsPlayerVampires = 51,
+DamageVsWood = 52,
+DamageVsMineral = 53,
+DamageVsVegetation = 54,
+DamageVsLightArmor = 55,
+DamageVsHeavyArmor = 56,
+DamageVsMagic = 57,
+ReducedResourceDurabilityLoss = 58,
+PrimaryAttackSpeed = 59,
+ImmuneToHazards = 60,
+PrimaryLifeLeech = 61,
+HealthRecovery = 62
 
 </details>
 
@@ -680,6 +769,7 @@ Diplays your current exp and progression to the next level, or toggle the exp ga
 
 `mastery [<log> <on>|<off>]`\
 Display your current mastery progression, or toggle the mastery gain notification.\
+Use .mastery reset all, or .mastery reset [weapon type] to reset it to 0 adding that amount to your efficency, and a configurable % of that to your mastery growth rate for that weapon. A negative number in growth means that it will decrease multiplicitavely based on that, formula of mastery/(mastery + negative growth rate) is multiplied in.\
 &ensp;&ensp;**Example:** `mastery`\
 &ensp;&ensp;**Example:** `mastery log off`
 
@@ -811,7 +901,99 @@ Notes:
 ## More Information
 <details>
 <summary>Changelog</summary>
-Version 1.0.0 coming!
+
+`1.4.2`
+- Some bug fixes
+- Added the Class system by `SALTYFLEA#3772`
+
+`1.4.1`
+- Actually updated the changelog.
+
+`1.4.0`
+- assorted bug fixes, like mastery going below 0 from decay, or being able to exceed the cap.
+- New Localization overhaul, use the new Language.json file to translate to your language
+
+`1.3.2`
+- assorted bug fixes
+- Fixed an issue where certain localizations would not read the weapon mastery configs correctly.
+
+`1.2.7a`
+- bug fixes
+
+`1.2.7`
+- Activated the efficency and growth subsystems for mastery.
+- fixed an issue with the dynamic faction system, accidentally only saved when units deleveled.
+
+`1.2.6`
+- Made mastery buffs fully configurable.
+
+`1.2.5`
+- Added several config options to the mastery system centered around the spell mastery.
+- Added config option to invert the dynamic faction system, making factions grow as they are killed and weaken as time passes.
+
+`1.2.4`
+- Arguments parse protection for customspawn command.
+- Fixed error with spawning horses using customspawn command.
+- New initialization method to fix crash with a 100% fresh server with no save.
+
+`1.2.3`
+- Added config option to announce all grief kills.
+- Added config option to exclude killing of offline player from PvP Punishment.
+- Fixed unintended effect that causes vermin nest & tomb to have no spawn limit.
+
+`1.2.2`
+- Added anti-cheese system for PvP Punishment without EXP System.
+- Added a config to disable the honor title only with benefits, etc still active.
+- Found an issue with heatspawn faction not applied, no longer this will be an issue.
+- Fixed customspawn command, stupid mistake was made, fixed it was.
+
+`1.2.1`
+- Added mob ignore feature for faction buff.
+- Added mob ignore command for faction buffs.
+- Added power up command.
+
+`1.2.0`
+- Added an initial version for world dynamics.
+- Added worlddynamics commands.
+
+`1.1.3`
+- Hotfix for crash when user is not within a clan.
+
+`1.1.2`
+- Bug fix for exception error on trying to get disabled/offline allies location.
+
+`1.1.1`
+- Attempt at fixing proximity glow bug where the mod can't decide if they're close or far.
+- Clan members are now factored in for honor system siege.
+- Bug fix for dreaded player being able to manually turn siege off.
+
+`1.1.0`
+- Added duration option for customspawn command.
+- Added honor system and a ton of other mechanics it entails.
+- Added siege command.
+- Added rename & adminrename commands.
+- Added playerinfo & myinfo commands to help server admins with some debugging.
+- Fixed hunter hunted not spawning anything on low heat level.
+- Give command will now refuse to run if no arguments is given.
+- SpawnNPC on waypoint now properly accept the spawn counts.
+- Implemented allies caching for better performance.
+- Bug fix with the exp gain for killing lower level mobs.
+- HunterHunted ambush group are now part of vampire hunters faction.
+
+`1.0.2`
+- Added customspawn command.
+- Added property to compile with wetstone or not.
+- Added shutdown command.
+- Bugfix for on defeat message.
+- Added kits json save/load log message.
+- Minor adjustments.
+
+`1.0.1`
+- Added optional wetstone dependency for compiling.
+- Added compabilities with wetstone reload function.
+
+`1.0.0`
+- Removed wetstone dependency.
 
 </details>
 
@@ -819,8 +1001,14 @@ Version 1.0.0 coming!
 <summary>Developer & Contributors</summary>
 
 ### [Discord](https://discord.gg/XY5bNtNm4w)
-### Main Developer
-- `Kaltharos#0001` He's gone dark :( RIP
+### Current Developer
+- `小爛土#7151` - Also known as Shou (like the english word show), Darkon47 on Github.
+If you enjoy the work I have put into this mod, subscribe to my patreon at https://www.patreon.com/user/membership?u=92238426
+
+- `SALTYFLEA#3772` Added the class system, currently otherwise undocumented.
+
+### Original Developer
+- `Kaltharos#0001`
 
 ### Contributors
 #### Without these people, this project will just be a dream. (In no particular order)
@@ -828,7 +1016,7 @@ Version 1.0.0 coming!
 - `Nopey#1337`
 - `syllabicat#0692`
 - `errox#7604`
-- 'Darkon47'
+
 </details>
 
 <details>
@@ -837,6 +1025,7 @@ Version 1.0.0 coming!
 ### General
 - Resetcooldown command does not refresh skills that has charges.
 - Blood command cannot apply "fragile" blood type.
+- Save command is non functional currently.
 
 ### Experience System
 - Some blood buff give a gear level to the character, which would be fixed once they kill something or re-equip accessory.
@@ -851,9 +1040,13 @@ Version 1.0.0 coming!
 
 <details>
 <summary>Planned Features</summary>
-*Continue balancing default settings for classes.
-*Can we move the changes into the UI of the game?
-*Pull Darkon47 content (maintain compatibility)
-*Add to the readme about usage of the new stuff
-*Fix some references in the readme about all the values for unit stats for masteries. Perhaps just change to using the enumeration string in the configs for masteries.
+
+- More optimization! It never hurts to optimize! (not from me)
+- Average reputation of clan members. (Not from me)
+- More dynamic events. (Not from me)
+- Bloodline. Planned for next from me!
+- Kits Option: Limited Uses. (On hold)
+- Explore team/alliance in VRising. (On hold)
+- Need a better name tagging sytem. (On hold)
+
 </details>
