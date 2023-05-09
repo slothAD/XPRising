@@ -811,70 +811,7 @@ Notes:
 ## More Information
 <details>
 <summary>Changelog</summary>
-
-`1.2.4`
-- Arguments parse protection for customspawn command.
-- Fixed error with spawning horses using customspawn command.
-- New initialization method to fix crash with a 100% fresh server with no save.
-
-`1.2.3`
-- Added config option to announce all grief kills.
-- Added config option to exclude killing of offline player from PvP Punishment.
-- Fixed unintended effect that causes vermin nest & tomb to have no spawn limit.
-
-`1.2.2`
-- Added anti-cheese system for PvP Punishment without EXP System.
-- Added a config to disable the honor title only with benefits, etc still active.
-- Found an issue with heatspawn faction not applied, no longer this will be an issue.
-- Fixed customspawn command, stupid mistake was made, fixed it was.
-
-`1.2.1`
-- Added mob ignore feature for faction buff.
-- Added mob ignore command for faction buffs.
-- Added power up command.
-
-`1.2.0`
-- Added an initial version for world dynamics.
-- Added worlddynamics commands.
-
-`1.1.3`
-- Hotfix for crash when user is not within a clan.
-
-`1.1.2`
-- Bug fix for exception error on trying to get disabled/offline allies location.
-
-`1.1.1`
-- Attempt at fixing proximity glow bug where the mod can't decide if they're close or far.
-- Clan members are now factored in for honor system siege.
-- Bug fix for dreaded player being able to manually turn siege off.
-
-`1.1.0`
-- Added duration option for customspawn command.
-- Added honor system and a ton of other mechanics it entails.
-- Added siege command.
-- Added rename & adminrename commands.
-- Added playerinfo & myinfo commands to help server admins with some debugging.
-- Fixed hunter hunted not spawning anything on low heat level.
-- Give command will now refuse to run if no arguments is given.
-- SpawnNPC on waypoint now properly accept the spawn counts.
-- Implemented allies caching for better performance.
-- Bug fix with the exp gain for killing lower level mobs.
-- HunterHunted ambush group are now part of vampire hunters faction.
-
-`1.0.2`
-- Added customspawn command.
-- Added property to compile with wetstone or not.
-- Added shutdown command.
-- Bugfix for on defeat message.
-- Added kits json save/load log message.
-- Minor adjustments.
-
-`1.0.1`
-- Added optional wetstone dependency for compiling.
-- Added compabilities with wetstone reload function.
-
-`1.0.0`
-- Removed wetstone dependency.
+Version 1.0.0 coming!
 
 </details>
 
@@ -883,7 +820,7 @@ Notes:
 
 ### [Discord](https://discord.gg/XY5bNtNm4w)
 ### Main Developer
-- `Kaltharos#0001`
+- `Kaltharos#0001` He's gone dark :( RIP
 
 ### Contributors
 #### Without these people, this project will just be a dream. (In no particular order)
@@ -891,7 +828,7 @@ Notes:
 - `Nopey#1337`
 - `syllabicat#0692`
 - `errox#7604`
-
+- 'Darkon47'
 </details>
 
 <details>
@@ -914,13 +851,9 @@ Notes:
 
 <details>
 <summary>Planned Features</summary>
-
-- More optimization! It never hurts to optimize!
-- Average reputation of clan members.
-- More dynamic events.
-- Bloodline. (On hold)
-- Kits Option: Limited Uses. (On hold)
-- Explore team/alliance in VRising. (On hold)
-- Need a better name tagging sytem. (On hold)
-
+*Continue balancing default settings for classes.
+*Can we move the changes into the UI of the game?
+*Pull Darkon47 content (maintain compatibility)
+*Add to the readme about usage of the new stuff
+*Fix some references in the readme about all the values for unit stats for masteries. Perhaps just change to using the enumeration string in the configs for masteries.
 </details>
