@@ -5,7 +5,7 @@ using Unity.Entities;
 
 namespace RPGMods.Commands
 {
-    [Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>]", Description = "Shows your currect experience and progression to next level, or toggle the exp gain notification.")]
+    [Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>] [<ability> \"ability\"", Description = "Shows your currect experience and progression to next level, toggle the exp gain notification, or spend earned ability points.")]
     public static class Experience
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
@@ -63,6 +63,72 @@ namespace RPGMods.Commands
                         return;
                     }
                 }
+                else if (ctx.Args[0].ToLower().Equals("ability") && ExperienceSystem.LevelRewardsOn)
+                {
+                    try
+                    {
+                        int spendPoints = 1;
+                        string abilityName = "help";
+                        
+                        if (ctx.Args.Length >= 2) abilityName = ctx.Args[1];
+                        if (ctx.Args.Length > 2 && !int.TryParse(ctx.Args[2], out spendPoints)) spendPoints = 1;
+
+
+                        if (!Database.player_abilityIncrease.ContainsKey(SteamID)) Database.player_abilityIncrease[SteamID] = 0;
+
+                        if (Database.player_abilityIncrease[SteamID] < spendPoints &&
+                            ctx.Args[1].ToLower() != "show" && ctx.Args[1].ToLower() != "reset")
+                        {
+                            Output.SendSystemMessage(ctx, "Not enough points!");
+                            return;
+                        }
+
+                        if (Database.experience_class_stats.ContainsKey(abilityName.ToLower()))
+                        {
+                            foreach (var buff in Database.experience_class_stats[abilityName.ToLower()])
+                            {
+                                Database.player_level_stats[SteamID][buff.Key] += buff.Value * spendPoints;
+                            }
+
+                            Database.player_abilityIncrease[SteamID] -= spendPoints;
+                            Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                            Output.SendSystemMessage(ctx, $"Spent {spendPoints}. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                            foreach (var buff in Database.player_level_stats[SteamID])
+                            {
+                                Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
+                            }
+                        }
+                        else switch(abilityName.ToLower())
+                            {
+                                case "show":
+                                    foreach (var buff in Database.player_level_stats[SteamID])
+                                    {
+                                        Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
+                                    }
+                                    break;
+                                case "reset":
+                                    if (!isAllowed) return;
+                                    Database.player_level_stats[SteamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
+                                    Database.player_abilityIncrease[SteamID] = 0;
+                                    Cache.player_level[SteamID] = 0;
+                                    ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
+                                    Output.SendSystemMessage(ctx, "Ability level up points reset.");
+                                    break;
+                                default:
+                                    Output.SendSystemMessage(ctx, "Type \".xp ability show\" to see current buffs.");
+                                    Output.SendSystemMessage(ctx, $"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                                    Output.SendSystemMessage(ctx, "You can spend ability points on:");
+                                    Output.SendSystemMessage(ctx, "health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
+                                    break;
+                            }
+
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Plugin.Logger.LogError($"Could not spend point! {ex.ToString()}");
+                        Output.CustomErrorMessage(ctx, $"Could not spend point! {ex.Message}");
+                    }
+                }
                 else
                 {
                     Output.InvalidArguments(ctx);
@@ -76,6 +142,7 @@ namespace RPGMods.Commands
                 Output.SendSystemMessage(ctx,
                     $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) " +
                     $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]");
+                if (ExperienceSystem.LevelRewardsOn) Output.SendSystemMessage(ctx, $"You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.");
             }
         }
     }

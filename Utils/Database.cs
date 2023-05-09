@@ -36,6 +36,7 @@ namespace RPGMods.Utils
 
         //-- -- Experience System
         public static Dictionary<ulong, float> player_level = new();
+        public static Dictionary <ulong,Dictionary<UnitStatType, float>> player_geartypedonned = new();
 
         //-- -- PvP System
         public static Dictionary<Entity, LevelData> PlayerLevelCache = new();
@@ -80,6 +81,20 @@ namespace RPGMods.Utils
 
         //-- -- EXP System
         public static Dictionary<ulong, int> player_experience { get; set; }
+        /// <summary>
+        /// Ability points awarded per level.
+        /// </summary>
+        public static Dictionary<ulong, int> player_abilityIncrease { get; set; }
+        /// <summary>
+        /// Buff stat bonuses from leveling
+        /// </summary>
+        public static LazyDictionary<ulong, LazyDictionary<UnitStatType,float>> player_level_stats { get; set; }   
+        /// <summary>
+        /// A configuration database of class stats per ability point spent.
+        /// </summary>
+        public static Dictionary<string, Dictionary<UnitStatType, float>> experience_class_stats { get; set; }
+        public static bool ErrorOnLoadingExperienceClasses = false;
+
         public static Dictionary<ulong, bool> player_log_exp { get; set; }
 
         //-- -- PvP System

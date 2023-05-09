@@ -266,7 +266,7 @@ namespace RPGMods.Systems
                     Value = value,
                     ModificationType = modType,
                     Id = ModificationId.NewId(0)
-                }); ;
+                });
             }
         }
 
@@ -332,7 +332,7 @@ namespace RPGMods.Systems
             WeaponMasterData Mastery;
             try {
                 bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out Mastery);
-                Mastery.data[Type] += Value;
+                Mastery.data[Type] += Value;                
                 Mastery.data[Type] = Math.Min(Mastery.data[Type], MaxMastery);
             }
             catch (NullReferenceException e) {
@@ -346,9 +346,7 @@ namespace RPGMods.Systems
                 if (Value < 0) Value = 0;
                 Mastery.data[Type] += Value;
             }
-            if(Mastery.data[Type] < 0) {
-                Mastery.data[Type] = 0;
-            }
+            if (Mastery.data[Type] < 0) Mastery.data[Type] = 0;
             Database.player_weaponmastery[SteamID] = Mastery;
             return;
         }
