@@ -615,6 +615,40 @@ namespace RPGMods.Utils
             Worker = 6
         }
 
+
+        // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the thing, and 0.75 quarters it.
+        // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
+        public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
+            {(int)UnitStatType.CooldownModifier },
+            {(int)UnitStatType.PhysicalResistance },
+            {(int)UnitStatType.SpellResistance },
+            {(int)UnitStatType.ResistVsBeasts },
+            {(int)UnitStatType.ResistVsCastleObjects },
+            {(int)UnitStatType.ResistVsDemons },
+            {(int)UnitStatType.ResistVsHumans },
+            {(int)UnitStatType.ResistVsMechanical },
+            {(int)UnitStatType.ResistVsPlayerVampires },
+            {(int)UnitStatType.ResistVsUndeads },
+            {(int)UnitStatType.ReducedResourceDurabilityLoss }
+        };
+
+        //This should be a dictionary lookup for the stats to what mod type they should use, and i should put the name strings in here, i might do it later.
+        public static HashSet<int> multiplierStats = new HashSet<int> {
+            {(int)UnitStatType.CooldownModifier },
+            {(int)UnitStatType.PhysicalResistance },
+            {(int)UnitStatType.SpellResistance },
+            {(int)UnitStatType.ResistVsBeasts },
+            {(int)UnitStatType.ResistVsCastleObjects },
+            {(int)UnitStatType.ResistVsDemons },
+            {(int)UnitStatType.ResistVsHumans },
+            {(int)UnitStatType.ResistVsMechanical },
+            {(int)UnitStatType.ResistVsPlayerVampires },
+            {(int)UnitStatType.ResistVsUndeads },
+            {(int)UnitStatType.ReducedResourceDurabilityLoss },
+            {(int)UnitStatType.ResourceYield }
+
+        };
+
         public static String statTypeToString(UnitStatType type)
         {
             String name = "Unknown";

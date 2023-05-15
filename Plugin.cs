@@ -144,6 +144,43 @@ namespace RPGMods
         private static ConfigEntry<float> maxGrowth;
         private static ConfigEntry<float> growthPerEfficency;
 
+
+        private static ConfigEntry<string> draculaBloodlineStats;
+        private static ConfigEntry<string> draculaBloodlineMinStrengths;
+        private static ConfigEntry<string> draculaBloodlineRates;
+        private static ConfigEntry<string> arwenBloodlineStats;
+        private static ConfigEntry<string> arwenBloodlineMinStrengths;
+        private static ConfigEntry<string> arwenBloodlineRates;
+        private static ConfigEntry<string> ilvrisBloodlineStats;
+        private static ConfigEntry<string> ilvrisBloodlineMinStrengths;
+        private static ConfigEntry<string> ilvrisBloodlineRates;
+        private static ConfigEntry<string> ayaBloodlineStats;
+        private static ConfigEntry<string> ayaBloodlineMinStrengths;
+        private static ConfigEntry<string> ayaBloodlineRates;
+        private static ConfigEntry<string> nytheriaBloodlineStats;
+        private static ConfigEntry<string> nytheriaBloodlineMinStrengths;
+        private static ConfigEntry<string> nytheriaBloodlineRates;
+        private static ConfigEntry<string> hadubertBloodlineStats;
+        private static ConfigEntry<string> hadubertBloodlineMinStrengths;
+        private static ConfigEntry<string> hadubertBloodlineRates;
+        private static ConfigEntry<string> reiBloodlineStats;
+        private static ConfigEntry<string> reiBloodlineMinStrengths;
+        private static ConfigEntry<string> reiBloodlineRates;
+
+
+        private static ConfigEntry<bool> bloodlinesEnabled;
+        private static ConfigEntry<bool> mercilessBloodlines;
+        private static ConfigEntry<double> bloodlineGrowthMultiplier;
+        private static ConfigEntry<double> bloodlineVBloodMultiplier;
+        private static ConfigEntry<bool> bloodlineEfficencySubSystem;
+        private static ConfigEntry<bool> bloodlineGrowthSubsystem;
+        private static ConfigEntry<double> MaxBloodlineStrength;
+        private static ConfigEntry<double> maxBloodlineEfficency;
+        private static ConfigEntry<double> maxBloodlineGrowth;
+        private static ConfigEntry<double> minBloodlineGrowth;
+        private static ConfigEntry<double> bloodlineGrowthPerEfficency;
+        private static ConfigEntry<string> bloodlineNames;
+
         private static ConfigEntry<bool> EnableWorldDynamics;
         private static ConfigEntry<bool> WDGrowOnKill;
 
@@ -309,7 +346,58 @@ namespace RPGMods
             WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.");
             WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Mastery CDR", false, "Changes CDR from mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
             WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Mastery CDR stacks", false, "Allows mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
+
+
+
+            bloodlinesEnabled = Config.Bind("Bloodlines", "Enable Bloodlines", true, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
+            mercilessBloodlines = Config.Bind("Bloodlines", "Merciless Bloodlines", true, "Causes bloodlines to only grow when you kill something with a matching bloodline of higher strength, finally, a reward when you accidentally kill that 100% blood you found");
+            bloodlineGrowthMultiplier = Config.Bind("Bloodlines", "Bloodline growth multiplier", 1.0, "The multiplier applied to all bloodline gains.");
+            bloodlineVBloodMultiplier = Config.Bind("Bloodlines", "Bloodline VBlood Multiplier", 25.0, "The multiplier applied to the effective level of VBlood enemies for bloodline gains.");
+            bloodlineEfficencySubSystem = Config.Bind("Bloodlines", "Enable Effectiveness Subsystem", true, "Enables the Effectiveness bloodline subsystem, which lets you reset your bloodline to gain a multiplier to the effects of the matching bloodline.");
+            bloodlineGrowthSubsystem = Config.Bind("Bloodlines", "Enable Growth Subsystem", true, "Enables the Growth Bloodline subsystem, same as the one for mastery");
+            MaxBloodlineStrength = Config.Bind("Bloodlines", "Maximum Strength", 100.0, "The maximum strength for a bloodline in percentage.");
+            maxBloodlineEfficency = Config.Bind("Bloodlines", "Maximum Effectiveness", 5.0, "The maximum bloodline effectiveness where 1 is 100%.");
+            minBloodlineGrowth = Config.Bind("Bloodlines", "Minimum Growth Rate", 0.1, "The minimum growth rate, where 1 is 100%");
+            maxBloodlineGrowth = Config.Bind("Bloodlines", "Maximum Growth Rate", 10.0, "the maximum growth rate where 1 is 100%");
+            bloodlineGrowthPerEfficency = Config.Bind("Bloodlines", "Growth per efficency", -1.0, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
+
+
+
+            draculaBloodlineStats = Config.Bind("Bloodline Rates", "Dracula Bloodline Stats", "", "The stat IDs for the frailed bloodline of Dracula the Progenitor, Active only with frailed blood.");
+            draculaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Dracula Bloodline Minimum Strengths", "", "The minimum bloodline strength to recieve the specified stat.");
+            draculaBloodlineRates = Config.Bind("Bloodline Rates", "Dracula Bloodline Rates", "", "The amount per bloodline strength % recieved once strength is met, Note that Dracula's Bloodline recieves a portion of all your other bloodlines.");
+
+
+            arwenBloodlineStats = Config.Bind("Bloodline Rates", "Arwen Bloodline Stats", "10, 5, 39", "The stat IDs for the bloodline of Arwen the Godeater, Active only with creature blood.");
+            arwenBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Arwen Bloodline Minimum Strengths", "0, 50, 100", "The minimum bloodline strength to recieve the specified stat.");
+            arwenBloodlineRates = Config.Bind("Bloodline Rates", "Arwen Bloodline Rates", "0.25, 0.005, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+
+            ilvrisBloodlineStats = Config.Bind("Bloodline Rates", "Ilvris Bloodline Stats", "9, 0, 42", "The stat IDs for the bloodline of Ilvris Dragonblood, Active only with warrior blood.");
+            ilvrisBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Ilvris Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            ilvrisBloodlineRates = Config.Bind("Bloodline Rates", "Ilvris Bloodline Rates", "0.25, 0.1, 0.0025 ", "The amount per bloodline strength % recieved once strength is met.");
+
+            ayaBloodlineStats = Config.Bind("Bloodline Rates", "Aya Bloodline Stats", "19, 29, 44", "The stat IDs for the bloodline of Aya the Shadowlord, Active only with rogue blood.");
+            ayaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Aya Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            ayaBloodlineRates = Config.Bind("Bloodline Rates", "Aya Bloodline Rates", "0.25, 0.001, 0.0025 ", "The amount per bloodline strength % recieved once strength is met.");
+
+            nytheriaBloodlineStats = Config.Bind("Bloodline Rates", "Nytheria Bloodline Stats", "11, 30, 38", "The stat IDs for the bloodline of Nytheria the Destroyer, Active only with brute blood.");
+            nytheriaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Nytheria Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            nytheriaBloodlineRates = Config.Bind("Bloodline Rates", "Nytheria Bloodline Rates", "0.25, 0.01, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
             
+            hadubertBloodlineStats = Config.Bind("Bloodline Rates", "Hadubert Bloodline Stats", "25, 7, 40", "The stat IDs for the bloodline of Hadubert the Inferno, Active only with scholar blood.");
+            hadubertBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Hadubert Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            hadubertBloodlineRates = Config.Bind("Bloodline Rates", "Hadubert Bloodline Rates", "0.1, 200, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+            
+            reiBloodlineStats = Config.Bind("Bloodline Rates", "Rei Bloodline Stats", "20, 3, 52, 53, 54", "The stat IDs for the bloodline of Rei the Binder, Active only with worker blood.");
+            reiBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Rei Bloodline Minimum Strengths", "0, 50, 100, 100, 100", "The minimum bloodline strength to recieve the specified stat.");
+            reiBloodlineRates = Config.Bind("Bloodline Rates", "Rei Bloodline Rates", "0.25, 0.01, 0.0025, 0.0025, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+
+
+            bloodlineNames = Config.Bind("Bloodline Rates", "Bloodline Names", "Dracula the Progenitor, Arwen the Godeater, Ilvris Dragonblood, Aya the Shadowlord, Nytheria the Destroyer, Hadubert the Inferno, Rei the Binder", "Rename the bloodlines here, the starting names are from supporters, Seperate names with commas, must contain exactly 7 names.");
+
+
+
+
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
@@ -474,6 +562,48 @@ namespace RPGMods
             WeaponMasterSystem.SpellStats = parseIntArrayConifg(SpellStats.Value);
             WeaponMasterSystem.SpellRates = parseFloatArrayConifg(SpellRates.Value);
 
+
+            Bloodlines.draculaStats = parseIntArrayConifg(draculaBloodlineStats.Value);
+            Bloodlines.draculaMinStrength = parseDoubleArrayConifg(draculaBloodlineMinStrengths.Value);
+            Bloodlines.draculaRates = parseDoubleArrayConifg(draculaBloodlineRates.Value);
+            Bloodlines.arwenStats = parseIntArrayConifg(arwenBloodlineStats.Value);
+            Bloodlines.arwenMinStrength = parseDoubleArrayConifg(arwenBloodlineMinStrengths.Value);
+            Bloodlines.arwenRates = parseDoubleArrayConifg(arwenBloodlineRates.Value);
+            Bloodlines.ilvrisStats = parseIntArrayConifg(ilvrisBloodlineStats.Value);
+            Bloodlines.ilvrisMinStrength = parseDoubleArrayConifg(ilvrisBloodlineMinStrengths.Value);
+            Bloodlines.ilvrisRates = parseDoubleArrayConifg(ilvrisBloodlineRates.Value);
+            Bloodlines.ayaStats = parseIntArrayConifg(ayaBloodlineStats.Value);
+            Bloodlines.ayaMinStrength = parseDoubleArrayConifg(ayaBloodlineMinStrengths.Value);
+            Bloodlines.ayaRates = parseDoubleArrayConifg(ayaBloodlineRates.Value);
+            Bloodlines.nytheriaStats = parseIntArrayConifg(nytheriaBloodlineStats.Value);
+            Bloodlines.nytheriaMinStrength = parseDoubleArrayConifg(nytheriaBloodlineMinStrengths.Value);
+            Bloodlines.nytheriaRates = parseDoubleArrayConifg(nytheriaBloodlineRates.Value);
+            Bloodlines.hadubertStats = parseIntArrayConifg(hadubertBloodlineStats.Value);
+            Bloodlines.hadubertMinStrength = parseDoubleArrayConifg(hadubertBloodlineMinStrengths.Value);
+            Bloodlines.hadubertRates = parseDoubleArrayConifg(hadubertBloodlineRates.Value);
+            Bloodlines.reiStats = parseIntArrayConifg(reiBloodlineStats.Value);
+            Bloodlines.reiMinStrength = parseDoubleArrayConifg(reiBloodlineMinStrengths.Value);
+            Bloodlines.reiRates = parseDoubleArrayConifg(reiBloodlineRates.Value);
+            string[] blNames = parseStringArrayConifg(bloodlineNames.Value);
+            Bloodlines.names = blNames;
+            for(int i = 0; i < blNames.Length; i++) {
+                Bloodlines.nameMap.TryAdd(blNames[i].ToLower().Trim(), i);
+            }
+
+            Bloodlines.areBloodlinesEnabled = bloodlinesEnabled.Value;
+            Bloodlines.mercilessBloodlines = mercilessBloodlines.Value;
+            Bloodlines.effectivenessSubSystemEnabled = bloodlineEfficencySubSystem.Value;
+            Bloodlines.growthSubsystemEnabled = bloodlineGrowthSubsystem.Value;
+
+            Bloodlines.MaxBloodlineStrength = MaxBloodlineStrength.Value;
+            Bloodlines.maxBloodlineEfficency = maxBloodlineEfficency.Value;
+            Bloodlines.maxBloodlineGrowth = maxBloodlineGrowth.Value;
+            Bloodlines.minBloodlineGrowth = minBloodlineGrowth.Value;
+            Bloodlines.growthPerEfficency = bloodlineGrowthPerEfficency.Value;
+
+
+
+
             WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats };
             WeaponMasterSystem.masteryRates = new float[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates };
 
@@ -525,12 +655,49 @@ namespace RPGMods
                 catch {
                     Plugin.Logger.LogWarning("Error interperting float value: " + match.ToString());
                 }
-                
+
                 match = match.NextMatch();
             }
 
             Plugin.Logger.LogInfo(">>>done parsing float array");
             float[] result = list.ToArray();
+            return result;
+        }
+        public static double[] parseDoubleArrayConifg(string data) {
+            Plugin.Logger.LogInfo(">>>parsing double array: " + data);
+            var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
+            List<double> list = new List<double>();
+            while (match.Success) {
+                try {
+                    Plugin.Logger.LogInfo(">>>got double: " + match.Value);
+                    double temp = double.Parse(match.Value, CultureInfo.InvariantCulture);
+                    Plugin.Logger.LogInfo(">>>double parsed into: " + temp);
+                    list.Add(temp);
+                }
+                catch {
+                    Plugin.Logger.LogWarning("Error interperting double value: " + match.ToString());
+                }
+
+                match = match.NextMatch();
+            }
+
+            Plugin.Logger.LogInfo(">>>done parsing double array");
+            double[] result = list.ToArray();
+            return result;
+        }
+        public static string[] parseStringArrayConifg(string data) {
+            Plugin.Logger.LogInfo(">>>parsing comma seperated String array: " + data);
+            List<string> list = new List<string>();
+            while (data.IndexOf(",") > 0) {
+                string str = data.Substring(0, data.IndexOf(","));
+                str.Trim();
+                list.Add(str);
+                data = data.Substring(data.IndexOf(",") + 1);
+            }
+            data.Trim();
+            list.Add(data);
+            Plugin.Logger.LogInfo(">>>done parsing string array");
+            string[] result = list.ToArray();
             return result;
         }
     }

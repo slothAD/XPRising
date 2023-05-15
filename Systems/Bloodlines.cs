@@ -15,59 +15,85 @@ namespace RPGMods.Systems
     {
         public static EntityManager em = Plugin.Server.EntityManager;
 
-        public static bool isDecaySystemEnabled = true;
-        public static int MasteryCombatTick = 5;
-        public static int MaxCombatTick = 12;
-        public static float MasteryMultiplier = 1;
+        public static bool isDecaySystemEnabled = false;
+        public static double growthMultiplier = 1;
         public static int DecayInterval = 60;
         public static int Online_DecayValue = 0;
         public static int Offline_DecayValue = 1;
-        public static float VBloodMultiplier = 15;
-        // Shou Change - make options for spell mastery with weapons active.
-        public static Boolean spellMasteryNeedsNoneToUse = true;
-        public static Boolean spellMasteryNeedsNoneToLearn = true;
-        public static Boolean linearSpellMastery = false;
-        public static Boolean spellMasteryStacks = false;
-        
+        public static double VBloodMultiplier = 15;
+
         public static bool areBloodlinesEnabled = true;
-        public static Boolean mercilessBloodlines = false;
-        public static int MaxBloodlineStrength = 100000;
+        public static bool mercilessBloodlines = false;
+        public static bool effectivenessSubSystemEnabled = true;
+        public static bool growthSubsystemEnabled = true;
+        public static double growthPerEfficency = 1.0;
+        public static double MaxBloodlineStrength = 100;
+        public static double maxBloodlineEfficency = 5;
+        public static double maxBloodlineGrowth = 10;
+        public static double minBloodlineGrowth = 0.1;
 
         // Idk how to do this elegantly and allow it to be bound to a config.
         public static int[] draculaStats = { };
-        public static int[] draculaMinStrength = { };
-        public static float[] draculaRates = { };
+        public static double[] draculaMinStrength = { };
+        public static double[] draculaRates = { };
 
-        public static int[] arwenStats = { };
-        public static int[] arwenMinStrength = { };
-        public static float[] arwenRates = { };
+        public static int[] arwenStats = { (int)UnitStatType.HolyResistance, (int)UnitStatType.MovementSpeed, (int)UnitStatType.DamageVsHumans};
+        public static double[] arwenMinStrength = {0, 50, 100 };
+        public static double[] arwenRates = { 0.25, 0.005, 0.0025 };
 
-        public static int[] ilvrisStats = { };
-        public static int[] ilvrisMinStrength = { };
-        public static float[] ilvrisRates = { };
+        public static int[] ilvrisStats = { (int)UnitStatType.FireResistance, (int)UnitStatType.PhysicalPower, (int)UnitStatType.DamageVsBeasts};
+        public static double[] ilvrisMinStrength = { 0, 50, 100 };
+        public static double[] ilvrisRates = { 0.25, 0.1, 0.0025 };
 
-        public static int[] ayaStats = { };
-        public static int[] ayaMinStrength = { };
-        public static float[] ayaRates = { };
+        public static int[] ayaStats = { (int)UnitStatType.SunResistance, (int)UnitStatType.PhysicalCriticalStrikeChance, (int)UnitStatType.DamageVsPlayerVampires};
+        public static double[] ayaMinStrength = { 0, 50, 100 };
+        public static double[] ayaRates = { 0.25, 0.001, 0.0025 };
 
-        public static int[] nytheriaStats = { };
-        public static int[] nytheriaMinStrength = { };
-        public static float[] nytheriaRates = { };
+        public static int[] nytheriaStats = { (int)UnitStatType.SilverResistance, (int)UnitStatType.PhysicalCriticalStrikeDamage, (int)UnitStatType.DamageVsUndeads };
+        public static double[] nytheriaMinStrength = { 0, 50, 100 };
+        public static double[] nytheriaRates = { 0.25, 0.01, 0.0025};
 
-        public static int[] hadubertStats = { };
-        public static int[] hadubertMinStrength = { };
-        public static float[] hadubertRates = { };
+        public static int[] hadubertStats = { (int)UnitStatType.SpellPower, (int)UnitStatType.CooldownModifier, (int)UnitStatType.DamageVsDemons };
+        public static double[] hadubertMinStrength = { 0, 50, 100};
+        public static double[] hadubertRates = { 0.1, 200, 0.0025};
 
-        public static int[] reiStats = { };
-        public static int[] reiMinStrength = { };
-        public static float[] reiRates = { };
-
-
-        public static int[][] bloodlineStats = { draculaStats, arwenStats, ilvrisStats, ayaStats, nytheriaStats, hadubertStats, reiStats };
-        public static int[][] bloodlineMinStrengths = { draculaMinStrength, arwenMinStrength, ilvrisMinStrength, ayaMinStrength, nytheriaMinStrength, hadubertMinStrength, reiMinStrength };
-        public static float[][] bloodlineRates = { draculaRates, arwenRates, ilvrisRates, ayaRates, nytheriaRates, hadubertRates, reiRates };
+        public static int[] reiStats = { (int)UnitStatType.GarlicResistance, (int)UnitStatType.ResourceYield, (int)UnitStatType.DamageVsMineral, (int)UnitStatType.DamageVsVegetation, (int)UnitStatType.DamageVsWood};
+        public static double[] reiMinStrength = { 0, 50, 100, 100, 100 };
+        public static double[] reiRates = { 0.25, 0.01, 0.0025, 0.0025, 0.0025 };
 
 
+        public static int[][] stats = { draculaStats, arwenStats, ilvrisStats, ayaStats, nytheriaStats, hadubertStats, reiStats };
+        public static double[][] minStrengths = { draculaMinStrength, arwenMinStrength, ilvrisMinStrength, ayaMinStrength, nytheriaMinStrength, hadubertMinStrength, reiMinStrength };
+        public static double[][] rates = { draculaRates, arwenRates, ilvrisRates, ayaRates, nytheriaRates, hadubertRates, reiRates };
+
+        public static Dictionary<PrefabGUID, int> bloodlineMap = new Dictionary<PrefabGUID, int> {
+            {new PrefabGUID((int)Helper.BloodType.Frailed), 0 },
+            {new PrefabGUID((int)Helper.BloodType.Creature), 1 },
+            {new PrefabGUID((int)Helper.BloodType.Warrior), 2 },
+            {new PrefabGUID((int)Helper.BloodType.Rogue), 3 },
+            {new PrefabGUID((int)Helper.BloodType.Brute), 4 },
+            {new PrefabGUID((int)Helper.BloodType.Scholar), 5 },
+            {new PrefabGUID((int)Helper.BloodType.Worker), 6 }
+        };
+
+        public static string[] names = { "Dracula, Vampire Progenitor", "Arwen the Godeater", "Ilvris Dragonblood", "Aya the Shadowlord", "Nytheria the Destroyer", "Hadubert the Inferno", "Rei the Binder" };
+
+        public static Dictionary<string, int> nameMap = new Dictionary<string, int> {
+            { "dracula", 0 },
+            { "arwen", 1 },
+            { "ilvris", 2 },
+            { "aya", 3 },
+            { "nytheria", 4 },
+            { "hadubert", 5 },
+            { "rei", 6 },
+            { "frail", 0 },
+            { "creature", 1 },
+            { "warrior", 2 },
+            { "rogue", 3 },
+            { "brute", 4 },
+            { "scholar", 5 },
+            { "worker", 6 }
+        };
 
         private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
 
@@ -78,29 +104,55 @@ namespace RPGMods.Systems
             if (Killer == Victim) return;
             if (em.HasComponent<Minion>(Victim)) return;
 
-            var VictimStats = em.GetComponentData<UnitStats>(Victim);
+            //var VictimStats = em.GetComponentData<UnitStats>(Victim);
+            UnitLevel UnitLevel = em.GetComponentData<UnitLevel>(Victim);
             Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity._Entity;
             User User = em.GetComponentData<User>(userEntity);
             ulong SteamID = User.PlatformId;
-            WeaponType WeaponType = GetWeaponType(Killer);
 
             Blood bloodline;
+            int bloodlineIndex = -1;
             BloodConsumeSource victimBlood;
+            double growthVal = 0;
             if (em.HasComponent<Blood>(Killer)){
                 bloodline = em.GetComponentData<Blood>(Killer);
-                int growthValue = (int)VictimStats.PhysicalPower;
-                if(bloodline.BloodType.GuidHash == (int)Helper.BloodType.Scholar){
-
+                growthVal = UnitLevel.Level;
+                if(!bloodlineMap.TryGetValue(bloodline.BloodType, out bloodlineIndex)) {
+                    if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
+                        Output.SendLore(targetUserEntity, "Bloodline not found for guid of " + bloodline.BloodType.GuidHash);
+                    return;
                 }
             }
             else { 
                 return; 
             }
 
+
+            bool isVBlood;
+            if (em.HasComponent<BloodConsumeSource>(Victim)) {
+                BloodConsumeSource BloodSource = em.GetComponentData<BloodConsumeSource>(Victim);
+                isVBlood = BloodSource.UnitBloodType.Equals(vBloodType);
+            }
+            else {
+                isVBlood = false;
+            }
+
+            if (isVBlood && !mercilessBloodlines) growthVal = (growthVal * VBloodMultiplier);
+
             if (mercilessBloodlines){
                 if (em.HasComponent<BloodConsumeSource>(Victim)){
                     victimBlood = em.GetComponentData<BloodConsumeSource>(Victim);
-                    
+                    if (!(victimBlood.UnitBloodType.Equals(bloodline)|| isVBlood)) {
+                        return;
+                    }
+                    if (!isVBlood || victimBlood.BloodQuality <= getBloodlineData(SteamID).strength[bloodlineIndex]) {
+                        return;
+                    }
+                    if (!isVBlood || bloodline.Quality <= getBloodlineData(SteamID).strength[bloodlineIndex]) {
+                        return;
+                    }
+
+                    growthVal *= 1 + ((victimBlood.BloodQuality+bloodline.Quality) - (getBloodlineData(SteamID).strength[bloodlineIndex]*2))/100;
                 }
                 else{
                     return;
@@ -108,479 +160,263 @@ namespace RPGMods.Systems
             }
 
 
-            int MasteryValue;
-            if (WeaponType == WeaponType.None) MasteryValue = (int)VictimStats.SpellPower;
-            else MasteryValue = (int)VictimStats.PhysicalPower;
 
-            MasteryValue = (int)(MasteryValue * (rand.Next(10, 100) * 0.01));
-
-            bool isVBlood;
-            if (em.HasComponent<BloodConsumeSource>(Victim))
-            {
-                BloodConsumeSource BloodSource = em.GetComponentData<BloodConsumeSource>(Victim);
-                isVBlood = BloodSource.UnitBloodType.Equals(vBloodType);
-            }
-            else
-            {
-                isVBlood = false;
-            }
-
-            if (isVBlood) MasteryValue = (int)(MasteryValue * VBloodMultiplier);
+            growthVal *= Math.Max(0.1, rand.NextDouble());
 
             if (em.HasComponent<PlayerCharacter>(Victim))
             {
                 Equipment VictimGear = em.GetComponentData<Equipment>(Victim);
                 var BonusMastery = VictimGear.ArmorLevel + VictimGear.WeaponLevel + VictimGear.SpellLevel;
-                MasteryValue *= (int)(1 + (BonusMastery * 0.01));
+                growthVal *= (1 + (BonusMastery * 0.01));
             }
 
-            MasteryValue = (int)(MasteryValue * MasteryMultiplier);
-            SetMastery(SteamID, WeaponType, MasteryValue);
+            growthVal = (int)(growthVal * growthMultiplier);
 
-            if (Database.player_log_mastery.TryGetValue(SteamID, out bool isLogging))
+            growthVal /= 1000;
+
+            modBloodline(SteamID, bloodlineIndex, growthVal);
+
+            if (Database.playerLogBloodline.TryGetValue(SteamID, out bool isLogging))
             {
                 if (isLogging)
                 {
-                    Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {MasteryValue * 0.001}%</color>");
+                    Output.SendLore(userEntity, "<color=#ffb700>"+names[bloodlineIndex]+"'s bloodline has increased by "+ growthVal + "%</color>");
                 }
             }
         }
-
-        public static void LoopBloodlines(Entity User, Entity Player)
-        {
-            User userData = em.GetComponentData<User>(User);
-            ulong SteamID = userData.PlatformId;
-
-            Cache.player_last_combat.TryGetValue(SteamID, out var LastCombat);
-            TimeSpan elapsed_time = DateTime.Now - LastCombat;
-            if (elapsed_time.TotalSeconds >= 10) Cache.player_combat_ticks[SteamID] = 0;
-            if (elapsed_time.TotalSeconds * 0.2 < 1) return;
-
-            Cache.player_last_combat[SteamID] = DateTime.Now;
-
-            if (Cache.player_combat_ticks[SteamID] > MaxCombatTick) return;
-            WeaponType WeaponType = GetWeaponType(Player);
-
-            int MasteryValue = (int)(MasteryCombatTick * MasteryMultiplier);
-            Cache.player_combat_ticks[SteamID] += 1;
-
-            SetMastery(SteamID, WeaponType, MasteryValue);
+        public static BloodlineData getBloodlineData(ulong SteamID) {
+            BloodlineData bld;
+            if (!Database.playerBloodline.TryGetValue(SteamID, out bld)) {
+                bld = new BloodlineData();
+                bld.strength = new double[rates.Length];
+                bld.efficency = new double[rates.Length];
+                bld.growth = new double[rates.Length];
+                for (int i = 0; i < bld.growth.Length; i++) {
+                    bld.strength[i] = 0;
+                    bld.efficency[i] = 1;
+                    bld.growth[i] = 1;
+                }
+                Database.playerBloodline[SteamID] = bld;
+            }
+            return bld;
         }
+        public static void resetBloodline(ulong SteamID, int type) {
+            if (!effectivenessSubSystemEnabled) {
+                if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)) {
+                    Output.SendLore(targetUserEntity, $"Effectiveness Subsystem disabled, not resetting mastery.");
+                }
+                return;
+            }
 
-        public static void DecayMastery(Entity userEntity)
-        {
-            User Data = em.GetComponentData<User>(userEntity);
-            var SteamID = Data.PlatformId;
-            if (Database.player_decaymastery_logout.TryGetValue(SteamID, out var LastDecay))
-            {
-                TimeSpan elapsed_time = DateTime.Now - LastDecay;
-                if (elapsed_time.TotalSeconds < DecayInterval) return;
+            BloodlineData bld = getBloodlineData(SteamID);
 
-                int DecayTicks = (int)Math.Floor(elapsed_time.TotalSeconds / DecayInterval);
-                if (DecayTicks > 0)
-                {
-                    int DecayValue = Offline_DecayValue * DecayTicks * -1;
+            if (type < 0) {
+                for (int i = 0; i < bld.strength.Length; i++) {
+                    addEffectiveness(SteamID, i, bld.strength[i] / MaxBloodlineStrength);
+                    adjustGrowth(SteamID, i, bld.strength[i] / MaxBloodlineStrength);
+                    bld.strength[i] = 0;
+                }
 
-                    Output.SendLore(userEntity, $"You've been sleeping for {(int)elapsed_time.TotalMinutes} minute(s). Your mastery has decayed by {DecayValue * 0.001}%");
+            }
+            else {
+                int i = type;
+                addEffectiveness(SteamID, i, bld.strength[i] / MaxBloodlineStrength);
+                adjustGrowth(SteamID, i, bld.strength[i] / MaxBloodlineStrength);
+                bld.strength[i] = 0;
+            }
+            Database.playerBloodline[SteamID] = bld;
+            return;
+        }
+        public static void adjustGrowth(ulong SteamID, int type, double value) {
+            BloodlineData bld = getBloodlineData(SteamID);
+            if (type >= 0 && type < bld.growth.Length) {
+                if (growthPerEfficency >= 0) {
+                    bld.growth[type] = Math.Min(maxBloodlineGrowth, bld.growth[type] + (value * growthPerEfficency));
+                }
+                else {
+                    double gpe = -1 * growthPerEfficency;
+                    value = value / (value + gpe);
+                    bld.growth[type] = Math.Max(minBloodlineGrowth, bld.growth[type] * value);
+                }
+            }
+            Database.playerBloodline[SteamID] = bld;
+            return;
+        }
+        public static void addEffectiveness(ulong SteamID, int type, double value) {
 
-                    foreach (WeaponType type in Enum.GetValues(typeof(WeaponType)))
-                    {
-                        SetMastery(SteamID, type, DecayValue);
+            BloodlineData bld = getBloodlineData(SteamID);
+            
+            if (type >= 0 && type < bld.efficency.Length) {
+                bld.efficency[type] = Math.Min(maxBloodlineEfficency, bld.efficency[type] + value);
+            }
+            Database.playerBloodline[SteamID] = bld;
+            return;
+        }
+        public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, Entity Owner, ulong SteamID) {
+            Blood bloodline;
+            int bloodlineIndex = -1;
+            if (em.HasComponent<Blood>(Owner)) {
+                bloodline = em.GetComponentData<Blood>(Owner);
+                if (!bloodlineMap.TryGetValue(bloodline.BloodType, out bloodlineIndex)) {
+                    if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)) {
+                        Output.SendLore(targetUserEntity, "Bloodline not found for guid of " + bloodline.BloodType.GuidHash);
                     }
+                    return;
                 }
             }
+            else {
+                return;
+            }
+            applyBloodlineBuffs(Buffer, bloodlineIndex, SteamID);
         }
-
-        public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
-        {
-            if (!GUID.Equals(Database.Buff.OutofCombat) && !GUID.Equals(Database.Buff.InCombat) && !GUID.Equals(Database.Buff.InCombat_PvP)) return;
-
-            var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
-            if (!em.HasComponent<PlayerCharacter>(Owner)) return;
-
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
-            var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
-
-            var Buffer = em.GetBuffer<ModifyUnitStatBuff_DOTS>(buffEntity);
-            BuffReceiver(Buffer, Owner, SteamID);
-        }
-
-        public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, Entity Owner, ulong SteamID)
-        {
-            var WeaponType = GetWeaponType(Owner);
-            var isMastered = ConvertMastery(SteamID, WeaponType, out var PMastery, out var SMastery);
-            if (isMastered)
-            {
-                switch (WeaponType)
-                {
-                    case WeaponType.Sword:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SpellPower,
-                            Value = (float)(PMastery * 0.125),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = (float)(PMastery * 0.125),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.Spear:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = (float)(PMastery * 0.25),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.Axes:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = (float)(PMastery * 0.125),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MaxHealth,
-                            Value = (float)(PMastery * 0.5),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.Scythe:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = (float)(PMastery * 0.125),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalCriticalStrikeChance,
-                            Value = (float)(PMastery * 0.00125),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.Slashers:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalCriticalStrikeChance,
-                            Value = (float)(PMastery * 0.00125),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MovementSpeed,
-                            Value = (float)(PMastery * 0.005),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.Mace:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MaxHealth,
-                            Value = (float)(PMastery),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.Crossbow:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalCriticalStrikeChance,
-                            Value = (float)(PMastery * 0.0025),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        break;
-                    case WeaponType.None:
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MovementSpeed,
-                            Value = (float)(PMastery * 0.01),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = (float)(PMastery * 0.25),
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        if (spellMasteryNeedsNoneToUse)
-                        {
-                            if (SMastery > 0)
-                            {
-                                Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                                {
-                                    StatType = UnitStatType.CooldownModifier,
-                                    Value = 1.0f - (linearSpellMastery ? (SMastery / (SMastery + 100.0f)) : (SMastery / 200.0f)),
-                                    ModificationType = spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set,
-                                    Id = ModificationId.NewId(0)
-                                });
-                            }
+        private static void applyBloodlineBuffs(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, int type, ulong SteamID) {
+            int end = type + 1;
+            bool isDracula = type == 0;
+            if (isDracula) { end = stats.Length; }
+            for (; type < end; type++) {
+                for (int i = 0; i < stats[type].Length; i++) {
+                    double value = isDracula ? calcDraculaBuffValue(type, SteamID, i) : calcBuffValue(type, SteamID, i);
+                    var modType = ModificationType.Add;
+                    if (Helper.inverseMultiplierStats.Contains(stats[type][i])) {
+                        value = 1.0f - value;
+                        modType = ModificationType.Set;
+                        if (Helper.multiplierStats.Contains(stats[type][i])) {
+                            modType = ModificationType.Multiply;
                         }
-                        break;
-                    default:
-                        break;
-                        //-- Nothing for Fishing Pole
-                }
-                if (!spellMasteryNeedsNoneToUse)
-                {
-                    if (SMastery > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.CooldownModifier,
-                            Value = 1.0f - (linearSpellMastery ? (SMastery / (SMastery + 100.0f)) : (SMastery / 200.0f)),
-                            ModificationType = spellMasteryStacks ? ModificationType.Multiply : ModificationType.Set,
-                            Id = ModificationId.NewId(0)
-                        });
                     }
+                    Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+                        StatType = (UnitStatType)stats[type][i],
+                        Value = (float)value,
+                        ModificationType = modType,
+                        Id = ModificationId.NewId(0)
+                    });
                 }
-
             }
         }
 
-        public static bool ConvertMastery(ulong SteamID, WeaponType weaponType, out float MasteryValue, out float MasterySpellValue)
-        {
-            MasteryValue = 0;
-            MasterySpellValue = 0;
-
-            bool isFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
-            if (!isFound) return false;
-
-            switch (weaponType)
-            {
-                case WeaponType.Sword:
-                    MasteryValue = Mastery.Sword; break;
-                case WeaponType.Spear:
-                    MasteryValue = Mastery.Spear; break;
-                case WeaponType.None:
-                    MasteryValue = Mastery.None;
-                    if (spellMasteryNeedsNoneToUse)
-                    {
-                        MasterySpellValue = Mastery.Spell;
-                    }
-                    break;
-                case WeaponType.Scythe:
-                    MasteryValue = Mastery.Scythe; break;
-                case WeaponType.Axes:
-                    MasteryValue = Mastery.Axes; break;
-                case WeaponType.Mace:
-                    MasteryValue = Mastery.Mace; break;
-                case WeaponType.Crossbow:
-                    MasteryValue = Mastery.Crossbow; break;
-                case WeaponType.Slashers:
-                    MasteryValue = Mastery.Slashers; break;
-                case WeaponType.FishingPole:
-                    MasteryValue = Mastery.FishingPole; break;
+        public static double calcDraculaBuffValue(int type, ulong SteamID, int stat) {
+            BloodlineData bld = getBloodlineData(SteamID);
+            double effectiveness = 1;
+            effectiveness = bld.efficency[type];
+            effectiveness = Math.Max(1.0f, effectiveness);
+            double value;
+            double strength = bld.strength[type];
+            if (strength < minStrengths[type][stat] || bld.strength[0] < minStrengths[type][stat]) {
+                return 0.0;
             }
-            if (!spellMasteryNeedsNoneToUse)
-            {
-                MasterySpellValue = Mastery.Spell;
+            strength *= (bld.strength[0] / 100) * bld.efficency[0] / stats.Length;
+            Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity);
+            // For some reason buffs are doubled if not wielding a none type weapon, so gotta check for that and halve it
+            if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
+                strength /= 2;
             }
-            if (MasteryValue > 0) MasteryValue = (float)(MasteryValue * 0.001);
-            if (MasterySpellValue > 0) MasterySpellValue = (float)(MasterySpellValue * 0.001);
-            return true;
+            if (Helper.inverseMultiplierStats.Contains(stats[type][stat])) {
+                value = strength * effectiveness;
+                value = value / (value + rates[type][stat]);
+            }
+            else {
+                value = strength * rates[type][stat] * effectiveness;
+            }
+            return value;
         }
 
-        public static void SetMastery(ulong SteamID, WeaponType Type, int Value)
+        public static double calcBuffValue(int type, ulong SteamID, int stat) {
+            BloodlineData bld = getBloodlineData(SteamID);
+            double effectiveness = 1;
+            effectiveness = bld.efficency[type];
+            effectiveness = Math.Max(1.0f, effectiveness);
+            double value;
+            double strength = bld.strength[type];
+            if(strength < minStrengths[type][stat]) {
+                return 0.0;
+            }
+            Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity);
+            // For some reason buffs are doubled if not wielding a none type weapon, so gotta check for that and halve it
+            if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
+                strength /= 2;
+            }
+            if (Helper.inverseMultiplierStats.Contains(stats[type][stat])) {
+                value = strength * effectiveness;
+                value = value / (value + rates[type][stat]);
+            }
+            else {
+                value = strength * rates[type][stat] * effectiveness;
+            }
+            return value;
+        }
+
+        public static void modBloodline(ulong SteamID, int Type, double value)
         {
-            int NoneExpertise = 0;
-            if (Type == WeaponType.None)
-            {
-                if (Value > 0) NoneExpertise = Value * 2;
-                else NoneExpertise = Value;
-            }
-            bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
-            if (isPlayerFound)
-            {
-                switch (Type)
-                {
-                    case WeaponType.Sword:
-                        if (Mastery.Sword + Value > MaxMastery) Mastery.Sword = MaxMastery;
-                        else if (Mastery.Sword + Value < 0) Mastery.Sword = 0;
-                        else Mastery.Sword += Value;
-                        break;
-                    case WeaponType.Spear:
-                        if (Mastery.Spear + Value >= MaxMastery) Mastery.Spear = MaxMastery;
-                        else if (Mastery.Spear + Value < 0) Mastery.Spear = 0;
-                        else Mastery.Spear += Value;
-                        break;
-                    case WeaponType.None:
-                        if (Mastery.None + NoneExpertise > MaxMastery) Mastery.None = MaxMastery;
-                        else if (Mastery.None + NoneExpertise < 0) Mastery.None = 0;
-                        else Mastery.None += NoneExpertise;
-                        if (spellMasteryNeedsNoneToLearn)
-                        {
-                            if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
-                            else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
-                            else Mastery.Spell += Value;
-                        }
-                        break;
-                    case WeaponType.Scythe:
-                        if (Mastery.Scythe + Value >= MaxMastery) Mastery.Scythe = MaxMastery;
-                        else if (Mastery.Scythe + Value < 0) Mastery.Scythe = 0;
-                        else Mastery.Scythe += Value;
-                        break;
-                    case WeaponType.Axes:
-                        if (Mastery.Axes + Value >= MaxMastery) Mastery.Axes = MaxMastery;
-                        else if (Mastery.Axes + Value < 0) Mastery.Axes = 0;
-                        else Mastery.Axes += Value;
-                        break;
-                    case WeaponType.Mace:
-                        if (Mastery.Mace + Value >= MaxMastery) Mastery.Mace = MaxMastery;
-                        else if (Mastery.Mace + Value < 0) Mastery.Mace = 0;
-                        else Mastery.Mace += Value;
-                        break;
-                    case WeaponType.Crossbow:
-                        if (Mastery.Crossbow + Value >= MaxMastery) Mastery.Crossbow = MaxMastery;
-                        else if (Mastery.Crossbow + Value < 0) Mastery.Crossbow = 0;
-                        else Mastery.Crossbow += Value;
-                        break;
-                    case WeaponType.Slashers:
-                        if (Mastery.Slashers + Value >= MaxMastery) Mastery.Slashers = MaxMastery;
-                        else if (Mastery.Slashers + Value < 0) Mastery.Slashers = 0;
-                        else Mastery.Slashers += Value;
-                        break;
-                    case WeaponType.FishingPole:
-                        if (Mastery.FishingPole + Value >= MaxMastery) Mastery.FishingPole = MaxMastery;
-                        else if (Mastery.FishingPole + Value < 0) Mastery.FishingPole = 0;
-                        else Mastery.FishingPole += Value;
-                        break;
-                }
-                if (!spellMasteryNeedsNoneToLearn)
-                {
-                    if (Mastery.Spell + Value > MaxMastery) Mastery.Spell = MaxMastery;
-                    else if (Mastery.Spell + Value < 0) Mastery.Spell = 0;
-                    else Mastery.Spell += Value;
-                }
-            }
-            else
-            {
-                Mastery = new WeaponMasterData();
 
-                if (NoneExpertise < 0) NoneExpertise = 0;
-                if (Value < 0) Value = 0;
+            BloodlineData bld = getBloodlineData(SteamID);
 
-                switch (Type)
-                {
-                    case WeaponType.Sword:
-                        Mastery.Sword += Value; break;
-                    case WeaponType.Spear:
-                        Mastery.Spear += Value; break;
-                    case WeaponType.None:
-                        Mastery.None += NoneExpertise;
-                        if (spellMasteryNeedsNoneToLearn)
-                        {
-                            Mastery.Spell += Value;
-                        }
-                        break;
-                    case WeaponType.Scythe:
-                        Mastery.Scythe += Value; break;
-                    case WeaponType.Axes:
-                        Mastery.Axes += Value; break;
-                    case WeaponType.Mace:
-                        Mastery.Mace += Value; break;
-                    case WeaponType.Crossbow:
-                        Mastery.Crossbow += Value; break;
-                    case WeaponType.Slashers:
-                        Mastery.Slashers += Value; break;
-                    case WeaponType.FishingPole:
-                        Mastery.FishingPole += Value; break;
-                }
-                if (!spellMasteryNeedsNoneToLearn)
-                {
-                    Mastery.Spell += Value;
-                }
-            }
-            Database.player_weaponmastery[SteamID] = Mastery;
+            bld.strength[Type] += value;
+            bld.strength[Type] = Math.Min(MaxBloodlineStrength, bld.strength[Type]);
+            bld.strength[Type] = Math.Max(0, bld.strength[Type]);
+
+            Database.playerBloodline[SteamID] = bld;
             return;
         }
 
-        public static WeaponType GetWeaponType(Entity Player)
+
+        public static void saveBloodlines()
         {
-            Entity WeaponEntity = em.GetComponentData<Equipment>(Player).WeaponSlotEntity._Entity;
-            WeaponType WeaponType = WeaponType.None;
-            if (em.HasComponent<EquippableData>(WeaponEntity))
-            {
-                EquippableData WeaponData = em.GetComponentData<EquippableData>(WeaponEntity);
-                WeaponType = WeaponData.WeaponType;
-            }
-            return WeaponType;
+            File.WriteAllText("BepInEx/config/RPGMods/Saves/bloodlines.json", JsonSerializer.Serialize(Database.playerBloodline, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/RPGMods/Saves/bloodline_decay.json", JsonSerializer.Serialize(Database.playerDecayBloodlineLogout, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json", JsonSerializer.Serialize(Database.playerLogBloodline, Database.JSON_options));
         }
 
-        public static void SaveWeaponMastery()
+        public static void loadBloodlines()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
-        }
-
-        public static void LoadWeaponMastery()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/weapon_mastery.json"))
+            if (!File.Exists("BepInEx/config/RPGMods/Saves/bloodlines.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/bloodlines.json");
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/bloodlines.json");
             try
             {
-                Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
-                Plugin.Logger.LogWarning("WeaponMastery DB Populated.");
+                Database.playerBloodline = JsonSerializer.Deserialize<Dictionary<ulong, BloodlineData>>(json);
+                Plugin.Logger.LogWarning("Bloodline DB Populated.");
             }
             catch
             {
-                Database.player_weaponmastery = new Dictionary<ulong, WeaponMasterData>();
-                Plugin.Logger.LogWarning("WeaponMastery DB Created.");
+                Database.playerBloodline = new Dictionary<ulong, BloodlineData>();
+                Plugin.Logger.LogWarning("Bloodline DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/mastery_decay.json"))
+            if (!File.Exists("BepInEx/config/RPGMods/Saves/bloodline_decay.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/mastery_decay.json");
+                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/bloodline_decay.json");
                 stream.Dispose();
             }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json");
+            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/bloodline_decay.json");
             try
             {
-                Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
-                Plugin.Logger.LogWarning("WeaponMasteryDecay DB Populated.");
+                Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
+                Plugin.Logger.LogWarning("Bloodline Decay DB Populated.");
             }
             catch
             {
-                Database.player_decaymastery_logout = new Dictionary<ulong, DateTime>();
-                Plugin.Logger.LogWarning("WeaponMasteryDecay DB Created.");
+                Database.playerDecayBloodlineLogout = new Dictionary<ulong, DateTime>();
+                Plugin.Logger.LogWarning("Bloodline Decay DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_mastery.json"))
+            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_log_mastery.json");
+                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json");
                 stream.Dispose();
             }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json");
+            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json");
             try
             {
-                Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                Plugin.Logger.LogWarning("Player_LogMastery_Switch DB Populated.");
+                Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                Plugin.Logger.LogWarning("Player Bloodline Logging DB Populated.");
             }
             catch
             {
-                Database.player_log_mastery = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning("Player_LogMastery_Switch DB Created.");
+                Database.playerLogBloodline = new Dictionary<ulong, bool>();
+                Plugin.Logger.LogWarning("Player Bloodline Logging DB Created.");
             }
         }
     }

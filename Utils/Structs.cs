@@ -226,10 +226,10 @@ namespace RPGMods.Utils
 
 
     public struct BloodlineData{
-        public int[] strength { get; set; }
-        public int[] efficency { get; set; }
-        public int[] growth { get; set; }
-        public BloodlineData(int[] strengthIn, int[] efficencyIn, int[] growthIn){
+        public double[] strength { get; set; }
+        public double[] efficency { get; set; }
+        public double[] growth { get; set; }
+        public BloodlineData(double[] strengthIn, double[] efficencyIn, double[] growthIn){
             strength = strengthIn;
             efficency = efficencyIn;
             growth = growthIn;

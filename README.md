@@ -34,6 +34,71 @@ Off by default, and only works if efficency is also on, but when you reset, the 
 
 </details>
 
+## Bloodline System
+<details>
+<summary>Bloodline System</summary>
+> ### Bloodlines
+Killing enemies while you have a blood type will progress the strength of your bloodline.\
+As your bloodline grows in strength it will provide scaling benefits to your stats, fully configurably\
+By default merciless bloodlines are enabled, which means to progress your bloodlines strength\
+You need to have and kill a target with blood of higher quality than your bloodlines strength.\
+Vblood always provides progress even in merciless mode\
+You can customise the benefits, including the minimum bloodline strength for a benefit, in the config\
+You can change the names of the bloodlines in the config as well.\
+The default names are based on the vampire characters of some of my long time supporters, and are as below\
+<details>
+<summary>Bloodline Names</summary>
+Dracula the Progenitor, dracula for short, is the frailed bloodline.
+<details>
+<summary>Lore</summary>
+Its Dracula, not from one of my supporters, but the iconic vampire of Bram Stroker. I considered using Carmilla or Varney, who are older vampire stories, but Dracula is the classic.
+</details>
+Arwen the Godeater, arwen for short, is the creature bloodline.
+<details>
+<summary>Lore</summary>
+Arwen, Third child of Semika, an asendent kitsune, and her lover, Bei, a cultivator who rebelled against the heavens, was born afflicted with vamprism, after her father sought it out to keep his youth alongside his lover, who had recently become ascended to divinity. When the thirf great reset happened, she took to the disapperance of her parents by indulging in her every desire. She quickly grew bored of the now empty city in which she grew up, and headed into the wider world to try and seek more entertainment. In her adventures in this newly changed world, her madness grew, and after breaking a bone once, she insisted on having them replaced with metal, eventually settling on a complex silver alloy, similar to the modern darksilver. The newfound prowress these bones gave her allowed her to maintain a hold on the deity of the archives, as she drained him dry, gaining her the title of godeater.
+</details>
+Ilvris Dragonblood, ilvris for short, is the warrior bloodline.
+<details>
+<summary>Lore</summary>
+An elf born after the fifth great reset in the fae realm, ilvris was always jealous of dragons, as part of her trials to earn a last name, she hunted down and killed three dragons, bathing in their blood to absorb their powers. Shortly after completing the ceremonies to obtain her name however, she was captured by an elder wyrm, and subjected to a powerful mind control. To her further misfortune, after being returned to her lands, she was captured by the elven overlord of the time, and was pronounced dead, with no heirs. However when Hadubert and his study visited the palace and fought the overlord, they set her free, and together they destroyed the elves, and destroyed the nascent avatar of kivtavash, the deity of hedonism, self-perfection, and freedom. The traveled together for a time, alongside the new bearer of the divine resurrection, and in seeking the power to overthrow the dragons, ilvris requested hadubert turn her into a vampire breaking the mind control. Eventually they hunted down the elder wyrm that mind controlled ilvris, and killed him by crashing his flying city into the citadel of the architect behind the confict in the first place.
+</details>
+Aya the Shadowlord, aya for short, is the rogue bloodline.
+<details>
+<summary>Lore</summary>
+Aya was a young prodigy of a clan of shadow mages shortly before the first great reset. When her clan was destroyed, her grandfather gave her his life-saving charm, a single use random teleport. Thinking herself saved, she was dismayed to find herself thrown directly into a cage, and then promptly sold to a vampire clan. Fortunately, as she aged, the young master of the vampire clan took a liking to her, and elevated her from servant and meal, to a proper vampire. When Semika, Atrata, and the rest of their adventuring party attacked the city, she took the chance to flee towards her family, to see who may have survived, and give them a proper burial. However, she made it less than half way when she was badly injured by a vampire hunter she encountered, and was then sealed in her coffin, as they lacked the ability to truly slay her. This turned out to be her great fortune, as this allowed her to survive the third great reset, and her coffin was found within a decade by Arwen, who set her free, and invited Aya into her home. Aya then served Rin, Arwens eldest sister, as spymaster, for the next decade, until the fourth great reset occured when magic was slain.
+</details>
+Nytheria the Destroyer, nytheria for short, is the brute bloodline.
+<details>
+<summary>Lore</summary>
+One of the twin children of Atrata, the fist of the soul, and Grunayrum, Dragonlord of the moons, Nytheria was discarded for being only half dragon, despite their incredible strength. When the third great reset happened, very little changed for them, but as they sought out adventure, their might continuted to grow. They contracted vampirism from Arwen, during their time as lovers, and the further increase to their strength lead to their now accidentally destroying things, such as trying to grab a sword and crushing the hilt instead. Fortunately, they had always favored their natural weapons, but their newfound capacity for destruction lead to their epithet. But their destuction of Mount Xuanyu is what made their name known for the millenia to come.
+</details>
+Hadubert the Inferno, hadubert for short, is the scholar bloodline.
+<details>
+<summary>Lore</summary>
+Hadubert, Student of the school of warcraft and wizardry, always had a penchant for two things, fire, and magical reasearch. While his incredible proficency in the first lead to his epithet, the second lead him to accompanying the chosen vessel of resurrection, and to creating vampirism in his world after the fifth great reset. After the first vessel burst, and he slew the nascent avatar alongside ilvris, and the vessels lover, he delved deep into magical research, to see if he could prevent the death of the next bearer, and reduce the harm the avatar would do. He succeeded, at a price, his research resulted in him having an eternal desire for blood, but also immense power and durability. Fortunately his research did work, and his efforts ensured the vessel survived the new birth, and they sustained the avatar on the souls of dragons, before crashing the dragons flying city into the citadel of the masterminds behind the process of the divine resurrection, the very school that raised him.
+</details>
+Rei the Binder, rei for short, is the worker bloodline.
+<details>
+<summary>Lore</summary>
+Fourth Child of Semika and bei, and younger sister of Arwen the Godeater, Rei was always exceptionally kind. Though the vampiric nature she inherited left her constantly craving the blood of the living, she chose, rather than to drink from people, to ensure her meals were always ethically sourced. Her choice, rather than finding consenting people to drink from, was to bind demons as her meals. She took to commanding them as well, using them for a huge variety of tasks, while always convincing them that it was just what they wanted to do in the first place. Eventually, she used her demonic hordes to help Arwen drain the deity of archives, and used them to kill magic itself, allowing the god of change to return, and causing the fourth great reset.
+</details>
+</details>
+The bloodline for frailed blood provides a portion of the benefits of your other bloodlines.\
+The command is .bloodline or .bl\
+
+
+> ### Bloodline Decay
+Though the option is currently present, decay is not yet implemented for bloodlines.
+
+> ### Efficency System
+On by default, when a vampire feels ready, they can type .bloodline reset <bloodline name>, The bloodline name can be the current names, the default names, or the blood type names, to reset their bloodline strength to 0, but make their bloodline that much more effective in the future. Thus a vampire who reaches 100% Dracula bloodline, then types .bl reset dracula will be reset back to 0% strength, but when calculating the bonus from the bloodline, will now be considered to have twice as much strength as they currently do, for the purposes of the power of the effect only so if they reach 25% strength, they will get a bonus like they have 50%, but not get the bonus unlocked when they hit 50%. if they reset again at this point, it will go up to 250% efficency, thus a bloodline of 50% would now be like 125% and 10% would be 25% and so on. The Efficency is specifc to each bloodline, so you could have 500% efficency with Hadubert's bloodline, 250% with Dracula's and 100% with Ilvris' bloodline.
+
+> ### Growth System
+On by default, and only works if efficency is also on, but when you reset, the Growth system will change how fast you get bloodline strength in the future based on what you reset at, so if the growth is set to 1, and you reset with 50% strength, you will now gain new strength 50% faster, if you were instead to then reset with another 50% strength, you would now gain strength twice as fast. The growth is specific for each bloodline, same as with efficency. If the config for growth is set to -1, then it will act as a divisior on the amount gained, so if you reset with 100% strength and growth config at -1, you would gain half as much strength, if you reset again at 100% strength, it would be a third, and so on.
+
+</details>
+
 ## HunterHunted System
 <details>
 <summary>Heat System</summary>
@@ -902,9 +967,14 @@ Notes:
 <details>
 <summary>Changelog</summary>
 
+`1.5.0`
+- Some bug fixes
+- Bloodline system finally added, see above for details
+
 `1.4.2`
 - Some bug fixes
 - Added the Class system by `SALTYFLEA#3772`
+- This version isnt on my patreon first because i didnt make the main changes.
 
 `1.4.1`
 - Actually updated the changelog.

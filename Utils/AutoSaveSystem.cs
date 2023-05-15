@@ -22,6 +22,7 @@ namespace RPGMods.Utils
             ExperienceSystem.SaveEXPData();
             PvPSystem.SavePvPStat();
             WeaponMasterSystem.SaveWeaponMastery();
+            Bloodlines.saveBloodlines();
             BanSystem.SaveBanList();
             WorldDynamicsSystem.SaveFactionStats();
             WorldDynamicsSystem.SaveIgnoredMobs();
@@ -46,6 +47,7 @@ namespace RPGMods.Utils
             PvPSystem.LoadPvPStat();
             ExperienceSystem.LoadEXPData();
             WeaponMasterSystem.LoadWeaponMastery();
+            Bloodlines.loadBloodlines();
             BanSystem.LoadBanList();
             WorldDynamicsSystem.LoadFactionStats();
             WorldDynamicsSystem.LoadIgnoredMobs();

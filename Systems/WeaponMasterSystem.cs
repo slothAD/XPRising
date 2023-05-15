@@ -406,7 +406,7 @@ namespace RPGMods.Systems
                     }
                     else {
                         float gpe = -1 * growthPerEfficency;
-                        value = value / (value + growthPerEfficency);
+                        value = value / (value + gpe);
                         growth.data[type] = Math.Max(minGrowth, growth.data[type] * value);
                     }
                 }
