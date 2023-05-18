@@ -182,7 +182,7 @@ namespace RPGMods.Hooks
                     if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
                     
                     PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-                    Entity User = playerCharacter.UserEntity._Entity;
+                    Entity User = playerCharacter.UserEntity;
                     User Data = entityManager.GetComponentData<User>(User);
                     
                     var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
@@ -310,7 +310,7 @@ namespace RPGMods.Hooks
                     if (!__instance.EntityManager.HasComponent<InCombatBuff>(entity)) continue;
                     Entity e_Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
-                    Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity._Entity;
+                    Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
 
                     if (HunterHuntedSystem.isActive)
                     {
@@ -363,7 +363,7 @@ namespace RPGMods.Hooks
                         var Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                         if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
-                        var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                        var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                         var playerName = __instance.EntityManager.GetComponentData<User>(userEntity).CharacterName.ToString();
 
                         if (PvPSystem.isHonorSystemEnabled) PvPSystem.NewPlayerReceiver(userEntity, Owner, playerName);

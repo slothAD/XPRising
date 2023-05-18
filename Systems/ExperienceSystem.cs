@@ -53,7 +53,7 @@ namespace RPGMods.Systems
         public static void UpdateEXP(Entity killerEntity, Entity victimEntity, PlayerGroup PlayerGroup)
         {
             PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(killerEntity);
-            Entity userEntity = player.UserEntity._Entity;
+            Entity userEntity = player.UserEntity;
             User user = entityManager.GetComponentData<User>(userEntity);
             ulong SteamID = user.PlatformId;
 
@@ -149,7 +149,7 @@ namespace RPGMods.Systems
         public static void LoseEXP(Entity playerEntity)
         {
             PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
-            Entity userEntity = player.UserEntity._Entity;
+            Entity userEntity = player.UserEntity;
             User user = entityManager.GetComponentData<User>(userEntity);
             ulong SteamID = user.PlatformId;
 

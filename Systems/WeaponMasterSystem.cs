@@ -81,7 +81,7 @@ namespace RPGMods.Systems
             if (Killer == Victim) return;
             if (em.HasComponent<Minion>(Victim)) return;
 
-            Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity._Entity;
+            Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity;
             User User = em.GetComponentData<User>(userEntity);
             ulong SteamID = User.PlatformId;
             int weapon = (int)GetWeaponType(Killer)+1;
@@ -222,7 +222,7 @@ namespace RPGMods.Systems
             var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
 
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity;
             var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
 
             var Buffer = em.GetBuffer<ModifyUnitStatBuff_DOTS>(buffEntity);

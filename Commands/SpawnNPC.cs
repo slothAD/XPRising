@@ -1,6 +1,7 @@
 ﻿using RPGMods.Utils;
 using System;
 using System.Linq;
+using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
@@ -58,7 +59,7 @@ namespace RPGMods.Commands
 
                     if (Database.globalWaypoint.TryGetValue(waypoint, out var WPData))
                     {
-                        Float2 wp = WPData.Location;
+                        float3 wp = WPData.Location;
                         if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
                         {
                             Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
@@ -70,7 +71,7 @@ namespace RPGMods.Commands
 
                     if (Database.waypoints.TryGetValue(waypoint+"_"+SteamID, out var WPData_))
                     {
-                        Float2 wp = WPData_.Location;
+                        float3 wp = WPData_.Location;
                         if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
                         {
                             Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");

@@ -20,9 +20,10 @@ using System.Globalization;
 using Wetstone.API;
 #endif
 
+
 namespace RPGMods
 {
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.5.1")]
 
 #if WETSTONE
     [BepInDependency("xyz.molenzwiebel.wetstone")]
@@ -416,12 +417,12 @@ namespace RPGMods
         {
             InitConfig();
             Logger = Log;
-            harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+            harmony = new Harmony("RPGMods");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             TaskRunner.Initialize();
 
-            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Log.LogInfo("Plugin RPGMods is loaded!");
         }
 
         public override bool Unload()
@@ -442,6 +443,7 @@ namespace RPGMods
 
         public static void Initialize()
         {
+            if (isInitialized) return;
             //-- Initialize System
             Helper.CreatePlayerCache();
             Helper.GetServerGameSettings(out Helper.SGS);
@@ -450,7 +452,6 @@ namespace RPGMods
             ProximityLoop.UpdateCache();
             PvPSystem.Interlocked.isSiegeOn = false;
 
-            if (isInitialized) return;
 
             //-- Commands Related
             AutoSaveSystem.LoadDatabase();

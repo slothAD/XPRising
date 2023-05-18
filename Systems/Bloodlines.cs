@@ -106,7 +106,7 @@ namespace RPGMods.Systems
 
             //var VictimStats = em.GetComponentData<UnitStats>(Victim);
             UnitLevel UnitLevel = em.GetComponentData<UnitLevel>(Victim);
-            Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity._Entity;
+            Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity;
             User User = em.GetComponentData<User>(userEntity);
             ulong SteamID = User.PlatformId;
 

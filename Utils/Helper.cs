@@ -51,7 +51,7 @@ namespace RPGMods.Utils
 
         public static bool GetServerGameManager(out ServerGameManager sgm)
         {
-            sgm = Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
+            sgm = (ServerGameManager)Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
             return true;
         }
 
@@ -68,9 +68,9 @@ namespace RPGMods.Utils
                 TimeSpan CacheAge = DateTime.Now - playerGroup.TimeStamp;
                 if (CacheAge.TotalSeconds < 300) return playerGroup.AllyCount;
             }
-
+            /*
             Team team = Helper.SGM._TeamChecker.GetTeam(PlayerCharacter);
-            playerGroup.AllyCount = Helper.SGM._TeamChecker.GetAlliedUsersCount(team)-1;
+            playerGroup.AllyCount = Helper.SGM._TeamChecker.GetAlliedUsersCount(team)-1;*/
             playerGroup.TimeStamp = DateTime.Now;
 
             Dictionary<Entity, Entity> Group = new();
@@ -81,10 +81,10 @@ namespace RPGMods.Utils
                 Cache.PlayerAllies[PlayerCharacter] = playerGroup;
                 return 0;
             }
-
+            /*
             NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
             Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
-
+            
             foreach (var entity in allyBuffer)
             {
                 if (Plugin.Server.EntityManager.HasComponent<User>(entity))
@@ -94,6 +94,7 @@ namespace RPGMods.Utils
                     Group[entity] = playerEntity;
                 }
             }
+            */
 
             playerGroup.Allies = Group;
             Cache.PlayerAllies[PlayerCharacter] = playerGroup;
@@ -343,7 +344,7 @@ namespace RPGMods.Utils
             em.SetComponentData(entity, KickEvent);
         }
 
-        public static Entity AddItemToInventory(Context ctx, PrefabGUID guid, int amount)
+        public static void AddItemToInventory(Context ctx, PrefabGUID guid, int amount)
         {
             unsafe
             {
@@ -357,8 +358,10 @@ namespace RPGMods.Utils
                 }, bytePtr, false);
                 var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
                 var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
-                var hasAdded = InventoryUtilitiesServer.TryAddItem(ctx.EntityManager, gameData.ItemHashLookupMap, ctx.Event.SenderCharacterEntity, guid, amount, out _, out Entity e, default, hack);
-                return e;
+                var sets = new AddItemSettings();
+                sets.DropRemainder = true;
+                sets.EquipIfPossible = true;
+                var hasAdded = InventoryUtilitiesServer.TryAddItem(sets,ctx.Event.SenderCharacterEntity, guid ,amount);
             }
         }
 
@@ -474,7 +477,7 @@ namespace RPGMods.Utils
             var em = Plugin.Server.EntityManager;
             var cUnitStats = em.GetComponentData<UnitStats>(character);
             var cBuffer = em.GetBuffer<BoolModificationBuffer>(character);
-            cUnitStats.PvPProtected.Set(value, cBuffer);
+            cUnitStats.PvPProtected.SetBaseValue(value, cBuffer);
             em.SetComponentData(character, cUnitStats);
         }
 
@@ -561,7 +564,7 @@ namespace RPGMods.Utils
             }
             try
             {
-                name = s.PrefabNameLookupMap[hashCode].ToString();
+                name = s.PrefabLookupMap[hashCode].ToString();
             }
             catch
             {
@@ -570,7 +573,7 @@ namespace RPGMods.Utils
             return name;
         }
 
-        public static void TeleportTo(Context ctx, Float2 position)
+        public static void TeleportTo(Context ctx, float3 position)
         {
             var entity = ctx.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
@@ -585,7 +588,7 @@ namespace RPGMods.Utils
 
             ctx.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
             {
-                Position = new float2(position.x, position.y),
+                Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
         }

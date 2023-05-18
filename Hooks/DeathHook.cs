@@ -39,7 +39,7 @@ public class DeathEventListenerSystem_Patch
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died))
                 {
                     PlayerCharacter player = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Died);
-                    Entity userEntity = player.UserEntity._Entity;
+                    Entity userEntity = player.UserEntity;
                     User user = __instance.EntityManager.GetComponentData<User>(userEntity);
                     ulong SteamID = user.PlatformId;
 

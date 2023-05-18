@@ -24,7 +24,7 @@ namespace RPGMods.Systems
         public static void PlayerUpdateHeat(Entity killerEntity, Entity victimEntity)
         {
             var player = entityManager.GetComponentData<PlayerCharacter>(killerEntity);
-            var userEntity = player.UserEntity._Entity;
+            var userEntity = player.UserEntity;
             var user = entityManager.GetComponentData<User>(userEntity);
             var SteamID = user.PlatformId;
 

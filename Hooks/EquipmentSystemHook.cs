@@ -33,7 +33,7 @@ namespace RPGMods.Hooks
                     }
                     else
                     {
-                        Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                        Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                         ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
 
                         float levelEfficiency = (level.Level / 10 - ExperienceSystem.getLevel(SteamID) / 3) / 2;
@@ -78,7 +78,7 @@ namespace RPGMods.Hooks
                 foreach (var entity in entities)
                 {
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                     if (ExperienceSystem.isEXPActive)
                     {
                         WeaponLevel level = entityManager.GetComponentData<WeaponLevel>(entity);
@@ -145,7 +145,7 @@ namespace RPGMods.Hooks
                 foreach (var entity in entities)
                 {
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                     ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
                     if (ExperienceSystem.ShouldAllowGearLevel) //experiment with buffing for equipment based on level.
                     {
@@ -195,7 +195,7 @@ namespace RPGMods.Hooks
                     if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive) PvPSystem.OnEquipChange(Owner);
                     if (ExperienceSystem.isEXPActive)
                     {
-                        Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                        Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                         ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
                         ExperienceSystem.SetLevel(Owner, User, SteamID);
                     }
@@ -239,7 +239,7 @@ namespace RPGMods.Hooks
                         Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                         if (entityManager.HasComponent<PlayerCharacter>(Owner))
                         {
-                            Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                            Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                             ulong SteamID = entityManager.GetComponentData<User>(User).PlatformId;
                             ExperienceSystem.SetLevel(Owner, User, SteamID);
                         }

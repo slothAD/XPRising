@@ -13,32 +13,33 @@ using System.Reflection;
 
 namespace RPGMods.Hooks
 {
-    //[HarmonyPatch(typeof(LoadPersistenceSystemV2), nameof(LoadPersistenceSystemV2.SetLoadState))]
-    //public class PersistenceSystem_Patch
-    //{
-    //    public static void Prefix(ServerStartupState.State loadState, LoadPersistenceSystemV2 __instance)
-    //    {
-    //        if (loadState == ServerStartupState.State.SuccessfulStartup)
-    //        {
-    //            Plugin.Initialize();
-    //        }
-    //    }
-    //}
-
-    //[HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
-    //public class ServerGameSetting_Patch
-    //{
-    //    private static bool isInitialized = false;
-    //    public static void Postfix()
-    //    {
-    //        if (isInitialized == false)
-    //        {
-    //            Plugin.Initialize();
-    //            isInitialized = true;
-    //        }
-    //    }
-    //}
-
+    /*
+    [HarmonyPatch(typeof(LoadPersistenceSystemV2), nameof(LoadPersistenceSystemV2.SetLoadState))]
+    public class PersistenceSystem_Patch
+    {
+        public static void Prefix(ServerStartupState.State loadState, LoadPersistenceSystemV2 __instance)
+        {
+            if (loadState == ServerStartupState.State.SuccessfulStartup)
+            {
+                Plugin.Initialize();
+            }
+        }
+    }*/
+    
+    [HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
+    public class ServerGameSetting_Patch
+    {
+        private static bool isInitialized = false;
+        public static void Postfix()
+        {
+            if (isInitialized == false)
+            {
+                Plugin.Initialize();
+                isInitialized = true;
+            }
+        }
+    }
+    /*
     [HarmonyPatch(typeof(HandleGameplayEventsSystem), nameof(HandleGameplayEventsSystem.OnUpdate))]
     public class InitializationPatch
     {
@@ -48,7 +49,7 @@ namespace RPGMods.Hooks
             Plugin.Initialize();
             Plugin.harmony.Unpatch(typeof(HandleGameplayEventsSystem).GetMethod("OnUpdate"), typeof(InitializationPatch).GetMethod("RPGMods_Initialize_Method"));
         }
-    }
+    }*/
 
     [HarmonyPatch(typeof(GameBootstrap), nameof(GameBootstrap.Start))]
     public static class GameBootstrap_Patch

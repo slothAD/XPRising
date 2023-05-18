@@ -2,6 +2,7 @@
 using RPGMods.Utils;
 using System;
 using Unity.Entities;
+using static RootMotion.FinalIK.Grounding;
 
 namespace RPGMods.Commands
 {
@@ -10,6 +11,10 @@ namespace RPGMods.Commands
     {
         public static void Initialize(Context ctx)
         {
+
+            Output.SendSystemMessage(ctx.Event, $"Command currently non functional due to gloomrot updates, fix incoming");
+            return;
+            /*
             if (ctx.Args.Length != 0)
             {
                 try
@@ -42,7 +47,7 @@ namespace RPGMods.Commands
             else
             {
                 Output.MissingArguments(ctx);
-            }
+            }*/
         }
     }
 }

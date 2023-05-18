@@ -133,7 +133,7 @@ namespace RPGMods.Systems
             if (em.HasComponent<Minion>(VictimEntity)) return;
 
             var killer = em.GetComponentData<PlayerCharacter>(KillerEntity);
-            var killer_userEntity = killer.UserEntity._Entity;
+            var killer_userEntity = killer.UserEntity;
             var killer_user = em.GetComponentData<User>(killer_userEntity);
             var killer_name = killer_user.CharacterName.ToString();
             var killer_id = killer_user.PlatformId;
@@ -191,13 +191,13 @@ namespace RPGMods.Systems
         public static void Monitor(Entity KillerEntity, Entity VictimEntity)
         {
             var killer = em.GetComponentData<PlayerCharacter>(KillerEntity);
-            var killer_userEntity = killer.UserEntity._Entity;
+            var killer_userEntity = killer.UserEntity;
             var killer_user = em.GetComponentData<User>(killer_userEntity);
             var killer_name = killer_user.CharacterName.ToString();
             var killer_id = killer_user.PlatformId;
 
             var victim = em.GetComponentData<PlayerCharacter>(VictimEntity);
-            var victim_userEntity = victim.UserEntity._Entity;
+            var victim_userEntity = victim.UserEntity;
             var victim_user = em.GetComponentData<User>(victim_userEntity);
             var victim_name = victim_user.CharacterName.ToString();
             var victim_id = victim_user.PlatformId;
@@ -463,11 +463,11 @@ namespace RPGMods.Systems
 
         public static void PunishCheck(Entity Killer, Entity Victim)
         {
-            Entity KillerUser = em.GetComponentData<PlayerCharacter>(Killer).UserEntity._Entity;
+            Entity KillerUser = em.GetComponentData<PlayerCharacter>(Killer).UserEntity;
             User killerUserData = em.GetComponentData<User>(KillerUser);
             ulong KillerSteamID = killerUserData.PlatformId;
 
-            Entity VictimUser = em.GetComponentData<PlayerCharacter>(Victim).UserEntity._Entity;
+            Entity VictimUser = em.GetComponentData<PlayerCharacter>(Victim).UserEntity;
             User victimUserData = em.GetComponentData<User>(VictimUser);
 
             if (isExcludeOffline)
@@ -533,7 +533,7 @@ namespace RPGMods.Systems
             var Owner = em.GetComponentData<EntityOwner>(BuffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
 
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity;
             var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
 
             if (!Database.PvPStats.TryGetValue(SteamID, out var pvpData)) return;

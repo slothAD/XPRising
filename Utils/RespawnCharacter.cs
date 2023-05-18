@@ -18,10 +18,10 @@ namespace RPGMods.Utils
         public static void Respawn(Entity VictimEntity, PlayerCharacter player, Entity userEntity)
         {
             var bufferSystem = Plugin.Server.GetOrCreateSystem<EntityCommandBufferSystem>();
-            var commandBufferSafe = new EntityCommandBufferSafe(Allocator.Temp)
+            /*var commandBufferSafe = new EntityCommandBufferSafe(Allocator.Temp)
             {
                 Unsafe = bufferSystem.CreateCommandBuffer()
-            };
+            };*/
 
             unsafe
             {
@@ -39,7 +39,7 @@ namespace RPGMods.Utils
                 var spawnLocation = new Il2CppSystem.Nullable<float3>(boxedBytePtr);
                 var server = Plugin.Server.GetOrCreateSystem<ServerBootstrapSystem>();
 
-                server.RespawnCharacter(commandBufferSafe, userEntity, customSpawnLocation: spawnLocation, previousCharacter: VictimEntity, fadeOutEntity: userEntity);
+                //server.RespawnCharacter(commandBufferSafe, userEntity, customSpawnLocation: spawnLocation, previousCharacter: VictimEntity, fadeOutEntity: userEntity);
             }
         }
     }

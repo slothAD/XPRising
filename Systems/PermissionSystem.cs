@@ -104,7 +104,7 @@ namespace RPGMods.Systems
             var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
 
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity;
             var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
 
             if (IsUserVIP(SteamID))

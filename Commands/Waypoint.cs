@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
@@ -69,8 +70,8 @@ namespace RPGMods.Commands
                         }
                     }
                     var location = ctx.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-                    var f2_location = new Float2(location.x, location.z);
-                    AddWaypoint(SteamID, f2_location, wp_name, wp_true_name, global);
+                    var f3_location = new float3(location.x, location.y, location.z);
+                    AddWaypoint(SteamID, f3_location, wp_name, wp_true_name, global);
                     Output.SendSystemMessage(ctx, "Successfully added Waypoint.");
                     return;
                 }
@@ -128,7 +129,7 @@ namespace RPGMods.Commands
             Output.CustomErrorMessage(ctx, "Waypoint not found.");
         }
 
-        public static void AddWaypoint(ulong owner, Float2 location, string name, string true_name, bool isGlobal)
+        public static void AddWaypoint(ulong owner, float3 location, string name, string true_name, bool isGlobal)
         {
             var WaypointData = new WaypointData(true_name, owner, location);
             if (isGlobal) Database.globalWaypoint[name] = WaypointData;

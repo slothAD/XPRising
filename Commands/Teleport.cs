@@ -16,6 +16,10 @@ namespace RPGMods.Commands
             var UserEntity = ctx.Event.SenderUserEntity;
             EntityManager entityManager = Plugin.Server.EntityManager;
 
+
+            Output.CustomErrorMessage(ctx, "Command Currently disabled");
+            return;
+            /*
             if (Helper.IsPlayerInCombat(UserCharacter))
             {
                 Output.CustomErrorMessage(ctx, "Unable to use command! You're in combat!");
@@ -58,6 +62,7 @@ namespace RPGMods.Commands
             }
 
             Helper.TeleportTo(ctx, new(target_WorldComponent.Position.x, target_WorldComponent.Position.z));
+            */
         }
     }
 }

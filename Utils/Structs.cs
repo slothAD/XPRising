@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace RPGMods.Utils
 {
@@ -187,8 +188,8 @@ namespace RPGMods.Utils
     {
         public string Name { get; set; }
         public ulong Owner { get; set; }
-        public Float2 Location { get; set; }
-        public WaypointData(string name, ulong owner, Float2 location)
+        public float3 Location { get; set; }
+        public WaypointData(string name, ulong owner, float3 location)
         {
             Name = name;
             Owner = owner;

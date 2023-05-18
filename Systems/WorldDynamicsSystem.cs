@@ -142,23 +142,23 @@ namespace RPGMods.Systems
 
             if (HP != 0)
             {
-                unitHealth.MaxHealth.Set(unitHealth.MaxHealth._Value + HP, floatBuffer);
+                unitHealth.MaxHealth.SetBaseValue(unitHealth.MaxHealth._Value + HP, floatBuffer);
                 unitHealth.Value = unitHealth.MaxHealth._Value + HP;
                 em.SetComponentData(entity, unitHealth);
             }
 
-            if (PhysicalPower != 0) unitStats.PhysicalPower.Set(unitStats.PhysicalPower._Value + PhysicalPower, floatBuffer);
-            if (PhysicalResistance != 0) unitStats.PhysicalResistance.Set(PhysicalResistance, floatBuffer);
-            if (PhysicalCriticalStrikeChance != 0) unitStats.PhysicalCriticalStrikeChance.Set(unitStats.PhysicalCriticalStrikeChance._Value + PhysicalCriticalStrikeChance, floatBuffer);
-            if (PhysicalCriticalStrikeDamage != 0) unitStats.PhysicalCriticalStrikeDamage.Set(unitStats.PhysicalCriticalStrikeDamage._Value + PhysicalCriticalStrikeDamage, floatBuffer);
-            if (SpellPower != 0) unitStats.SpellPower.Set(unitStats.SpellPower._Value + SpellPower, floatBuffer);
-            if (SpellResistance != 0) unitStats.SpellResistance.Set(SpellResistance, floatBuffer);
-            if (SpellCriticalStrikeChance != 0) unitStats.SpellCriticalStrikeChance.Set(unitStats.SpellCriticalStrikeChance._Value + SpellCriticalStrikeChance, floatBuffer);
-            if (SpellCriticalStrikeDamage != 0) unitStats.SpellCriticalStrikeDamage.Set(unitStats.SpellCriticalStrikeDamage._Value + SpellCriticalStrikeDamage, floatBuffer);
-            if (DamageVsPlayerVampires != 0) unitStats.DamageVsPlayerVampires.Set(DamageVsPlayerVampires, floatBuffer);
-            if (ResistVsPlayerVampires != 0) unitStats.ResistVsPlayerVampires.Set(ResistVsPlayerVampires, floatBuffer);
-            if (FireResistance != 0) unitStats.FireResistance.Set(unitStats.FireResistance._Value + FireResistance, intBuffer);
-            unitStats.PvPProtected.Set(false, boolBuffer);
+            if (PhysicalPower != 0) unitStats.PhysicalPower.SetBaseValue(unitStats.PhysicalPower._Value + PhysicalPower, floatBuffer);
+            if (PhysicalResistance != 0) unitStats.PhysicalResistance.SetBaseValue(PhysicalResistance, floatBuffer);
+            if (PhysicalCriticalStrikeChance != 0) unitStats.PhysicalCriticalStrikeChance.SetBaseValue(unitStats.PhysicalCriticalStrikeChance._Value + PhysicalCriticalStrikeChance, floatBuffer);
+            if (PhysicalCriticalStrikeDamage != 0) unitStats.PhysicalCriticalStrikeDamage.SetBaseValue(unitStats.PhysicalCriticalStrikeDamage._Value + PhysicalCriticalStrikeDamage, floatBuffer);
+            if (SpellPower != 0) unitStats.SpellPower.SetBaseValue(unitStats.SpellPower._Value + SpellPower, floatBuffer);
+            if (SpellResistance != 0) unitStats.SpellResistance.SetBaseValue(SpellResistance, floatBuffer);
+            if (SpellCriticalStrikeChance != 0) unitStats.SpellCriticalStrikeChance.SetBaseValue(unitStats.SpellCriticalStrikeChance._Value + SpellCriticalStrikeChance, floatBuffer);
+            if (SpellCriticalStrikeDamage != 0) unitStats.SpellCriticalStrikeDamage.SetBaseValue(unitStats.SpellCriticalStrikeDamage._Value + SpellCriticalStrikeDamage, floatBuffer);
+            //if (DamageVsPlayerVampires != 0) unitStats.DamageVsPlayerVampires.Set(DamageVsPlayerVampires, floatBuffer);
+            //if (ResistVsPlayerVampires != 0) unitStats.ResistVsPlayerVampires.Set(ResistVsPlayerVampires, floatBuffer);
+            if (FireResistance != 0) unitStats.FireResistance.SetBaseValue(unitStats.FireResistance._Value + FireResistance, intBuffer);
+            unitStats.PvPProtected.SetBaseValue(false, boolBuffer);
             em.SetComponentData(entity, unitStats);
         }
 
