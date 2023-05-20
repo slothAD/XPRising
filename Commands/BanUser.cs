@@ -5,7 +5,7 @@ using System.Linq;
 using System;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("ban", Usage = "ban <playername> <days> <reason>", Description = "Check the status of specified player, or ban them. 0 is permanent.")]
     public static class BanUser
     {
@@ -117,4 +117,4 @@ namespace RPGMods.Commands
             }
         }
     }
-}
+*/}

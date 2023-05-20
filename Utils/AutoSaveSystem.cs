@@ -9,14 +9,15 @@ namespace RPGMods.Utils
         public static void SaveDatabase()
         {
             PermissionSystem.SaveUserPermission(); //-- Nothing new to save.
+            GodMode.SaveGodMode();
+            /*
             SunImmunity.SaveImmunity();
             Waypoint.SaveWaypoints();
             NoCooldown.SaveCooldown();
-            GodMode.SaveGodMode();
             Speed.SaveSpeed();
             AutoRespawn.SaveAutoRespawn();
             //Kit.SaveKits();   //-- Nothing to save here for now.
-            PowerUp.SavePowerUp();
+            PowerUp.SavePowerUp();*/
 
             //-- System Related
             ExperienceSystem.SaveEXPData();
@@ -33,15 +34,15 @@ namespace RPGMods.Utils
         public static void LoadDatabase()
         {
             //-- Commands Related
-            PermissionSystem.LoadPermissions();
+            PermissionSystem.LoadPermissions();/*
             SunImmunity.LoadSunImmunity();
             Waypoint.LoadWaypoints();
-            NoCooldown.LoadNoCooldown();
-            GodMode.LoadGodMode();
+            NoCooldown.LoadNoCooldown();*/
+            GodMode.LoadGodMode();/*
             Speed.LoadSpeed();
             AutoRespawn.LoadAutoRespawn();
             Kit.LoadKits();
-            PowerUp.LoadPowerUp();
+            PowerUp.LoadPowerUp();*/
 
             //-- System Related
             PvPSystem.LoadPvPStat();

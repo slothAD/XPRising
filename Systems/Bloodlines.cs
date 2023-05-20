@@ -76,7 +76,7 @@ namespace RPGMods.Systems
             {new PrefabGUID((int)Helper.BloodType.Worker), 6 }
         };
 
-        public static string[] names = { "Dracula, Vampire Progenitor", "Arwen the Godeater", "Ilvris Dragonblood", "Aya the Shadowlord", "Nytheria the Destroyer", "Hadubert the Inferno", "Rei the Binder" };
+        public static string[] names = { "Dracula, Vampire Progenitor", "Arwen the Godeater", "Ilvris Dragonblood", "Aya the Shadowlord", "Nytheria the Destroyer", "Hadubert the Inferno", "Rei the Binder", "Semika the Ever-shifting" };
 
         public static Dictionary<string, int> nameMap = new Dictionary<string, int> {
             { "dracula", 0 },
@@ -119,7 +119,11 @@ namespace RPGMods.Systems
                 growthVal = UnitLevel.Level;
                 if(!bloodlineMap.TryGetValue(bloodline.BloodType, out bloodlineIndex)) {
                     if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
+                    {
+
+                        Plugin.Logger.LogWarning("Bloodline DB Populated.");
                         Output.SendLore(targetUserEntity, "Bloodline not found for guid of " + bloodline.BloodType.GuidHash);
+                    }
                     return;
                 }
             }
@@ -142,13 +146,16 @@ namespace RPGMods.Systems
             if (mercilessBloodlines){
                 if (em.HasComponent<BloodConsumeSource>(Victim)){
                     victimBlood = em.GetComponentData<BloodConsumeSource>(Victim);
-                    if (!(victimBlood.UnitBloodType.Equals(bloodline)|| isVBlood)) {
+                    if (!(victimBlood.UnitBloodType.GuidHash == bloodline.BloodType.GuidHash|| isVBlood)){
+                        Plugin.Logger.LogInfo("Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
                         return;
                     }
-                    if (!isVBlood || victimBlood.BloodQuality <= getBloodlineData(SteamID).strength[bloodlineIndex]) {
+                    if (!(isVBlood || victimBlood.BloodQuality > getBloodlineData(SteamID).strength[bloodlineIndex])) {
+                        Plugin.Logger.LogInfo("Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
-                    if (!isVBlood || bloodline.Quality <= getBloodlineData(SteamID).strength[bloodlineIndex]) {
+                    if (!(isVBlood || bloodline.Quality > getBloodlineData(SteamID).strength[bloodlineIndex])){
+                        Plugin.Logger.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
 
@@ -180,6 +187,7 @@ namespace RPGMods.Systems
             {
                 if (isLogging)
                 {
+
                     Output.SendLore(userEntity, "<color=#ffb700>"+names[bloodlineIndex]+"'s bloodline has increased by "+ growthVal + "%</color>");
                 }
             }

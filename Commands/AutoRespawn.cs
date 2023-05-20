@@ -1,14 +1,15 @@
 ﻿using ProjectM.Network;
 using RPGMods.Systems;
 using RPGMods.Utils;
+using VampireCommandFramework;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
-    [Command("autorespawn", Usage = "autorespawn [<PlayerName>]", Description = "Toggle auto respawn on the same position on death.")]
+{/*
+    [Command("autorespawn", usage = "autorespawn [<PlayerName>]", Description = "Toggle auto respawn on the same position on death.")]
     public static class AutoRespawn
     {
         public static void Initialize(Context ctx)
@@ -99,5 +100,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("AutoRespawn DB Created.");
             }
         }
-    }
+    }*/
 }

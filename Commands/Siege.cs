@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("siege", Usage = "siege [<on>|<off>]", Description = "Display all players currently in siege mode, or engage siege mode.")]
     public static class Siege
     {
@@ -146,5 +146,5 @@ namespace RPGMods.Commands
                 Output.InvalidArguments(ctx);
             }
         }
-    }
+    }*/
 }

@@ -8,18 +8,18 @@ using RPGMods.Systems;
 
 namespace RPGMods.Hooks
 {
-    [HarmonyPatch(typeof(HandleGameplayEventsOnDeathSystem), nameof(HandleGameplayEventsOnDeathSystem.OnUpdate))]
-    public class HandleGameplayEventsSystem_Patch
+    [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
+    public class HandleGameplayEventsBase_Patch
     {
         private static byte CurrentDay = 0;
         private static bool isDNInitialized = false;
-        private static void Postfix(HandleGameplayEventsOnDeathSystem __instance)
+        private static void Postfix(HandleGameplayEventsBase __instance)
         {
             //-- Player Location Caching
             if (ExperienceSystem.isEXPActive || (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow)) ProximityLoop.UpdateCache();
             //-- HonorSystem Hostile Glow
             if (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow) ProximityLoop.HostileProximityGlow();
-
+            /*
             //-- Day Cycle Tracking
             var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
             if (CurrentDay != DNCycle.GameDateTimeNow.Day)
@@ -34,7 +34,7 @@ namespace RPGMods.Hooks
                     CurrentDay = DNCycle.GameDateTimeNow.Day;
                     if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
                 }
-            }
+            }*/
             //-- ------------------
 
             //-- Spawn Custom NPC Task

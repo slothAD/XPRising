@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("help, h", Usage = "help [<command>]", Description = "Shows a list of commands, or details about a command.", ReqPermission = 0)]
     public static class Help
     {
@@ -77,4 +77,4 @@ namespace RPGMods.Commands
             }
         }
     }
-}
+*/}

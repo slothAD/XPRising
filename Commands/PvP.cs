@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("pvp", Usage = "pvp [<on>|<off>|<top>]", Description = "Display your PvP statistics or toggle PvP/Castle Siege state")]
     public static class PvP
     {
@@ -230,5 +230,5 @@ namespace RPGMods.Commands
                 }
             }
         }
-    }
+    }*/
 }

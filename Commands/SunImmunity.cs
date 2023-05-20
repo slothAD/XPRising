@@ -4,7 +4,7 @@ using System.Text.Json;
 using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("sunimmunity, sun", Usage = "sunimmunity", Description = "Toggles sun immunity.")]
     public static class SunImmunity
     {
@@ -65,5 +65,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("SunImmunity DB Created.");
             }
         }
-    }
+    }*/
 }

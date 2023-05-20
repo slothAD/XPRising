@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text.Json;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("kit", "kit <Name>", "Gives you a previously specified set of items.")]
     public static class Kit
     {
@@ -69,5 +69,5 @@ namespace RPGMods.Commands
             };
             File.WriteAllText("BepInEx/config/RPGMods/kits.json", JsonSerializer.Serialize(kits, options));
         }
-    }
+    }*/
 }

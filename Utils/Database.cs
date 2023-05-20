@@ -108,9 +108,6 @@ namespace RPGMods.Utils
 
         //-- -- Mastery System
         public static Dictionary<ulong, WeaponMasterData> player_weaponmastery { get; set; }
-        public static Dictionary<ulong, WeaponMasterDataOld> player_weaponmasteryOld { get; set; }
-        public static Dictionary<ulong, WeaponMasterEffectivenessData> playerWeaponEffectiveness { get; set; }
-        public static Dictionary<ulong, WeaponMasterGrowthData> playerWeaponGrowth { get; set; }
         public static Dictionary<ulong, DateTime> player_decaymastery_logout { get; set; }
         public static Dictionary<ulong, bool> player_log_mastery { get; set; }
 

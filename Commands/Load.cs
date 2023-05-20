@@ -3,7 +3,7 @@ using RPGMods.Utils;
 using System.Text.RegularExpressions;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("load", Usage = "load", Description = "Force the server to load RPGMods DB from a json file.")]
     public static class Load
     {
@@ -31,5 +31,5 @@ namespace RPGMods.Commands
             //Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name);
             Output.SendSystemMessage(ctx, $"Data load complete.");
         }
-    }
+    }*/
 }

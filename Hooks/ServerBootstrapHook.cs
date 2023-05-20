@@ -25,6 +25,7 @@ namespace RPGMods.Hooks
             }
         }
     }*/
+
     
     [HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
     public class ServerGameSetting_Patch
@@ -118,30 +119,13 @@ namespace RPGMods.Hooks
             catch { }
         }
     }
-
-    [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserDisconnected))]
-    public static class OnUserDisconnected_Patch
+    /*
+    [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.BeginSetupServer))]
+    public static class BeginSetupServer_Patch
     {
         private static void Prefix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId, ConnectionStatusChangeReason connectionStatusReason, string extraData)
         {
-            try
-            {
-                var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
-                var serverClient = __instance._ApprovedUsersLookup[userIndex];
-                var userData = __instance.EntityManager.GetComponentData<User>(serverClient.UserEntity);
-                bool isNewVampire = userData.CharacterName.IsEmpty;
-
-                if (!isNewVampire)
-                {
-                    var playerName = userData.CharacterName.ToString();
-                    Helper.UpdatePlayerCache(serverClient.UserEntity, playerName, playerName, true);
-                    if (WeaponMasterSystem.isDecaySystemEnabled)
-                    {
-                        Database.player_decaymastery_logout[userData.PlatformId] = DateTime.Now;
-                    }
-                }
-            }
-            catch { };
+            Plugin.Initialize();
         }
-    }
+    }*/
 }

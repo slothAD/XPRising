@@ -3,7 +3,7 @@ using RPGMods.Utils;
 using System.Text.RegularExpressions;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("save", Usage = "save [<name>]", Description = "Force the server to write RPGMods DB to a json file.")]
     public static class Save
     {
@@ -31,5 +31,5 @@ namespace RPGMods.Commands
             //Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name);
             Output.SendSystemMessage(ctx, $"Data save complete.");
         }
-    }
+    }*/
 }

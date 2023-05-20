@@ -31,6 +31,7 @@ namespace RPGMods.Systems
         public static float GroupMaxDistance = 50;
         public static bool ShouldAllowGearLevel = true;
         public static bool LevelRewardsOn = true;
+        public static bool easyLvl15 = true;
 
         public static double EXPLostOnDeath = 0.10;
 
@@ -88,7 +89,7 @@ namespace RPGMods.Systems
             else{
                 float xpMult = level_diff * -1.0f;
                 xpMult = xpMult / (xpMult + 10.0f);
-                EXPGained = (int)(EXPGained * xpMult);
+                EXPGained = (int)(EXPGained * (1-xpMult));
             }
             /*
             else if (level_diff <= -20) EXPGained = (int) Math.Ceiling(EXPGained * 0.10 * EXPMultiplier);
@@ -189,15 +190,13 @@ namespace RPGMods.Systems
 
             float level = convertXpToLevel(Database.player_experience[SteamID]);
             if (level < 0) return;
-            if (level > MaxLevel)
-            {
+            if (level > MaxLevel){
                 level = MaxLevel;
                 Database.player_experience[SteamID] = convertLevelToXp(MaxLevel);
             }
 
             bool isLastLevel = Cache.player_level.TryGetValue(SteamID, out var level_);
-            if (isLastLevel)
-            {
+            if (isLastLevel){
                 if (level_ < level) 
                 {
                     Cache.player_level[SteamID] = level;
@@ -283,13 +282,22 @@ namespace RPGMods.Systems
         public static int convertXpToLevel(int xp)
         {
             // Level = 0.05 * sqrt(xp)
-            return (int)Math.Floor(EXPConstant * Math.Sqrt(xp));
+            int lvl = (int)Math.Floor(EXPConstant * Math.Sqrt(xp));
+            if(lvl < 15 && easyLvl15){
+                lvl = Math.Min(15, (int)Math.Sqrt(xp));
+            }
+            return lvl;
         }
 
         public static int convertLevelToXp(int level)
         {
             // XP = (Level / 0.05) ^ 2
-            return (int)Math.Pow(level / EXPConstant, EXPPower);
+            int xp = (int)Math.Pow(level / EXPConstant, EXPPower);
+            if (level <= 15 && easyLvl15)
+            {
+                xp = level * level;
+            }
+            return xp;
         }
 
         public static int getXp(ulong SteamID)

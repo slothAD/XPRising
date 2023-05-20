@@ -2,7 +2,7 @@
 using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("punish", Usage = "punish <playername> [<remove>]", Description = "Manually punish someone or lift their debuff.")]
     public static class Punish
     {
@@ -46,5 +46,5 @@ namespace RPGMods.Commands
                 return;
             }
         }
-    }
+    }*/
 }

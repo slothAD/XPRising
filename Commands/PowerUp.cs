@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.Json;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("powerup, pu", Usage = "pu <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", Description = "Buff specified player with the specified value.")]
     public static class PowerUp
     {
@@ -97,5 +97,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("PowerUp DB Created.");
             }
         }
-    }
+    }*/
 }

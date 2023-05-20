@@ -5,7 +5,7 @@ using Unity.Entities;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("teleport, tp", "teleport <Name>", "Teleport you to another online player within your clan.")]
     public static class Teleport
     {
@@ -19,7 +19,7 @@ namespace RPGMods.Commands
 
             Output.CustomErrorMessage(ctx, "Command Currently disabled");
             return;
-            /*
+            
             if (Helper.IsPlayerInCombat(UserCharacter))
             {
                 Output.CustomErrorMessage(ctx, "Unable to use command! You're in combat!");
@@ -62,7 +62,7 @@ namespace RPGMods.Commands
             }
 
             Helper.TeleportTo(ctx, new(target_WorldComponent.Position.x, target_WorldComponent.Position.z));
-            */
+            
         }
-    }
+    }*/
 }

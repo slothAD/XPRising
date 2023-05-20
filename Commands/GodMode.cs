@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using ProjectM;
 using RPGMods.Utils;
+using VampireCommandFramework;
 
 namespace RPGMods.Commands
 {
-    [Command("godmode, god", Usage = "godmode", Description = "Toggles god mode.")]
     public static class GodMode
     {
+        /*
         public static void Initialize(Context ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -18,27 +20,23 @@ namespace RPGMods.Commands
             string s = isGodMode ? "Activated" : "Deactivated";
             Output.SendSystemMessage(ctx, $"God mode <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
-        }
+        }*/
 
-        public static bool UpdateGodMode(Context ctx, bool isGodMode)
-        {
+        [Command("godmode","god", "godmode", "Toggles god mode.")]
+        public static bool UpdateGodMode(ChatCommandContext ctx, bool isGodMode){
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.godmode.TryGetValue(SteamID, out bool isGodMode_);
-            if (isExist || !isGodMode) RemoveGodMode(ctx);
+            if (isExist || !isGodMode) RemoveGodMode(SteamID);
             else Database.godmode.Add(SteamID, isGodMode);
             return true;
         }
 
-        public static void SaveGodMode()
-        {
+        public static void SaveGodMode(){
             File.WriteAllText("BepInEx/config/RPGMods/Saves/godmode.json", JsonSerializer.Serialize(Database.godmode, Database.JSON_options));
         }
 
-        public static bool RemoveGodMode(Context ctx)
-        {
-            ulong SteamID = ctx.Event.User.PlatformId;
-            if (Database.godmode.TryGetValue(SteamID, out bool isGodMode_))
-            {
+        public static bool RemoveGodMode(ulong SteamID){
+            if (Database.godmode.TryGetValue(SteamID, out bool isGodMode_)){
                 Database.godmode.Remove(SteamID);
                 return true;
             }

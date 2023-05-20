@@ -5,25 +5,29 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Unity.Entities;
+using Unity.Entities.UniversalDelegates;
+using UnityEngine.Networking.Types;
+using VampireCommandFramework;
 
 namespace RPGMods.Utils
 {
     public static class Output
     {
+        /*
         public static void CustomErrorMessage(Context ctx, string message)
         {
             ServerChatUtils.SendSystemMessageToClient(ctx.EntityManager, ctx.Event.User, $"<color=#ff0000>{message}</color>");
-        }
+        }*/
 
         public static void CustomErrorMessage(VChatEvent ev, string message)
         {
             ServerChatUtils.SendSystemMessageToClient(Plugin.Server.EntityManager, ev.User, $"<color=#ff0000>{message}</color>");
         }
-
+        /*
         public static void SendSystemMessage(Context ctx, string message)
         {
             ServerChatUtils.SendSystemMessageToClient(ctx.EntityManager, ctx.Event.User, $"{message}");
-        }
+        }*/
 
         public static void SendSystemMessage(VChatEvent ev, string message)
         {
@@ -34,7 +38,7 @@ namespace RPGMods.Utils
         {
             ServerChatUtils.SendSystemMessageToClient(Plugin.Server.EntityManager, ev.User, $"<color=#ff0000>Invalid command.</color>");
         }
-
+        /*
         public static void InvalidArguments(Context ctx)
         {
             ServerChatUtils.SendSystemMessageToClient(ctx.EntityManager, ctx.Event.User, $"<color=#ff0000>Invalid command parameters. Check {ctx.Prefix}help [<command>] for more information.</color>");
@@ -43,11 +47,16 @@ namespace RPGMods.Utils
         public static void MissingArguments(Context ctx)
         {
             ServerChatUtils.SendSystemMessageToClient(ctx.EntityManager, ctx.Event.User, $"<color=#ff0000>Missing command parameters. Check {ctx.Prefix}help [<command>] for more information.</color>");
-        }
+        }*/
 
         public static void SendLore(Entity userEntity, string message)
         {
+
+
             EntityManager em = Plugin.Server.EntityManager;
+            ServerChatUtils.SendSystemMessageToClient(em, em.GetComponentData <ProjectM.Network.User> (userEntity), message);
+            return;
+
             int index = em.GetComponentData<User>(userEntity).Index;
             NetworkId id = em.GetComponentData<NetworkId>(userEntity);
 

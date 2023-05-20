@@ -5,7 +5,7 @@ using System;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("playerinfo, i", Usage = "playerinfo <Name>", Description = "Display the player information details.")]
     public static class PlayerInfo
     {
@@ -99,5 +99,5 @@ namespace RPGMods.Commands
             Output.SendSystemMessage(ctx, $"Char Entity: {Color.White(CharacterEntity)}");
             Output.SendSystemMessage(ctx, $"User Entity: {Color.White(UserEntity)}");
         }
-    }
+    }*/
 }

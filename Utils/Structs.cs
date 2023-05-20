@@ -236,34 +236,25 @@ namespace RPGMods.Utils
             growth = growthIn;
 		}
 	}
-	
-    public struct WeaponMasterData {
-        public int[] data { get; set; }
 
-        public WeaponMasterData(int spear = 0, int sword = 0, int scythe = 0, int crossbow = 0, int mace = 0, int slashers = 0, int axes = 0, int none = 0, int fishingpole = 0, int spell = 0) {
-            data = new int[] { spell, none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole };
-        }
-    }
-
-    public struct WeaponMasterEffectivenessData
+    public struct WeaponMasterData
     {
-        public float[] data { get; set; }
+        public double[] mastery { get; set; }
+        public double[] efficency { get; set; }
+        public double[] growth { get; set; }
 
-        public WeaponMasterEffectivenessData(float spear = 1, float sword = 1, float scythe = 1, float crossbow = 1, float mace = 1, float slashers = 1, float axes = 1, float none = 1, float fishingpole = 1, float spell = 1)
-        {
-            data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
+        public WeaponMasterData(double[] strengthIn, double[] efficencyIn, double[] growthIn){
+            mastery = strengthIn;
+            efficency = efficencyIn;
+            growth = growthIn;
+            for(int i = 0; i < mastery.Length; i++){
+                mastery[i] = 0.0;
+                efficency[i] = 1.0;
+                growth[i] = 1.0;
+            }
         }
     }
 
-    public struct WeaponMasterGrowthData
-    {
-        public float[] data { get; set; }
-
-        public WeaponMasterGrowthData(float spear = 1, float sword = 1, float scythe = 1, float crossbow = 1, float mace = 1, float slashers = 1, float axes = 1, float none = 1, float fishingpole = 1, float spell = 1)
-        {
-            data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
-        }
-    }
 
     public struct BanData
     {

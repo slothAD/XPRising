@@ -8,7 +8,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("waypoint, wp", "waypoint <Name|Set|Remove|List> [<Name>] [global]", "Teleports you to previously created waypoints.")]
     public static class Waypoint
     {
@@ -218,5 +218,5 @@ namespace RPGMods.Commands
             File.WriteAllText("BepInEx/config/RPGMods/Saves/global_waypoints.json", JsonSerializer.Serialize(Database.globalWaypoint, Database.JSON_options));
             File.WriteAllText("BepInEx/config/RPGMods/Saves/total_waypoints.json", JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));
         }
-    }
+    }*/
 }

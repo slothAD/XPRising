@@ -382,7 +382,7 @@ namespace RPGMods.Systems
             Database.SiegeState[SteamID] = new SiegeData(false, default, default);
             return true;
         }
-
+        /*
         public static async Task SiegeList(Context ctx)
         {
             await Task.Yield();
@@ -431,7 +431,7 @@ namespace RPGMods.Systems
                 }
                 return new object();
             }, false);
-        }
+        }*/
 
         public static void OnEquipChange(Entity player)
         {
@@ -669,7 +669,7 @@ namespace RPGMods.Systems
                 }
             }
         }
-
+        /*
         public static async Task TopRanks(Context ctx)
         {
             await Task.Yield();
@@ -727,7 +727,7 @@ namespace RPGMods.Systems
                 }
                 return new object();
             }, false);
-        }
+        }*/
 
         public static void SavePvPStat()
         {

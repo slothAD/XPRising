@@ -5,7 +5,7 @@ using System.Text.Json;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("nocooldown, nocd", Usage = "nocooldown", Description = "Toggles instant cooldown for all abilities.")]
     public static class NoCooldown
     {
@@ -66,5 +66,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("NoCooldown DB Created.");
             }
         }
-    }
+    }*/
 }

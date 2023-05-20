@@ -1,12 +1,14 @@
-﻿using RPGMods.Utils;
+﻿using ProjectM;
+using RPGMods.Utils;
 using System.Text.RegularExpressions;
 using Unity.Collections;
+using VampireCommandFramework;
 
 namespace RPGMods.Commands
-{
-    [Command("rename", Usage = "rename <Player Name/SteamID> <New Name>", Description = "Rename the specified player.")]
+{/*
     public static class Rename
     {
+        [Command("rename", usage: "rename <Player Name/SteamID> <New Name>", description: "Rename the specified player.")]
         public static void Initialize(Context ctx)
         {
             if (ctx.Args.Length < 1)
@@ -118,5 +120,5 @@ namespace RPGMods.Commands
                 Output.SendSystemMessage(ctx, $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
             }
         }
-    }
+    }*/
 }

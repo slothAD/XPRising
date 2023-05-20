@@ -1,6 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.IL2CPP;
+using BepInEx.Unity.IL2CPP;
 using BepInEx.Logging;
 using HarmonyLib;
 using RPGMods.Commands;
@@ -9,12 +9,12 @@ using RPGMods.Systems;
 using RPGMods.Utils;
 using System.IO;
 using System.Reflection;
-using UnhollowerRuntimeLib;
 using Unity.Entities;
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Globalization;
+using VampireCommandFramework;
 
 #if WETSTONE
 using Wetstone.API;
@@ -24,6 +24,7 @@ using Wetstone.API;
 namespace RPGMods
 {
     [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.5.1")]
+    [BepInDependency("gg.deca.VampireCommandFramework")]
 
 #if WETSTONE
     [BepInDependency("xyz.molenzwiebel.wetstone")]
@@ -45,6 +46,7 @@ namespace RPGMods
         private static ConfigEntry<int> VIP_Permission;
         private static ConfigEntry<bool> ShouldAllowGearLevel;
         private static ConfigEntry<bool> EnableLevelRewards;
+        private static ConfigEntry<bool> EasyLevel15;
 
         private static ConfigEntry<double> VIP_InCombat_ResYield;
         private static ConfigEntry<double> VIP_InCombat_DurabilityLoss;
@@ -104,10 +106,10 @@ namespace RPGMods
 
         private static ConfigEntry<bool> EnableWeaponMaster;
         private static ConfigEntry<bool> EnableWeaponMasterDecay;
-        private static ConfigEntry<float> WeaponMasterMultiplier;
+        private static ConfigEntry<double> WeaponMasterMultiplier;
         private static ConfigEntry<int> WeaponDecayInterval;
-        private static ConfigEntry<int> WeaponMaxMastery;
-        private static ConfigEntry<float> WeaponMastery_VBloodMultiplier;
+        private static ConfigEntry<double> WeaponMaxMastery;
+        private static ConfigEntry<double> WeaponMastery_VBloodMultiplier;
         private static ConfigEntry<int> Offline_Weapon_MasteryDecayValue;
         private static ConfigEntry<int> MasteryCombatTick;
         private static ConfigEntry<int> MasteryMaxCombatTicks;
@@ -136,6 +138,12 @@ namespace RPGMods
         private static ConfigEntry<string> FishingPoleRates;
         private static ConfigEntry<string> SpellStats;
         private static ConfigEntry<string> SpellRates;
+        private static ConfigEntry<string> RapierStats;
+        private static ConfigEntry<string> RapierRates;
+        private static ConfigEntry<string> PistolStats;
+        private static ConfigEntry<string> PistolRates;
+        private static ConfigEntry<string> GreatswordStats;
+        private static ConfigEntry<string> GreatswordRates;
 
 
         private static ConfigEntry<bool> effectivenessSubSystemEnabled;
@@ -284,7 +292,9 @@ namespace RPGMods
 
             EnableExperienceSystem = Config.Bind("Experience", "Enable", true, "Enable/disable the the Experience System.");
             ShouldAllowGearLevel = Config.Bind("Experience", "Allow Gear Level", true, "Enable/disable gear level adjustment.");
-            EnableLevelRewards = Config.Bind("Experience", "Enable Level Rewards", true, "Enable rewards per level.");
+            EnableLevelRewards = Config.Bind("Experience", "Enable Level Rewards", false, "Enable rewards per level.");
+            EasyLevel15 = Config.Bind("Experience", "Easy lvl 15", true, "Makes level 15 much easier to reach so players dont get held up by the quest on it.");
+
             MaxLevel = Config.Bind("Experience", "Max Level", 80, "Configure the experience system max level.");
             EXPMultiplier = Config.Bind("Experience", "Multiplier", 1.0f, "Multiply the EXP gained by player.\n" +
                 "Ex.: 0.7f -> Will reduce the EXP gained by 30%\nFormula: UnitKilledLevel * EXPMultiplier");
@@ -297,14 +307,15 @@ namespace RPGMods
             EXPGroupModifier = Config.Bind("Experience", "Group Modifier", 0.75, "Set the modifier for EXP gained for each ally(player) in vicinity.\n" +
                 "Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)");
             EXPGroupMaxDistance = Config.Bind("Experience", "Ally Max Distance", 50f, "Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player");
+            
 
             EnableWeaponMaster = Config.Bind("Mastery", "Enable Weapon Mastery", true, "Enable/disable the weapon mastery system.");
             EnableWeaponMasterDecay = Config.Bind("Mastery", "Enable Mastery Decay", true, "Enable/disable the decay of weapon mastery when the user is offline.");
-            WeaponMaxMastery = Config.Bind("Mastery", "Max Mastery Value", 100000, "Configure the maximum mastery the user can atain. (100000 is 100%)");
+            WeaponMaxMastery = Config.Bind("Mastery", "Max Mastery Value", 100d, "Configure the maximum mastery the user can atain. (100000 is 100%)");
             MasteryCombatTick = Config.Bind("Mastery", "Mastery Value/Combat Ticks", 5, "Configure the amount of mastery gained per combat ticks. (5 -> 0.005%)");
             MasteryMaxCombatTicks = Config.Bind("Mastery", "Max Combat Ticks", 12, "Mastery will no longer increase after this many ticks is reached in combat. (1 tick = 5 seconds)");
-            WeaponMasterMultiplier = Config.Bind("Mastery", "Mastery Multiplier", 1f, "Multiply the gained mastery value by this amount.");
-            WeaponMastery_VBloodMultiplier = Config.Bind("Mastery", "VBlood Mastery Multiplier", 15f, "Multiply Mastery gained from VBlood kill.");
+            WeaponMasterMultiplier = Config.Bind("Mastery", "Mastery Multiplier", 1d, "Multiply the gained mastery value by this amount.");
+            WeaponMastery_VBloodMultiplier = Config.Bind("Mastery", "VBlood Mastery Multiplier", 15d, "Multiply Mastery gained from VBlood kill.");
             WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
             WeaponMasterySpellMasteryNeedsNoneToUse = Config.Bind("Mastery", "Unarmed Only Spell Mastery Use", true, "Gain the benefits of spell mastery only when you have no weapon equipped.");
@@ -333,13 +344,19 @@ namespace RPGMods
             FishingPoleRates = Config.Bind("Mastery Rates", "Fishing Pole Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             SpellStats = Config.Bind("Mastery Rates", "Spell Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
             SpellRates = Config.Bind("Mastery Rates", "Spell Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            RapierStats = Config.Bind("Mastery Rates", "Rapier Stats", " 0, 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            RapierRates = Config.Bind("Mastery Rates", "Rapier Rates", " 0.125, 0.5 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            PistolStats = Config.Bind("Mastery Rates", "Pistol Stats", " ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            PistolRates = Config.Bind("Mastery Rates", "Pistol Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            GreatswordStats = Config.Bind("Mastery Rates", "Greatsword Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            GreatswordRates = Config.Bind("Mastery Rates", "Greatsword Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
 
             effectivenessSubSystemEnabled = Config.Bind("Mastery", "Enable Effectiveness Subsystem", false, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
             maxEffectiveness = Config.Bind("Mastery", "Maximum Effectiveness", 10f, "The maximum mastery effectiveness where 1 is 100%.");
             growthSubSystemEnabled = Config.Bind("Mastery", "Enable Growth Subsystem", false, "Enables the growth subsystem, when you reset mastery either increases or decreases your matching mastery growth rate, depending on config.");
             minGrowth = Config.Bind("Mastery", "Minimum Growth Rate", 0.1f, "The minimum growth rate, where 1 is 100%");
             maxGrowth = Config.Bind("Mastery", "Maximum Growth Rate", 10f, "the maximum growth rate where 1 is 100%");
-            growthPerEfficency = Config.Bind("Mastery", "Growth per efficency", 10f, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
+            growthPerEfficency = Config.Bind("Mastery", "Growth per efficency", -1f, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
 
             WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
@@ -443,7 +460,9 @@ namespace RPGMods
 
         public static void Initialize()
         {
+            Logger.LogInfo("Trying to Initalize RPGMods, isInitalized already: " + isInitialized);
             if (isInitialized) return;
+            Logger.LogInfo("Initalizing RPGMods");
             //-- Initialize System
             Helper.CreatePlayerCache();
             Helper.GetServerGameSettings(out Helper.SGS);
@@ -457,10 +476,12 @@ namespace RPGMods
             AutoSaveSystem.LoadDatabase();
 
             //-- Apply configs
-            CommandHandler.Prefix = Prefix.Value;
-            CommandHandler.DisabledCommands = DisabledCommands.Value;
-            CommandHandler.delay_Cooldown = DelayedCommands.Value;
-            Waypoint.WaypointLimit = WaypointLimit.Value;
+            //CommandHandler.Prefix = Prefix.Value;
+            //CommandHandler.DisabledCommands = DisabledCommands.Value;
+            //CommandHandler.delay_Cooldown = DelayedCommands.Value;
+            CommandRegistry.RegisterAll();
+
+            //Waypoint.WaypointLimit = WaypointLimit.Value;
 
             PermissionSystem.isVIPSystem = EnableVIPSystem.Value;
             PermissionSystem.isVIPWhitelist = EnableVIPWhitelist.Value;
@@ -525,6 +546,7 @@ namespace RPGMods
             ExperienceSystem.EXPConstant = EXPFormula_1.Value;
             ExperienceSystem.GroupModifier = EXPGroupModifier.Value;
             ExperienceSystem.GroupMaxDistance = EXPGroupMaxDistance.Value;
+            ExperienceSystem.easyLvl15 = EasyLevel15.Value;
 
             WeaponMasterSystem.isMasteryEnabled = EnableWeaponMaster.Value;
             WeaponMasterSystem.isDecaySystemEnabled = EnableWeaponMasterDecay.Value;
@@ -539,29 +561,36 @@ namespace RPGMods
             WeaponMasterSystem.spellMasteryNeedsNoneToLearn = WeaponMasterySpellMasteryNeedsNoneToLearn.Value;
             WeaponMasterSystem.linearCDR = WeaponLinearSpellMastery.Value;
             WeaponMasterSystem.CDRStacks = WeaponSpellMasteryCDRStacks.Value;
+            WeaponMasterSystem.growthSubSystemEnabled = growthSubSystemEnabled.Value;
             Mastery.detailedStatements = DetailedMasteryInfo.Value;
 
 
             WeaponMasterSystem.UnarmedStats = parseIntArrayConifg(UnarmedStats.Value);
-            WeaponMasterSystem.UnarmedRates = parseFloatArrayConifg(UnarmedRates.Value);
+            WeaponMasterSystem.UnarmedRates = parseDoubleArrayConifg(UnarmedRates.Value);
             WeaponMasterSystem.SpearStats = parseIntArrayConifg(SpearStats.Value);
-            WeaponMasterSystem.SpearRates = parseFloatArrayConifg(SpearRates.Value);
+            WeaponMasterSystem.SpearRates = parseDoubleArrayConifg(SpearRates.Value);
             WeaponMasterSystem.SwordStats = parseIntArrayConifg(SwordStats.Value);
-            WeaponMasterSystem.SwordRates = parseFloatArrayConifg(SwordRates.Value);
+            WeaponMasterSystem.SwordRates = parseDoubleArrayConifg(SwordRates.Value);
             WeaponMasterSystem.ScytheStats = parseIntArrayConifg(ScytheStats.Value);
-            WeaponMasterSystem.ScytheRates = parseFloatArrayConifg(ScytheRates.Value);
+            WeaponMasterSystem.ScytheRates = parseDoubleArrayConifg(ScytheRates.Value);
             WeaponMasterSystem.CrossbowStats = parseIntArrayConifg(CrossbowStats.Value);
-            WeaponMasterSystem.CrossbowRates = parseFloatArrayConifg(CrossbowRates.Value);
+            WeaponMasterSystem.CrossbowRates = parseDoubleArrayConifg(CrossbowRates.Value);
             WeaponMasterSystem.SlasherStats = parseIntArrayConifg(SlasherStats.Value);
-            WeaponMasterSystem.SlasherRates = parseFloatArrayConifg(SlasherRates.Value);
+            WeaponMasterSystem.SlasherRates = parseDoubleArrayConifg(SlasherRates.Value);
             WeaponMasterSystem.MaceStats = parseIntArrayConifg(MaceStats.Value);
-            WeaponMasterSystem.MaceRates = parseFloatArrayConifg(MaceRates.Value);
+            WeaponMasterSystem.MaceRates = parseDoubleArrayConifg(MaceRates.Value);
             WeaponMasterSystem.AxeStats = parseIntArrayConifg(AxeStats.Value);
-            WeaponMasterSystem.AxeRates = parseFloatArrayConifg(AxeRates.Value);
+            WeaponMasterSystem.AxeRates = parseDoubleArrayConifg(AxeRates.Value);
             WeaponMasterSystem.FishingPoleStats = parseIntArrayConifg(FishingPoleStats.Value);
-            WeaponMasterSystem.FishingPoleRates = parseFloatArrayConifg(FishingPoleRates.Value);
+            WeaponMasterSystem.FishingPoleRates = parseDoubleArrayConifg(FishingPoleRates.Value);
             WeaponMasterSystem.SpellStats = parseIntArrayConifg(SpellStats.Value);
-            WeaponMasterSystem.SpellRates = parseFloatArrayConifg(SpellRates.Value);
+            WeaponMasterSystem.SpellRates = parseDoubleArrayConifg(SpellRates.Value);
+            WeaponMasterSystem.RapierStats = parseIntArrayConifg(RapierStats.Value);
+            WeaponMasterSystem.RapierRates = parseDoubleArrayConifg(RapierRates.Value);
+            WeaponMasterSystem.PistolStats = parseIntArrayConifg(PistolStats.Value);
+            WeaponMasterSystem.PistolRates = parseDoubleArrayConifg(PistolRates.Value);
+            WeaponMasterSystem.GreatSwordStats = parseIntArrayConifg(GreatswordStats.Value);
+            WeaponMasterSystem.GreatSwordRates = parseDoubleArrayConifg(GreatswordRates.Value);
 
 
             Bloodlines.draculaStats = parseIntArrayConifg(draculaBloodlineStats.Value);
@@ -591,6 +620,10 @@ namespace RPGMods
                 Bloodlines.nameMap.TryAdd(blNames[i].ToLower().Trim(), i);
             }
 
+            Bloodlines.stats = new int[][] { Bloodlines.draculaStats, Bloodlines.arwenStats, Bloodlines.ilvrisStats, Bloodlines.ayaStats, Bloodlines.nytheriaStats, Bloodlines.hadubertStats, Bloodlines.reiStats };
+            Bloodlines.minStrengths = new double[][] { Bloodlines.draculaMinStrength, Bloodlines.arwenMinStrength, Bloodlines.ilvrisMinStrength, Bloodlines.ayaMinStrength, Bloodlines.nytheriaMinStrength, Bloodlines.hadubertMinStrength, Bloodlines.reiMinStrength };
+            Bloodlines.rates = new double[][] { Bloodlines.draculaRates, Bloodlines.arwenRates, Bloodlines.ilvrisRates, Bloodlines.ayaRates, Bloodlines.nytheriaRates, Bloodlines.hadubertRates, Bloodlines.reiRates };
+
             Bloodlines.areBloodlinesEnabled = bloodlinesEnabled.Value;
             Bloodlines.mercilessBloodlines = mercilessBloodlines.Value;
             Bloodlines.effectivenessSubSystemEnabled = bloodlineEfficencySubSystem.Value;
@@ -601,12 +634,14 @@ namespace RPGMods
             Bloodlines.maxBloodlineGrowth = maxBloodlineGrowth.Value;
             Bloodlines.minBloodlineGrowth = minBloodlineGrowth.Value;
             Bloodlines.growthPerEfficency = bloodlineGrowthPerEfficency.Value;
+            Bloodlines.VBloodMultiplier = bloodlineVBloodMultiplier.Value;
+            Bloodlines.growthMultiplier = bloodlineGrowthMultiplier.Value;
 
 
 
 
-            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats };
-            WeaponMasterSystem.masteryRates = new float[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates };
+            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats, WeaponMasterSystem.RapierStats, WeaponMasterSystem.PistolStats, WeaponMasterSystem.GreatSwordStats };
+            WeaponMasterSystem.masteryRates = new double[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates, WeaponMasterSystem.RapierRates, WeaponMasterSystem.PistolRates, WeaponMasterSystem.GreatSwordRates };
 
             WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
             WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;

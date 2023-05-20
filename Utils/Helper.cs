@@ -13,6 +13,7 @@ using RPGMods.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
+using VampireCommandFramework;
 
 namespace RPGMods.Utils
 {
@@ -344,7 +345,7 @@ namespace RPGMods.Utils
             em.SetComponentData(entity, KickEvent);
         }
 
-        public static void AddItemToInventory(Context ctx, PrefabGUID guid, int amount)
+        public static void AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
             unsafe
             {
@@ -511,26 +512,26 @@ namespace RPGMods.Utils
             return true;
         }
 
-        public static bool SpawnAtPosition(Entity user, string name, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
+        public static bool SpawnAtPosition(Entity user, string name, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
         {
             var isFound = Database.database_units.TryGetValue(name, out var unit);
             if (!isFound) return false;
 
-            var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            var f3pos = new float3(position.x, translation.Value.y, position.y);
-            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, f3pos, count, minRange, maxRange, duration);
+            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
+            //var f3pos = new float3(position.x, translation.Value.y, position.y);
+            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, count, minRange, maxRange, duration);
             return true;
         }
 
-        public static bool SpawnAtPosition(Entity user, int GUID, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
+        public static bool SpawnAtPosition(Entity user, int GUID, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
         {
             var unit = new PrefabGUID(GUID);
 
-            var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            var f3pos = new float3(position.x, translation.Value.y, position.y);
+            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
+            //var f3pos = new float3(position.x, translation.Value.y, position.y);
             try
             {
-                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, f3pos, count, minRange, maxRange, duration);
+                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, count, minRange, maxRange, duration);
             }
             catch
             {
@@ -573,6 +574,7 @@ namespace RPGMods.Utils
             return name;
         }
 
+        /*
         public static void TeleportTo(Context ctx, float3 position)
         {
             var entity = ctx.EntityManager.CreateEntity(
@@ -591,7 +593,7 @@ namespace RPGMods.Utils
                 Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
-        }
+        }*/
 
         struct FakeNull
         {

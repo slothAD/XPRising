@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("speed", Usage = "speed", Description = "Toggles increased movement speed.")]
 
     public static class Speed
@@ -65,5 +65,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("Speed DB Created.");
             }
         }
-    }
+    }*/
 }

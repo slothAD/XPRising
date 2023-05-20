@@ -3,7 +3,7 @@ using RPGMods.Utils;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("customspawn, cspn", "customspawn <Prefab Name> [<BloodType> <BloodQuality> <BloodConsumeable(\"true/false\")> <Duration>]", "Spawns a modified NPC at your current position.")]
     public static class CustomSpawnNPC
     {
@@ -77,5 +77,5 @@ namespace RPGMods.Commands
                 Output.MissingArguments(ctx);
             }
         }
-    }
+    }*/
 }

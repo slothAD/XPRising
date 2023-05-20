@@ -3,7 +3,7 @@ using ProjectM.Network;
 using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("health, hp", Usage = "health <percentage> [<player name>]", Description = "Sets your current Health")]
     public static class Health
     {
@@ -49,5 +49,5 @@ namespace RPGMods.Commands
 
             Output.SendSystemMessage(ctx, $"Player \"{PlayerName}\" Health set to <color=#ffff00>{Value}%</color>");
         }
-    }
+    }*/
 }
