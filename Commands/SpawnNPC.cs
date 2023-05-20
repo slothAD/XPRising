@@ -46,10 +46,10 @@ namespace RPGMods.Commands
                     float3 wp = WPData.Location;
                     if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
                     {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
+                        ctx.Reply($"Could not find specified unit: {name}");
                         return;
                     }
-                    Output.SendSystemMessage(ctx, $"Spawning {count} {name} at <{wp.x}, {wp.y}>");
+                    ctx.Reply($"Spawning {count} {name} at <{wp.x}, {wp.y}>");
                     return;
                 }
 
@@ -58,13 +58,13 @@ namespace RPGMods.Commands
                     float3 wp = WPData_.Location;
                     if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
                     {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
+                        ctx.Reply($"Could not find specified unit: {name}");
                         return;
                     }
-                    Output.SendSystemMessage(ctx, $"Spawning {count} {name} at <{wp.x}, {wp.y}>");
+                    ctx.Reply($"Spawning {count} {name} at <{wp.x}, {wp.y}>");
                     return;
                 }
-                Output.CustomErrorMessage(ctx, "This waypoint doesn't exist.");
+                ctx.Reply("This waypoint doesn't exist.");
             }*/
         }
     }

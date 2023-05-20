@@ -9,7 +9,7 @@ namespace RPGMods.Commands
     public static class Rename
     {
         [Command("rename", usage: "rename <Player Name/SteamID> <New Name>", description: "Rename the specified player.")]
-        public static void Initialize(Context ctx)
+        public static void Initialize( ctx)
         {
             if (ctx.Args.Length < 1)
             {
@@ -28,7 +28,7 @@ namespace RPGMods.Commands
 
                 if (!isPlayerFound)
                 {
-                    Output.CustomErrorMessage(ctx, $"Unable to find the specified player.");
+                    ctx.Reply($"Unable to find the specified player.");
                     return;
                 }
 
@@ -37,7 +37,7 @@ namespace RPGMods.Commands
 
             if (Regex.IsMatch(NewName.ToString(), @"[^a-zA-Z0-9]"))
             {
-                Output.CustomErrorMessage(ctx, "Name can only contain alphanumeric!");
+                ctx.Reply("Name can only contain alphanumeric!");
                 return;
             }
 
@@ -45,80 +45,70 @@ namespace RPGMods.Commands
             //-- The max legth assignable is actually 61 bytes.
             if (NewName.utf8LengthInBytes > 20)
             {
-                Output.CustomErrorMessage(ctx, $"New name is too long!");
+                ctx.Reply($"New name is too long!");
                 return;
             }
 
             if (Cache.NamePlayerCache.TryGetValue(NewName.ToString().ToLower(), out _))
             {
-                Output.CustomErrorMessage(ctx, $"Name is already taken!");
+                ctx.Reply($"Name is already taken!");
                 return;
             }
 
             Helper.RenamePlayer(userEntity, playerEntity, NewName);
             if (userEntity.Equals(ctx.Event.SenderUserEntity))
             {
-                Output.SendSystemMessage(ctx, $"Your name has been updated to \"{NewName}\".");
+                ctx.Reply($"Your name has been updated to \"{NewName}\".");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
+                ctx.Reply($"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
             }
         }
     }
-
-    [Command("adminrename", Usage = "adminrename <Player Name/SteamID> <New Name>", Description = "Rename the specified player. Careful, the new name isn't parsed to be alphanumeric.")]
-    public static class Adminrename
+    */
+   public static class Adminrename
     {
-        public static void Initialize(Context ctx)
+        [Command("adminrename", usage: "adminrename <Player Name/SteamID> <New Name>", description: "Rename the specified player. Careful, the new name isn't parsed to be alphanumeric.", adminOnly: true)]
+        public static void Initialize(ChatCommandContext ctx, string oldName, string newName)
         {
-            if (ctx.Args.Length < 1)
+            var playerEntity = ctx.Event.SenderCharacterEntity;
+            var userEntity = ctx.Event.SenderUserEntity;
+            FixedString64 NewName = newName;
+            bool isPlayerFound;
+            if (ulong.TryParse(oldName, out var SteamID)) isPlayerFound = Helper.FindPlayer(SteamID, false, out playerEntity, out userEntity);
+            else isPlayerFound = Helper.FindPlayer(oldName, false, out playerEntity, out userEntity);
+
+            if (!isPlayerFound)
             {
-                Output.MissingArguments(ctx);
+                ctx.Reply($"Unable to find the specified player.");
                 return;
             }
 
-            var playerEntity = ctx.Event.SenderCharacterEntity;
-            var userEntity = ctx.Event.SenderUserEntity;
-            FixedString64 NewName = ctx.Args[0];
-            if (ctx.Args.Length > 1)
-            {
-                bool isPlayerFound;
-                if (ulong.TryParse(ctx.Args[0], out var SteamID)) isPlayerFound = Helper.FindPlayer(SteamID, false, out playerEntity, out userEntity);
-                else isPlayerFound = Helper.FindPlayer(ctx.Args[0], false, out playerEntity, out userEntity);
-
-                if (!isPlayerFound)
-                {
-                    Output.CustomErrorMessage(ctx, $"Unable to find the specified player.");
-                    return;
-                }
-
-                NewName = ctx.Args[1];
-            }
 
             //-- The game default max byte length is 20.
             //-- The max legth assignable is actually 61 bytes.
             if (NewName.utf8LengthInBytes > 20)
             {
-                Output.CustomErrorMessage(ctx, $"New name is too long!");
+                ctx.Reply($"New name is too long!");
                 return;
             }
 
             if (Cache.NamePlayerCache.TryGetValue(NewName.ToString().ToLower(), out _))
             {
-                Output.CustomErrorMessage(ctx, $"Name is already taken!");
+                ctx.Reply($"Name is already taken!");
                 return;
             }
 
             Helper.RenamePlayer(userEntity, playerEntity, NewName);
             if (userEntity.Equals(ctx.Event.SenderUserEntity))
             {
-                Output.SendSystemMessage(ctx, $"Your name has been updated to \"{NewName}\".");
+                ctx.Reply($"Your name has been updated to \"{NewName}\".");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
+                ctx.Reply($"Player \"{oldName}\" name has been updated to \"{NewName}\".");
             }
         }
-    }*/
+    }
 }

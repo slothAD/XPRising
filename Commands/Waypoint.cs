@@ -20,7 +20,7 @@ namespace RPGMods.Commands
             var SteamID = ctx.Event.User.PlatformId;
             if (Helper.IsPlayerInCombat(PlayerEntity))
             {
-                Output.CustomErrorMessage(ctx, "Unable to use waypoint! You're in combat!");
+                ctx.Reply("Unable to use waypoint! You're in combat!");
                 return;
             }
             if (ctx.Args.Length < 1)
@@ -41,7 +41,7 @@ namespace RPGMods.Commands
                     if ((args_2nd.Equals("true") || args_2nd.Equals("global")) && isAllowed) global = true;
                     else
                     {
-                        Output.CustomErrorMessage(ctx, "You do not have permission to edit a global waypoint.");
+                        ctx.Reply("You do not have permission to edit a global waypoint.");
                         return;
                     }
                 }
@@ -49,7 +49,7 @@ namespace RPGMods.Commands
                 {
                     if (Database.globalWaypoint.TryGetValue(wp_name, out _))
                     {
-                        Output.CustomErrorMessage(ctx, $"A global waypoint with the \"{wp_name}\" name existed. Please rename your waypoint.");
+                        ctx.Reply($"A global waypoint with the \"{wp_name}\" name existed. Please rename your waypoint.");
                         return;
                     }
                     if (!global)
@@ -58,28 +58,28 @@ namespace RPGMods.Commands
                         {
                             if (total >= WaypointLimit)
                             {
-                                Output.CustomErrorMessage(ctx, "You already have reached your total waypoint limit.");
+                                ctx.Reply("You already have reached your total waypoint limit.");
                                 return;
                             }
                         }
                         wp_name = wp_name + "_" +SteamID;
                         if (Database.waypoints.TryGetValue(wp_name, out _))
                         {
-                            Output.CustomErrorMessage(ctx, $"You already have a waypoint with the same name.");
+                            ctx.Reply($"You already have a waypoint with the same name.");
                             return;
                         }
                     }
                     var location = ctx.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
                     var f3_location = new float3(location.x, location.y, location.z);
                     AddWaypoint(SteamID, f3_location, wp_name, wp_true_name, global);
-                    Output.SendSystemMessage(ctx, "Successfully added Waypoint.");
+                    ctx.Reply("Successfully added Waypoint.");
                     return;
                 }
                 if (ctx.Args[0].ToLower().Equals("remove"))
                 {
                     if (!Database.globalWaypoint.TryGetValue(wp_name, out _) && global)
                     {
-                        Output.CustomErrorMessage(ctx, $"Global \"{wp_name}\" waypoint not found.");
+                        ctx.Reply($"Global \"{wp_name}\" waypoint not found.");
                         return;
                     }
                     if (!global)
@@ -87,11 +87,11 @@ namespace RPGMods.Commands
                         wp_name = wp_name + "_" + SteamID;
                         if (!Database.waypoints.TryGetValue(wp_name, out _))
                         {
-                            Output.CustomErrorMessage(ctx, $"You do not have any waypoint with this name.");
+                            ctx.Reply($"You do not have any waypoint with this name.");
                             return;
                         }
                     }
-                    Output.SendSystemMessage(ctx, "Successfully removed Waypoint.");
+                    ctx.Reply("Successfully removed Waypoint.");
                     RemoveWaypoint(SteamID, wp_name, global);
                     return;
                 }
@@ -102,15 +102,15 @@ namespace RPGMods.Commands
                 int total_wp = 0;
                 foreach (var global_wp in Database.globalWaypoint)
                 {
-                    Output.SendSystemMessage(ctx, $" - <color=#ffff00>{global_wp.Key}</color> [<color=#00dd00>Global</color>]");
+                    ctx.Reply($" - <color=#ffff00>{global_wp.Key}</color> [<color=#00dd00>Global</color>]");
                     total_wp++;
                 }
                 foreach (var wp in Database.waypoints)
                 {
-                    Output.SendSystemMessage(ctx, $" - <color=#ffff00>{wp.Value.Name}</color>");
+                    ctx.Reply($" - <color=#ffff00>{wp.Value.Name}</color>");
                     total_wp++;
                 }
-                if (total_wp == 0) Output.CustomErrorMessage(ctx, "No waypoint available.");
+                if (total_wp == 0) ctx.Reply("No waypoint available.");
                 return;
             }
 
@@ -126,7 +126,7 @@ namespace RPGMods.Commands
                 Helper.TeleportTo(ctx, WPData_.Location);
                 return;
             }
-            Output.CustomErrorMessage(ctx, "Waypoint not found.");
+            ctx.Reply("Waypoint not found.");
         }
 
         public static void AddWaypoint(ulong owner, float3 location, string name, string true_name, bool isGlobal)

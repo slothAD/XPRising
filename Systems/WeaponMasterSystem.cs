@@ -40,22 +40,22 @@ namespace RPGMods.Systems
         public static double[] UnarmedRates = { 0.25f, 0.01f };
 
         public static int[] SpearStats = { 0 };
-        public static double[] SpearRates = { 0.25f };
+        public static double[] SpearRates = { 0.25 };
 
         public static int[] SwordStats = { 0, 25 };
-        public static double[] SwordRates = { 0.125f, 0.125f };
+        public static double[] SwordRates = { 0.125, 0.125 };
 
         public static int[] ScytheStats = { 0 , 29 };
-        public static double[] ScytheRates = { 0.125f, 0.00125f };
+        public static double[] ScytheRates = { 0.125, 0.00125 };
 
         public static int[] CrossbowStats = { 29 };
-        public static double[] CrossbowRates = { 0.0025f };
+        public static double[] CrossbowRates = { 0.0025 };
 
         public static int[] MaceStats = { 4 };
         public static double[] MaceRates = { 1f };
 
         public static int[] SlasherStats = { 29, 5 };
-        public static double[] SlasherRates = { 0.00125f, 0.005f };
+        public static double[] SlasherRates = { 0.00125, 0.005 };
 
         public static int[] AxeStats = { 0, 4 };
         public static double[] AxeRates = { 0.125f, 0.5f };
@@ -66,14 +66,14 @@ namespace RPGMods.Systems
         public static int[] SpellStats = { 7 };
         public static double[] SpellRates = { 100 };
 
-        public static int[] RapierStats = {  };
-        public static double[] RapierRates = {  };
+        public static int[] RapierStats = { 29, 0x20 };
+        public static double[] RapierRates = { 0.00125, 0.00125 };
 
-        public static int[] PistolStats = {  };
-        public static double[] PistolRates = {  };
+        public static int[] PistolStats = { 29, 30 };
+        public static double[] PistolRates = { 0.00125, 0.0125 };
 
-        public static int[] GreatSwordStats = {  };
-        public static double[] GreatSwordRates = {  };
+        public static int[] GreatSwordStats = { 0, 30 };
+        public static double[] GreatSwordRates = { 0.125, 0.0125 };
 
 
         public static int[][] masteryStats = { SpellStats, UnarmedStats, SpearStats, SwordStats, ScytheStats, CrossbowStats, MaceStats, SlasherStats, AxeStats, FishingPoleStats, RapierStats, PistolStats, GreatSwordStats };

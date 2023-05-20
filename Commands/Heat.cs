@@ -37,14 +37,14 @@ namespace RPGMods.Commands
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified player \"{name}\".");
+                        ctx.Reply($"Could not find specified player \"{name}\".");
                         return;
                     }
                 }
                 if (int.TryParse(ctx.Args[0], out var n)) Cache.heatlevel[SteamID] = n;
                 if (int.TryParse(ctx.Args[1], out var nm)) Cache.bandit_heatlevel[SteamID] = nm;
-                Output.SendSystemMessage(ctx, $"Player \"{CharName}\" heat value changed.");
-                Output.SendSystemMessage(ctx, $"Human: <color=#ffff00>{Cache.heatlevel[SteamID]}</color> | Bandit: <color=#ffff00>{Cache.bandit_heatlevel[SteamID]}</color>");
+                ctx.Reply($"Player \"{CharName}\" heat value changed.");
+                ctx.Reply($"Human: <color=#ffff00>{Cache.heatlevel[SteamID]}</color> | Bandit: <color=#ffff00>{Cache.bandit_heatlevel[SteamID]}</color>");
                 HunterHuntedSystem.HeatManager(userEntity);
                 return;
             }*/
@@ -76,9 +76,9 @@ namespace RPGMods.Commands
                 int NextAmbush = (int)(HunterHuntedSystem.ambush_interval - since_ambush.TotalSeconds);
                 if (NextAmbush < 0) NextAmbush = 0;
 
-                Output.SendSystemMessage(ctx, $"Next Possible Ambush in {Color.White(NextAmbush.ToString())}s");
-                Output.SendSystemMessage(ctx, $"Ambush Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
-                Output.SendSystemMessage(ctx, $"Human: {Color.White(human_heatlevel.ToString())} | Bandit: {Color.White(bandit_heatlevel.ToString())}");
+                ctx.Reply($"Next Possible Ambush in {Color.White(NextAmbush.ToString())}s");
+                ctx.Reply($"Ambush Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
+                ctx.Reply($"Human: {Color.White(human_heatlevel.ToString())} | Bandit: {Color.White(bandit_heatlevel.ToString())}");
             }*/
         }
     }

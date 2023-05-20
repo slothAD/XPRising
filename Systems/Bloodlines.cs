@@ -57,14 +57,18 @@ namespace RPGMods.Systems
         public static double[] hadubertMinStrength = { 0, 50, 100};
         public static double[] hadubertRates = { 0.1, 200, 0.0025};
 
-        public static int[] reiStats = { (int)UnitStatType.GarlicResistance, (int)UnitStatType.ResourceYield, (int)UnitStatType.DamageVsMineral, (int)UnitStatType.DamageVsVegetation, (int)UnitStatType.DamageVsWood};
+        public static int[] reiStats = { (int)UnitStatType.GarlicResistance, (int)UnitStatType.ResourceYield, (int)UnitStatType.DamageVsMineral, (int)UnitStatType.DamageVsVegetation, (int)UnitStatType.DamageVsWood };
         public static double[] reiMinStrength = { 0, 50, 100, 100, 100 };
         public static double[] reiRates = { 0.25, 0.01, 0.0025, 0.0025, 0.0025 };
 
+        public static int[] semikaStats = { (int)UnitStatType.SpellCriticalStrikeChance, (int)UnitStatType.MovementSpeed, (int)UnitStatType.DamageVsHumans};
+        public static double[] semikaMinStrength = { 0, 50, 100, 100, 100 };
+        public static double[] semikaRates = { 0.005, 0.005, 0.0025 };
 
-        public static int[][] stats = { draculaStats, arwenStats, ilvrisStats, ayaStats, nytheriaStats, hadubertStats, reiStats };
-        public static double[][] minStrengths = { draculaMinStrength, arwenMinStrength, ilvrisMinStrength, ayaMinStrength, nytheriaMinStrength, hadubertMinStrength, reiMinStrength };
-        public static double[][] rates = { draculaRates, arwenRates, ilvrisRates, ayaRates, nytheriaRates, hadubertRates, reiRates };
+
+        public static int[][] stats = { draculaStats, arwenStats, ilvrisStats, ayaStats, nytheriaStats, hadubertStats, reiStats, semikaStats };
+        public static double[][] minStrengths = { draculaMinStrength, arwenMinStrength, ilvrisMinStrength, ayaMinStrength, nytheriaMinStrength, hadubertMinStrength, reiMinStrength, semikaMinStrength };
+        public static double[][] rates = { draculaRates, arwenRates, ilvrisRates, ayaRates, nytheriaRates, hadubertRates, reiRates, semikaRates };
 
         public static Dictionary<PrefabGUID, int> bloodlineMap = new Dictionary<PrefabGUID, int> {
             {new PrefabGUID((int)Helper.BloodType.Frailed), 0 },
@@ -86,6 +90,9 @@ namespace RPGMods.Systems
             { "nytheria", 4 },
             { "hadubert", 5 },
             { "rei", 6 },
+            { "semika", 7 },
+            { "semi", 7 },
+            { "mutant", 7 },
             { "frail", 0 },
             { "creature", 1 },
             { "warrior", 2 },

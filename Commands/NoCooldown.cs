@@ -1,32 +1,34 @@
-﻿using RPGMods.Utils;
+﻿using ProjectM;
+using RPGMods.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace RPGMods.Commands
-{/*
-    [Command("nocooldown, nocd", Usage = "nocooldown", Description = "Toggles instant cooldown for all abilities.")]
+{
     public static class NoCooldown
     {
-        public static void Initialize(Context ctx)
+
+        [Command("nocooldown, nocd", description: "Toggles instant cooldown for all abilities.")]
+        public static void Initialize(ChatCommandContext ctx)
         {
             Entity PlayerCharacter = ctx.Event.SenderCharacterEntity;
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isNoCD = Database.nocooldownlist.TryGetValue(SteamID, out bool isNoCooldown_);
             if (isNoCD) isNoCD = false;
             else isNoCD = true;
-            UpdateCooldownList(ctx, isNoCD);
+            UpdateCooldownList(SteamID, isNoCD);
             string p = isNoCD ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"No Cooldown is now <color=#ffff00>{p}</color>");
+            ctx.Reply($"No Cooldown is now <color=#ffff00>{p}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        public static bool UpdateCooldownList(Context ctx, bool isNoCooldown)
+        public static bool UpdateCooldownList(ulong SteamID, bool isNoCooldown)
         {
-            ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.nocooldownlist.TryGetValue(SteamID, out bool isNoCooldown_);
-            if (isExist || !isNoCooldown) RemoveCooldown(ctx);
+            if (isExist || !isNoCooldown) RemoveCooldown(SteamID);
             else Database.nocooldownlist.Add(SteamID, isNoCooldown);
             return true;
         }
@@ -36,9 +38,8 @@ namespace RPGMods.Commands
             File.WriteAllText("BepInEx/config/RPGMods/Saves/nocooldown.json", JsonSerializer.Serialize(Database.nocooldownlist, Database.JSON_options));
         }
 
-        public static bool RemoveCooldown(Context ctx)
+        public static bool RemoveCooldown(ulong SteamID)
         {
-            ulong SteamID = ctx.Event.User.PlatformId;
             if (Database.nocooldownlist.TryGetValue(SteamID, out bool isNoCooldown_))
             {
                 Database.nocooldownlist.Remove(SteamID);
@@ -66,5 +67,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("NoCooldown DB Created.");
             }
         }
-    }*/
+    }
 }

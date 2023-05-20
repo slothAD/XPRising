@@ -175,6 +175,9 @@ namespace RPGMods
         private static ConfigEntry<string> reiBloodlineStats;
         private static ConfigEntry<string> reiBloodlineMinStrengths;
         private static ConfigEntry<string> reiBloodlineRates;
+        private static ConfigEntry<string> semikaBloodlineStats;
+        private static ConfigEntry<string> semikaBloodlineMinStrengths;
+        private static ConfigEntry<string> semikaBloodlineRates;
 
 
         private static ConfigEntry<bool> bloodlinesEnabled;
@@ -344,12 +347,13 @@ namespace RPGMods
             FishingPoleRates = Config.Bind("Mastery Rates", "Fishing Pole Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
             SpellStats = Config.Bind("Mastery Rates", "Spell Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
             SpellRates = Config.Bind("Mastery Rates", "Spell Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            RapierStats = Config.Bind("Mastery Rates", "Rapier Stats", " 0, 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            RapierRates = Config.Bind("Mastery Rates", "Rapier Rates", " 0.125, 0.5 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            PistolStats = Config.Bind("Mastery Rates", "Pistol Stats", " ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            PistolRates = Config.Bind("Mastery Rates", "Pistol Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            GreatswordStats = Config.Bind("Mastery Rates", "Greatsword Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            GreatswordRates = Config.Bind("Mastery Rates", "Greatsword Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            RapierStats = Config.Bind("Mastery Rates", "Rapier Stats", " 29, 32 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            RapierRates = Config.Bind("Mastery Rates", "Rapier Rates", " 0.00125, 0.00125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            PistolStats = Config.Bind("Mastery Rates", "Pistol Stats", " 29, 30 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            PistolRates = Config.Bind("Mastery Rates", "Pistol Rates", " 0.00125, 0.0125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            GreatswordStats = Config.Bind("Mastery Rates", "Greatsword Stats", " 0, 30 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            GreatswordRates = Config.Bind("Mastery Rates", "Greatsword Rates", " 0.125, 0.0125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+
 
             effectivenessSubSystemEnabled = Config.Bind("Mastery", "Enable Effectiveness Subsystem", false, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
             maxEffectiveness = Config.Bind("Mastery", "Maximum Effectiveness", 10f, "The maximum mastery effectiveness where 1 is 100%.");
@@ -405,13 +409,17 @@ namespace RPGMods
             hadubertBloodlineStats = Config.Bind("Bloodline Rates", "Hadubert Bloodline Stats", "25, 7, 40", "The stat IDs for the bloodline of Hadubert the Inferno, Active only with scholar blood.");
             hadubertBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Hadubert Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
             hadubertBloodlineRates = Config.Bind("Bloodline Rates", "Hadubert Bloodline Rates", "0.1, 200, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
-            
+
             reiBloodlineStats = Config.Bind("Bloodline Rates", "Rei Bloodline Stats", "20, 3, 52, 53, 54", "The stat IDs for the bloodline of Rei the Binder, Active only with worker blood.");
             reiBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Rei Bloodline Minimum Strengths", "0, 50, 100, 100, 100", "The minimum bloodline strength to recieve the specified stat.");
             reiBloodlineRates = Config.Bind("Bloodline Rates", "Rei Bloodline Rates", "0.25, 0.01, 0.0025, 0.0025, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
 
+            semikaBloodlineStats = Config.Bind("Bloodline Rates", "Semika Bloodline Stats", "31, 5, 39", "The stat IDs for the bloodline of Semika the Evershifting, Active only with mutant blood.");
+            semikaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Semika Bloodline Minimum Strengths", "0, 50, 100", "The minimum bloodline strength to recieve the specified stat.");
+            semikaBloodlineRates = Config.Bind("Bloodline Rates", "Semika Bloodline Rates", "0.005, 0.005, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
 
-            bloodlineNames = Config.Bind("Bloodline Rates", "Bloodline Names", "Dracula the Progenitor, Arwen the Godeater, Ilvris Dragonblood, Aya the Shadowlord, Nytheria the Destroyer, Hadubert the Inferno, Rei the Binder", "Rename the bloodlines here, the starting names are from supporters, Seperate names with commas, must contain exactly 7 names.");
+
+            bloodlineNames = Config.Bind("Bloodline Rates", "Bloodline Names", "Dracula the Progenitor, Arwen the Godeater, Ilvris Dragonblood, Aya the Shadowlord, Nytheria the Destroyer, Hadubert the Inferno, Rei the Binder, Semika the Evershifting", "Rename the bloodlines here, the starting names are from supporters, Seperate names with commas, must contain exactly 8 names.");
 
 
 
@@ -614,15 +622,18 @@ namespace RPGMods
             Bloodlines.reiStats = parseIntArrayConifg(reiBloodlineStats.Value);
             Bloodlines.reiMinStrength = parseDoubleArrayConifg(reiBloodlineMinStrengths.Value);
             Bloodlines.reiRates = parseDoubleArrayConifg(reiBloodlineRates.Value);
+            Bloodlines.semikaStats = parseIntArrayConifg(semikaBloodlineStats.Value);
+            Bloodlines.semikaMinStrength = parseDoubleArrayConifg(semikaBloodlineMinStrengths.Value);
+            Bloodlines.semikaRates = parseDoubleArrayConifg(semikaBloodlineRates.Value);
             string[] blNames = parseStringArrayConifg(bloodlineNames.Value);
             Bloodlines.names = blNames;
             for(int i = 0; i < blNames.Length; i++) {
                 Bloodlines.nameMap.TryAdd(blNames[i].ToLower().Trim(), i);
             }
 
-            Bloodlines.stats = new int[][] { Bloodlines.draculaStats, Bloodlines.arwenStats, Bloodlines.ilvrisStats, Bloodlines.ayaStats, Bloodlines.nytheriaStats, Bloodlines.hadubertStats, Bloodlines.reiStats };
-            Bloodlines.minStrengths = new double[][] { Bloodlines.draculaMinStrength, Bloodlines.arwenMinStrength, Bloodlines.ilvrisMinStrength, Bloodlines.ayaMinStrength, Bloodlines.nytheriaMinStrength, Bloodlines.hadubertMinStrength, Bloodlines.reiMinStrength };
-            Bloodlines.rates = new double[][] { Bloodlines.draculaRates, Bloodlines.arwenRates, Bloodlines.ilvrisRates, Bloodlines.ayaRates, Bloodlines.nytheriaRates, Bloodlines.hadubertRates, Bloodlines.reiRates };
+            Bloodlines.stats = new int[][] { Bloodlines.draculaStats, Bloodlines.arwenStats, Bloodlines.ilvrisStats, Bloodlines.ayaStats, Bloodlines.nytheriaStats, Bloodlines.hadubertStats, Bloodlines.reiStats, Bloodlines.semikaStats, };
+            Bloodlines.minStrengths = new double[][] { Bloodlines.draculaMinStrength, Bloodlines.arwenMinStrength, Bloodlines.ilvrisMinStrength, Bloodlines.ayaMinStrength, Bloodlines.nytheriaMinStrength, Bloodlines.hadubertMinStrength, Bloodlines.reiMinStrength, Bloodlines.semikaMinStrength };
+            Bloodlines.rates = new double[][] { Bloodlines.draculaRates, Bloodlines.arwenRates, Bloodlines.ilvrisRates, Bloodlines.ayaRates, Bloodlines.nytheriaRates, Bloodlines.hadubertRates, Bloodlines.reiRates, Bloodlines.semikaRates };
 
             Bloodlines.areBloodlinesEnabled = bloodlinesEnabled.Value;
             Bloodlines.mercilessBloodlines = mercilessBloodlines.Value;

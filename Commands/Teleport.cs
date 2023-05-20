@@ -17,12 +17,12 @@ namespace RPGMods.Commands
             EntityManager entityManager = Plugin.Server.EntityManager;
 
 
-            Output.CustomErrorMessage(ctx, "Command Currently disabled");
+            ctx.Reply("Command Currently disabled");
             return;
             
             if (Helper.IsPlayerInCombat(UserCharacter))
             {
-                Output.CustomErrorMessage(ctx, "Unable to use command! You're in combat!");
+                ctx.Reply("Unable to use command! You're in combat!");
                 return;
             }
             if (ctx.Args.Length < 1)
@@ -44,20 +44,20 @@ namespace RPGMods.Commands
             }
             else
             {
-                Output.CustomErrorMessage(ctx, "Target player not found.");
+                ctx.Reply("Target player not found.");
                 return;
             }
 
             var serverGameManager = Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
             if (!serverGameManager._TeamChecker.IsAllies(user_TeamComponent, target_TeamComponent))
             {
-                Output.CustomErrorMessage(ctx, "Unable to teleport to player from another Clan!");
+                ctx.Reply("Unable to teleport to player from another Clan!");
                 return;
             }
 
             if (Helper.IsPlayerInCombat(TargetChar))
             {
-                Output.CustomErrorMessage(ctx, $"Unable to teleport! Player \"{TargetName}\" is in combat!");
+                ctx.Reply($"Unable to teleport! Player \"{TargetName}\" is in combat!");
                 return;
             }
 

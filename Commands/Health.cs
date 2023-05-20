@@ -34,7 +34,7 @@ namespace RPGMods.Commands
                 }
                 else
                 {
-                    Utils.Output.CustomErrorMessage(ctx, $"Player \"{targetName}\" not found.");
+                    Utils.ctx.Reply($"Player \"{targetName}\" not found.");
                     return;
                 }
             }
@@ -47,7 +47,7 @@ namespace RPGMods.Commands
             };
             Plugin.Server.GetExistingSystem<DebugEventsSystem>().ChangeHealthEvent(UserIndex, ref HealthEvent);
 
-            Output.SendSystemMessage(ctx, $"Player \"{PlayerName}\" Health set to <color=#ffff00>{Value}%</color>");
+            ctx.Reply($"Player \"{PlayerName}\" Health set to <color=#ffff00>{Value}%</color>");
         }
     }*/
 }

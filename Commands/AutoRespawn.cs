@@ -38,7 +38,7 @@ namespace RPGMods.Commands
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, $"Player \"{TargetName}\" not found!");
+                        ctx.Reply($"Player \"{TargetName}\" not found!");
                         return;
                     }
                 }
@@ -50,11 +50,11 @@ namespace RPGMods.Commands
             string s = isAutoRespawn ? "Activated" : "Deactivated";
             if (isServerWide)
             {
-                Output.SendSystemMessage(ctx, $"Server wide Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Server wide Auto Respawn <color=#ffff00>{s}</color>");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
             }
         }
 

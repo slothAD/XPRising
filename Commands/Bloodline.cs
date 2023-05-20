@@ -23,7 +23,7 @@ namespace RPGMods.Commands
                 return;
             }
             /*else {
-                Output.CustomErrorMessage(ctx, "The Bloodline system command is not yet coded.");
+                ctx.Reply("The Bloodline system command is not yet coded.");
                 return;
             }*/
             var SteamID = ctx.Event.User.PlatformId;

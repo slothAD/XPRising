@@ -16,20 +16,20 @@ namespace RPGMods.Commands
                 name = string.Join(' ', ctx.Args);
                 if (name.Length > 50)
                 {
-                    Output.CustomErrorMessage(ctx, "Name is too long!");
+                    ctx.Reply("Name is too long!");
                     return;
                 }
                 if (Regex.IsMatch(name, @"[^a-zA-Z0-9\x20]"))
                 {
-                    Output.CustomErrorMessage(ctx, "Name can only contain alphanumeric & space!");
+                    ctx.Reply("Name can only contain alphanumeric & space!");
                     return;
                 }
             }
 
-            Output.SendSystemMessage(ctx, $"Saving data....");
+            ctx.Reply($"Saving data....");
             AutoSaveSystem.SaveDatabase();
             //Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name);
-            Output.SendSystemMessage(ctx, $"Data save complete.");
+            ctx.Reply($"Data save complete.");
         }
     }*/
 }

@@ -68,7 +68,7 @@ namespace RPGMods.Systems
         {
             foreach(var m in messages)
             {
-                Output.SendSystemMessage(ctx, m);
+                ctx.Reply(m);
             }
             return new object();
         }

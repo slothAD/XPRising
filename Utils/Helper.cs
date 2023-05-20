@@ -608,7 +608,8 @@ namespace RPGMods.Utils
             Rogue = 793735874,
             Brute = 581377887,
             Scholar = -586506765,
-            Worker = -540707191
+            Worker = -540707191,
+            Mutant = -2017994753
         }
         public enum BloodCategory {
             Frailed = 0,

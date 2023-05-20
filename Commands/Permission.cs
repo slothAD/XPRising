@@ -21,12 +21,12 @@ namespace RPGMods.Commands
                 else if (args[0].ToLower().Equals("save"))
                 {
                     PermissionSystem.SaveUserPermission();
-                    Output.SendSystemMessage(ctx, "Saved user permission to JSON file.");
+                    ctx.Reply("Saved user permission to JSON file.");
                 }
                 else if (args[0].ToLower().Equals("reload"))
                 {
                     PermissionSystem.LoadPermissions();
-                    Output.SendSystemMessage(ctx, "Reloaded permission from JSON file.");
+                    ctx.Reply("Reloaded permission from JSON file.");
                 }
                 else
                 {
@@ -64,7 +64,7 @@ namespace RPGMods.Commands
                     bool tryFind = Helper.FindPlayer(args[2], false, out _, out var target_userEntity);
                     if (!tryFind)
                     {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified player \"{args[2]}\".");
+                        ctx.Reply($"Could not find specified player \"{args[2]}\".");
                         return;
                     }
                     playerName = args[2];
@@ -75,7 +75,7 @@ namespace RPGMods.Commands
                     playerName = Helper.GetNameFromSteamID(SteamID);
                     if (playerName == null)
                     {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified player steam id \"{args[2]}\".");
+                        ctx.Reply($"Could not find specified player steam id \"{args[2]}\".");
                         return;
                     }
                 }
@@ -83,7 +83,7 @@ namespace RPGMods.Commands
                 if (level == 0) Database.user_permission.Remove(SteamID);
                 else Database.user_permission[SteamID] = level;
 
-                Output.SendSystemMessage(ctx, $"Player \"{playerName}\" permission is now set to <color=#fffffffe>{level}</color>.");
+                ctx.Reply($"Player \"{playerName}\" permission is now set to <color=#fffffffe>{level}</color>.");
                 return;
             }
             else
