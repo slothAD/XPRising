@@ -1,4 +1,5 @@
 ﻿using ProjectM;
+using ProjectM.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -63,6 +64,8 @@ namespace RPGMods.Utils
         //-- Dynamic Database (Saved on a JSON file on plugin reload, server restart, and shutdown.)
         //-- Initialization for the data loading is on each command or related CS file.
 
+        //public static Dictionary<ulong, ApplyBuffDebugEvent> playerBuffs = new();
+        public static HashSet<ApplyBuffDebugEvent> playerBuffs = new();
         //-- -- Commands
         public static Dictionary<ulong, bool> sunimmunity { get; set; }
         public static Dictionary<ulong, bool> nocooldownlist { get; set; }

@@ -11,11 +11,14 @@ namespace RPGMods.Commands
     {
         [Command("powerup", "pu", "<player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", "Buff specified player with the specified value.", adminOnly:true)]
         public static void Initialize(ChatCommandContext ctx, string name, string flag, float MaxHP = 0, float PATK = 0, float SATK = 0, float PDEF = 0, float SDEF = 0){
+            
             if (!Helper.FindPlayer(name, false, out var playerEntity, out var userEntity))
             {
                 ctx.Reply("Specified player not found.");
                 return;
             }
+
+
             ulong SteamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
 
             if (flag.ToLower().Equals("remove"))

@@ -166,17 +166,21 @@ namespace RPGMods.Hooks
         };
         #endregion
 
+
+
         private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 
             foreach (var entity in entities)
             {
-                PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);                
-                if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose))
+                //PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+                ApplyBuffDebugEvent GUID = entityManager.GetComponentData<ApplyBuffDebugEvent>(entity);
+
+                //if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose))
+                if (Database.playerBuffs.Contains(GUID))
                 {
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
@@ -281,7 +285,6 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(BuffSystem_Spawn_Server __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (PvPSystem.isPunishEnabled || SiegeSystem.isSiegeBuff || PermissionSystem.isVIPSystem || PvPSystem.isHonorSystemEnabled)
             {
@@ -300,7 +303,6 @@ namespace RPGMods.Hooks
 
         private static void Postfix(BuffSystem_Spawn_Server __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (PvPSystem.isPunishEnabled || HunterHuntedSystem.isActive || WeaponMasterSystem.isMasteryEnabled)
             {
@@ -330,7 +332,6 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(ModifyBloodDrainSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (PermissionSystem.isVIPSystem || PvPSystem.isHonorSystemEnabled)
             {
@@ -351,24 +352,21 @@ namespace RPGMods.Hooks
     {
         private static void Postfix(Destroy_TravelBuffSystem __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
+            var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
             {
-                var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-                foreach (var entity in entities)
+                PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
+                //-- Most likely it's a new player!
+                if (GUID.Equals(Database.Buff.AB_Interact_TombCoffinSpawn_Travel))
                 {
-                    PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-                    //-- Most likely it's a new player!
-                    if (GUID.Equals(Database.Buff.AB_Interact_TombCoffinSpawn_Travel))
-                    {
-                        var Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                        if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
+                    var Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
+                    if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
-                        var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-                        var playerName = __instance.EntityManager.GetComponentData<User>(userEntity).CharacterName.ToString();
+                    var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
+                    var playerName = __instance.EntityManager.GetComponentData<User>(userEntity).CharacterName.ToString();
 
-                        if (PvPSystem.isHonorSystemEnabled) PvPSystem.NewPlayerReceiver(userEntity, Owner, playerName);
-                        else Helper.UpdatePlayerCache(userEntity, playerName, playerName);
-                    }
+                    if (PvPSystem.isHonorSystemEnabled) PvPSystem.NewPlayerReceiver(userEntity, Owner, playerName);
+                    else Helper.UpdatePlayerCache(userEntity, playerName, playerName);
                 }
             }
         }

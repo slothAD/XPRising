@@ -256,9 +256,11 @@ namespace RPGMods.Utils
                 Character = Char
             };
             var buffEvent = new ApplyBuffDebugEvent()
-            {
-                BuffPrefabGUID = GUID
-            };
+            //{
+            //    BuffPrefabGUID = GUID
+            //}
+            ;
+            Database.playerBuffs.Add(buffEvent);
             des.ApplyBuff(fromCharacter, buffEvent);
         }
 
