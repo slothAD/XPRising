@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
 using VampireCommandFramework;
+using UnityEngine;
 
 namespace RPGMods.Utils
 {
@@ -41,6 +42,7 @@ namespace RPGMods.Utils
         public static ServerGameSettings SGS = default;
         public static ServerGameManager SGM = default;
         public static UserActivityGridSystem UAGS = default;
+        public static int groupRange = 50;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
         
@@ -82,9 +84,11 @@ namespace RPGMods.Utils
                 Cache.PlayerAllies[PlayerCharacter] = playerGroup;
                 return 0;
             }
-            /*
-            NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
-            Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
+
+            NativeArray<Entity> allyBuffer = Helper.SGM._EntityManager.GetAllEntities();
+
+            //NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
+            //Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
             
             foreach (var entity in allyBuffer)
             {
@@ -92,10 +96,18 @@ namespace RPGMods.Utils
                 {
                     Entity playerEntity = Plugin.Server.EntityManager.GetComponentData<User>(entity).LocalCharacter._Entity;
                     if (playerEntity.Equals(PlayerCharacter)) continue;
-                    Group[entity] = playerEntity;
+                    if(Helper.SGM.IsAllies(playerEntity, PlayerCharacter))
+                    {
+                        float3 pos1 = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(PlayerCharacter).Position;
+                        float3 pos2 = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(playerEntity).Position;
+                        if (Vector3.Distance(pos1, pos2) <= groupRange)
+                        {
+                            Group[entity] = playerEntity;
+                        }
+                    }
                 }
             }
-            */
+            
 
             playerGroup.Allies = Group;
             Cache.PlayerAllies[PlayerCharacter] = playerGroup;
