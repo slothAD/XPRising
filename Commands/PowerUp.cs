@@ -10,16 +10,28 @@ namespace RPGMods.Commands
     public static class PowerUp
     {
         [Command("powerup", "pu", "<player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", "Buff specified player with the specified value.", adminOnly:true)]
-        public static void Initialize(ChatCommandContext ctx, string name, string flag, float MaxHP = 0, float PATK = 0, float SATK = 0, float PDEF = 0, float SDEF = 0){
+        public static void powerUP(ChatCommandContext ctx, string name, string flag, float MaxHP = 0, float PATK = 0, float SATK = 0, float PDEF = 0, float SDEF = 0){
             
             if (!Helper.FindPlayer(name, false, out var playerEntity, out var userEntity))
             {
                 ctx.Reply("Specified player not found.");
                 return;
             }
-
-
-            ulong SteamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
+            ulong SteamID;
+            if (Plugin.Server.EntityManager.TryGetComponentData<User>(userEntity, out var user) )
+            {
+                SteamID = user.PlatformId;
+            }
+            else if(Plugin.Server.EntityManager.TryGetComponentData<User>(ctx.Event.SenderUserEntity, out var u2))
+            {
+                SteamID = u2.PlatformId;
+            }
+            else
+            {
+                ctx.Reply("Steam ID for " + name + " could not be found!");
+                SteamID=0;
+                flag = "remove";
+            }
 
             if (flag.ToLower().Equals("remove"))
             {
@@ -46,9 +58,12 @@ namespace RPGMods.Commands
                 Database.PowerUpList[SteamID] = PowerUpData;
                 Helper.ApplyBuff(userEntity, playerEntity, Database.Buff.Buff_VBlood_Perk_Moose);
                 ctx.Reply("PowerUp added to specified player.");
-                return;
             }
+            else
+            {
 
+                ctx.Reply("flag needs to be add or remove");
+            }
             return;
         }
 

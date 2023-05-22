@@ -180,12 +180,12 @@ namespace RPGMods.Hooks
             foreach (var entity in entities)
             {
                 if (buffLogging) Plugin.Logger.LogInfo("processing for entity " + entity.ToString());
-                //PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-                ApplyBuffDebugEvent GUID = entityManager.GetComponentData<ApplyBuffDebugEvent>(entity);
+                PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+                //ApplyBuffDebugEvent GUID = entityManager.GetComponentData<ApplyBuffDebugEvent>(entity);
                 if (buffLogging) Plugin.Logger.LogInfo("got buff debug event data " + GUID.ToString());
 
-                //if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose))
-                if (Database.playerBuffs.Contains(GUID))
+                if (GUID.GuidHash == (Database.Buff.Buff_VBlood_Perk_Moose.GuidHash))
+                //if (Database.playerBuffs.Contains(GUID))
                 {
                     if (buffLogging) Plugin.Logger.LogInfo("Buff event data in db");
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
@@ -307,6 +307,7 @@ namespace RPGMods.Hooks
                     if (buffLogging) Plugin.Logger.LogInfo("buffer is now length: " + Buffer.Length);
                     if (buffLogging) Plugin.Logger.LogInfo("buffer is now: " + Buffer.ToString());
                 }
+                if (buffLogging) Plugin.Logger.LogInfo("Done trying buffing");
             }
         }
     }
