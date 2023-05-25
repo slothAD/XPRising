@@ -5,8 +5,6 @@ using ProjectM.Network;
 using ProjectM;
 using RPGMods.Utils;
 using RPGMods.Systems;
-using static UnityEngine.UI.GridLayoutGroup;
-using RPGMods.Commands;
 
 namespace RPGMods.Hooks
 {
@@ -171,145 +169,162 @@ namespace RPGMods.Hooks
 
         private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
         {
-            if(buffLogging) Plugin.Logger.LogInfo("Attempting to apply buffs");
-            EntityManager entityManager = __instance.EntityManager;
-            if (buffLogging) Plugin.Logger.LogInfo("Entity Manager found");
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-            if (buffLogging) Plugin.Logger.LogInfo("got entity array of length " + entities.Length);
 
-            foreach (var entity in entities)
+            EntityManager em = __instance.EntityManager;
+            System.Type t = typeof(PlayerCharacter);
+
+            EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
             {
-                if (buffLogging) Plugin.Logger.LogInfo("processing for entity " + entity.ToString());
-                PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-                //ApplyBuffDebugEvent GUID = entityManager.GetComponentData<ApplyBuffDebugEvent>(entity);
-                if (buffLogging) Plugin.Logger.LogInfo("got buff debug event data " + GUID.ToString());
-
-                if (GUID.GuidHash == (Database.Buff.Buff_VBlood_Perk_Moose.GuidHash))
-                //if (Database.playerBuffs.Contains(GUID))
-                {
-                    if (buffLogging) Plugin.Logger.LogInfo("Buff event data in db");
-                    Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    if (buffLogging) Plugin.Logger.LogInfo("got buff owner " + Owner.ToString());
-                    if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
-
-                    if (buffLogging) Plugin.Logger.LogInfo("Owner is a pc");
-                    PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-                    if (buffLogging) Plugin.Logger.LogInfo("got pc of owner: " + playerCharacter.ToString());
-                    Entity User = playerCharacter.UserEntity;
-                    if (buffLogging) Plugin.Logger.LogInfo("got user entity: " + User.ToString());
-                    User Data = entityManager.GetComponentData<User>(User);
-                    if (buffLogging) Plugin.Logger.LogInfo("got user data: " + Data.ToString());
-
-                    var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-                    if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + Buffer.Length);
-
-                    Buffer.Clear();
-                    if (buffLogging) Plugin.Logger.LogInfo("cleared buffer");
-
-                    if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData))
-                    {
-
-                        if (buffLogging) Plugin.Logger.LogInfo("powerup data found, adding it");
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                All = new ComponentType[]
                         {
-                            StatType = UnitStatType.MaxHealth,
-                            Value = powerUpData.MaxHP,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
+                            ComponentType.ReadOnly<PlayerCharacter>(),
+                            ComponentType.ReadOnly<IsConnected>()
+                        },
+                Options = EntityQueryOptions.IncludeDisabled
+            });
+            foreach (var entity in query.ToEntityArray(Allocator.Temp)){
 
-                        if (buffLogging) Plugin.Logger.LogInfo("hp done");
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = powerUpData.PATK,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        if (buffLogging) Plugin.Logger.LogInfo("phys power done");
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SpellPower,
-                            Value = powerUpData.SATK,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        if (buffLogging) Plugin.Logger.LogInfo("spell power done");
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalResistance,
-                            Value = powerUpData.PDEF,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        if (buffLogging) Plugin.Logger.LogInfo("phys res done");
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SpellResistance,
-                            Value = powerUpData.SDEF,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                        if (buffLogging) Plugin.Logger.LogInfo("spell res done");
-                    }
-
-                    if (buffLogging) Plugin.Logger.LogInfo("mastery now applying");
-                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-                    if (buffLogging) Plugin.Logger.LogInfo("bloodlines now applying");
-                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
-                    if (buffLogging) Plugin.Logger.LogInfo("classes now applying");
-                    if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-
-                    if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
-                    {
-                        if (buffLogging) Plugin.Logger.LogInfo("nocd now applying");
-                        Buffer.Add(Cooldown);
-                    }
-
-                    if (Database.sunimmunity.ContainsKey(Data.PlatformId))
-                    {
-                        if (buffLogging) Plugin.Logger.LogInfo("sunimmune now applying");
-                        Buffer.Add(SunCharge);
-                        Buffer.Add(Hazard);
-                        Buffer.Add(SunResist);
-                    }
-
-                    if (Database.speeding.ContainsKey(Data.PlatformId))
-                    {
-                        if (buffLogging) Plugin.Logger.LogInfo("speed now applying");
-                        Buffer.Add(Speed);
-                    }
-
-                    if (buffLogging) Plugin.Logger.LogInfo("checking godmode");
-                    if (Database.godmode.ContainsKey(Data.PlatformId))
-                    {
-                        if (buffLogging) Plugin.Logger.LogInfo("godmode now applying");
-                        Buffer.Add(PResist);
-                        Buffer.Add(FResist);
-                        Buffer.Add(HResist);
-                        Buffer.Add(SResist);
-                        Buffer.Add(SunResist);
-                        Buffer.Add(GResist);
-                        Buffer.Add(SPResist);
-                        Buffer.Add(PPower);
-                        Buffer.Add(RPower);
-                        Buffer.Add(SPPower);
-                        Buffer.Add(MaxYield);
-                        Buffer.Add(MaxHP);
-                        Buffer.Add(Hazard);
-                        Buffer.Add(SunCharge);
-                        Buffer.Add(DurabilityLoss);
-                    }
-
-                    if (buffLogging) Plugin.Logger.LogInfo("buffer is now length: " + Buffer.Length);
-                    if (buffLogging) Plugin.Logger.LogInfo("buffer is now: " + Buffer.ToString());
-                }
-                if (buffLogging) Plugin.Logger.LogInfo("Done trying buffing");
             }
-        }
+                /*
+                if(buffLogging) Plugin.Logger.LogInfo("Attempting to apply buffs");
+                EntityManager entityManager = __instance.EntityManager;
+                if (buffLogging) Plugin.Logger.LogInfo("Entity Manager found");
+                NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+                if (buffLogging) Plugin.Logger.LogInfo("got entity array of length " + entities.Length);
+
+                foreach (var entity in entities)
+                {
+                    if (buffLogging) Plugin.Logger.LogInfo("processing for entity " + entity.ToString());
+                    PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+                    //ApplyBuffDebugEvent GUID = entityManager.GetComponentData<ApplyBuffDebugEvent>(entity);
+                    if (buffLogging) Plugin.Logger.LogInfo("got buff debug event data " + GUID.ToString());
+
+                    if (GUID.GuidHash == (Database.Buff.Buff_VBlood_Perk_Moose.GuidHash))
+                    //if (Database.playerBuffs.Contains(GUID))
+                    {
+                        if (buffLogging) Plugin.Logger.LogInfo("Buff event data in db");
+                        Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
+                        if (buffLogging) Plugin.Logger.LogInfo("got buff owner " + Owner.ToString());
+                        if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
+
+                        if (buffLogging) Plugin.Logger.LogInfo("Owner is a pc");
+                        PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
+                        if (buffLogging) Plugin.Logger.LogInfo("got pc of owner: " + playerCharacter.ToString());
+                        Entity User = playerCharacter.UserEntity;
+                        if (buffLogging) Plugin.Logger.LogInfo("got user entity: " + User.ToString());
+                        User Data = entityManager.GetComponentData<User>(User);
+                        if (buffLogging) Plugin.Logger.LogInfo("got user data: " + Data.ToString());
+
+                        var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
+                        if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + Buffer.Length);
+
+                        Buffer.Clear();
+                        if (buffLogging) Plugin.Logger.LogInfo("cleared buffer");
+
+                        if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData))
+                        {
+
+                            if (buffLogging) Plugin.Logger.LogInfo("powerup data found, adding it");
+                            Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                            {
+                                StatType = UnitStatType.MaxHealth,
+                                Value = powerUpData.MaxHP,
+                                ModificationType = ModificationType.Add,
+                                Id = ModificationId.NewId(0)
+                            });
+
+                            if (buffLogging) Plugin.Logger.LogInfo("hp done");
+                            Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                            {
+                                StatType = UnitStatType.PhysicalPower,
+                                Value = powerUpData.PATK,
+                                ModificationType = ModificationType.Add,
+                                Id = ModificationId.NewId(0)
+                            });
+                            if (buffLogging) Plugin.Logger.LogInfo("phys power done");
+
+                            Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                            {
+                                StatType = UnitStatType.SpellPower,
+                                Value = powerUpData.SATK,
+                                ModificationType = ModificationType.Add,
+                                Id = ModificationId.NewId(0)
+                            });
+                            if (buffLogging) Plugin.Logger.LogInfo("spell power done");
+
+                            Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                            {
+                                StatType = UnitStatType.PhysicalResistance,
+                                Value = powerUpData.PDEF,
+                                ModificationType = ModificationType.Add,
+                                Id = ModificationId.NewId(0)
+                            });
+                            if (buffLogging) Plugin.Logger.LogInfo("phys res done");
+
+                            Buffer.Add(new ModifyUnitStatBuff_DOTS()
+                            {
+                                StatType = UnitStatType.SpellResistance,
+                                Value = powerUpData.SDEF,
+                                ModificationType = ModificationType.Add,
+                                Id = ModificationId.NewId(0)
+                            });
+                            if (buffLogging) Plugin.Logger.LogInfo("spell res done");
+                        }
+
+                        if (buffLogging) Plugin.Logger.LogInfo("mastery now applying");
+                        if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+                        if (buffLogging) Plugin.Logger.LogInfo("bloodlines now applying");
+                        if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
+                        if (buffLogging) Plugin.Logger.LogInfo("classes now applying");
+                        if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+
+                        if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
+                        {
+                            if (buffLogging) Plugin.Logger.LogInfo("nocd now applying");
+                            Buffer.Add(Cooldown);
+                        }
+
+                        if (Database.sunimmunity.ContainsKey(Data.PlatformId))
+                        {
+                            if (buffLogging) Plugin.Logger.LogInfo("sunimmune now applying");
+                            Buffer.Add(SunCharge);
+                            Buffer.Add(Hazard);
+                            Buffer.Add(SunResist);
+                        }
+
+                        if (Database.speeding.ContainsKey(Data.PlatformId))
+                        {
+                            if (buffLogging) Plugin.Logger.LogInfo("speed now applying");
+                            Buffer.Add(Speed);
+                        }
+
+                        if (buffLogging) Plugin.Logger.LogInfo("checking godmode");
+                        if (Database.godmode.ContainsKey(Data.PlatformId))
+                        {
+                            if (buffLogging) Plugin.Logger.LogInfo("godmode now applying");
+                            Buffer.Add(PResist);
+                            Buffer.Add(FResist);
+                            Buffer.Add(HResist);
+                            Buffer.Add(SResist);
+                            Buffer.Add(SunResist);
+                            Buffer.Add(GResist);
+                            Buffer.Add(SPResist);
+                            Buffer.Add(PPower);
+                            Buffer.Add(RPower);
+                            Buffer.Add(SPPower);
+                            Buffer.Add(MaxYield);
+                            Buffer.Add(MaxHP);
+                            Buffer.Add(Hazard);
+                            Buffer.Add(SunCharge);
+                            Buffer.Add(DurabilityLoss);
+                        }
+
+                        if (buffLogging) Plugin.Logger.LogInfo("buffer is now length: " + Buffer.Length);
+                        if (buffLogging) Plugin.Logger.LogInfo("buffer is now: " + Buffer.ToString());
+                    }
+                    if (buffLogging) Plugin.Logger.LogInfo("Done trying buffing");
+                }*/
+            }
     }
 
     [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]

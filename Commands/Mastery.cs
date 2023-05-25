@@ -109,7 +109,7 @@ namespace RPGMods.Commands
 
             WeaponMasterSystem.SetMastery(SteamID, type, (int)(amount * 1000));
             ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount}%</color>");
-            Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.BloodSight);
+            Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
         [Command("log", "l", "<On, Off>", "Turns on or off logging of mastery gain.", adminOnly: false)]

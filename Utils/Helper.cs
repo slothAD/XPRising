@@ -260,7 +260,7 @@ namespace RPGMods.Utils
         }
 
         public static void ApplyBuff(Entity User, Entity Char, PrefabGUID GUID)
-        {
+        {/*
             var des = Plugin.Server.GetExistingSystem<DebugEventsSystem>();
             var fromCharacter = new FromCharacter()
             {
@@ -274,6 +274,7 @@ namespace RPGMods.Utils
             ;
             Database.playerBuffs.Add(buffEvent);
             des.ApplyBuff(fromCharacter, buffEvent);
+            */
         }
 
         public static void RemoveBuff(Entity Char, PrefabGUID GUID)
@@ -398,6 +399,7 @@ namespace RPGMods.Utils
             else if (name.Equals("scholar")) type = new PrefabGUID(-700632469);
             else if (name.Equals("creature")) type = new PrefabGUID(1897056612);
             else if (name.Equals("worker")) type = new PrefabGUID(-1342764880);
+            else if (name.Equals("mutant")) type = new PrefabGUID(-2017994753);
             else type = new PrefabGUID();
             return type;
         }
