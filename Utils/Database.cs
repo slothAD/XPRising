@@ -19,6 +19,7 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, PlayerData> SteamPlayerCache = new();
         public static Dictionary<Entity, PlayerGroup> PlayerAllies = new();
         public static Dictionary<Entity, LocalToWorld> PlayerLocations = new();
+        public static Dictionary<ulong, List<BuffData>> buffData = new();
 
         //-- -- Commands
         public static Dictionary<ulong, float> command_Cooldown = new();

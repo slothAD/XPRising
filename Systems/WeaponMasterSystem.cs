@@ -343,8 +343,8 @@ namespace RPGMods.Systems
             MasteryValue = Mastery.mastery[(int)weaponType + 1];
             MasterySpellValue = Mastery.mastery[0];
 
-            if (MasteryValue > 0) MasteryValue = (MasteryValue);
-            if (MasterySpellValue > 0) MasterySpellValue = (MasterySpellValue);
+            if (MasteryValue < 0) MasteryValue = 0;
+            if (MasterySpellValue < 0) MasterySpellValue = 0;
             return true;
         }
 

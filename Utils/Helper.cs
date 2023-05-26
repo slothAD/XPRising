@@ -85,26 +85,46 @@ namespace RPGMods.Utils
                 return 0;
             }
 
-            NativeArray<Entity> allyBuffer = Helper.SGM._EntityManager.GetAllEntities();
-
+            NativeArray<Entity> allyBuffer;
+            EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
+            {
+                All = new ComponentType[]
+                        {
+                            ComponentType.ReadOnly<PlayerCharacter>(),
+                            ComponentType.ReadOnly<IsConnected>()
+                        },
+                Options = EntityQueryOptions.IncludeDisabled
+            });
+            allyBuffer = query.ToEntityArray(Allocator.Temp);
             //NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
             //Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
-            
+            if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("got connected PC entities buffer of length " + allyBuffer.Length);
+
+            if(!Plugin.Server.EntityManager.TryGetComponentData<User>(PlayerCharacter, out User mainUser))
             foreach (var entity in allyBuffer)
             {
-                if (Plugin.Server.EntityManager.HasComponent<User>(entity))
+                if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("got Entity " + entity.ToString());
+                bool hasUser = Plugin.Server.EntityManager.TryGetComponentData<User>(entity, out User userEntity);
+                if (hasUser)
                 {
-                    Entity playerEntity = Plugin.Server.EntityManager.GetComponentData<User>(entity).LocalCharacter._Entity;
-                    if (playerEntity.Equals(PlayerCharacter)) continue;
-                    if(Helper.SGM.IsAllies(playerEntity, PlayerCharacter))
-                    {
-                        float3 pos1 = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(PlayerCharacter).Position;
-                        float3 pos2 = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(playerEntity).Position;
-                        if (Vector3.Distance(pos1, pos2) <= groupRange)
-                        {
-                            Group[entity] = playerEntity;
-                        }
+                    if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("Entity is User " + entity.ToString());
+                    if (userEntity.Equals(mainUser)){
+                        if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("Entity is User " + entity.ToString());
+                        continue;
                     }
+                    if(Helper.SGM.IsAllies(entity, PlayerCharacter)){
+                        Group[entity] = entity;
+                            if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("Ally for " + PlayerCharacter.ToString() + " found " + entity.ToString() + " is their ally");
+                        }
+                    else
+                    {
+                        if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo(PlayerCharacter.ToString() + " and " + entity.ToString() + " are not allies");
+
+                    }
+                }
+                else
+                {
+                    if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("No Associated User!");
                 }
             }
             
@@ -668,6 +688,29 @@ namespace RPGMods.Utils
             {(int)UnitStatType.ResistVsUndeads },
             {(int)UnitStatType.ReducedResourceDurabilityLoss },
             {(int)UnitStatType.ResourceYield }
+
+        };
+
+        public static HashSet<int> baseStatsSet = new HashSet<int> {
+            {(int)UnitStatType.PhysicalPower },
+            {(int)UnitStatType.ResourcePower },
+            {(int)UnitStatType.SiegePower },
+            {(int)UnitStatType.AttackSpeed },
+            {(int)UnitStatType.FireResistance },
+            {(int)UnitStatType.GarlicResistance },
+            {(int)UnitStatType.SilverResistance },
+            {(int)UnitStatType.HolyResistance },
+            {(int)UnitStatType.SunResistance },
+            {(int)UnitStatType.SpellResistance },
+            {(int)UnitStatType.PhysicalResistance },
+            {(int)UnitStatType.SpellCriticalStrikeDamage },
+            {(int)UnitStatType.SpellCriticalStrikeChance },
+            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
+            {(int)UnitStatType.PhysicalCriticalStrikeChance },
+            {(int)UnitStatType.PassiveHealthRegen },
+            {(int)UnitStatType.ResourceYield },
+            {(int)UnitStatType.PvPResilience },
+            {(int)UnitStatType.ReducedResourceDurabilityLoss }
 
         };
 
