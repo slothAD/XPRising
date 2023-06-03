@@ -216,7 +216,7 @@ namespace RPGMods.Hooks
                         ModificationType = (ModificationType)bd.modificationType,
                         Id = ModificationId.NewId(bd.ID)
                     };
-                    applyBuff(baseStats, buff,sgm,entity);
+                    applyBuff(em, buff,sgm,entity);
                     //baseStats.PhysicalPower.ApplyModification(sgm, entity, entity, buff.ModificationType, buff.Value);
                 }
 
@@ -293,7 +293,6 @@ namespace RPGMods.Hooks
                 }
             }
             else if(tar == UnitStatType.MaxHealth) {
-
                 em.TryGetComponentData<Health>(e, out Health health);
                 health.MaxHealth.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
             }
