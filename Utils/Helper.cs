@@ -337,8 +337,7 @@ namespace RPGMods.Utils
                 {
                     var item = managed.GetOrDefault<ManagedItemData>(entry.Key);
                     if (item.PrefabName.StartsWith("Item_VBloodSource") || item.PrefabName.StartsWith("GM_Unit_Creature_Base") || item.PrefabName == "Item_Cloak_ShadowPriest") continue;
-                    if (item.Name.ToString().ToLower() == name.ToLower())
-                    {
+                    if (item.Name.ToString().ToLower().Equals( name.ToLower())){
                         return entry.Key;
                     }
                 }

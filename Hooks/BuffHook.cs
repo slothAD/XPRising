@@ -170,9 +170,10 @@ namespace RPGMods.Hooks
 
         public static bool buffLogging = true;
 
-        private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
-        {
-
+        private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance){
+            rebuiltBuffHook(__instance);
+        }
+        public static void rebuiltBuffHook(ModifyUnitStatBuffSystem_Spawn __instance){
             EntityManager em = __instance.EntityManager;
             bool hasSGM = Helper.GetServerGameManager(out ServerGameManager sgm);
             if (!hasSGM)
@@ -204,7 +205,8 @@ namespace RPGMods.Hooks
 
                 em.TryGetBuffer<ModifyUnitStats>(entity, out var stats);
 
-                if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + Buffer.Length);
+                if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuffDOTS buffer of length " + Buffer.Length);
+                if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + stats.Length);
 
                 foreach (BuffData bd in bdl)
                 {
@@ -216,7 +218,7 @@ namespace RPGMods.Hooks
                         ModificationType = (ModificationType)bd.modificationType,
                         Id = ModificationId.NewId(bd.ID)
                     };
-                    applyBuff(em, buff,sgm,entity);
+                    applyBuff(em, buff, sgm, entity);
                     //baseStats.PhysicalPower.ApplyModification(sgm, entity, entity, buff.ModificationType, buff.Value);
                 }
 
