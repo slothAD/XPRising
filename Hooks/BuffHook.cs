@@ -190,7 +190,7 @@ namespace RPGMods.Hooks
             {
                 PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
                 if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID of " + GUID.GuidHash + ": Compared to moose blood of " + Database.Buff.Buff_VBlood_Perk_Moose.GuidHash);
-                if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1766561750)
+                //if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1766561750)
                 {
                     if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID is the moose blood");
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
@@ -204,7 +204,7 @@ namespace RPGMods.Hooks
                     var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
                     if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
 
-                    Buffer.Clear();
+                    //Buffer.Clear();
                     if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
 
 
