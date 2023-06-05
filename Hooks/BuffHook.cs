@@ -174,8 +174,8 @@ namespace RPGMods.Hooks
         {
             if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entered Buff System, attempting Old Style");
             oldStyleBuffHook(__instance);
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Old Style Done, attemping New Style, just cause");
-            rebuiltBuffHook(__instance);
+            //if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Old Style Done, attemping New Style, just cause");
+            //rebuiltBuffHook(__instance);
         }
 
         public static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance)
@@ -205,11 +205,37 @@ namespace RPGMods.Hooks
                     if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
 
                     Buffer.Clear();
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length + " Now handling PowerUp Command");
+                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
 
-                    /*
-                    if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData))
-                    {
+
+                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
+                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
+                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
+                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
+                    if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+
+
+                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing PowerUp Command");
+                    if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)){
+                        if (powerUpData.Equals(null)){
+                            powerUpData = new PowerUpData();
+                        }
+                        if (powerUpData.MaxHP.Equals(null)){
+                            powerUpData.MaxHP = 0;
+                        }
+                        if (powerUpData.PATK.Equals(null)) {
+                            powerUpData.PATK = 0;
+                        }
+                        if (powerUpData.SATK.Equals(null)) {
+                            powerUpData.SATK = 0;
+                        }
+                        if (powerUpData.PDEF.Equals(null)) {
+                            powerUpData.PDEF = 0;
+                        }
+                        if (powerUpData.SDEF.Equals(null)) {
+                            powerUpData.SDEF = 0;
+                        }
                         Buffer.Add(new ModifyUnitStatBuff_DOTS()
                         {
                             StatType = UnitStatType.MaxHealth,
@@ -249,14 +275,9 @@ namespace RPGMods.Hooks
                             ModificationType = ModificationType.Add,
                             Id = ModificationId.NewId(0)
                         });
-                    }*/
+                    }
 
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
-                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
-                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
-                    if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+
                     /*
                     if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing NoCD Command");
                     if (Database.nocooldownlist.ContainsKey(Data.PlatformId))

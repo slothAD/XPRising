@@ -1,5 +1,6 @@
 ﻿using RPGMods.Commands;
 using RPGMods.Systems;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace RPGMods.Utils
 {
@@ -34,15 +35,17 @@ namespace RPGMods.Utils
         public static void LoadDatabase()
         {
             //-- Commands Related
-            PermissionSystem.LoadPermissions();/*
+            PermissionSystem.LoadPermissions();
+            NoCooldown.LoadNoCooldown();
+            GodMode.LoadGodMode();
+            PowerUp.LoadPowerUp();
+
+            /*
             SunImmunity.LoadSunImmunity();
             Waypoint.LoadWaypoints();
-            NoCooldown.LoadNoCooldown();*/
-            GodMode.LoadGodMode();/*
             Speed.LoadSpeed();
             AutoRespawn.LoadAutoRespawn();
-            Kit.LoadKits();
-            PowerUp.LoadPowerUp();*/
+            Kit.LoadKits();*/
 
             //-- System Related
             PvPSystem.LoadPvPStat();

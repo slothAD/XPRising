@@ -107,7 +107,7 @@ namespace RPGMods.Commands
             else if (MasteryType.Equals("axes")) type = (int)WeaponType.Axes + 1;
             else if (MasteryType.Equals("spell")) type = 0;
 
-            WeaponMasterSystem.SetMastery(SteamID, type, (int)(amount * 1000));
+            WeaponMasterSystem.SetMastery(SteamID, type, (amount));
             ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount}%</color>");
             Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
