@@ -8,6 +8,7 @@ using RPGMods.Systems;
 using RPGMods.Utils;
 using System;
 using static UnityEngine.UI.GridLayoutGroup;
+using Unity.Assertions;
 
 namespace RPGMods.Hooks
 {
@@ -23,10 +24,24 @@ namespace RPGMods.Hooks
             {
                 EntityManager entityManager = __instance.EntityManager;
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-                foreach (var entity in entities)
-                {
+                foreach (var entity in entities){
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    ArmorLevel level = entityManager.GetComponentData<ArmorLevel>(entity);
+                    ArmorLevel level = new ArmorLevel();
+                    level.Level = 0;
+                    try
+                    {
+                        if (!entityManager.TryGetComponentData<ArmorLevel>(entity, out level))
+                        {
+                            throw new MemberNotFoundException("Armor Level Not Found");
+                        }
+                    }
+                    catch(Exception e){
+                        Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                    }
+                    if (!ExperienceSystem.ShouldAllowGearLevel)
+                    {
+                        level.Level = 0;
+                    }
                     if (!ExperienceSystem.ShouldAllowGearLevel)
                     {
                         level.Level = 0;
@@ -70,6 +85,7 @@ namespace RPGMods.Hooks
         {
             if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
+            Plugin.Logger.LogInfo(System.DateTime.Now + ": Weapon System Patch Entry");
             if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
             {
                 EntityManager entityManager = __instance.EntityManager;
@@ -79,9 +95,25 @@ namespace RPGMods.Hooks
                 {
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                     Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
+                    if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
+                    {
+                        Plugin.Logger.LogInfo(System.DateTime.Now + " Applying Moose buff");
+                        Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
+                    }
                     if (ExperienceSystem.isEXPActive)
                     {
-                        WeaponLevel level = entityManager.GetComponentData<WeaponLevel>(entity);
+                        WeaponLevel level = new WeaponLevel();
+                        level.Level = 0;
+                        try
+                        {
+                            if(!entityManager.TryGetComponentData<WeaponLevel>(entity, out level))
+                            {
+                                throw new MemberNotFoundException("Weapon Level Not Found");
+                            }
+                        }
+                        catch(Exception e){
+                            Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                        }
                         if (!ExperienceSystem.ShouldAllowGearLevel)
                         {
                             level.Level = 0;                            
@@ -108,8 +140,6 @@ namespace RPGMods.Hooks
                     {                        
                         if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;                       
                     }
-                    if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn) 
-                        Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
                 }
             }
         }
@@ -174,7 +204,19 @@ namespace RPGMods.Hooks
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities)
                 {
-                    SpellLevel level = entityManager.GetComponentData<SpellLevel>(entity);
+                    SpellLevel level = new SpellLevel();
+                    level.Level = 0;
+                    try
+                    {
+                        if (!entityManager.TryGetComponentData<SpellLevel>(entity, out level))
+                        {
+                            throw new MemberNotFoundException("Spell Level Not Found");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                    }
                     level.Level = 0;
                     entityManager.SetComponentData(entity, level);
                 }
@@ -217,8 +259,19 @@ namespace RPGMods.Hooks
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities)
                 {
-                    SpellLevel level = entityManager.GetComponentData<SpellLevel>(entity);
+                    SpellLevel level = new SpellLevel();
                     level.Level = 0;
+                    try
+                    {
+                        if (!entityManager.TryGetComponentData<SpellLevel>(entity, out level))
+                        {
+                            throw new MemberNotFoundException("Spell Level Not Found");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                    }
                     entityManager.SetComponentData(entity, level);
                 }
             }

@@ -280,7 +280,7 @@ namespace RPGMods.Utils
         }
 
         public static void ApplyBuff(Entity User, Entity Char, PrefabGUID GUID)
-        {/*
+        {
             var des = Plugin.Server.GetExistingSystem<DebugEventsSystem>();
             var fromCharacter = new FromCharacter()
             {
@@ -288,13 +288,13 @@ namespace RPGMods.Utils
                 Character = Char
             };
             var buffEvent = new ApplyBuffDebugEvent()
-            //{
-            //    BuffPrefabGUID = GUID
-            //}
+            {
+                BuffPrefabGUID = GUID
+            }
             ;
             Database.playerBuffs.Add(buffEvent);
             des.ApplyBuff(fromCharacter, buffEvent);
-            */
+            
         }
 
         public static void RemoveBuff(Entity Char, PrefabGUID GUID)
@@ -340,6 +340,8 @@ namespace RPGMods.Utils
                     if (item.Name.ToString().ToLower().Equals( name.ToLower())){
                         return entry.Key;
                     }
+                    if (item.PrefabName.ToLower().Equals(name.ToLower())) { return entry.Key; }
+                    //if (item.PrefabName.Substring(item.PrefabName.IndexOf("_"+1)).ToLower().Equals(name.ToLower())) { return entry.Key; }
                 }
                 catch { }
             }
@@ -381,6 +383,7 @@ namespace RPGMods.Utils
 
         public static void AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
+            /*
             unsafe
             {
                 var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
@@ -397,7 +400,12 @@ namespace RPGMods.Utils
                 sets.DropRemainder = true;
                 sets.EquipIfPossible = true;
                 var hasAdded = InventoryUtilitiesServer.TryAddItem(sets,ctx.Event.SenderCharacterEntity, guid ,amount);
-            }
+            }*/
+
+            var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
+            var itemSettings = AddItemSettings.Create(Plugin.Server.EntityManager, gameData.ItemHashLookupMap);
+            var inventoryResponse = InventoryUtilitiesServer.TryAddItem(itemSettings, ctx.Event.SenderCharacterEntity, guid, amount);
+            //return inventoryResponse.NewEntity;
         }
 
         public static BloodType GetBloodTypeFromName(string name)
