@@ -8,6 +8,7 @@ using Unity.Entities;
 using RPGMods.Utils;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace RPGMods.Systems
 {
@@ -85,6 +86,43 @@ namespace RPGMods.Systems
         public static double minGrowth = 0.1f;
         public static double maxGrowth = 10;
         public static double growthPerEfficency = 1;
+        
+        public static Dictionary<string, int> nameMap = new Dictionary<string, int> {
+            { "spell", 0 },
+            { "magic", 0 },
+            { "unarmed", (int) WeaponType.None + 1 },
+            { "none", (int) WeaponType.None + 1 },
+            { "spear", (int)WeaponType.Spear+1 },
+            { "crossbow", (int) WeaponType.Crossbow + 1 },
+            { "slashers", (int) WeaponType.Slashers + 1 },
+            { "scythe", (int) WeaponType.Scythe + 1 },
+            { "reaper", (int) WeaponType.Scythe + 1 },
+            { "sword", (int) WeaponType.Sword + 1 },
+            { "fishingpole", (int) WeaponType.FishingPole + 1 },
+            { "mace", (int) WeaponType.Mace + 1 },
+            { "axe", (int) WeaponType.Axes + 1 },
+            { "greatsword", (int) WeaponType.GreatSword + 1 },
+            { "rapier", (int) WeaponType.Rapier + 1 },
+            { "pistol", (int) WeaponType.Pistols + 1 },
+            { "dagger", (int) WeaponType.Sword + 1 },
+            { "longbow", (int) WeaponType.Crossbow + 1 },
+            { "xbow", (int) WeaponType.Crossbow + 1 }
+        };
+        public static Dictionary<int, string> typeToNameMap = new Dictionary<int, string> {
+            { 0, "spell" },
+            { (int) WeaponType.None + 1, "unarmed" },
+            { (int) WeaponType.Spear + 1, "spear" },
+            { (int) WeaponType.Crossbow + 1 , "crossbow" },
+            { (int) WeaponType.Slashers + 1, "slashers" },
+            { (int) WeaponType.Scythe + 1, "reaper" },
+            { (int) WeaponType.Sword + 1, "sword" },
+            { (int) WeaponType.FishingPole + 1, "fishingpole" },
+            { (int) WeaponType.Mace + 1, "mace" },
+            { (int) WeaponType.Axes + 1, "axe" },
+            { (int) WeaponType.GreatSword + 1, "greatsword" },
+            { (int) WeaponType.Rapier + 1, "rapier" },
+            { (int) WeaponType.Pistols + 1, "pistol" }
+        };
 
         public static void UpdateMastery(Entity Killer, Entity Victim)
         {
@@ -380,7 +418,6 @@ namespace RPGMods.Systems
             return;
         }
 
-
         public static void resetMastery(ulong SteamID, int type) {
             if (!effectivenessSubSystemEnabled) {
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)) {
@@ -392,22 +429,21 @@ namespace RPGMods.Systems
             if (isPlayerFound) {
                 if (type < 0) {
                     for (int i = 0; i < Mastery.mastery.Length; i++) {
-                        addMasteryEffectiveness(SteamID, i, Mastery.mastery[i] / 100000.0f);
-                        adjustGrowth(SteamID, i, Mastery.mastery[i] / 100000.0f);
+                        addMasteryEffectiveness(SteamID, i, Mastery.mastery[i] / MaxMastery);
+                        adjustGrowth(SteamID, i, Mastery.mastery[i] / MaxMastery);
                         Mastery.mastery[i] = 0;
                     }
                     
                 }
                 else {
-                    addMasteryEffectiveness(SteamID, type, (double)Mastery.mastery[type] / 100000.0f);
-                    adjustGrowth(SteamID, type, (double)Mastery.mastery[type] / 100000.0f);
+                    addMasteryEffectiveness(SteamID, type, Mastery.mastery[type]/MaxMastery);
+                    adjustGrowth(SteamID, type, Mastery.mastery[type] / MaxMastery);
                     Mastery.mastery[type] = 0;
                 }
                 Database.player_weaponmastery[SteamID] = Mastery;
             }
             return;
         }
-
 
         public static void adjustGrowth(ulong SteamID, int type, double value) {
             bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData wd);
@@ -418,7 +454,7 @@ namespace RPGMods.Systems
                     }
                     else {
                         double gpe = -1 * growthPerEfficency;
-                        value = value / (value + growthPerEfficency);
+                        value = value / (value + gpe);
                         wd.growth[type] = Math.Max(minGrowth, wd.growth[type] * value );
                     }
                 }
@@ -493,43 +529,12 @@ namespace RPGMods.Systems
 
         public static string typeToName(int type)
         {
-            type -= 1;
-            string weaponName = "Unknown";
-            switch (type)
-            {
-                case (int)WeaponType.None:
-                    weaponName = "Unarmed";
-                    break;
-                case (int)WeaponType.Spear:
-                    weaponName = "Spear";
-                    break;
-                case (int)WeaponType.Sword:
-                    weaponName = "Sword";
-                    break;
-                case (int)WeaponType.Scythe:
-                    weaponName = "Scythe";
-                    break;
-                case (int)WeaponType.Crossbow:
-                    weaponName = "Crossbow";
-                    break;
-                case (int)WeaponType.Mace:
-                    weaponName = "Mace";
-                    break;
-                case (int)WeaponType.Slashers:
-                    weaponName = "Slashers";
-                    break;
-                case (int)WeaponType.Axes:
-                    weaponName = "Axes";
-                    break;
-                case (int)WeaponType.FishingPole:
-                    weaponName = "Fishing Rod";
-                    break;
-                case -1:
-                    weaponName = "Spell";
-                    break;
-                case -2:
-                    weaponName = "All";
-                    break;
+            if(type == -1) {
+                return "All";
+            }
+            bool nameFound = typeToNameMap.TryGetValue(type, out string weaponName);
+            if (!nameFound) {
+                weaponName = "Unknown";
             }
             return weaponName;
         }

@@ -15,6 +15,7 @@ using ProjectM.Scripting;
 using System.Collections.Generic;
 using VampireCommandFramework;
 using UnityEngine;
+using Il2CppSystem.Net;
 
 namespace RPGMods.Utils
 {
@@ -64,10 +65,10 @@ namespace RPGMods.Utils
             return true;
         }
 
-        public static int GetAllies(Entity PlayerCharacter, out PlayerGroup playerGroup)
-        {
-            if (Cache.PlayerAllies.TryGetValue(PlayerCharacter, out playerGroup))
-            {
+        public static int GetAllies(Entity PlayerCharacter, out PlayerGroup playerGroup) {
+            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Beginning To Parse Player Group");
+            if (Cache.PlayerAllies.TryGetValue(PlayerCharacter, out playerGroup)) {
+                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Found in Cache, timestamp is "+ playerGroup.TimeStamp);
                 TimeSpan CacheAge = DateTime.Now - playerGroup.TimeStamp;
                 if (CacheAge.TotalSeconds < 300) return playerGroup.AllyCount;
             }
@@ -77,13 +78,13 @@ namespace RPGMods.Utils
             playerGroup.TimeStamp = DateTime.Now;
 
             Dictionary<Entity, Entity> Group = new();
-
+            /*
             if (playerGroup.AllyCount <= 0)
             {
                 playerGroup.Allies = Group;
                 Cache.PlayerAllies[PlayerCharacter] = playerGroup;
                 return 0;
-            }
+            }*/
 
             NativeArray<Entity> allyBuffer;
             EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
@@ -98,33 +99,56 @@ namespace RPGMods.Utils
             allyBuffer = query.ToEntityArray(Allocator.Temp);
             //NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
             //Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
-            if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("got connected PC entities buffer of length " + allyBuffer.Length);
+            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got connected PC entities buffer of length " + allyBuffer.Length);
 
             if(!Plugin.Server.EntityManager.TryGetComponentData<User>(PlayerCharacter, out User mainUser))
-            foreach (var entity in allyBuffer)
-            {
-                if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("got Entity " + entity.ToString());
+            foreach (var entity in allyBuffer){
+                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got Entity " + entity.ToString());
                 bool hasUser = Plugin.Server.EntityManager.TryGetComponentData<User>(entity, out User userEntity);
-                if (hasUser)
-                {
-                    if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("Entity is User " + entity.ToString());
-                    if (userEntity.Equals(mainUser)){
-                        if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("Entity is User " + entity.ToString());
+                if (hasUser || true){
+                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity.ToString());
+                    if (entity.Equals(PlayerCharacter)){
+                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity.ToString());
                         continue;
                     }
-                    if(Helper.SGM.IsAllies(entity, PlayerCharacter)){
-                        Group[entity] = entity;
-                            if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("Ally for " + PlayerCharacter.ToString() + " found " + entity.ToString() + " is their ally");
+                    bool allies = false;
+                    try {
+                            //allies = Helper.SGM.IsAllies(entity, PlayerCharacter);
+                            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get teams ");
+                            bool team1Found = Plugin.Server.EntityManager.TryGetComponentData<Team>(entity, out Team t1);
+                            if (ExperienceSystem.xpLogging) {
+                                if (team1Found) Plugin.Logger.LogInfo(DateTime.Now + ": Team 1 Found Value:" + t1.Value + " - Faction Index: " + t1.FactionIndex);
+                                else {
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for entity: " + entity.ToString());
+                                }
+                            }
+                            bool team2Found = Plugin.Server.EntityManager.TryGetComponentData<Team>(PlayerCharacter, out Team t2);
+                            if (ExperienceSystem.xpLogging) {
+                                if (team2Found && ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Team 2 Found Value:" + t2.Value + " - Faction Index: " + t2.FactionIndex);
+                                else {
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for Player Character: " + PlayerCharacter.ToString());
+                                }
+                            }
+                            if(team1Found && team2Found) {
+                                allies = t1.Value == t2.Value || t1.FactionIndex == t2.FactionIndex;
+                            }
+
+                        } catch (Exception e) {
+                            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": IsAllies Failed " + e.Message);
+                        }
+                    if(allies) {
+                            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Ally for " + PlayerCharacter.ToString() + " found " + entity.ToString() + " is their ally");
+                            Group[entity] = entity;
                         }
                     else
                     {
-                        if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo(PlayerCharacter.ToString() + " and " + entity.ToString() + " are not allies");
+                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": " + PlayerCharacter.ToString() + " and " + entity.ToString() + " are not allies");
 
                     }
                 }
                 else
                 {
-                    if (ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging) Plugin.Logger.LogInfo("No Associated User!");
+                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": No Associated User!");
                 }
             }
             

@@ -294,7 +294,7 @@ namespace RPGMods
 
 
             EnableExperienceSystem = Config.Bind("Experience", "Enable", true, "Enable/disable the the Experience System.");
-            ShouldAllowGearLevel = Config.Bind("Experience", "Allow Gear Level", true, "Enable/disable gear level adjustment.");
+            ShouldAllowGearLevel = Config.Bind("Experience", "Allow Gear Level", false, "Enable/disable gear level adjustment.");
             EnableLevelRewards = Config.Bind("Experience", "Enable Level Rewards", false, "Enable rewards per level.");
             EasyLevel15 = Config.Bind("Experience", "Easy lvl 15", true, "Makes level 15 much easier to reach so players dont get held up by the quest on it.");
 

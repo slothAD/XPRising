@@ -17,19 +17,16 @@ namespace RPGMods.Commands
 
 
         [Command("get", "g", "", "Display your current mastery progression")]
-        public static void getMastery(ChatCommandContext ctx)
-        {
+        public static void getMastery(ChatCommandContext ctx) {
             ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
-            if (!WeaponMasterSystem.isMasteryEnabled)
-            {
+            if (!WeaponMasterSystem.isMasteryEnabled) {
                 ctx.Reply("Weapon Mastery system is not enabled.");
                 return;
             }
             var SteamID = ctx.Event.User.PlatformId;
 
             bool isDataExist = Database.player_weaponmastery.TryGetValue(SteamID, out var MasteryData);
-            if (!isDataExist)
-            {
+            if (!isDataExist) {
                 ctx.Reply("You haven't even tried to master anything...");
                 return;
             }
@@ -38,15 +35,38 @@ namespace RPGMods.Commands
 
             int weapon;
 
-            if (detailedStatements){
-                for (weapon = 0; weapon < WeaponMasterSystem.masteryStats.Length; weapon++){
+            if (detailedStatements) {
+                for (weapon = 0; weapon < WeaponMasterSystem.masteryStats.Length; weapon++) {
                     ctx.Reply(getMasteryDataStringForType(SteamID, weapon));
                 }
-            }
-            else{
+            } else {
                 weapon = (int)WeaponMasterSystem.GetWeaponType(ctx.Event.SenderCharacterEntity) + 1;
                 ctx.Reply(getMasteryDataStringForType(SteamID, weapon));
                 ctx.Reply(getMasteryDataStringForType(SteamID, 0));
+            }
+        }
+
+        [Command("get all", "g a", "", "Display your current mastery progression in everything")]
+        public static void getAllMastery(ChatCommandContext ctx) {
+            ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
+            if (!WeaponMasterSystem.isMasteryEnabled) {
+                ctx.Reply("Weapon Mastery system is not enabled.");
+                return;
+            }
+            var SteamID = ctx.Event.User.PlatformId;
+
+            bool isDataExist = Database.player_weaponmastery.TryGetValue(SteamID, out var MasteryData);
+            if (!isDataExist) {
+                ctx.Reply("You haven't even tried to master anything...");
+                return;
+            }
+
+            ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
+
+            int weapon;
+
+            for (weapon = 0; weapon < WeaponMasterSystem.masteryStats.Length; weapon++) {
+                ctx.Reply(getMasteryDataStringForType(SteamID, weapon));
             }
         }
 
@@ -82,8 +102,7 @@ namespace RPGMods.Commands
         }
 
         [Command("add", "a", "weaponType, amount", "Adds the amount to the mastery of the specifed weaponType", adminOnly: true)]
-        public static void addMastery(ChatCommandContext ctx, string name, double amount)
-        {
+        public static void addMastery(ChatCommandContext ctx, string name, double amount){
             if (!WeaponMasterSystem.isMasteryEnabled)
             {
                 ctx.Reply("Weapon Mastery system is not enabled.");
@@ -96,6 +115,12 @@ namespace RPGMods.Commands
 
             string MasteryType = name.ToLower();
             int type = 0;
+            bool typeFound = WeaponMasterSystem.nameMap.TryGetValue(MasteryType, out type);
+            if (!typeFound) {
+                ctx.Reply($"{name.ToUpper()} Mastery type not found! did you typo?");
+                return;
+            }
+            /*
             if (MasteryType.Equals("sword")) type = (int)WeaponType.Sword + 1;
             else if (MasteryType.Equals("none") || MasteryType.Equals("unarmed")) type = (int)WeaponType.None + 1;
             else if (MasteryType.Equals("spear")) type = (int)WeaponType.Spear + 1;
@@ -105,11 +130,30 @@ namespace RPGMods.Commands
             else if (MasteryType.Equals("fishingpole")) type = (int)WeaponType.FishingPole + 1;
             else if (MasteryType.Equals("mace")) type = (int)WeaponType.Mace + 1;
             else if (MasteryType.Equals("axes")) type = (int)WeaponType.Axes + 1;
-            else if (MasteryType.Equals("spell")) type = 0;
+            else if (MasteryType.Equals("spell")) type = 0;*/
 
             WeaponMasterSystem.SetMastery(SteamID, type, (amount));
             ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount}%</color>");
             Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+        }
+        
+        [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]
+        public static void setXP(ChatCommandContext ctx, string name, string type, int value) {
+            if (!WeaponMasterSystem.isMasteryEnabled) {
+                ctx.Reply("Weapon Mastery system is not enabled.");
+                return;
+            }
+            ulong SteamID;
+
+            if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity)) {
+                SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
+            } else {
+                ctx.Reply($"Could not find specified player \"{name}\".");
+                return;
+            }
+            Database.player_experience[SteamID] = xp;
+            ExperienceSystem.SetLevel(targetEntity, targetUserEntity, SteamID);
+            ctx.Reply($"Player \"{name}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
         }
 
         [Command("log", "l", "<On, Off>", "Turns on or off logging of mastery gain.", adminOnly: false)]

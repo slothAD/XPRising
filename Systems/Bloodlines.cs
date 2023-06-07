@@ -77,7 +77,8 @@ namespace RPGMods.Systems
             {new PrefabGUID((int)Helper.BloodType.Rogue), 3 },
             {new PrefabGUID((int)Helper.BloodType.Brute), 4 },
             {new PrefabGUID((int)Helper.BloodType.Scholar), 5 },
-            {new PrefabGUID((int)Helper.BloodType.Worker), 6 }
+            {new PrefabGUID((int)Helper.BloodType.Worker), 6 },
+            {new PrefabGUID((int)Helper.BloodType.Mutant), 7 }
         };
 
         public static string[] names = { "Dracula, Vampire Progenitor", "Arwen the Godeater", "Ilvris Dragonblood", "Aya the Shadowlord", "Nytheria the Destroyer", "Hadubert the Inferno", "Rei the Binder", "Semika the Ever-shifting" };
@@ -100,6 +101,16 @@ namespace RPGMods.Systems
             { "brute", 4 },
             { "scholar", 5 },
             { "worker", 6 }
+        };
+        public static Dictionary<int, string> typeToName = new Dictionary<int, string> {
+            { 0, "dracula" },
+            { 1, "arwen" },
+            { 2, "ilvris" },
+            { 3, "aya" },
+            { 4, "nytheria" },
+            { 5, "hadubert" },
+            { 6, "rei" },
+            { 7, "Semika" },
         };
 
         private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
@@ -148,7 +159,7 @@ namespace RPGMods.Systems
                 isVBlood = false;
             }
 
-            if (isVBlood && !mercilessBloodlines) growthVal = (growthVal * VBloodMultiplier);
+            if (isVBlood /*&& !mercilessBloodlines*/) growthVal = (growthVal * VBloodMultiplier);
 
             if (mercilessBloodlines){
                 if (em.HasComponent<BloodConsumeSource>(Victim)){

@@ -11,7 +11,7 @@ namespace RPGMods.Commands
     public static class NoCooldown
     {
 
-        [Command("nocooldown, nocd", description: "Toggles instant cooldown for all abilities.")]
+        [Command("nocooldown", shortHand:"Nocd", description: "Toggles instant cooldown for all abilities.", adminOnly:true)]
         public static void Initialize(ChatCommandContext ctx)
         {
             Entity PlayerCharacter = ctx.Event.SenderCharacterEntity;

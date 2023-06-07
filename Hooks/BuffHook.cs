@@ -178,6 +178,134 @@ namespace RPGMods.Hooks
             //rebuiltBuffHook(__instance);
         }
 
+        public static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
+
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Applying RPGMods Buffs");
+            Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Owner found, hash: " + Owner.GetHashCode());
+            if (!entityManager.HasComponent<PlayerCharacter>(Owner)) return;
+
+            PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
+            Entity User = playerCharacter.UserEntity/*._Entity*/;
+            User Data = entityManager.GetComponentData<User>(User);
+
+            var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
+
+            //Buffer.Clear();
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
+
+
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
+            if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
+            if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
+            if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+
+
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing PowerUp Command");
+            if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)) {
+                if (powerUpData.Equals(null)) {
+                    powerUpData = new PowerUpData();
+                }
+                if (powerUpData.MaxHP.Equals(null)) {
+                    powerUpData.MaxHP = 0;
+                }
+                if (powerUpData.PATK.Equals(null)) {
+                    powerUpData.PATK = 0;
+                }
+                if (powerUpData.SATK.Equals(null)) {
+                    powerUpData.SATK = 0;
+                }
+                if (powerUpData.PDEF.Equals(null)) {
+                    powerUpData.PDEF = 0;
+                }
+                if (powerUpData.SDEF.Equals(null)) {
+                    powerUpData.SDEF = 0;
+                }
+                Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+                    StatType = UnitStatType.MaxHealth,
+                    Value = powerUpData.MaxHP,
+                    ModificationType = ModificationType.Add,
+                    Id = ModificationId.NewId(0)
+                });
+
+                Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+                    StatType = UnitStatType.PhysicalPower,
+                    Value = powerUpData.PATK,
+                    ModificationType = ModificationType.Add,
+                    Id = ModificationId.NewId(0)
+                });
+
+                Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+                    StatType = UnitStatType.SpellPower,
+                    Value = powerUpData.SATK,
+                    ModificationType = ModificationType.Add,
+                    Id = ModificationId.NewId(0)
+                });
+
+                Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+                    StatType = UnitStatType.PhysicalResistance,
+                    Value = powerUpData.PDEF,
+                    ModificationType = ModificationType.Add,
+                    Id = ModificationId.NewId(0)
+                });
+
+                Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+                    StatType = UnitStatType.SpellResistance,
+                    Value = powerUpData.SDEF,
+                    ModificationType = ModificationType.Add,
+                    Id = ModificationId.NewId(0)
+                });
+            }
+
+
+            
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing NoCD Command");
+            if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
+            {
+                Buffer.Add(Cooldown);
+            }
+            /*
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Sun Immunity Command");
+            if (Database.sunimmunity.ContainsKey(Data.PlatformId))
+            {
+                Buffer.Add(SunCharge);
+                Buffer.Add(Hazard);
+                Buffer.Add(SunResist);
+            }
+
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Speeding Command");
+            if (Database.speeding.ContainsKey(Data.PlatformId))
+            {
+                Buffer.Add(Speed);
+            }
+
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing GodMode Command");
+            if (Database.godmode.ContainsKey(Data.PlatformId))
+            {
+                Buffer.Add(PResist);
+                Buffer.Add(FResist);
+                Buffer.Add(HResist);
+                Buffer.Add(SResist);
+                Buffer.Add(SunResist);
+                Buffer.Add(GResist);
+                Buffer.Add(SPResist);
+                Buffer.Add(PPower);
+                Buffer.Add(RPower);
+                Buffer.Add(SPPower);
+                Buffer.Add(MaxYield);
+                Buffer.Add(MaxHP);
+                Buffer.Add(Hazard);
+                Buffer.Add(SunCharge);
+                Buffer.Add(DurabilityLoss);
+            }
+            */
+            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Done Adding, Buffer length: " + Buffer.Length);
+
+        }
+
         public static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance)
         {
             if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
@@ -186,141 +314,12 @@ namespace RPGMods.Hooks
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 
             if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entities Length of " + entities.Length);
-            foreach (var entity in entities)
-            {
+            foreach (var entity in entities){
                 PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
                 if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID of " + GUID.GuidHash + ": Compared to moose blood of " + Database.Buff.Buff_VBlood_Perk_Moose.GuidHash);
-                //if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1766561750)
+                if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1465458722)
                 {
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID is the moose blood");
-                    Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Owner found, hash: " + Owner.GetHashCode());
-                    if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
-
-                    PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-                    Entity User = playerCharacter.UserEntity/*._Entity*/;
-                    User Data = entityManager.GetComponentData<User>(User);
-
-                    var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
-
-                    //Buffer.Clear();
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
-
-
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
-                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
-                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
-                    if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-
-
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing PowerUp Command");
-                    if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)){
-                        if (powerUpData.Equals(null)){
-                            powerUpData = new PowerUpData();
-                        }
-                        if (powerUpData.MaxHP.Equals(null)){
-                            powerUpData.MaxHP = 0;
-                        }
-                        if (powerUpData.PATK.Equals(null)) {
-                            powerUpData.PATK = 0;
-                        }
-                        if (powerUpData.SATK.Equals(null)) {
-                            powerUpData.SATK = 0;
-                        }
-                        if (powerUpData.PDEF.Equals(null)) {
-                            powerUpData.PDEF = 0;
-                        }
-                        if (powerUpData.SDEF.Equals(null)) {
-                            powerUpData.SDEF = 0;
-                        }
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MaxHealth,
-                            Value = powerUpData.MaxHP,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalPower,
-                            Value = powerUpData.PATK,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SpellPower,
-                            Value = powerUpData.SATK,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.PhysicalResistance,
-                            Value = powerUpData.PDEF,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SpellResistance,
-                            Value = powerUpData.SDEF,
-                            ModificationType = ModificationType.Add,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-
-
-                    /*
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing NoCD Command");
-                    if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
-                    {
-                        Buffer.Add(Cooldown);
-                    }
-
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Sun Immunity Command");
-                    if (Database.sunimmunity.ContainsKey(Data.PlatformId))
-                    {
-                        Buffer.Add(SunCharge);
-                        Buffer.Add(Hazard);
-                        Buffer.Add(SunResist);
-                    }
-
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Speeding Command");
-                    if (Database.speeding.ContainsKey(Data.PlatformId))
-                    {
-                        Buffer.Add(Speed);
-                    }
-
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing GodMode Command");
-                    if (Database.godmode.ContainsKey(Data.PlatformId))
-                    {
-                        Buffer.Add(PResist);
-                        Buffer.Add(FResist);
-                        Buffer.Add(HResist);
-                        Buffer.Add(SResist);
-                        Buffer.Add(SunResist);
-                        Buffer.Add(GResist);
-                        Buffer.Add(SPResist);
-                        Buffer.Add(PPower);
-                        Buffer.Add(RPower);
-                        Buffer.Add(SPPower);
-                        Buffer.Add(MaxYield);
-                        Buffer.Add(MaxHP);
-                        Buffer.Add(Hazard);
-                        Buffer.Add(SunCharge);
-                        Buffer.Add(DurabilityLoss);
-                    }
-                    */
-                    if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Done Adding, Buffer length: " + Buffer.Length);
-
+                    oldStyleBuffApplicaiton(entity, entityManager);
                 }
             }
         }
