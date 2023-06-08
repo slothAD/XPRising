@@ -1,5 +1,7 @@
 ﻿using ProjectM;
 using ProjectM.Network;
+using RPGMods.Commands;
+using RPGMods.Systems;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -245,8 +247,18 @@ namespace RPGMods.Utils
             strength = strengthIn;
             efficency = efficencyIn;
             growth = growthIn;
-		}
-	}
+        }
+        public BloodlineData() {
+            strength = new double[Bloodlines.rates.Length];
+            efficency = new double[Bloodlines.rates.Length];
+            growth = new double[Bloodlines.rates.Length];
+            for (int i = 0; i < strength.Length; i++) {
+                strength[i] = 0.0;
+                efficency[i] = 1.0;
+                growth[i] = 1.0;
+            }
+        }
+    }
 
     public struct WeaponMasterData
     {
@@ -254,11 +266,21 @@ namespace RPGMods.Utils
         public double[] efficency { get; set; }
         public double[] growth { get; set; }
 
-        public WeaponMasterData(double[] strengthIn, double[] efficencyIn, double[] growthIn){
+        public WeaponMasterData(double[] strengthIn, double[] efficencyIn, double[] growthIn) {
             mastery = strengthIn;
             efficency = efficencyIn;
             growth = growthIn;
-            for(int i = 0; i < mastery.Length; i++){
+            for (int i = 0; i < mastery.Length; i++) {
+                mastery[i] = 0.0;
+                efficency[i] = 1.0;
+                growth[i] = 1.0;
+            }
+        }
+        public WeaponMasterData() {
+            mastery = new double[WeaponMasterSystem.masteryRates.Length];
+            efficency = new double[WeaponMasterSystem.masteryRates.Length];
+            growth = new double[WeaponMasterSystem.masteryRates.Length];
+            for (int i = 0; i < mastery.Length; i++) {
                 mastery[i] = 0.0;
                 efficency[i] = 1.0;
                 growth[i] = 1.0;

@@ -168,7 +168,7 @@ namespace RPGMods.Hooks
         };
         #endregion
 
-        public static bool buffLogging = true;
+        public static bool buffLogging = false;
 
         private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
         {

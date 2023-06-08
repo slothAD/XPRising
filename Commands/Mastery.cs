@@ -138,26 +138,35 @@ namespace RPGMods.Commands
         }
         
         [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]
-        public static void setXP(ChatCommandContext ctx, string name, string type, int value) {
+        public static void setMastery(ChatCommandContext ctx, string name, string type, int value) {
             if (!WeaponMasterSystem.isMasteryEnabled) {
                 ctx.Reply("Weapon Mastery system is not enabled.");
                 return;
             }
             ulong SteamID;
-
             if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity)) {
                 SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
             } else {
                 ctx.Reply($"Could not find specified player \"{name}\".");
                 return;
             }
-            Database.player_experience[SteamID] = xp;
-            ExperienceSystem.SetLevel(targetEntity, targetUserEntity, SteamID);
-            ctx.Reply($"Player \"{name}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
+            if(WeaponMasterSystem.nameMap.TryGetValue(type, out int index)) {
+                if(Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData wd)){
+                    wd.mastery[index] = value;
+                    Database.player_weaponmastery[SteamID] = wd;
+                } else {
+                    wd = new WeaponMasterData();
+                    wd.mastery[index] = value;
+                    Database.player_weaponmastery[SteamID] = wd;
+                }
+                ctx.Reply(name + "'s " + type + " mastery set to " + value);
+            } else {
+                ctx.Reply("Weapon Type could not be found");
+            }
         }
 
         [Command("log", "l", "<On, Off>", "Turns on or off logging of mastery gain.", adminOnly: false)]
-        public static void logBloodline(ChatCommandContext ctx, string flag)
+        public static void logMastery(ChatCommandContext ctx, string flag)
         {
             ulong SteamID;
             var UserEntity = ctx.Event.SenderUserEntity;

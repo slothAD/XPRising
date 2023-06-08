@@ -101,7 +101,8 @@ namespace RPGMods.Utils
             //Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
             if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got connected PC entities buffer of length " + allyBuffer.Length);
 
-            if(!Plugin.Server.EntityManager.TryGetComponentData<User>(PlayerCharacter, out User mainUser))
+            int allyCount = 0;
+            if (!Plugin.Server.EntityManager.TryGetComponentData<User>(PlayerCharacter, out User mainUser))
             foreach (var entity in allyBuffer){
                 if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got Entity " + entity.ToString());
                 bool hasUser = Plugin.Server.EntityManager.TryGetComponentData<User>(entity, out User userEntity);
@@ -120,6 +121,7 @@ namespace RPGMods.Utils
                                 if (team1Found) Plugin.Logger.LogInfo(DateTime.Now + ": Team 1 Found Value:" + t1.Value + " - Faction Index: " + t1.FactionIndex);
                                 else {
                                     Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for entity: " + entity.ToString());
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Components for entity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
                                 }
                             }
                             bool team2Found = Plugin.Server.EntityManager.TryGetComponentData<Team>(PlayerCharacter, out Team t2);
@@ -127,11 +129,13 @@ namespace RPGMods.Utils
                                 if (team2Found && ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Team 2 Found Value:" + t2.Value + " - Faction Index: " + t2.FactionIndex);
                                 else {
                                     Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for Player Character: " + PlayerCharacter.ToString());
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Components for Player Character are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(PlayerCharacter));
                                 }
                             }
                             if(team1Found && team2Found) {
-                                allies = t1.Value == t2.Value || t1.FactionIndex == t2.FactionIndex;
+                                allies = t1.Value == t2.Value;
                             }
+
 
                         } catch (Exception e) {
                             if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": IsAllies Failed " + e.Message);
@@ -139,6 +143,8 @@ namespace RPGMods.Utils
                     if(allies) {
                             if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Ally for " + PlayerCharacter.ToString() + " found " + entity.ToString() + " is their ally");
                             Group[entity] = entity;
+                            allyCount ++;
+                            
                         }
                     else
                     {
@@ -154,6 +160,7 @@ namespace RPGMods.Utils
             
 
             playerGroup.Allies = Group;
+            playerGroup.AllyCount = allyCount;
             Cache.PlayerAllies[PlayerCharacter] = playerGroup;
 
             return playerGroup.AllyCount;
