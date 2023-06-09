@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using VampireCommandFramework;
 using UnityEngine;
 using Il2CppSystem.Net;
+using System.IO;
 
 namespace RPGMods.Utils
 {
@@ -668,12 +669,12 @@ namespace RPGMods.Utils
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
         }*/
-
+        /*
         struct FakeNull
         {
             public int value;
             public bool has_value;
-        }
+        }*/
 
         public enum BloodType {
             Frailed = -899826404,
@@ -752,6 +753,12 @@ namespace RPGMods.Utils
 
         };
 
+        public static void confirmFile (string address) {
+            if (!File.Exists(address)) {
+                FileStream stream = File.Create(address);
+                stream.Dispose();
+            }
+        }
         public static String statTypeToString(UnitStatType type)
         {
             String name = "Unknown";

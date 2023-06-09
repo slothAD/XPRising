@@ -80,9 +80,6 @@ namespace RPGMods.Utils
         public static Dictionary<string, int> command_permission { get; set; }
         public static Dictionary<ulong, PowerUpData> PowerUpList { get; set; }
 
-        //-- -- Ban System
-        public static Dictionary<ulong, BanData> user_banlist { get; set; }
-
         //-- -- EXP System
         public static Dictionary<ulong, int> player_experience { get; set; }
         /// <summary>

@@ -385,62 +385,61 @@ namespace RPGMods.Systems
         }
 
 
-        public static void saveBloodlines()
+        public static void saveBloodlines(string saveFolder)
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/bloodlines.json", JsonSerializer.Serialize(Database.playerBloodline, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/bloodline_decay.json", JsonSerializer.Serialize(Database.playerDecayBloodlineLogout, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json", JsonSerializer.Serialize(Database.playerLogBloodline, Database.JSON_options));
+            File.WriteAllText(saveFolder+"bloodlines.json", JsonSerializer.Serialize(Database.playerBloodline, Database.JSON_options));
+            File.WriteAllText(saveFolder+"bloodline_decay.json", JsonSerializer.Serialize(Database.playerDecayBloodlineLogout, Database.JSON_options));
+            File.WriteAllText(saveFolder+"player_log_bloodlines.json", JsonSerializer.Serialize(Database.playerLogBloodline, Database.JSON_options));
         }
 
-        public static void loadBloodlines()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/bloodlines.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/bloodlines.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/bloodlines.json");
-            try
-            {
+        public static void loadBloodlines() {
+            string specificName = "bloodlines.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
+            try {
                 Database.playerBloodline = JsonSerializer.Deserialize<Dictionary<ulong, BloodlineData>>(json);
-                Plugin.Logger.LogWarning("Bloodline DB Populated.");
-            }
-            catch
-            {
+                if (Database.playerBloodline == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.playerBloodline = JsonSerializer.Deserialize<Dictionary<ulong, BloodlineData>>(json);
+                }
+                Plugin.Logger.LogWarning(DateTime.Now + "Bloodline DB Populated.");
+            } catch {
                 Database.playerBloodline = new Dictionary<ulong, BloodlineData>();
-                Plugin.Logger.LogWarning("Bloodline DB Created.");
+                Plugin.Logger.LogWarning(DateTime.Now+"Bloodline DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/bloodline_decay.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/bloodline_decay.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/bloodline_decay.json");
-            try
-            {
+
+            specificName = "bloodline_decay.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
+            try {
                 Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
-                Plugin.Logger.LogWarning("Bloodline Decay DB Populated.");
-            }
-            catch
-            {
+                if (Database.playerDecayBloodlineLogout == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
+                }
+                Plugin.Logger.LogWarning(DateTime.Now + "Bloodline Decay DB Populated.");
+            } catch {
                 Database.playerDecayBloodlineLogout = new Dictionary<ulong, DateTime>();
-                Plugin.Logger.LogWarning("Bloodline Decay DB Created.");
+                Plugin.Logger.LogWarning(DateTime.Now + "Bloodline Decay DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_log_bloodlines.json");
-            try
-            {
+
+            specificName = "player_log_bloodlines.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"player_log_bloodlines.json");
+            try {
                 Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                if (Database.playerLogBloodline == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                }
                 Plugin.Logger.LogWarning("Player Bloodline Logging DB Populated.");
-            }
-            catch
-            {
+            } catch {
                 Database.playerLogBloodline = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("Player Bloodline Logging DB Created.");
             }

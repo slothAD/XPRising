@@ -132,13 +132,13 @@ namespace RPGMods.Commands
             else if (MasteryType.Equals("axes")) type = (int)WeaponType.Axes + 1;
             else if (MasteryType.Equals("spell")) type = 0;*/
 
-            WeaponMasterSystem.SetMastery(SteamID, type, (amount));
+            WeaponMasterSystem.modMastery(SteamID, type, (amount));
             ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount}%</color>");
             Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
         
         [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]
-        public static void setMastery(ChatCommandContext ctx, string name, string type, int value) {
+        public static void setMastery(ChatCommandContext ctx, string name, string MasteryType, double value) {
             if (!WeaponMasterSystem.isMasteryEnabled) {
                 ctx.Reply("Weapon Mastery system is not enabled.");
                 return;
@@ -150,19 +150,17 @@ namespace RPGMods.Commands
                 ctx.Reply($"Could not find specified player \"{name}\".");
                 return;
             }
-            if(WeaponMasterSystem.nameMap.TryGetValue(type, out int index)) {
-                if(Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData wd)){
-                    wd.mastery[index] = value;
-                    Database.player_weaponmastery[SteamID] = wd;
-                } else {
-                    wd = new WeaponMasterData();
-                    wd.mastery[index] = value;
-                    Database.player_weaponmastery[SteamID] = wd;
-                }
-                ctx.Reply(name + "'s " + type + " mastery set to " + value);
-            } else {
-                ctx.Reply("Weapon Type could not be found");
+
+            MasteryType = MasteryType.ToLower();
+            bool typeFound = WeaponMasterSystem.nameMap.TryGetValue(MasteryType, out int type);
+            if (!typeFound) {
+                ctx.Reply($"{MasteryType} Mastery type not found! did you typo?");
+                return;
             }
+
+            WeaponMasterSystem.modMastery(SteamID, type, -100000);
+            WeaponMasterSystem.modMastery(SteamID, type, (value));
+            ctx.Reply($"{MasteryType} Mastery for \"{name}\" set to <color=#fffffffe>{value}%</color>");
         }
 
         [Command("log", "l", "<On, Off>", "Turns on or off logging of mastery gain.", adminOnly: false)]

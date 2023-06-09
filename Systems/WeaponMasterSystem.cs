@@ -9,6 +9,7 @@ using RPGMods.Utils;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using Il2CppSystem.Net;
 
 namespace RPGMods.Systems
 {
@@ -191,9 +192,9 @@ namespace RPGMods.Systems
 
             MasteryValue = (MasteryValue * MasteryMultiplier);
             spellMasteryValue = (spellMasteryValue * MasteryMultiplier);
-            SetMastery(SteamID, weapon, MasteryValue);
+            modMastery(SteamID, weapon, MasteryValue);
             if (weapon == (((int)WeaponType.None) + 1) || !spellMasteryNeedsNoneToLearn) {
-                SetMastery(SteamID, 0, spellMasteryValue);
+                modMastery(SteamID, 0, spellMasteryValue);
             }
 
             if (Database.player_log_mastery.TryGetValue(SteamID, out bool isLogging))
@@ -248,9 +249,9 @@ namespace RPGMods.Systems
             double spellMasteryValue = (MasteryCombatTick * MasteryMultiplier * spellGrowth)/1000.0;
             Cache.player_combat_ticks[SteamID] += 1;
             
-            SetMastery(SteamID, (int)WeaponType+1, MasteryValue);
+            modMastery(SteamID, (int)WeaponType+1, MasteryValue);
             if(WeaponType == WeaponType.None || !spellMasteryNeedsNoneToLearn) {
-                SetMastery(SteamID, 0, spellMasteryValue);
+                modMastery(SteamID, 0, spellMasteryValue);
 
             }
         }
@@ -271,7 +272,7 @@ namespace RPGMods.Systems
                     Output.SendLore(userEntity, $"You've been sleeping for {(int)elapsed_time.TotalMinutes} minute(s). Your mastery has decayed by {DecayValue * 0.001}%");
 
                     for(int i = 0; i < masteryStats.Length; i++){
-                        SetMastery(SteamID, i, DecayValue);
+                        modMastery(SteamID, i, DecayValue);
                     }
                 }
             }
@@ -386,7 +387,7 @@ namespace RPGMods.Systems
             return true;
         }
 
-        public static void SetMastery(ulong SteamID, int Type, double Value)
+        public static void modMastery(ulong SteamID, int Type, double Value)
         {
             int NoneExpertise = 0;
             if (Type == (int)WeaponType.None+1){
@@ -398,7 +399,7 @@ namespace RPGMods.Systems
                 Mastery.mastery[Type] += Value;                
                 Mastery.mastery[Type] = Math.Min(Mastery.mastery[Type], MaxMastery);
             }
-            catch (NullReferenceException e) {
+            catch (NullReferenceException nre) {
                 Mastery = new WeaponMasterData();
                 Mastery.mastery = new double[masteryStats.Length];
                 Mastery.efficency = new double[masteryStats.Length];
@@ -412,6 +413,7 @@ namespace RPGMods.Systems
                 if (NoneExpertise < 0) NoneExpertise = 0;
                 if (Value < 0) Value = 0;
                 Mastery.mastery[Type] += Value;
+                Plugin.Logger.LogInfo(DateTime.Now + ": Null Ref trying to get mastery, reset it instead: " + nre.Message);
             }
             if (Mastery.mastery[Type] < 0) Mastery.mastery[Type] = 0;
             Database.player_weaponmastery[SteamID] = Mastery;
@@ -546,61 +548,61 @@ namespace RPGMods.Systems
             return Mastery.mastery[type];
         }
 
-        public static void SaveWeaponMastery()
+        public static void SaveWeaponMastery(string saveFolder)
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/weaponMastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
+            File.WriteAllText(saveFolder+"weaponMastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
+            File.WriteAllText(saveFolder+"mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
+            File.WriteAllText(saveFolder +"player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
         }
 
         public static void LoadWeaponMastery() {
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/weaponMastery.json")){
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/weaponMastery.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/weaponMastery.json");
-            try
-            {
+            string specificName = "weaponMastery.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"weaponMastery.json");
+            try {
                 Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
+                if (Database.player_weaponmastery == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
+                }
                 Plugin.Logger.LogWarning("WeaponMastery DB Populated.");
-            }
-            catch
-            {
+            } catch {
                 Database.player_weaponmastery = new Dictionary<ulong, WeaponMasterData>();
                 Plugin.Logger.LogWarning("WeaponMastery DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/mastery_decay.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/mastery_decay.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json");
-            try
-            {
+            specificName = "weaponMastery.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
+                if (Database.player_decaymastery_logout == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
+                }
                 Plugin.Logger.LogWarning("WeaponMasteryDecay DB Populated.");
             }
-            catch
-            {
+            catch{
                 Database.player_decaymastery_logout = new Dictionary<ulong, DateTime>();
                 Plugin.Logger.LogWarning("WeaponMasteryDecay DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_mastery.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_log_mastery.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json");
-            try
-            {
+            specificName = "player_log_mastery.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                if (Database.player_log_mastery == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                }
                 Plugin.Logger.LogWarning("Player_LogMastery_Switch DB Populated.");
             }
-            catch
-            {
+            catch{
                 Database.player_log_mastery = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("Player_LogMastery_Switch DB Created.");
             }

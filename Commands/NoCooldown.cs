@@ -33,9 +33,9 @@ namespace RPGMods.Commands
             return true;
         }
 
-        public static void SaveCooldown()
+        public static void SaveCooldown(string saveFolder)
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/nocooldown.json", JsonSerializer.Serialize(Database.nocooldownlist, Database.JSON_options));
+            File.WriteAllText(saveFolder+"nocooldown.json", JsonSerializer.Serialize(Database.nocooldownlist, Database.JSON_options));
         }
 
         public static bool RemoveCooldown(ulong SteamID)
@@ -48,21 +48,19 @@ namespace RPGMods.Commands
             return false;
         }
 
-        public static void LoadNoCooldown()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/nocooldown.json"))
-            {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/nocooldown.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/nocooldown.json");
-            try
-            {
+        public static void LoadNoCooldown() {
+            string specificName = "nocooldown.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
+            try {
                 Database.nocooldownlist = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                if (Database.godmode == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.nocooldownlist = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                }
                 Plugin.Logger.LogWarning("NoCooldown DB Populated.");
-            }
-            catch
-            {
+            } catch {
                 Database.nocooldownlist = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("NoCooldown DB Created.");
             }

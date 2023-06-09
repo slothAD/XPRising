@@ -308,7 +308,7 @@ namespace RPGMods.Hooks
 
         public static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);

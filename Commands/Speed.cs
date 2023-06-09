@@ -32,7 +32,7 @@ namespace RPGMods.Commands
 
         public static void SaveSpeed()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
         }
 
         public static bool RemoveSpeed(Context ctx)
@@ -48,12 +48,12 @@ namespace RPGMods.Commands
 
         public static void LoadSpeed()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/speeding.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"speeding.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/speeding.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"speeding.json");
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/speeding.json");
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"speeding.json");
             try
             {
                 Database.speeding = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

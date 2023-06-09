@@ -71,27 +71,32 @@ namespace RPGMods.Commands
             return;
         }
 
-        public static void SavePowerUp()
+        public static void SavePowerUp(string saveFolder)
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/powerup.json", JsonSerializer.Serialize(Database.PowerUpList, Database.JSON_options));
+            File.WriteAllText(saveFolder+"powerup.json", JsonSerializer.Serialize(Database.PowerUpList, Database.JSON_options));
         }
 
-        public static void LoadPowerUp()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/powerup.json"))
+        public static void LoadPowerUp() {
+            string specificName = "powerup.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+ specificName))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/powerup.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+specificName);
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/RPGMods/Saves/powerup.json");
-            try
-            {
+            string content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.PowerUpList = JsonSerializer.Deserialize<Dictionary<ulong, PowerUpData>>(content);
+                if(Database.PowerUpList == null) {
+                    content = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.PowerUpList = JsonSerializer.Deserialize<Dictionary<ulong, PowerUpData>>(content);
+                }
                 Plugin.Logger.LogWarning("PowerUp DB Populated.");
             }
             catch
             {
-                Database.PowerUpList = new ();
+                Database.PowerUpList = new Dictionary<ulong, PowerUpData>();
                 Plugin.Logger.LogWarning("PowerUp DB Created.");
             }
         }

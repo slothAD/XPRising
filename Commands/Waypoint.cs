@@ -157,13 +157,13 @@ namespace RPGMods.Commands
 
         public static void LoadWaypoints()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/waypoints.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"waypoints.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/waypoints.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"waypoints.json");
                 stream.Dispose();
             }
 
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/waypoints.json");
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"waypoints.json");
             try
             {
                 Database.waypoints = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
@@ -175,13 +175,13 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("Waypoints DB Created");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/global_waypoints.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"global_waypoints.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/global_waypoints.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"global_waypoints.json");
                 stream.Dispose();
             }
 
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/global_waypoints.json");
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"global_waypoints.json");
             try
             {
                 Database.globalWaypoint = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
@@ -193,13 +193,13 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("GlobalWaypoints DB Created");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/total_waypoints.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"total_waypoints.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/total_waypoints.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"total_waypoints.json");
                 stream.Dispose();
             }
 
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/total_waypoints.json");
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"total_waypoints.json");
             try
             {
                 Database.waypoints_owned = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -214,9 +214,9 @@ namespace RPGMods.Commands
 
         public static void SaveWaypoints()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/waypoints.json", JsonSerializer.Serialize(Database.waypoints, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/global_waypoints.json", JsonSerializer.Serialize(Database.globalWaypoint, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/total_waypoints.json", JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"waypoints.json", JsonSerializer.Serialize(Database.waypoints, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"global_waypoints.json", JsonSerializer.Serialize(Database.globalWaypoint, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"total_waypoints.json", JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));
         }
     }*/
 }

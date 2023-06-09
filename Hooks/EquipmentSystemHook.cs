@@ -18,7 +18,7 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(ArmorLevelSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (ExperienceSystem.isEXPActive)
             {
@@ -62,7 +62,7 @@ namespace RPGMods.Hooks
 
         private static void Postfix(ArmorLevelSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive)
             {
@@ -83,7 +83,7 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(WeaponLevelSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             Plugin.Logger.LogInfo(System.DateTime.Now + ": Weapon System Patch Entry");
             if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
@@ -146,7 +146,7 @@ namespace RPGMods.Hooks
 
         private static void Postfix(WeaponLevelSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive)
             {
@@ -166,7 +166,7 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(WeaponLevelSystem_Destroy __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (ExperienceSystem.isEXPActive && (ExperienceSystem.LevelRewardsOn || ExperienceSystem.ShouldAllowGearLevel))
             {
@@ -196,7 +196,7 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(SpellLevelSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (ExperienceSystem.isEXPActive)
             {
@@ -225,7 +225,7 @@ namespace RPGMods.Hooks
 
         private static void Postfix(SpellLevelSystem_Spawn __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (ExperienceSystem.isEXPActive || PvPSystem.isPunishEnabled)
             {
@@ -251,7 +251,7 @@ namespace RPGMods.Hooks
     {
         private static void Prefix(SpellLevelSystem_Destroy __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (ExperienceSystem.isEXPActive)
             {
@@ -279,7 +279,7 @@ namespace RPGMods.Hooks
 
         private static void Postfix(SpellLevelSystem_Destroy __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             if (ExperienceSystem.isEXPActive)
             {

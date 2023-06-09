@@ -7,27 +7,35 @@ namespace RPGMods.Utils
     public static class AutoSaveSystem
     {
         //-- AutoSave is now directly hooked into the Server game save activity.
-        public static void SaveDatabase()
-        {
+        public const string mainSaveFolder = "BepInEx/config/RPGMods/Saves/";
+        public const string backupSaveFolder = "BepInEx/config/RPGMods/Saves/Backup/";
+        public static int saveCount = 0;
+        private static int backupFrequency = 5;
+        public static void SaveDatabase(){
+            saveCount++;
+            string saveFolder = mainSaveFolder;
+            if(saveCount % backupFrequency == 0) {
+                saveFolder = backupSaveFolder;
+            }
             PermissionSystem.SaveUserPermission(); //-- Nothing new to save.
-            GodMode.SaveGodMode();
-            /*
-            SunImmunity.SaveImmunity();
-            Waypoint.SaveWaypoints();
-            NoCooldown.SaveCooldown();
-            Speed.SaveSpeed();
-            AutoRespawn.SaveAutoRespawn();
+            GodMode.SaveGodMode(saveFolder);
+            
+            //SunImmunity.SaveImmunity();
+            //Waypoint.SaveWaypoints();
+            NoCooldown.SaveCooldown(saveFolder);
+            //Speed.SaveSpeed();
+            //AutoRespawn.SaveAutoRespawn();
             //Kit.SaveKits();   //-- Nothing to save here for now.
-            PowerUp.SavePowerUp();*/
+            PowerUp.SavePowerUp(saveFolder);
 
             //-- System Related
-            ExperienceSystem.SaveEXPData();
-            PvPSystem.SavePvPStat();
-            WeaponMasterSystem.SaveWeaponMastery();
-            Bloodlines.saveBloodlines();
-            BanSystem.SaveBanList();
-            WorldDynamicsSystem.SaveFactionStats();
-            WorldDynamicsSystem.SaveIgnoredMobs();
+            ExperienceSystem.SaveEXPData(saveFolder);
+            //PvPSystem.SavePvPStat();
+            WeaponMasterSystem.SaveWeaponMastery(saveFolder);
+            Bloodlines.saveBloodlines(saveFolder);
+            //BanSystem.SaveBanList();
+            //WorldDynamicsSystem.SaveFactionStats(saveFolder);
+            //WorldDynamicsSystem.SaveIgnoredMobs(saveFolder);
 
             Plugin.Logger.LogInfo("All database saved to JSON file.");
         }
@@ -52,7 +60,7 @@ namespace RPGMods.Utils
             ExperienceSystem.LoadEXPData();
             WeaponMasterSystem.LoadWeaponMastery();
             Bloodlines.loadBloodlines();
-            BanSystem.LoadBanList();
+            //BanSystem.LoadBanList();
             WorldDynamicsSystem.LoadFactionStats();
             WorldDynamicsSystem.LoadIgnoredMobs();
 

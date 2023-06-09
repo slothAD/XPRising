@@ -132,8 +132,9 @@ namespace RPGMods.Commands
             ctx.Reply($"{Bloodlines.names[type]}'s bloodline for \"{name}\" adjusted by <color=#fffffffe>{amount}%</color>");
             Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
+
         [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]
-        public static void setMastery(ChatCommandContext ctx, string name, string type, int value) {
+        public static void setMastery(ChatCommandContext ctx, string name, string type, double value) {
             if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
@@ -145,20 +146,17 @@ namespace RPGMods.Commands
                 ctx.Reply($"Could not find specified player \"{name}\".");
                 return;
             }
-            if (Bloodlines.nameMap.TryGetValue(type, out int index)) {
-                if (Database.playerBloodline.TryGetValue(SteamID, out BloodlineData bd)) {
-                    bd.strength[index] = value;
-                    Database.playerBloodline[SteamID] = bd;
-                } else {
-                    bd = new BloodlineData();
-                    bd.strength[index] = value;
-                    Database.playerBloodline[SteamID] = bd;
-                }
-                ctx.Reply(name + "'s " + type + " bloodline set to " + value);
-            } else {
-                ctx.Reply("bloodline Type could not be found");
+
+            bool typeFound = Bloodlines.nameMap.TryGetValue(type, out int index);
+            if (!typeFound) {
+                ctx.Reply($"{type} Bloodline not found! did you typo?");
+                return;
             }
+            Bloodlines.modBloodline(SteamID, index, -100000);
+            Bloodlines.modBloodline(SteamID, index, value);
+            ctx.Reply(name + "'s " + type + " bloodline set to " + value);
         }
+
         [Command("log", "l", "<On, Off>", "Turns on or off logging of bloodlineXP gain.", adminOnly: false)]
         public static void logBloodline(ChatCommandContext ctx, string flag)
         {

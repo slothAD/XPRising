@@ -11,8 +11,8 @@ namespace RPGMods.Hooks
     [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
     public class HandleGameplayEventsBase_Patch
     {
-        private static byte CurrentDay = 0;
-        private static bool isDNInitialized = false;
+        //private static byte CurrentDay = 0;
+        //private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
             //-- Player Location Caching

@@ -55,6 +55,7 @@ namespace RPGMods.Utils
 
             EntityManager em = Plugin.Server.EntityManager;
             ServerChatUtils.SendSystemMessageToClient(em, em.GetComponentData <ProjectM.Network.User> (userEntity), message);
+            /*
             return;
 
             int index = em.GetComponentData<User>(userEntity).Index;
@@ -84,6 +85,7 @@ namespace RPGMods.Utils
             });
 
             em.SetComponentData(entity, ev);
+            */
         }
     }
 }

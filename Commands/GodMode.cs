@@ -31,8 +31,8 @@ namespace RPGMods.Commands
             return true;
         }
 
-        public static void SaveGodMode(){
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/godmode.json", JsonSerializer.Serialize(Database.godmode, Database.JSON_options));
+        public static void SaveGodMode(string saveFolder) {
+            File.WriteAllText(saveFolder+"godmode.json", JsonSerializer.Serialize(Database.godmode, Database.JSON_options));
         }
 
         public static bool RemoveGodMode(ulong SteamID){
@@ -43,21 +43,19 @@ namespace RPGMods.Commands
             return false;
         }
 
-        public static void LoadGodMode()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/godmode.json"))
-            {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/godmode.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/godmode.json");
-            try
-            {
+        public static void LoadGodMode() {
+            string specificName = "godmode.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificName);
+            try {
                 Database.godmode = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                if (Database.godmode == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.godmode = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                }
                 Plugin.Logger.LogWarning("GodMode DB Populated.");
-            }
-            catch
-            {
+            } catch {
                 Database.godmode = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("GodMode DB Created.");
             }

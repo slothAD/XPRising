@@ -15,7 +15,7 @@ public class DeathEventListenerSystem_Patch
     [HarmonyPostfix]
     public static void Postfix(DeathEventListenerSystem __instance)
     {
-        if (__instance._DeathEventQuery != null)
+        //if (__instance._DeathEventQuery != null)
         {
             NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
             foreach (DeathEvent ev in deathEvents)
