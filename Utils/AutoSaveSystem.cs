@@ -1,5 +1,6 @@
 ﻿using RPGMods.Commands;
 using RPGMods.Systems;
+using System;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace RPGMods.Utils
@@ -37,7 +38,7 @@ namespace RPGMods.Utils
             //WorldDynamicsSystem.SaveFactionStats(saveFolder);
             //WorldDynamicsSystem.SaveIgnoredMobs(saveFolder);
 
-            Plugin.Logger.LogInfo("All database saved to JSON file.");
+            Plugin.Logger.LogInfo(DateTime.Now+"All database saved to JSON file.");
         }
 
         public static void LoadDatabase()

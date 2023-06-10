@@ -55,7 +55,7 @@ namespace RPGMods.Commands
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
             try {
                 Database.nocooldownlist = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                if (Database.godmode == null) {
+                if (Database.nocooldownlist == null) {
                     json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
                     Database.nocooldownlist = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
                 }

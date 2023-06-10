@@ -22,7 +22,7 @@ namespace RPGMods.Commands
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }*/
 
-        [Command("godmode","god", "godmode", "Toggles god mode.")]
+        [Command("godmode","god", "<True/False>", "Sets god mode.")]
         public static bool UpdateGodMode(ChatCommandContext ctx, bool isGodMode){
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.godmode.TryGetValue(SteamID, out bool isGodMode_);

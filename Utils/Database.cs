@@ -419,6 +419,18 @@ namespace RPGMods.Utils
 
             public static PrefabGUID Buff_VBlood_Perk_Moose = new PrefabGUID(-1464851863);      //-- Using this for commands & mastery buff
             public static PrefabGUID PerkMoose = new PrefabGUID(-1464851863);
+            //public static PrefabGUID NPCInvul = new PrefabGUID(544892542);
+
+            /*
+            541307027		BloodQualityUnitBuff_Brute Entity(3611:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+1708373727		BloodQualityUnitBuff_Creature Entity(3612:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+-798998623		BloodQualityUnitBuff_Mutant Entity(3613:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+1064495467		BloodQualityUnitBuff_Rogue Entity(3614:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+-1959246041		BloodQualityUnitBuff_Scholar Entity(3615:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+1243275376		BloodQualityUnitBuff_Warrior Entity(3616:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+2089547928		BloodQualityUnitBuff_Worker Entity(3617:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+                */
+
 
             public static PrefabGUID SiegeGolem_T01 = new PrefabGUID(-148535031);
             public static PrefabGUID SiegeGolem_T02 = new PrefabGUID(914043867);

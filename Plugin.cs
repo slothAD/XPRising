@@ -668,35 +668,36 @@ namespace RPGMods
             isInitialized = true;
         }
 
+        private static bool parseLogging = false;
         public static int[] parseIntArrayConifg(string data) {
-            Plugin.Logger.LogInfo(">>>parsing int array: " + data);
+            if (parseLogging) Plugin.Logger.LogInfo(">>>parsing int array: " + data);
             var match = Regex.Match(data, "([0-9]+)");
             List<int> list = new List<int>();
             while (match.Success) {
                 try {
-                    Plugin.Logger.LogInfo(">>>got int: " + match.Value);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>got int: " + match.Value);
                     int temp = int.Parse(match.Value, CultureInfo.InvariantCulture);
-                    Plugin.Logger.LogInfo(">>>int parsed into: " + temp);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>int parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
-                    Plugin.Logger.LogWarning("Error interperting integer value: " + match.ToString());
+                    if (parseLogging) Plugin.Logger.LogWarning("Error interperting integer value: " + match.ToString());
                 }
                 match = match.NextMatch();
             }
-            Plugin.Logger.LogInfo(">>>done parsing int array");
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing int array");
             int[] result = list.ToArray();
             return result;
         }
         public static float[] parseFloatArrayConifg(string data) {
-            Plugin.Logger.LogInfo(">>>parsing float array: " + data);
+            if (parseLogging) Plugin.Logger.LogInfo(">>>parsing float array: " + data);
             var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<float> list = new List<float>();
             while (match.Success) {
                 try {
-                    Plugin.Logger.LogInfo(">>>got float: " + match.Value);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>got float: " + match.Value);
                     float temp = float.Parse(match.Value, CultureInfo.InvariantCulture);
-                    Plugin.Logger.LogInfo(">>>float parsed into: " + temp);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>float parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
@@ -706,19 +707,19 @@ namespace RPGMods
                 match = match.NextMatch();
             }
 
-            Plugin.Logger.LogInfo(">>>done parsing float array");
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing float array");
             float[] result = list.ToArray();
             return result;
         }
         public static double[] parseDoubleArrayConifg(string data) {
-            Plugin.Logger.LogInfo(">>>parsing double array: " + data);
+            if(parseLogging) Plugin.Logger.LogInfo(">>>parsing double array: " + data);
             var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<double> list = new List<double>();
             while (match.Success) {
                 try {
-                    Plugin.Logger.LogInfo(">>>got double: " + match.Value);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>got double: " + match.Value);
                     double temp = double.Parse(match.Value, CultureInfo.InvariantCulture);
-                    Plugin.Logger.LogInfo(">>>double parsed into: " + temp);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>double parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
@@ -728,12 +729,12 @@ namespace RPGMods
                 match = match.NextMatch();
             }
 
-            Plugin.Logger.LogInfo(">>>done parsing double array");
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing double array");
             double[] result = list.ToArray();
             return result;
         }
         public static string[] parseStringArrayConifg(string data) {
-            Plugin.Logger.LogInfo(">>>parsing comma seperated String array: " + data);
+            if (parseLogging) Plugin.Logger.LogInfo(">>>parsing comma seperated String array: " + data);
             List<string> list = new List<string>();
             while (data.IndexOf(",") > 0) {
                 string str = data.Substring(0, data.IndexOf(","));
@@ -743,7 +744,7 @@ namespace RPGMods
             }
             data.Trim();
             list.Add(data);
-            Plugin.Logger.LogInfo(">>>done parsing string array");
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing string array");
             string[] result = list.ToArray();
             return result;
         }

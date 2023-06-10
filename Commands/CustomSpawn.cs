@@ -61,7 +61,7 @@ namespace RPGMods.Commands
                         ctx.Reply($"Could not find specified unit: {name}");
                         return;
                     }
-
+                     
                     var Options = new SpawnOptions(true, type, quality, bloodconsume, false, default, true);
                     var NPCData = Cache.spawnNPC_Listen[npc_id];
                     NPCData.Options = Options;
