@@ -13,6 +13,10 @@ using RPGMods.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
+using VampireCommandFramework;
+using UnityEngine;
+using Il2CppSystem.Net;
+using System.IO;
 
 namespace RPGMods.Utils
 {
@@ -40,6 +44,7 @@ namespace RPGMods.Utils
         public static ServerGameSettings SGS = default;
         public static ServerGameManager SGM = default;
         public static UserActivityGridSystem UAGS = default;
+        public static int groupRange = 50;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
         
@@ -51,7 +56,7 @@ namespace RPGMods.Utils
 
         public static bool GetServerGameManager(out ServerGameManager sgm)
         {
-            sgm = Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
+            sgm = (ServerGameManager)Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
             return true;
         }
 
@@ -61,41 +66,102 @@ namespace RPGMods.Utils
             return true;
         }
 
-        public static int GetAllies(Entity PlayerCharacter, out PlayerGroup playerGroup)
-        {
-            if (Cache.PlayerAllies.TryGetValue(PlayerCharacter, out playerGroup))
-            {
+        public static int GetAllies(Entity PlayerCharacter, out PlayerGroup playerGroup) {
+            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Beginning To Parse Player Group");
+            if (Cache.PlayerAllies.TryGetValue(PlayerCharacter, out playerGroup)) {
+                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Found in Cache, timestamp is "+ playerGroup.TimeStamp);
                 TimeSpan CacheAge = DateTime.Now - playerGroup.TimeStamp;
                 if (CacheAge.TotalSeconds < 300) return playerGroup.AllyCount;
             }
-
+            /*
             Team team = Helper.SGM._TeamChecker.GetTeam(PlayerCharacter);
-            playerGroup.AllyCount = Helper.SGM._TeamChecker.GetAlliedUsersCount(team)-1;
+            playerGroup.AllyCount = Helper.SGM._TeamChecker.GetAlliedUsersCount(team)-1;*/
             playerGroup.TimeStamp = DateTime.Now;
 
             Dictionary<Entity, Entity> Group = new();
-
+            /*
             if (playerGroup.AllyCount <= 0)
             {
                 playerGroup.Allies = Group;
                 Cache.PlayerAllies[PlayerCharacter] = playerGroup;
                 return 0;
-            }
+            }*/
 
-            NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
-            Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
-
-            foreach (var entity in allyBuffer)
+            NativeArray<Entity> allyBuffer;
+            EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
             {
-                if (Plugin.Server.EntityManager.HasComponent<User>(entity))
+                All = new ComponentType[]
+                        {
+                            ComponentType.ReadOnly<PlayerCharacter>(),
+                            ComponentType.ReadOnly<IsConnected>()
+                        },
+                Options = EntityQueryOptions.IncludeDisabled
+            });
+            allyBuffer = query.ToEntityArray(Allocator.Temp);
+            //NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
+            //Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
+            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got connected PC entities buffer of length " + allyBuffer.Length);
+
+            int allyCount = 0;
+            if (!Plugin.Server.EntityManager.TryGetComponentData<User>(PlayerCharacter, out User mainUser))
+            foreach (var entity in allyBuffer){
+                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got Entity " + entity.ToString());
+                bool hasUser = Plugin.Server.EntityManager.TryGetComponentData<User>(entity, out User userEntity);
+                if (hasUser || true){
+                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity.ToString());
+                    if (entity.Equals(PlayerCharacter)){
+                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity.ToString());
+                        continue;
+                    }
+                    bool allies = false;
+                    try {
+                            //allies = Helper.SGM.IsAllies(entity, PlayerCharacter);
+                            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get teams ");
+                            bool team1Found = Plugin.Server.EntityManager.TryGetComponentData<Team>(entity, out Team t1);
+                            if (ExperienceSystem.xpLogging) {
+                                if (team1Found) Plugin.Logger.LogInfo(DateTime.Now + ": Team 1 Found Value:" + t1.Value + " - Faction Index: " + t1.FactionIndex);
+                                else {
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for entity: " + entity.ToString());
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Components for entity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
+                                }
+                            }
+                            bool team2Found = Plugin.Server.EntityManager.TryGetComponentData<Team>(PlayerCharacter, out Team t2);
+                            if (ExperienceSystem.xpLogging) {
+                                if (team2Found && ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Team 2 Found Value:" + t2.Value + " - Faction Index: " + t2.FactionIndex);
+                                else {
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for Player Character: " + PlayerCharacter.ToString());
+                                    Plugin.Logger.LogInfo(DateTime.Now + ": Components for Player Character are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(PlayerCharacter));
+                                }
+                            }
+                            if(team1Found && team2Found) {
+                                allies = t1.Value == t2.Value;
+                            }
+
+
+                        } catch (Exception e) {
+                            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": IsAllies Failed " + e.Message);
+                        }
+                    if(allies) {
+                            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Ally for " + PlayerCharacter.ToString() + " found " + entity.ToString() + " is their ally");
+                            Group[entity] = entity;
+                            allyCount ++;
+                            
+                        }
+                    else
+                    {
+                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": " + PlayerCharacter.ToString() + " and " + entity.ToString() + " are not allies");
+
+                    }
+                }
+                else
                 {
-                    Entity playerEntity = Plugin.Server.EntityManager.GetComponentData<User>(entity).LocalCharacter._Entity;
-                    if (playerEntity.Equals(PlayerCharacter)) continue;
-                    Group[entity] = playerEntity;
+                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": No Associated User!");
                 }
             }
+            
 
             playerGroup.Allies = Group;
+            playerGroup.AllyCount = allyCount;
             Cache.PlayerAllies[PlayerCharacter] = playerGroup;
 
             return playerGroup.AllyCount;
@@ -256,8 +322,11 @@ namespace RPGMods.Utils
             var buffEvent = new ApplyBuffDebugEvent()
             {
                 BuffPrefabGUID = GUID
-            };
+            }
+            ;
+            Database.playerBuffs.Add(buffEvent);
             des.ApplyBuff(fromCharacter, buffEvent);
+            
         }
 
         public static void RemoveBuff(Entity Char, PrefabGUID GUID)
@@ -300,10 +369,11 @@ namespace RPGMods.Utils
                 {
                     var item = managed.GetOrDefault<ManagedItemData>(entry.Key);
                     if (item.PrefabName.StartsWith("Item_VBloodSource") || item.PrefabName.StartsWith("GM_Unit_Creature_Base") || item.PrefabName == "Item_Cloak_ShadowPriest") continue;
-                    if (item.Name.ToString().ToLower() == name.ToLower())
-                    {
+                    if (item.Name.ToString().ToLower().Equals( name.ToLower())){
                         return entry.Key;
                     }
+                    if (item.PrefabName.ToLower().Equals(name.ToLower())) { return entry.Key; }
+                    //if (item.PrefabName.Substring(item.PrefabName.IndexOf("_"+1)).ToLower().Equals(name.ToLower())) { return entry.Key; }
                 }
                 catch { }
             }
@@ -343,8 +413,9 @@ namespace RPGMods.Utils
             em.SetComponentData(entity, KickEvent);
         }
 
-        public static Entity AddItemToInventory(Context ctx, PrefabGUID guid, int amount)
+        public static void AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
+            /*
             unsafe
             {
                 var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
@@ -357,9 +428,16 @@ namespace RPGMods.Utils
                 }, bytePtr, false);
                 var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
                 var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
-                var hasAdded = InventoryUtilitiesServer.TryAddItem(ctx.EntityManager, gameData.ItemHashLookupMap, ctx.Event.SenderCharacterEntity, guid, amount, out _, out Entity e, default, hack);
-                return e;
-            }
+                var sets = new AddItemSettings();
+                sets.DropRemainder = true;
+                sets.EquipIfPossible = true;
+                var hasAdded = InventoryUtilitiesServer.TryAddItem(sets,ctx.Event.SenderCharacterEntity, guid ,amount);
+            }*/
+
+            var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
+            var itemSettings = AddItemSettings.Create(Plugin.Server.EntityManager, gameData.ItemHashLookupMap);
+            var inventoryResponse = InventoryUtilitiesServer.TryAddItem(itemSettings, ctx.Event.SenderCharacterEntity, guid, amount);
+            //return inventoryResponse.NewEntity;
         }
 
         public static BloodType GetBloodTypeFromName(string name)
@@ -380,6 +458,7 @@ namespace RPGMods.Utils
             else if (name.Equals("scholar")) type = new PrefabGUID(-700632469);
             else if (name.Equals("creature")) type = new PrefabGUID(1897056612);
             else if (name.Equals("worker")) type = new PrefabGUID(-1342764880);
+            else if (name.Equals("mutant")) type = new PrefabGUID(-2017994753);
             else type = new PrefabGUID();
             return type;
         }
@@ -474,7 +553,7 @@ namespace RPGMods.Utils
             var em = Plugin.Server.EntityManager;
             var cUnitStats = em.GetComponentData<UnitStats>(character);
             var cBuffer = em.GetBuffer<BoolModificationBuffer>(character);
-            cUnitStats.PvPProtected.Set(value, cBuffer);
+            cUnitStats.PvPProtected.SetBaseValue(value, cBuffer);
             em.SetComponentData(character, cUnitStats);
         }
 
@@ -508,26 +587,26 @@ namespace RPGMods.Utils
             return true;
         }
 
-        public static bool SpawnAtPosition(Entity user, string name, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
+        public static bool SpawnAtPosition(Entity user, string name, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
         {
             var isFound = Database.database_units.TryGetValue(name, out var unit);
             if (!isFound) return false;
 
-            var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            var f3pos = new float3(position.x, translation.Value.y, position.y);
-            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, f3pos, count, minRange, maxRange, duration);
+            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
+            //var f3pos = new float3(position.x, translation.Value.y, position.y);
+            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, count, minRange, maxRange, duration);
             return true;
         }
 
-        public static bool SpawnAtPosition(Entity user, int GUID, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
+        public static bool SpawnAtPosition(Entity user, int GUID, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
         {
             var unit = new PrefabGUID(GUID);
 
-            var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            var f3pos = new float3(position.x, translation.Value.y, position.y);
+            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
+            //var f3pos = new float3(position.x, translation.Value.y, position.y);
             try
             {
-                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, f3pos, count, minRange, maxRange, duration);
+                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, count, minRange, maxRange, duration);
             }
             catch
             {
@@ -561,7 +640,7 @@ namespace RPGMods.Utils
             }
             try
             {
-                name = s.PrefabNameLookupMap[hashCode].ToString();
+                name = s.PrefabLookupMap[hashCode].ToString();
             }
             catch
             {
@@ -570,7 +649,8 @@ namespace RPGMods.Utils
             return name;
         }
 
-        public static void TeleportTo(Context ctx, Float2 position)
+        /*
+        public static void TeleportTo(Context ctx, float3 position)
         {
             var entity = ctx.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
@@ -585,28 +665,100 @@ namespace RPGMods.Utils
 
             ctx.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
             {
-                Position = new float2(position.x, position.y),
+                Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
-        }
-
+        }*/
+        /*
         struct FakeNull
         {
             public int value;
             public bool has_value;
-        }
+        }*/
 
-        public enum BloodType
-        {
+        public enum BloodType {
             Frailed = -899826404,
             Creature = -77658840,
             Warrior = -1094467405,
             Rogue = 793735874,
             Brute = 581377887,
             Scholar = -586506765,
-            Worker = -540707191
+            Worker = -540707191,
+            Mutant = -2017994753
+        }
+        public enum BloodCategory {
+            Frailed = 0,
+            Creature = 1,
+            Warrior = 2,
+            Rogue = 3,
+            Brute = 4,
+            Scholar = 5,
+            Worker = 6
         }
 
+
+        // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the thing, and 0.75 quarters it.
+        // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
+        public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
+            {(int)UnitStatType.CooldownModifier },
+            {(int)UnitStatType.PhysicalResistance },
+            {(int)UnitStatType.SpellResistance },
+            {(int)UnitStatType.ResistVsBeasts },
+            {(int)UnitStatType.ResistVsCastleObjects },
+            {(int)UnitStatType.ResistVsDemons },
+            {(int)UnitStatType.ResistVsHumans },
+            {(int)UnitStatType.ResistVsMechanical },
+            {(int)UnitStatType.ResistVsPlayerVampires },
+            {(int)UnitStatType.ResistVsUndeads },
+            {(int)UnitStatType.ReducedResourceDurabilityLoss }
+        };
+
+        //This should be a dictionary lookup for the stats to what mod type they should use, and i should put the name strings in here, i might do it later.
+        public static HashSet<int> multiplierStats = new HashSet<int> {
+            {(int)UnitStatType.CooldownModifier },
+            {(int)UnitStatType.PhysicalResistance },
+            {(int)UnitStatType.SpellResistance },
+            {(int)UnitStatType.ResistVsBeasts },
+            {(int)UnitStatType.ResistVsCastleObjects },
+            {(int)UnitStatType.ResistVsDemons },
+            {(int)UnitStatType.ResistVsHumans },
+            {(int)UnitStatType.ResistVsMechanical },
+            {(int)UnitStatType.ResistVsPlayerVampires },
+            {(int)UnitStatType.ResistVsUndeads },
+            {(int)UnitStatType.ReducedResourceDurabilityLoss },
+            {(int)UnitStatType.ResourceYield }
+
+        };
+
+        public static HashSet<int> baseStatsSet = new HashSet<int> {
+            {(int)UnitStatType.PhysicalPower },
+            {(int)UnitStatType.ResourcePower },
+            {(int)UnitStatType.SiegePower },
+            {(int)UnitStatType.AttackSpeed },
+            {(int)UnitStatType.FireResistance },
+            {(int)UnitStatType.GarlicResistance },
+            {(int)UnitStatType.SilverResistance },
+            {(int)UnitStatType.HolyResistance },
+            {(int)UnitStatType.SunResistance },
+            {(int)UnitStatType.SpellResistance },
+            {(int)UnitStatType.PhysicalResistance },
+            {(int)UnitStatType.SpellCriticalStrikeDamage },
+            {(int)UnitStatType.SpellCriticalStrikeChance },
+            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
+            {(int)UnitStatType.PhysicalCriticalStrikeChance },
+            {(int)UnitStatType.PassiveHealthRegen },
+            {(int)UnitStatType.ResourceYield },
+            {(int)UnitStatType.PvPResilience },
+            {(int)UnitStatType.ReducedResourceDurabilityLoss }
+
+        };
+
+        public static void confirmFile (string address) {
+            if (!File.Exists(address)) {
+                FileStream stream = File.Create(address);
+                stream.Dispose();
+            }
+        }
         public static String statTypeToString(UnitStatType type)
         {
             String name = "Unknown";

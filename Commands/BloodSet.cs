@@ -3,7 +3,7 @@ using ProjectM.Network;
 using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("blood", Usage = "blood <Type> [<Quality>] [<Value>]", Description = "Sets your current Blood Type, Quality and Value")]
     public static class BloodSet
     {
@@ -28,12 +28,12 @@ namespace RPGMods.Commands
 
                     var BloodEvent = new ChangeBloodDebugEvent()
                     {
-                        Amount = value,
-                        Quality = quality,
-                        Source = type
+                        Amount = value//,
+                        //Quality = quality,
+                        //Source = type
                     };
                     Plugin.Server.GetExistingSystem<DebugEventsSystem>().ChangeBloodEvent(ctx.Event.User.Index, ref BloodEvent);
-                    Output.SendSystemMessage(ctx, $"Changed Blood Type to <color=#ffff00>{ctx.Args[0]}</color> with <color=#ffff00>{quality}</color>% quality");
+                    ctx.Reply($"Changed Blood Type to <color=#ffff00>{ctx.Args[0]}</color> with <color=#ffff00>{quality}</color>% quality");
                 }
                 catch
                 {
@@ -46,5 +46,5 @@ namespace RPGMods.Commands
                 Output.MissingArguments(ctx);
             }
         }
-    }
+    }*/
 }

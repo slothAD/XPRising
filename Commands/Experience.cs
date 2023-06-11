@@ -1,149 +1,152 @@
-﻿using ProjectM.Network;
+﻿using ProjectM;
+using ProjectM.Network;
 using RPGMods.Systems;
 using RPGMods.Utils;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace RPGMods.Commands
 {
-    [Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>] [<ability> \"ability\"", Description = "Shows your currect experience and progression to next level, toggle the exp gain notification, or spend earned ability points.")]
-    public static class Experience
-    {
+    //[Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>] [<ability> \"ability\"", Description = "Shows your currect experience and progression to next level, toggle the exp gain notification, or spend earned ability points.")]
+
+    [CommandGroup("experience","xp")]
+    public static class Experience{
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static void Initialize(Context ctx)
-        {
+
+        [Command("get", "g", "", "Display your current bloodline progression", adminOnly: false)]
+        public static void getXP(ChatCommandContext ctx) {
+            if (!ExperienceSystem.isEXPActive)
+            {
+                ctx.Reply("Experience system is not enabled.");
+                return;
+            }
             var user = ctx.Event.User;
             var CharName = user.CharacterName.ToString();
             var SteamID = user.PlatformId;
-            var PlayerCharacter = ctx.Event.SenderCharacterEntity;
-            var UserEntity = ctx.Event.SenderUserEntity;
+            int userLevel = ExperienceSystem.getLevel(SteamID);
+            string response = "-- <color=#fffffffe>" + CharName + "</color> --\n";
+            response += $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) ";
+            response += $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]";
+            if (ExperienceSystem.LevelRewardsOn) response += $"You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.";
+            ctx.Reply(response);
+        }
 
-            if (!ExperienceSystem.isEXPActive)
-            {
-                Output.CustomErrorMessage(ctx, "Experience system is not enabled.");
+
+        [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]
+        public static void setXP(ChatCommandContext ctx, string name, int xp){
+            if (!ExperienceSystem.isEXPActive){
+                ctx.Reply("Experience system is not enabled.");
                 return;
             }
+            ulong SteamID;
 
-            if (ctx.Args.Length >= 2 )
-            {
-                bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "experience_args");
-                if (ctx.Args[0].Equals("set") && isAllowed && int.TryParse(ctx.Args[1], out int value))
-                {
-                    if (ctx.Args.Length == 3)
-                    {
-                        string name = ctx.Args[2];
-                        if(Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
-                        {
-                            CharName = name;
-                            SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
-                            PlayerCharacter = targetEntity;
-                            UserEntity = targetUserEntity;
-                        }
-                        else
-                        {
-                            Output.CustomErrorMessage(ctx, $"Could not find specified player \"{name}\".");
-                            return;
-                        }
-                    }
-                    Database.player_experience[SteamID] = value;
-                    ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
-                    Output.SendSystemMessage(ctx, $"Player \"{CharName}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
-                }
-                else if (ctx.Args[0].ToLower().Equals("log"))
-                {
-                    if (ctx.Args[1].ToLower().Equals("on"))
-                    {
-                        Database.player_log_exp[SteamID] = true;
-                        Output.SendSystemMessage(ctx, $"Experience gain is now logged.");
-                        return;
-                    }
-                    else if (ctx.Args[1].ToLower().Equals("off"))
-                    {
-                        Database.player_log_exp[SteamID] = false;
-                        Output.SendSystemMessage(ctx, $"Experience gain is no longer being logged.");
-                        return;
-                    }
-                }
-                else if (ctx.Args[0].ToLower().Equals("ability") && ExperienceSystem.LevelRewardsOn)
-                {
-                    try
-                    {
-                        int spendPoints = 1;
-                        string abilityName = "help";
-                        
-                        if (ctx.Args.Length >= 2) abilityName = ctx.Args[1];
-                        if (ctx.Args.Length > 2 && !int.TryParse(ctx.Args[2], out spendPoints)) spendPoints = 1;
-
-
-                        if (!Database.player_abilityIncrease.ContainsKey(SteamID)) Database.player_abilityIncrease[SteamID] = 0;
-
-                        if (Database.player_abilityIncrease[SteamID] < spendPoints &&
-                            ctx.Args[1].ToLower() != "show" && ctx.Args[1].ToLower() != "reset")
-                        {
-                            Output.SendSystemMessage(ctx, "Not enough points!");
-                            return;
-                        }
-
-                        if (Database.experience_class_stats.ContainsKey(abilityName.ToLower()))
-                        {
-                            foreach (var buff in Database.experience_class_stats[abilityName.ToLower()])
-                            {
-                                Database.player_level_stats[SteamID][buff.Key] += buff.Value * spendPoints;
-                            }
-
-                            Database.player_abilityIncrease[SteamID] -= spendPoints;
-                            Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
-                            Output.SendSystemMessage(ctx, $"Spent {spendPoints}. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                            foreach (var buff in Database.player_level_stats[SteamID])
-                            {
-                                Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
-                            }
-                        }
-                        else switch(abilityName.ToLower())
-                            {
-                                case "show":
-                                    foreach (var buff in Database.player_level_stats[SteamID])
-                                    {
-                                        Output.SendSystemMessage(ctx, $"{buff.Key} : {buff.Value}");
-                                    }
-                                    break;
-                                case "reset":
-                                    if (!isAllowed) return;
-                                    Database.player_level_stats[SteamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
-                                    Database.player_abilityIncrease[SteamID] = 0;
-                                    Cache.player_level[SteamID] = 0;
-                                    ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
-                                    Output.SendSystemMessage(ctx, "Ability level up points reset.");
-                                    break;
-                                default:
-                                    Output.SendSystemMessage(ctx, "Type \".xp ability show\" to see current buffs.");
-                                    Output.SendSystemMessage(ctx, $"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
-                                    Output.SendSystemMessage(ctx, "You can spend ability points on:");
-                                    Output.SendSystemMessage(ctx, "health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
-                                    break;
-                            }
-
-                    }
-                    catch (System.Exception ex)
-                    {
-                        Plugin.Logger.LogError($"Could not spend point! {ex.ToString()}");
-                        Output.CustomErrorMessage(ctx, $"Could not spend point! {ex.Message}");
-                    }
-                }
-                else
-                {
-                    Output.InvalidArguments(ctx);
-                    return;
-                }
+            if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity)){
+                SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
             }
             else
             {
-                int userLevel = ExperienceSystem.getLevel(SteamID);
-                Output.SendSystemMessage(ctx, $"-- <color=#fffffffe>{CharName}</color> --");
-                Output.SendSystemMessage(ctx,
-                    $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) " +
-                    $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]");
-                if (ExperienceSystem.LevelRewardsOn) Output.SendSystemMessage(ctx, $"You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.");
+                ctx.Reply($"Could not find specified player \"{name}\".");
+                return;
+            }
+            Database.player_experience[SteamID] = xp;
+            ExperienceSystem.SetLevel(targetEntity, targetUserEntity, SteamID);
+            ctx.Reply($"Player \"{name}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
+        }
+
+        [Command("log", "l", "<On, Off>", "Turns on or off logging of xp gain.", adminOnly: false)]
+        public static void logBloodline(ChatCommandContext ctx, string flag){
+            if (!ExperienceSystem.isEXPActive){
+                ctx.Reply("Experience system is not enabled.");
+                return;
+            }
+            ulong SteamID;
+            var UserEntity = ctx.Event.SenderUserEntity;
+            SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
+            if (flag.ToLower().Equals("on"))
+            {
+                Database.player_log_exp.Remove(SteamID);
+                Database.player_log_exp.Add(SteamID, true);
+                ctx.Reply("Experience gain is now being logged.");
+                return;
+            }
+            else if (flag.ToLower().Equals("off"))
+            {
+                Database.player_log_exp.Remove(SteamID);
+                Database.player_log_exp.Add(SteamID, false);
+                ctx.Reply($"Experience gain is no longer being logged.");
+                return;
             }
         }
+
+        [Command("ability", "a", "[AbilityName, amount]", "spend amount ability points in AbilityName", adminOnly: false)]
+        public static void classAbility(ChatCommandContext ctx, string name, int amount){
+            if (!ExperienceSystem.isEXPActive){
+                ctx.Reply("Experience system is not enabled.");
+                return;
+            }
+            if (!ExperienceSystem.LevelRewardsOn){
+                ctx.Reply("Experience Class system is not enabled.");
+                return;
+            }
+            ulong SteamID;
+            var UserEntity = ctx.Event.SenderUserEntity;
+            var PlayerCharacter = ctx.Event.SenderCharacterEntity;
+            SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
+            
+            //set arbitrary to 50;
+            bool isAllowed = Database.user_permission[SteamID] >= 50;
+            
+            try{
+                int spendPoints = amount;
+                string abilityName = name;
+
+                if (!Database.player_abilityIncrease.ContainsKey(SteamID)) Database.player_abilityIncrease[SteamID] = 0;
+
+                if (Database.player_abilityIncrease[SteamID] < spendPoints && name.ToLower() != "show" && name.ToLower() != "reset"){
+                    ctx.Reply("Not enough points!");
+                    return;
+                }
+
+                if (Database.experience_class_stats.ContainsKey(abilityName.ToLower())){
+                    foreach (var buff in Database.experience_class_stats[abilityName.ToLower()]){
+                        Database.player_level_stats[SteamID][buff.Key] += buff.Value * spendPoints;
+                    }
+
+                    Database.player_abilityIncrease[SteamID] -= spendPoints;
+                    Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                    ctx.Reply($"Spent {spendPoints}. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                    foreach (var buff in Database.player_level_stats[SteamID]){
+                        ctx.Reply($"{buff.Key} : {buff.Value}");
+                    }
+                }
+                else switch (abilityName.ToLower()){
+                    case "show":
+                        foreach (var buff in Database.player_level_stats[SteamID]){
+                            ctx.Reply($"{buff.Key} : {buff.Value}");
+                        }
+                        break;
+                    case "reset":
+                        if (!isAllowed) return;
+                        Database.player_level_stats[SteamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
+                        Database.player_abilityIncrease[SteamID] = 0;
+                        Cache.player_level[SteamID] = 0;
+                        ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
+                        ctx.Reply("Ability level up points reset.");
+                        break;
+                    default:
+                        ctx.Reply("Type \".xp ability show\" to see current buffs.");
+                        ctx.Reply($"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        ctx.Reply("You can spend ability points on:");
+                        ctx.Reply("health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
+                        break;
+                }
+
+            }
+            catch (System.Exception ex){
+                Plugin.Logger.LogError($"Could not spend point! {ex.ToString()}");
+                ctx.Reply($"Could not spend point! {ex.Message}");
+            }
+        }
+
     }
 }

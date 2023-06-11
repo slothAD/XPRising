@@ -4,7 +4,7 @@ using System.Text.Json;
 using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("sunimmunity, sun", Usage = "sunimmunity", Description = "Toggles sun immunity.")]
     public static class SunImmunity
     {
@@ -16,7 +16,7 @@ namespace RPGMods.Commands
             else isSunImmune = true;
             UpdateImmunity(ctx, isSunImmune);
             string s = isSunImmune ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"Sun Immunity <color=#ffff00>{s}</color>");
+            ctx.Reply($"Sun Immunity <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
@@ -31,7 +31,7 @@ namespace RPGMods.Commands
 
         public static void SaveImmunity()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
         }
 
         public static bool RemoveImmunity(Context ctx)
@@ -47,13 +47,13 @@ namespace RPGMods.Commands
 
         public static void LoadSunImmunity()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/sunimmunity.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"sunimmunity.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/sunimmunity.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"sunimmunity.json");
                 stream.Dispose();
             }
 
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/sunimmunity.json");
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"sunimmunity.json");
             try
             {
                 Database.sunimmunity = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
@@ -65,5 +65,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("SunImmunity DB Created.");
             }
         }
-    }
+    }*/
 }

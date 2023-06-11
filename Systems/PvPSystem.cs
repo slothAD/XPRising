@@ -133,7 +133,7 @@ namespace RPGMods.Systems
             if (em.HasComponent<Minion>(VictimEntity)) return;
 
             var killer = em.GetComponentData<PlayerCharacter>(KillerEntity);
-            var killer_userEntity = killer.UserEntity._Entity;
+            var killer_userEntity = killer.UserEntity;
             var killer_user = em.GetComponentData<User>(killer_userEntity);
             var killer_name = killer_user.CharacterName.ToString();
             var killer_id = killer_user.PlatformId;
@@ -191,13 +191,13 @@ namespace RPGMods.Systems
         public static void Monitor(Entity KillerEntity, Entity VictimEntity)
         {
             var killer = em.GetComponentData<PlayerCharacter>(KillerEntity);
-            var killer_userEntity = killer.UserEntity._Entity;
+            var killer_userEntity = killer.UserEntity;
             var killer_user = em.GetComponentData<User>(killer_userEntity);
             var killer_name = killer_user.CharacterName.ToString();
             var killer_id = killer_user.PlatformId;
 
             var victim = em.GetComponentData<PlayerCharacter>(VictimEntity);
-            var victim_userEntity = victim.UserEntity._Entity;
+            var victim_userEntity = victim.UserEntity;
             var victim_user = em.GetComponentData<User>(victim_userEntity);
             var victim_name = victim_user.CharacterName.ToString();
             var victim_id = victim_user.PlatformId;
@@ -382,7 +382,7 @@ namespace RPGMods.Systems
             Database.SiegeState[SteamID] = new SiegeData(false, default, default);
             return true;
         }
-
+        /*
         public static async Task SiegeList(Context ctx)
         {
             await Task.Yield();
@@ -427,11 +427,11 @@ namespace RPGMods.Systems
             {
                 foreach (var m in messages)
                 {
-                    Output.SendSystemMessage(ctx, m);
+                    ctx.Reply(m);
                 }
                 return new object();
             }, false);
-        }
+        }*/
 
         public static void OnEquipChange(Entity player)
         {
@@ -463,11 +463,11 @@ namespace RPGMods.Systems
 
         public static void PunishCheck(Entity Killer, Entity Victim)
         {
-            Entity KillerUser = em.GetComponentData<PlayerCharacter>(Killer).UserEntity._Entity;
+            Entity KillerUser = em.GetComponentData<PlayerCharacter>(Killer).UserEntity;
             User killerUserData = em.GetComponentData<User>(KillerUser);
             ulong KillerSteamID = killerUserData.PlatformId;
 
-            Entity VictimUser = em.GetComponentData<PlayerCharacter>(Victim).UserEntity._Entity;
+            Entity VictimUser = em.GetComponentData<PlayerCharacter>(Victim).UserEntity;
             User victimUserData = em.GetComponentData<User>(VictimUser);
 
             if (isExcludeOffline)
@@ -533,7 +533,7 @@ namespace RPGMods.Systems
             var Owner = em.GetComponentData<EntityOwner>(BuffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
 
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity;
             var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
 
             if (!Database.PvPStats.TryGetValue(SteamID, out var pvpData)) return;
@@ -669,7 +669,7 @@ namespace RPGMods.Systems
                 }
             }
         }
-
+        /*
         public static async Task TopRanks(Context ctx)
         {
             await Task.Yield();
@@ -723,28 +723,28 @@ namespace RPGMods.Systems
             {
                 foreach (var m in messages)
                 {
-                    Output.SendSystemMessage(ctx, m);
+                    ctx.Reply(m);
                 }
                 return new object();
             }, false);
-        }
+        }*/
 
         public static void SavePvPStat()
         {
             //-- NEW
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/pvpstats.json", JsonSerializer.Serialize(Database.PvPStats, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/siegestates.json", JsonSerializer.Serialize(Database.SiegeState, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"pvpstats.json", JsonSerializer.Serialize(Database.PvPStats, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"siegestates.json", JsonSerializer.Serialize(Database.SiegeState, Database.JSON_options));
         }
 
         public static void LoadPvPStat()
         {
             //-- NEW
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/pvpstats.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"pvpstats.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/pvpstats.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"pvpstats.json");
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpstats.json");
+            string content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"pvpstats.json");
             try
             {
                 Database.PvPStats = JsonSerializer.Deserialize<ConcurrentDictionary<ulong, PvPData>>(content);
@@ -757,12 +757,12 @@ namespace RPGMods.Systems
             }
 
             //-- Siege Mechanic
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/siegestates.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"siegestates.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/siegestates.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"siegestates.json");
                 stream.Dispose();
             }
-            content = File.ReadAllText("BepInEx/config/RPGMods/Saves/siegestates.json");
+            content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"siegestates.json");
             try
             {
                 Database.SiegeState = JsonSerializer.Deserialize<Dictionary<ulong, SiegeData>>(content);
@@ -775,9 +775,9 @@ namespace RPGMods.Systems
             }
 
             //-- Transfer OLD Stats to new database.
-            if (File.Exists("BepInEx/config/RPGMods/Saves/pvpkills.json"))
+            if (File.Exists(AutoSaveSystem.mainSaveFolder+"pvpkills.json"))
             {
-                string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpkills.json");
+                string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"pvpkills.json");
                 try
                 {
                     Database.pvpkills = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -788,14 +788,14 @@ namespace RPGMods.Systems
                         Database.PvPStats[item.Key] = data;
                     }
                     Plugin.Logger.LogWarning("PvPKills DB Transfered.");
-                    File.Delete("BepInEx/config/RPGMods/Saves/pvpkills.json");
+                    File.Delete(AutoSaveSystem.mainSaveFolder+"pvpkills.json");
                 }
                 catch { }
             }
 
-            if (File.Exists("BepInEx/config/RPGMods/Saves/pvpdeath.json"))
+            if (File.Exists(AutoSaveSystem.mainSaveFolder+"pvpdeath.json"))
             {
-                string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpdeath.json");
+                string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"pvpdeath.json");
                 try
                 {
                     Database.pvpdeath = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -806,15 +806,15 @@ namespace RPGMods.Systems
                         Database.PvPStats[item.Key] = data;
                     }
                     Plugin.Logger.LogWarning("PvPDeath DB Transfered.");
-                    File.Delete("BepInEx/config/RPGMods/Saves/pvpdeath.json");
+                    File.Delete(AutoSaveSystem.mainSaveFolder+"pvpdeath.json");
                 }
                 catch { }
             }
             
 
-            if (File.Exists("BepInEx/config/RPGMods/Saves/pvpkd.json"))
+            if (File.Exists(AutoSaveSystem.mainSaveFolder+"pvpkd.json"))
             {
-                string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpkd.json");
+                string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"pvpkd.json");
                 try
                 {
                     Database.pvpkd = JsonSerializer.Deserialize<Dictionary<ulong, double>>(json);
@@ -825,7 +825,7 @@ namespace RPGMods.Systems
                         Database.PvPStats[item.Key] = data;
                     }
                     Plugin.Logger.LogWarning("PvPKD DB Transfered.");
-                    File.Delete("BepInEx/config/RPGMods/Saves/pvpkd.json");
+                    File.Delete(AutoSaveSystem.mainSaveFolder+"pvpkd.json");
                 }
                 catch { }
             }

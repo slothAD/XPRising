@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("speed", Usage = "speed", Description = "Toggles increased movement speed.")]
 
     public static class Speed
@@ -17,7 +17,7 @@ namespace RPGMods.Commands
             else isSpeeding = true;
             UpdateSpeed(ctx, isSpeeding);
             string s = isSpeeding ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"Speed buff <color=#ffff00>{s}</color>");
+            ctx.Reply($"Speed buff <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
@@ -32,7 +32,7 @@ namespace RPGMods.Commands
 
         public static void SaveSpeed()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
         }
 
         public static bool RemoveSpeed(Context ctx)
@@ -48,12 +48,12 @@ namespace RPGMods.Commands
 
         public static void LoadSpeed()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/speeding.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"speeding.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/speeding.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"speeding.json");
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/speeding.json");
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"speeding.json");
             try
             {
                 Database.speeding = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
@@ -65,5 +65,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("Speed DB Created.");
             }
         }
-    }
+    }*/
 }

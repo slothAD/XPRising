@@ -3,7 +3,7 @@ using RPGMods.Utils;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("resetcooldown, cd", Usage = "resetcooldown [<Player Name>]", Description = "Instantly cooldown all ability & skills for the player.")]
     public static class ResetCooldown
     {
@@ -23,7 +23,7 @@ namespace RPGMods.Commands
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, $"Could not find the specified player \"{name}\".");
+                    ctx.Reply($"Could not find the specified player \"{name}\".");
                     return;
                 }
             }
@@ -47,7 +47,7 @@ namespace RPGMods.Commands
                     entityManager.SetComponentData(abilityState, abilityCooldownState);
                 }
             }
-            Output.SendSystemMessage(ctx, $"Player \"{CharName}\" cooldown resetted.");
+            ctx.Reply($"Player \"{CharName}\" cooldown resetted.");
         }
-    }
+    }*/
 }

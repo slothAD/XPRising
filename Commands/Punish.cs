@@ -2,7 +2,7 @@
 using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("punish", Usage = "punish <playername> [<remove>]", Description = "Manually punish someone or lift their debuff.")]
     public static class Punish
     {
@@ -18,7 +18,7 @@ namespace RPGMods.Commands
                         if (ctx.Args[1].ToLower().Equals("remove"))
                         {
                             Helper.RemoveBuff(CharEntity, Database.Buff.Severe_GarlicDebuff);
-                            Output.SendSystemMessage(ctx, $"Punishment debuff removed from player \"{PlayerName}\"");
+                            ctx.Reply($"Punishment debuff removed from player \"{PlayerName}\"");
                             return;
                         }
                         else
@@ -30,13 +30,13 @@ namespace RPGMods.Commands
                     else
                     {
                         Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Severe_GarlicDebuff);
-                        Output.SendSystemMessage(ctx, $"Applied punishment debuff to player \"{PlayerName}\"");
+                        ctx.Reply($"Applied punishment debuff to player \"{PlayerName}\"");
                         return;
                     }
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, "Player not found.");
+                    ctx.Reply("Player not found.");
                     return;
                 }
             }
@@ -46,5 +46,5 @@ namespace RPGMods.Commands
                 return;
             }
         }
-    }
+    }*/
 }

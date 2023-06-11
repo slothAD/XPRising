@@ -14,6 +14,7 @@ using System.Collections.Concurrent;
 using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
 using Unity.Entities.UniversalDelegates;
+using MS.Internal.Xml.XPath;
 
 namespace RPGMods.Systems
 {
@@ -31,31 +32,37 @@ namespace RPGMods.Systems
         public static float GroupMaxDistance = 50;
         public static bool ShouldAllowGearLevel = true;
         public static bool LevelRewardsOn = true;
+        public static bool easyLvl15 = true;
 
         public static double EXPLostOnDeath = 0.10;
 
         private static readonly PrefabGUID vBloodType = new PrefabGUID(1557174542);
-
+        public static bool xpLogging = false;
         public static void EXPMonitor(Entity killerEntity, Entity victimEntity)
         {
             //-- Check victim is not a summon
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Kill Found, Handling XP");
             if (entityManager.HasComponent<Minion>(victimEntity)) return;
 
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Not a Minion, checking level");
             //-- Check victim has a level
             if (!entityManager.HasComponent<UnitLevel>(victimEntity)) return;
 
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has Level, fetching allies");
             //-- Must be executed from main thread
             Helper.GetAllies(killerEntity, out var PlayerGroup);
             //-- ---------------------------------
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Fetched, player group is " + PlayerGroup + ", Total ally count of " + PlayerGroup.AllyCount);
             UpdateEXP(killerEntity, victimEntity, PlayerGroup);
         }
 
-        public static void UpdateEXP(Entity killerEntity, Entity victimEntity, PlayerGroup PlayerGroup)
-        {
+        public static void UpdateEXP(Entity killerEntity, Entity victimEntity, PlayerGroup PlayerGroup) {
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Began XP Update, player group is size " + PlayerGroup.AllyCount);
             PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(killerEntity);
-            Entity userEntity = player.UserEntity._Entity;
+            Entity userEntity = player.UserEntity;
             User user = entityManager.GetComponentData<User>(userEntity);
             ulong SteamID = user.PlatformId;
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": SteamID of killer is " + SteamID);
 
             int player_level = 0;
             if (Database.player_experience.TryGetValue(SteamID, out int exp))
@@ -87,8 +94,8 @@ namespace RPGMods.Systems
             if (level_diff >= 0) EXPGained = (int)(EXPGained * (1 + level_diff * 0.1) * EXPMultiplier);
             else{
                 float xpMult = level_diff * -1.0f;
-                xpMult = 1.0f - (xpMult / (xpMult + 10.0f));
-                EXPGained = (int)(EXPGained * xpMult);
+                xpMult = xpMult / (xpMult + 10.0f);
+                EXPGained = (int)(EXPGained * (1-xpMult));
             }
             /*
             else if (level_diff <= -20) EXPGained = (int) Math.Ceiling(EXPGained * 0.10 * EXPMultiplier);
@@ -97,27 +104,31 @@ namespace RPGMods.Systems
             else if (level_diff <= -5) EXPGained = (int) Math.Ceiling(EXPGained * 0.75 * EXPMultiplier);
             else EXPGained = (int)(EXPGained * EXPMultiplier);*/
 
-            if (PlayerGroup.AllyCount > 0)
-            {
+            if (PlayerGroup.AllyCount > 0) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Beginning XP Sharing");
                 List<Entity> CloseAllies = new();
-                if (Cache.PlayerLocations.TryGetValue(killerEntity, out var playerPos))
-                {
-                    foreach (var ally in PlayerGroup.Allies)
-                    {
-                        if (Cache.PlayerLocations.TryGetValue(ally.Value, out var allyPos))
-                        {
+                if (Cache.PlayerLocations.TryGetValue(killerEntity, out var playerPos)) {
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Got Player Position from Cache");
+                    foreach (var ally in PlayerGroup.Allies) {
+                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Iterating over allies, ally is " + ally.GetHashCode());
+                        if (Cache.PlayerLocations.TryGetValue(ally.Value, out var allyPos)) {
+                            if (xpLogging) Plugin.Logger.LogInfo(   DateTime.Now + ": Got Ally Position");
                             var Distance = math.distance(playerPos.Position.xz, allyPos.Position.xz);
-                            if (Distance <= GroupMaxDistance)
-                            {
+                            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Distance is " + Distance + ", Max Distance is " + GroupMaxDistance);
+                            if (Distance <= GroupMaxDistance) {
+                                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Adjusting XP Gain and adding ally to the close allies list");
                                 EXPGained = (int)(EXPGained * GroupModifier);
                                 CloseAllies.Add(ally.Key);
                             }
+                        } else {
+                            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Could not get position, update the cache!");
                         }
                     }
                 }
-                
-                foreach (var teammate in CloseAllies)
-                {
+
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Share EXP");
+                foreach (var teammate in CloseAllies) {
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Sharing EXP to " + teammate.GetHashCode());
                     ShareEXP(teammate, EXPGained);
                 }
             }
@@ -135,13 +146,30 @@ namespace RPGMods.Systems
             }
         }
 
-        public static void ShareEXP(Entity user, int EXPGain)
-        {
-            var user_component = entityManager.GetComponentData<User>(user);
-            if (EXPGain > 0)
-            {
+        public static void ShareEXP(Entity user, int EXPGain) {
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Getting User Component from Ally");
+            //var user_component = entityManager.GetComponentData<User>(user);
+            if (EXPGain > 0) {
+                bool gotUser = entityManager.TryGetComponentData<User>(user, out User user_component);
+                if (!gotUser) {
+                    bool gotPC = entityManager.TryGetComponentData<PlayerCharacter>(user, out PlayerCharacter pc);
+                    if (!gotPC) {
+                        Plugin.Logger.LogInfo(DateTime.Now + ": Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(user));
+                    } else {
+                        Entity userEntity = pc.UserEntity;
+                        bool gotUserComponent = entityManager.TryGetComponentData<User>(userEntity, out user_component);
+                        if (!gotUserComponent) {
+                            Plugin.Logger.LogInfo(DateTime.Now + ": User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(userEntity));
+
+                        }
+                    }
+                    
+                }
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get allies exp");
                 Database.player_experience.TryGetValue(user_component.PlatformId, out var exp);
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to set allies exp");
                 Database.player_experience[user_component.PlatformId] = exp + EXPGain;
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Set Level for Ally");
                 SetLevel(user_component.LocalCharacter._Entity, user, user_component.PlatformId);
             }
         }
@@ -149,7 +177,7 @@ namespace RPGMods.Systems
         public static void LoseEXP(Entity playerEntity)
         {
             PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
-            Entity userEntity = player.UserEntity._Entity;
+            Entity userEntity = player.UserEntity;
             User user = entityManager.GetComponentData<User>(userEntity);
             ulong SteamID = user.PlatformId;
 
@@ -189,15 +217,13 @@ namespace RPGMods.Systems
 
             float level = convertXpToLevel(Database.player_experience[SteamID]);
             if (level < 0) return;
-            if (level > MaxLevel)
-            {
+            if (level > MaxLevel){
                 level = MaxLevel;
                 Database.player_experience[SteamID] = convertLevelToXp(MaxLevel);
             }
 
             bool isLastLevel = Cache.player_level.TryGetValue(SteamID, out var level_);
-            if (isLastLevel)
-            {
+            if (isLastLevel){
                 if (level_ < level) 
                 {
                     Cache.player_level[SteamID] = level;
@@ -283,13 +309,22 @@ namespace RPGMods.Systems
         public static int convertXpToLevel(int xp)
         {
             // Level = 0.05 * sqrt(xp)
-            return (int)Math.Floor(EXPConstant * Math.Sqrt(xp));
+            int lvl = (int)Math.Floor(EXPConstant * Math.Sqrt(xp));
+            if(lvl < 15 && easyLvl15){
+                lvl = Math.Min(15, (int)Math.Sqrt(xp));
+            }
+            return lvl;
         }
 
         public static int convertLevelToXp(int level)
         {
             // XP = (Level / 0.05) ^ 2
-            return (int)Math.Pow(level / EXPConstant, EXPPower);
+            int xp = (int)Math.Pow(level / EXPConstant, EXPPower);
+            if (level <= 15 && easyLvl15)
+            {
+                xp = level * level;
+            }
+            return xp;
         }
 
         public static int getXp(ulong SteamID)
@@ -315,26 +350,26 @@ namespace RPGMods.Systems
             return 100 - (int)Math.Ceiling(earnedXP / neededXP * 100);
         }
 
-        public static void SaveEXPData()
+        public static void SaveEXPData(string saveFolder)
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_experience.json", JsonSerializer.Serialize(Database.player_experience, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_exp.json", JsonSerializer.Serialize(Database.player_log_exp, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_abilitypoints.json", JsonSerializer.Serialize(Database.player_abilityIncrease, Database.JSON_options));
-            File.WriteAllText($"BepInEx/config/RPGMods/Saves/player_level_stats.json", JsonSerializer.Serialize(Database.player_level_stats, Database.JSON_options));
-            if (!Database.ErrorOnLoadingExperienceClasses) File.WriteAllText($"BepInEx/config/RPGMods/Saves/experience_class_stats.json", JsonSerializer.Serialize(Database.experience_class_stats, Database.JSON_options));
+            File.WriteAllText(saveFolder + "player_experience.json", JsonSerializer.Serialize(Database.player_experience, Database.JSON_options));
+            File.WriteAllText(saveFolder+"player_log_exp.json", JsonSerializer.Serialize(Database.player_log_exp, Database.JSON_options));
+            File.WriteAllText(saveFolder+"player_abilitypoints.json", JsonSerializer.Serialize(Database.player_abilityIncrease, Database.JSON_options));
+            File.WriteAllText(saveFolder+"player_level_stats.json", JsonSerializer.Serialize(Database.player_level_stats, Database.JSON_options));
+            if (!Database.ErrorOnLoadingExperienceClasses) File.WriteAllText(saveFolder+"experience_class_stats.json", JsonSerializer.Serialize(Database.experience_class_stats, Database.JSON_options));
         }
 
-        public static void LoadEXPData()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_experience.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_experience.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_experience.json");
-            try
-            {
+        public static void LoadEXPData() {
+            string specificName = "player_experience.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
+                if (Database.player_experience == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
+                }
                 Plugin.Logger.LogWarning("PlayerEXP DB Populated.");
             }
             catch
@@ -346,77 +381,80 @@ namespace RPGMods.Systems
             //we have to know the difference here between a deserialization failure or initialization since if the file is there we don't 
             //want to overwrite it in case we typoed a unitstattype or some other typo in the experience class config file.
             var wasExperienceClassesCreated = false;
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/experience_class_stats.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/experience_class_stats.json");
+            specificName = "experience_class_stats.json";
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json")){
+                FileStream stream = File.Create(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
                 wasExperienceClassesCreated = true;
                 stream.Dispose();
             }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/experience_class_stats.json");
-            try
-            {
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
+            try{
                 Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
+                if (Database.experience_class_stats == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
+                }
                 Plugin.Logger.LogWarning("Experience class stats DB Populated.");
                 Database.ErrorOnLoadingExperienceClasses = false;
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex){
                 initializeClassData();
                 if (wasExperienceClassesCreated) Plugin.Logger.LogWarning("Experience class stats DB Created.");
-                else
-                {
+                else{
                     Plugin.Logger.LogError($"Problem loading experience classes from file. {ex.Message}");
                     Database.ErrorOnLoadingExperienceClasses = true;
                 }
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_abilitypoints.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_abilitypoints.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_abilitypoints.json");
-            try
-            {
+            specificName = "player_abilitypoints.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
+                if (Database.player_abilityIncrease == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
+                }
                 Plugin.Logger.LogWarning("PlayerAbilities DB Populated.");
             }
-            catch
-            {
+            catch{
                 Database.player_abilityIncrease = new Dictionary<ulong, int>();                
                 Plugin.Logger.LogWarning("PlayerAbilities DB Created.");
             }
 
-            if (!File.Exists($"BepInEx/config/RPGMods/Saves/player_level_stats.json"))
-            {
-                FileStream stream = File.Create($"BepInEx/config/RPGMods/Saves/player_level_stats.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText($"BepInEx/config/RPGMods/Saves/player_level_stats.json");
-            try
-            {
+
+            specificName = "player_level_stats.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(json);
+                if (Database.player_level_stats == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>>(json);
+                }
                 Plugin.Logger.LogWarning("Player level Stats DB Populated.");
             }
-            catch
-            {
+            catch{
                 Database.player_level_stats = new LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>();
                 Plugin.Logger.LogWarning("Player level stats DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_exp.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_log_exp.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_log_exp.json");
-            try
-            {
+            specificName = "player_log_exp.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
+            try{
                 Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                if (Database.player_log_exp == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
+                    Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                }
                 Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Populated.");
             }
-            catch
-            {
+            catch{
                 Database.player_log_exp = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Created.");
             }

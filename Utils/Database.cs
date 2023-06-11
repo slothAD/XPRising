@@ -1,4 +1,5 @@
 ﻿using ProjectM;
+using ProjectM.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, PlayerData> SteamPlayerCache = new();
         public static Dictionary<Entity, PlayerGroup> PlayerAllies = new();
         public static Dictionary<Entity, LocalToWorld> PlayerLocations = new();
+        public static Dictionary<ulong, List<BuffData>> buffData = new();
 
         //-- -- Commands
         public static Dictionary<ulong, float> command_Cooldown = new();
@@ -63,6 +65,8 @@ namespace RPGMods.Utils
         //-- Dynamic Database (Saved on a JSON file on plugin reload, server restart, and shutdown.)
         //-- Initialization for the data loading is on each command or related CS file.
 
+        //public static Dictionary<ulong, ApplyBuffDebugEvent> playerBuffs = new();
+        public static HashSet<ApplyBuffDebugEvent> playerBuffs = new();
         //-- -- Commands
         public static Dictionary<ulong, bool> sunimmunity { get; set; }
         public static Dictionary<ulong, bool> nocooldownlist { get; set; }
@@ -75,9 +79,6 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, int> user_permission { get; set; }
         public static Dictionary<string, int> command_permission { get; set; }
         public static Dictionary<ulong, PowerUpData> PowerUpList { get; set; }
-
-        //-- -- Ban System
-        public static Dictionary<ulong, BanData> user_banlist { get; set; }
 
         //-- -- EXP System
         public static Dictionary<ulong, int> player_experience { get; set; }
@@ -108,11 +109,13 @@ namespace RPGMods.Utils
 
         //-- -- Mastery System
         public static Dictionary<ulong, WeaponMasterData> player_weaponmastery { get; set; }
-        public static Dictionary<ulong, WeaponMasterDataOld> player_weaponmasteryOld { get; set; }
-        public static Dictionary<ulong, WeaponMasterEffectivenessData> playerWeaponEffectiveness { get; set; }
-        public static Dictionary<ulong, WeaponMasterGrowthData> playerWeaponGrowth { get; set; }
         public static Dictionary<ulong, DateTime> player_decaymastery_logout { get; set; }
         public static Dictionary<ulong, bool> player_log_mastery { get; set; }
+
+        //-- -- Bloodline System
+        public static Dictionary<ulong, BloodlineData> playerBloodline { get; set; }
+        public static Dictionary<ulong, DateTime> playerDecayBloodlineLogout { get; set; }
+        public static Dictionary<ulong, bool> playerLogBloodline { get; set; }
 
         //-- -- World Event System
         public static ConcurrentDictionary<int, FactionData> FactionStats { get; set; }
@@ -416,6 +419,18 @@ namespace RPGMods.Utils
 
             public static PrefabGUID Buff_VBlood_Perk_Moose = new PrefabGUID(-1464851863);      //-- Using this for commands & mastery buff
             public static PrefabGUID PerkMoose = new PrefabGUID(-1464851863);
+            //public static PrefabGUID NPCInvul = new PrefabGUID(544892542);
+
+            /*
+            541307027		BloodQualityUnitBuff_Brute Entity(3611:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+1708373727		BloodQualityUnitBuff_Creature Entity(3612:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+-798998623		BloodQualityUnitBuff_Mutant Entity(3613:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+1064495467		BloodQualityUnitBuff_Rogue Entity(3614:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+-1959246041		BloodQualityUnitBuff_Scholar Entity(3615:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+1243275376		BloodQualityUnitBuff_Warrior Entity(3616:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+2089547928		BloodQualityUnitBuff_Worker Entity(3617:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
+                */
+
 
             public static PrefabGUID SiegeGolem_T01 = new PrefabGUID(-148535031);
             public static PrefabGUID SiegeGolem_T02 = new PrefabGUID(914043867);

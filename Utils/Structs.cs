@@ -1,10 +1,13 @@
 ﻿using ProjectM;
 using ProjectM.Network;
+using RPGMods.Commands;
+using RPGMods.Systems;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace RPGMods.Utils
 {
@@ -18,6 +21,17 @@ namespace RPGMods.Utils
             Level = level;
             TimeStamp = timeStamp;
         }
+    }
+
+    public struct BuffData
+    {
+        public string source;
+        public int targetStat;
+        public int modificationType;
+        public double value;
+        public int ID;
+        public bool isApplied;
+
     }
 
     public struct PowerUpData
@@ -187,8 +201,8 @@ namespace RPGMods.Utils
     {
         public string Name { get; set; }
         public ulong Owner { get; set; }
-        public Float2 Location { get; set; }
-        public WaypointData(string name, ulong owner, Float2 location)
+        public float3 Location { get; set; }
+        public WaypointData(string name, ulong owner, float3 location)
         {
             Name = name;
             Owner = owner;
@@ -225,33 +239,55 @@ namespace RPGMods.Utils
     }
 
 
-    public struct WeaponMasterData {
-        public int[] data { get; set; }
-
-        public WeaponMasterData(int spear = 0, int sword = 0, int scythe = 0, int crossbow = 0, int mace = 0, int slashers = 0, int axes = 0, int none = 0, int fishingpole = 0, int spell = 0) {
-            data = new int[] { spell, none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole };
+    public struct BloodlineData{
+        public double[] strength { get; set; }
+        public double[] efficency { get; set; }
+        public double[] growth { get; set; }
+        public BloodlineData(double[] strengthIn, double[] efficencyIn, double[] growthIn){
+            strength = strengthIn;
+            efficency = efficencyIn;
+            growth = growthIn;
+        }
+        public BloodlineData() {
+            strength = new double[Bloodlines.rates.Length];
+            efficency = new double[Bloodlines.rates.Length];
+            growth = new double[Bloodlines.rates.Length];
+            for (int i = 0; i < strength.Length; i++) {
+                strength[i] = 0.0;
+                efficency[i] = 1.0;
+                growth[i] = 1.0;
+            }
         }
     }
 
-    public struct WeaponMasterEffectivenessData
+    public struct WeaponMasterData
     {
-        public float[] data { get; set; }
+        public double[] mastery { get; set; }
+        public double[] efficency { get; set; }
+        public double[] growth { get; set; }
 
-        public WeaponMasterEffectivenessData(float spear = 1, float sword = 1, float scythe = 1, float crossbow = 1, float mace = 1, float slashers = 1, float axes = 1, float none = 1, float fishingpole = 1, float spell = 1)
-        {
-            data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
+        public WeaponMasterData(double[] strengthIn, double[] efficencyIn, double[] growthIn) {
+            mastery = strengthIn;
+            efficency = efficencyIn;
+            growth = growthIn;
+            for (int i = 0; i < mastery.Length; i++) {
+                mastery[i] = 0.0;
+                efficency[i] = 1.0;
+                growth[i] = 1.0;
+            }
+        }
+        public WeaponMasterData() {
+            mastery = new double[WeaponMasterSystem.masteryRates.Length];
+            efficency = new double[WeaponMasterSystem.masteryRates.Length];
+            growth = new double[WeaponMasterSystem.masteryRates.Length];
+            for (int i = 0; i < mastery.Length; i++) {
+                mastery[i] = 0.0;
+                efficency[i] = 1.0;
+                growth[i] = 1.0;
+            }
         }
     }
 
-    public struct WeaponMasterGrowthData
-    {
-        public float[] data { get; set; }
-
-        public WeaponMasterGrowthData(float spear = 1, float sword = 1, float scythe = 1, float crossbow = 1, float mace = 1, float slashers = 1, float axes = 1, float none = 1, float fishingpole = 1, float spell = 1)
-        {
-            data = new float[] { none, spear, sword, scythe, crossbow, mace, slashers, axes, fishingpole, spell };
-        }
-    }
 
     public struct BanData
     {

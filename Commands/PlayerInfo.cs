@@ -5,7 +5,7 @@ using System;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("playerinfo, i", Usage = "playerinfo <Name>", Description = "Display the player information details.")]
     public static class PlayerInfo
     {
@@ -19,7 +19,7 @@ namespace RPGMods.Commands
 
             if (!Helper.FindPlayer(ctx.Args[0], false, out var playerEntity, out var userEntity))
             {
-                Output.CustomErrorMessage(ctx, "Player not found."); 
+                ctx.Reply("Player not found."); 
                 return;
             }
 
@@ -35,19 +35,19 @@ namespace RPGMods.Commands
             Database.PvPStats.TryGetValue(SteamID, out var pvpStats);
             Database.player_experience.TryGetValue(SteamID, out var exp);
 
-            Output.SendSystemMessage(ctx, $"Name: {Color.White(Name)}");
-            Output.SendSystemMessage(ctx, $"SteamID: {Color.White(SteamID.ToString())}");
-            Output.SendSystemMessage(ctx, $"Latency: {Color.White(ping.ToString())}s");
-            Output.SendSystemMessage(ctx, $"-- Position --");
-            Output.SendSystemMessage(ctx, $"X: {Color.White(Math.Round(position.x,2).ToString())} " +
+            ctx.Reply($"Name: {Color.White(Name)}");
+            ctx.Reply($"SteamID: {Color.White(SteamID.ToString())}");
+            ctx.Reply($"Latency: {Color.White(ping.ToString())}s");
+            ctx.Reply($"-- Position --");
+            ctx.Reply($"X: {Color.White(Math.Round(position.x,2).ToString())} " +
                 $"Y: {Color.White(Math.Round(position.y,2).ToString())} " +
                 $"Z: {Color.White(Math.Round(position.z,2).ToString())}");
-            Output.SendSystemMessage(ctx, $"-- {Color.White("Entities")} --");
-            Output.SendSystemMessage(ctx, $"Char Entity: {Color.White(CharacterEntity)}");
-            Output.SendSystemMessage(ctx, $"User Entity: {Color.White(UserEntity)}");
-            Output.SendSystemMessage(ctx, $"-- {Color.White("Experience")} --");
-            Output.SendSystemMessage(ctx, $"Level: {Color.White(ExperienceSystem.convertXpToLevel(exp).ToString())} [{Color.White(exp.ToString())}]");
-            Output.SendSystemMessage(ctx, $"-- {Color.White("PvP Stats")} --");
+            ctx.Reply($"-- {Color.White("Entities")} --");
+            ctx.Reply($"Char Entity: {Color.White(CharacterEntity)}");
+            ctx.Reply($"User Entity: {Color.White(UserEntity)}");
+            ctx.Reply($"-- {Color.White("Experience")} --");
+            ctx.Reply($"Level: {Color.White(ExperienceSystem.convertXpToLevel(exp).ToString())} [{Color.White(exp.ToString())}]");
+            ctx.Reply($"-- {Color.White("PvP Stats")} --");
 
             if (PvPSystem.isHonorSystemEnabled)
             {
@@ -64,13 +64,13 @@ namespace RPGMods.Commands
                 string hostilityText = hostilityState.IsHostile ? "Aggresive" : "Passive";
                 string siegeText = siegeState.IsSiegeOn ? "Sieging" : "Defensive";
 
-                Output.SendSystemMessage(ctx, $"Reputation: {Color.White(pvpStats.Reputation.ToString())}");
-                Output.SendSystemMessage(ctx, $"Hostility: {Color.White(hostilityText)}");
-                Output.SendSystemMessage(ctx, $"Siege: {Color.White(siegeText)}");
-                Output.SendSystemMessage(ctx, $"-- Time Left: {Color.White(tLeft.ToString())} hour(s)");
+                ctx.Reply($"Reputation: {Color.White(pvpStats.Reputation.ToString())}");
+                ctx.Reply($"Hostility: {Color.White(hostilityText)}");
+                ctx.Reply($"Siege: {Color.White(siegeText)}");
+                ctx.Reply($"-- Time Left: {Color.White(tLeft.ToString())} hour(s)");
             }
 
-            Output.SendSystemMessage(ctx, $"K/D: {Color.White(pvpStats.KD.ToString())} " +
+            ctx.Reply($"K/D: {Color.White(pvpStats.KD.ToString())} " +
                 $"Kill: {Color.White(pvpStats.Kills.ToString())} " +
                 $"Death: {Color.White(pvpStats.Deaths.ToString())}");
         }
@@ -88,16 +88,16 @@ namespace RPGMods.Commands
             var ping = ctx.EntityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;
             var position = ctx.EntityManager.GetComponentData<Translation>(ctx.Event.SenderCharacterEntity).Value;
 
-            Output.SendSystemMessage(ctx, $"Name: {Color.White(Name)}");
-            Output.SendSystemMessage(ctx, $"SteamID: {Color.White(SteamID.ToString())}");
-            Output.SendSystemMessage(ctx, $"Latency: {Color.White(ping.ToString())}s");
-            Output.SendSystemMessage(ctx, $"-- Position --");
-            Output.SendSystemMessage(ctx, $"X: {Color.White(Math.Round(position.x,2).ToString())} " +
+            ctx.Reply($"Name: {Color.White(Name)}");
+            ctx.Reply($"SteamID: {Color.White(SteamID.ToString())}");
+            ctx.Reply($"Latency: {Color.White(ping.ToString())}s");
+            ctx.Reply($"-- Position --");
+            ctx.Reply($"X: {Color.White(Math.Round(position.x,2).ToString())} " +
                 $"Y: {Color.White(Math.Round(position.y,2).ToString())} " +
                 $"Z: {Color.White(Math.Round(position.z,2).ToString())}");
-            Output.SendSystemMessage(ctx, $"-- Entities --");
-            Output.SendSystemMessage(ctx, $"Char Entity: {Color.White(CharacterEntity)}");
-            Output.SendSystemMessage(ctx, $"User Entity: {Color.White(UserEntity)}");
+            ctx.Reply($"-- Entities --");
+            ctx.Reply($"Char Entity: {Color.White(CharacterEntity)}");
+            ctx.Reply($"User Entity: {Color.White(UserEntity)}");
         }
-    }
+    }*/
 }

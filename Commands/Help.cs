@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("help, h", Usage = "help [<command>]", Description = "Shows a list of commands, or details about a command.", ReqPermission = 0)]
     public static class Help
     {
@@ -22,7 +22,7 @@ namespace RPGMods.Commands
                     List<string> aliases = type.GetAttributeValue((CommandAttribute cmd) => cmd.Aliases);
                     if (CommandHandler.DisabledCommands.Split(',').Any(x => x.ToLower() == aliases.First().ToLower()))
                     {
-                        Output.SendSystemMessage(ctx, $"Specified command not found.");
+                        ctx.Reply($"Specified command not found.");
                         return;
                     }
                     string usage = type.GetAttributeValue((CommandAttribute cmd) => cmd.Usage);
@@ -32,24 +32,24 @@ namespace RPGMods.Commands
 
                     if (userPermission < reqPermission && !ctx.Event.User.IsAdmin)
                     {
-                        Output.SendSystemMessage(ctx, $"Specified command not found.");
+                        ctx.Reply($"Specified command not found.");
                         return;
                     }
-                    Output.SendSystemMessage(ctx, $"Help for <color=#00ff00>{ctx.Prefix}{aliases.First()}</color>");
-                    Output.SendSystemMessage(ctx, $"<color=#fffffffe>Aliases: {string.Join(", ", aliases)}</color>");
-                    Output.SendSystemMessage(ctx, $"<color=#fffffffe>Description: {description}</color>");
-                    Output.SendSystemMessage(ctx, $"<color=#fffffffe>Usage: {ctx.Prefix}{usage}</color>");
+                    ctx.Reply($"Help for <color=#00ff00>{ctx.Prefix}{aliases.First()}</color>");
+                    ctx.Reply($"<color=#fffffffe>Aliases: {string.Join(", ", aliases)}</color>");
+                    ctx.Reply($"<color=#fffffffe>Description: {description}</color>");
+                    ctx.Reply($"<color=#fffffffe>Usage: {ctx.Prefix}{usage}</color>");
                     return;
                 }
                 else
                 {
-                    Output.SendSystemMessage(ctx, $"Specified command not found.");
+                    ctx.Reply($"Specified command not found.");
                     return;
                 }
             }
             catch
             {
-                Output.SendSystemMessage(ctx, "List of all commands:");
+                ctx.Reply("List of all commands:");
                 foreach (Type type in types)
                 {
                     List<string> aliases = type.GetAttributeValue((CommandAttribute cmd) => cmd.Aliases);
@@ -72,9 +72,9 @@ namespace RPGMods.Commands
                         //s = $"<color=#00ff00ff>{ctx.Prefix}{aliases.First()}/{string.Join(", ", aliases)}</color> - <color=#ffffffff>{description}</color>";
                         send = true;
                     }
-                    if (send) Output.SendSystemMessage(ctx, s);
+                    if (send) ctx.Reply(s);
                 }
             }
         }
     }
-}
+*/}

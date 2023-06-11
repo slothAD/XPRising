@@ -1,14 +1,15 @@
 ﻿using ProjectM.Network;
 using RPGMods.Systems;
 using RPGMods.Utils;
+using VampireCommandFramework;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
-    [Command("autorespawn", Usage = "autorespawn [<PlayerName>]", Description = "Toggle auto respawn on the same position on death.")]
+{/*
+    [Command("autorespawn", usage = "autorespawn [<PlayerName>]", Description = "Toggle auto respawn on the same position on death.")]
     public static class AutoRespawn
     {
         public static void Initialize(Context ctx)
@@ -37,7 +38,7 @@ namespace RPGMods.Commands
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, $"Player \"{TargetName}\" not found!");
+                        ctx.Reply($"Player \"{TargetName}\" not found!");
                         return;
                     }
                 }
@@ -49,11 +50,11 @@ namespace RPGMods.Commands
             string s = isAutoRespawn ? "Activated" : "Deactivated";
             if (isServerWide)
             {
-                Output.SendSystemMessage(ctx, $"Server wide Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Server wide Auto Respawn <color=#ffff00>{s}</color>");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
             }
         }
 
@@ -67,7 +68,7 @@ namespace RPGMods.Commands
 
         public static void SaveAutoRespawn()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/autorespawn.json", JsonSerializer.Serialize(Database.autoRespawn, Database.JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"autorespawn.json", JsonSerializer.Serialize(Database.autoRespawn, Database.JSON_options));
         }
 
         public static bool RemoveAutoRespawn(ulong SteamID)
@@ -82,12 +83,12 @@ namespace RPGMods.Commands
 
         public static void LoadAutoRespawn()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/autorespawn.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"autorespawn.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/autorespawn.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"autorespawn.json");
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/autorespawn.json");
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"autorespawn.json");
             try
             {
                 Database.autoRespawn = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
@@ -99,5 +100,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("AutoRespawn DB Created.");
             }
         }
-    }
+    }*/
 }

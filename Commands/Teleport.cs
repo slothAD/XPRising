@@ -5,7 +5,7 @@ using Unity.Entities;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("teleport, tp", "teleport <Name>", "Teleport you to another online player within your clan.")]
     public static class Teleport
     {
@@ -16,9 +16,13 @@ namespace RPGMods.Commands
             var UserEntity = ctx.Event.SenderUserEntity;
             EntityManager entityManager = Plugin.Server.EntityManager;
 
+
+            ctx.Reply("Command Currently disabled");
+            return;
+            
             if (Helper.IsPlayerInCombat(UserCharacter))
             {
-                Output.CustomErrorMessage(ctx, "Unable to use command! You're in combat!");
+                ctx.Reply("Unable to use command! You're in combat!");
                 return;
             }
             if (ctx.Args.Length < 1)
@@ -40,24 +44,25 @@ namespace RPGMods.Commands
             }
             else
             {
-                Output.CustomErrorMessage(ctx, "Target player not found.");
+                ctx.Reply("Target player not found.");
                 return;
             }
 
             var serverGameManager = Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
             if (!serverGameManager._TeamChecker.IsAllies(user_TeamComponent, target_TeamComponent))
             {
-                Output.CustomErrorMessage(ctx, "Unable to teleport to player from another Clan!");
+                ctx.Reply("Unable to teleport to player from another Clan!");
                 return;
             }
 
             if (Helper.IsPlayerInCombat(TargetChar))
             {
-                Output.CustomErrorMessage(ctx, $"Unable to teleport! Player \"{TargetName}\" is in combat!");
+                ctx.Reply($"Unable to teleport! Player \"{TargetName}\" is in combat!");
                 return;
             }
 
             Helper.TeleportTo(ctx, new(target_WorldComponent.Position.x, target_WorldComponent.Position.z));
+            
         }
-    }
+    }*/
 }

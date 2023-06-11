@@ -22,7 +22,7 @@ namespace RPGMods.Hooks
             //-- Spawned mobs appear here!
             if (!WorldDynamicsSystem.isFactionDynamic) return;
 
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
             {
                 var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
                 foreach (var entity in entities)
@@ -34,7 +34,7 @@ namespace RPGMods.Hooks
                 }
             }
 
-            if (__instance.__OnUpdate_LambdaJob1_entityQuery != null)
+            //if (__instance.__OnUpdate_LambdaJob1_entityQuery != null)
             {
                 var entities = __instance.__OnUpdate_LambdaJob1_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
                 foreach (var entity in entities)

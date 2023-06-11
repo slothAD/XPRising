@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text.Json;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("kit", "kit <Name>", "Gives you a previously specified set of items.")]
     public static class Kit
     {
@@ -18,7 +18,7 @@ namespace RPGMods.Commands
         {
             if (ctx.Args.Length < 1)
             {
-                Output.SendSystemMessage(ctx, $"Kit name missing.");
+                ctx.Reply($"Kit name missing.");
                 return;
             }
 
@@ -31,11 +31,11 @@ namespace RPGMods.Commands
                 {
                     Helper.AddItemToInventory(ctx, new PrefabGUID(guid.Key), guid.Value);
                 }
-                Output.SendSystemMessage(ctx, $"You got the kit: <color=#ffff00>{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
+                ctx.Reply($"You got the kit: <color=#ffff00>{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
             }
             catch
             {
-                Output.SendSystemMessage(ctx, $"Kit doesn't exist.");
+                ctx.Reply($"Kit doesn't exist.");
                 return;
             }
         }
@@ -69,5 +69,5 @@ namespace RPGMods.Commands
             };
             File.WriteAllText("BepInEx/config/RPGMods/kits.json", JsonSerializer.Serialize(kits, options));
         }
-    }
+    }*/
 }

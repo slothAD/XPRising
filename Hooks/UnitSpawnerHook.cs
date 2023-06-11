@@ -11,7 +11,7 @@ namespace RPGMods.Hooks
         public static bool listen = false;
         public static void Prefix(UnitSpawnerReactSystem __instance)
         {
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
+            //if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
             {
                 var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
                 foreach (var entity in entities)

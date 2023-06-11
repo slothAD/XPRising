@@ -3,7 +3,7 @@ using RPGMods.Utils;
 using Unity.Transforms;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("customspawn, cspn", "customspawn <Prefab Name> [<BloodType> <BloodQuality> <BloodConsumeable(\"true/false\")> <Duration>]", "Spawns a modified NPC at your current position.")]
     public static class CustomSpawnNPC
     {
@@ -58,10 +58,10 @@ namespace RPGMods.Commands
                     var pos = ctx.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
                     if (!Helper.SpawnNPCIdentify(out var npc_id, name, pos, 1, 2, duration))
                     {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
+                        ctx.Reply($"Could not find specified unit: {name}");
                         return;
                     }
-
+                     
                     var Options = new SpawnOptions(true, type, quality, bloodconsume, false, default, true);
                     var NPCData = Cache.spawnNPC_Listen[npc_id];
                     NPCData.Options = Options;
@@ -69,7 +69,7 @@ namespace RPGMods.Commands
 
                     Cache.spawnNPC_Listen[npc_id] = NPCData;
 
-                    Output.SendSystemMessage(ctx, $"Spawning CustomNPC {name} at your position with LifeTime of {duration}s");
+                    ctx.Reply($"Spawning CustomNPC {name} at your position with LifeTime of {duration}s");
                 }
             }
             else
@@ -77,5 +77,5 @@ namespace RPGMods.Commands
                 Output.MissingArguments(ctx);
             }
         }
-    }
+    }*/
 }

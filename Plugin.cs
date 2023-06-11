@@ -1,6 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.IL2CPP;
+using BepInEx.Unity.IL2CPP;
 using BepInEx.Logging;
 using HarmonyLib;
 using RPGMods.Commands;
@@ -9,20 +9,22 @@ using RPGMods.Systems;
 using RPGMods.Utils;
 using System.IO;
 using System.Reflection;
-using UnhollowerRuntimeLib;
 using Unity.Entities;
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Globalization;
+using VampireCommandFramework;
 
 #if WETSTONE
 using Wetstone.API;
 #endif
 
+
 namespace RPGMods
 {
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.5.1")]
+    [BepInDependency("gg.deca.VampireCommandFramework")]
 
 #if WETSTONE
     [BepInDependency("xyz.molenzwiebel.wetstone")]
@@ -44,6 +46,7 @@ namespace RPGMods
         private static ConfigEntry<int> VIP_Permission;
         private static ConfigEntry<bool> ShouldAllowGearLevel;
         private static ConfigEntry<bool> EnableLevelRewards;
+        private static ConfigEntry<bool> EasyLevel15;
 
         private static ConfigEntry<double> VIP_InCombat_ResYield;
         private static ConfigEntry<double> VIP_InCombat_DurabilityLoss;
@@ -103,10 +106,10 @@ namespace RPGMods
 
         private static ConfigEntry<bool> EnableWeaponMaster;
         private static ConfigEntry<bool> EnableWeaponMasterDecay;
-        private static ConfigEntry<float> WeaponMasterMultiplier;
+        private static ConfigEntry<double> WeaponMasterMultiplier;
         private static ConfigEntry<int> WeaponDecayInterval;
-        private static ConfigEntry<int> WeaponMaxMastery;
-        private static ConfigEntry<float> WeaponMastery_VBloodMultiplier;
+        private static ConfigEntry<double> WeaponMaxMastery;
+        private static ConfigEntry<double> WeaponMastery_VBloodMultiplier;
         private static ConfigEntry<int> Offline_Weapon_MasteryDecayValue;
         private static ConfigEntry<int> MasteryCombatTick;
         private static ConfigEntry<int> MasteryMaxCombatTicks;
@@ -135,6 +138,12 @@ namespace RPGMods
         private static ConfigEntry<string> FishingPoleRates;
         private static ConfigEntry<string> SpellStats;
         private static ConfigEntry<string> SpellRates;
+        private static ConfigEntry<string> RapierStats;
+        private static ConfigEntry<string> RapierRates;
+        private static ConfigEntry<string> PistolStats;
+        private static ConfigEntry<string> PistolRates;
+        private static ConfigEntry<string> GreatswordStats;
+        private static ConfigEntry<string> GreatswordRates;
 
 
         private static ConfigEntry<bool> effectivenessSubSystemEnabled;
@@ -143,6 +152,46 @@ namespace RPGMods
         private static ConfigEntry<float> minGrowth;
         private static ConfigEntry<float> maxGrowth;
         private static ConfigEntry<float> growthPerEfficency;
+
+
+        private static ConfigEntry<string> draculaBloodlineStats;
+        private static ConfigEntry<string> draculaBloodlineMinStrengths;
+        private static ConfigEntry<string> draculaBloodlineRates;
+        private static ConfigEntry<string> arwenBloodlineStats;
+        private static ConfigEntry<string> arwenBloodlineMinStrengths;
+        private static ConfigEntry<string> arwenBloodlineRates;
+        private static ConfigEntry<string> ilvrisBloodlineStats;
+        private static ConfigEntry<string> ilvrisBloodlineMinStrengths;
+        private static ConfigEntry<string> ilvrisBloodlineRates;
+        private static ConfigEntry<string> ayaBloodlineStats;
+        private static ConfigEntry<string> ayaBloodlineMinStrengths;
+        private static ConfigEntry<string> ayaBloodlineRates;
+        private static ConfigEntry<string> nytheriaBloodlineStats;
+        private static ConfigEntry<string> nytheriaBloodlineMinStrengths;
+        private static ConfigEntry<string> nytheriaBloodlineRates;
+        private static ConfigEntry<string> hadubertBloodlineStats;
+        private static ConfigEntry<string> hadubertBloodlineMinStrengths;
+        private static ConfigEntry<string> hadubertBloodlineRates;
+        private static ConfigEntry<string> reiBloodlineStats;
+        private static ConfigEntry<string> reiBloodlineMinStrengths;
+        private static ConfigEntry<string> reiBloodlineRates;
+        private static ConfigEntry<string> semikaBloodlineStats;
+        private static ConfigEntry<string> semikaBloodlineMinStrengths;
+        private static ConfigEntry<string> semikaBloodlineRates;
+
+
+        private static ConfigEntry<bool> bloodlinesEnabled;
+        private static ConfigEntry<bool> mercilessBloodlines;
+        private static ConfigEntry<double> bloodlineGrowthMultiplier;
+        private static ConfigEntry<double> bloodlineVBloodMultiplier;
+        private static ConfigEntry<bool> bloodlineEfficencySubSystem;
+        private static ConfigEntry<bool> bloodlineGrowthSubsystem;
+        private static ConfigEntry<double> MaxBloodlineStrength;
+        private static ConfigEntry<double> maxBloodlineEfficency;
+        private static ConfigEntry<double> maxBloodlineGrowth;
+        private static ConfigEntry<double> minBloodlineGrowth;
+        private static ConfigEntry<double> bloodlineGrowthPerEfficency;
+        private static ConfigEntry<string> bloodlineNames;
 
         private static ConfigEntry<bool> EnableWorldDynamics;
         private static ConfigEntry<bool> WDGrowOnKill;
@@ -245,8 +294,10 @@ namespace RPGMods
 
 
             EnableExperienceSystem = Config.Bind("Experience", "Enable", true, "Enable/disable the the Experience System.");
-            ShouldAllowGearLevel = Config.Bind("Experience", "Allow Gear Level", true, "Enable/disable gear level adjustment.");
-            EnableLevelRewards = Config.Bind("Experience", "Enable Level Rewards", true, "Enable rewards per level.");
+            ShouldAllowGearLevel = Config.Bind("Experience", "Allow Gear Level", false, "Enable/disable gear level adjustment.");
+            EnableLevelRewards = Config.Bind("Experience", "Enable Level Rewards", false, "Enable rewards per level.");
+            EasyLevel15 = Config.Bind("Experience", "Easy lvl 15", true, "Makes level 15 much easier to reach so players dont get held up by the quest on it.");
+
             MaxLevel = Config.Bind("Experience", "Max Level", 80, "Configure the experience system max level.");
             EXPMultiplier = Config.Bind("Experience", "Multiplier", 1.0f, "Multiply the EXP gained by player.\n" +
                 "Ex.: 0.7f -> Will reduce the EXP gained by 30%\nFormula: UnitKilledLevel * EXPMultiplier");
@@ -259,14 +310,15 @@ namespace RPGMods
             EXPGroupModifier = Config.Bind("Experience", "Group Modifier", 0.75, "Set the modifier for EXP gained for each ally(player) in vicinity.\n" +
                 "Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)");
             EXPGroupMaxDistance = Config.Bind("Experience", "Ally Max Distance", 50f, "Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player");
+            
 
             EnableWeaponMaster = Config.Bind("Mastery", "Enable Weapon Mastery", true, "Enable/disable the weapon mastery system.");
             EnableWeaponMasterDecay = Config.Bind("Mastery", "Enable Mastery Decay", true, "Enable/disable the decay of weapon mastery when the user is offline.");
-            WeaponMaxMastery = Config.Bind("Mastery", "Max Mastery Value", 100000, "Configure the maximum mastery the user can atain. (100000 is 100%)");
+            WeaponMaxMastery = Config.Bind("Mastery", "Max Mastery Value", 100d, "Configure the maximum mastery the user can atain. (100000 is 100%)");
             MasteryCombatTick = Config.Bind("Mastery", "Mastery Value/Combat Ticks", 5, "Configure the amount of mastery gained per combat ticks. (5 -> 0.005%)");
             MasteryMaxCombatTicks = Config.Bind("Mastery", "Max Combat Ticks", 12, "Mastery will no longer increase after this many ticks is reached in combat. (1 tick = 5 seconds)");
-            WeaponMasterMultiplier = Config.Bind("Mastery", "Mastery Multiplier", 1f, "Multiply the gained mastery value by this amount.");
-            WeaponMastery_VBloodMultiplier = Config.Bind("Mastery", "VBlood Mastery Multiplier", 15f, "Multiply Mastery gained from VBlood kill.");
+            WeaponMasterMultiplier = Config.Bind("Mastery", "Mastery Multiplier", 1d, "Multiply the gained mastery value by this amount.");
+            WeaponMastery_VBloodMultiplier = Config.Bind("Mastery", "VBlood Mastery Multiplier", 15d, "Multiply Mastery gained from VBlood kill.");
             WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
             WeaponMasterySpellMasteryNeedsNoneToUse = Config.Bind("Mastery", "Unarmed Only Spell Mastery Use", true, "Gain the benefits of spell mastery only when you have no weapon equipped.");
@@ -275,33 +327,40 @@ namespace RPGMods
             WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Mastery CDR stacks", false, "Allows mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
             DetailedMasteryInfo = Config.Bind("Mastery", "Detailed Mastery Info", false, "Shows all mastery benefits when you use the .mastery command.");
 
-            UnarmedStats = Config.Bind("Mastery", "Unarmed Stats", " 0, 5 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            UnarmedRates = Config.Bind("Mastery", "Unarmed Rates", " 0.25, 0.01 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            SpearStats = Config.Bind("Mastery", "Spear Stats", " 0 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SpearRates = Config.Bind("Mastery", "Spear Rates", " 0.25", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            SwordStats = Config.Bind("Mastery", "Sword Stats", " 0, 25 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SwordRates = Config.Bind("Mastery", "Sword Rates", " 0.125, 0.125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            ScytheStats = Config.Bind("Mastery", "Scythe Stats", " 0, 29 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            ScytheRates = Config.Bind("Mastery", "Scythe Rates", " 0.125, 0.00125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            CrossbowStats = Config.Bind("Mastery", "Crossbow Stats", " 29 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            CrossbowRates = Config.Bind("Mastery", "Crossbow Rates", " 0.0025", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            MaceStats = Config.Bind("Mastery", "Mace Stats", " 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            MaceRates = Config.Bind("Mastery", "Mace Rates", " 1 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            SlasherStats = Config.Bind("Mastery", "Slasher Stats", " 29, 5 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SlasherRates = Config.Bind("Mastery", "Slasher Rates", " 0.00125, 0.005 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            AxeStats = Config.Bind("Mastery", "Axe Stats", " 0, 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            AxeRates = Config.Bind("Mastery", "Axe Rates", " 0.125, 0.5 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            FishingPoleStats = Config.Bind("Mastery", "Fishing Pole Stats", " ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            FishingPoleRates = Config.Bind("Mastery", "Fishing Pole Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
-            SpellStats = Config.Bind("Mastery", "Spell Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
-            SpellRates = Config.Bind("Mastery", "Spell Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            UnarmedStats = Config.Bind("Mastery Rates", "Unarmed Stats", " 0, 5 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            UnarmedRates = Config.Bind("Mastery Rates", "Unarmed Rates", " 0.25, 0.01 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SpearStats = Config.Bind("Mastery Rates", "Spear Stats", " 0 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            SpearRates = Config.Bind("Mastery Rates", "Spear Rates", " 0.25", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SwordStats = Config.Bind("Mastery Rates", "Sword Stats", " 0, 25 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            SwordRates = Config.Bind("Mastery Rates", "Sword Rates", " 0.125, 0.125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            ScytheStats = Config.Bind("Mastery Rates", "Scythe Stats", " 0, 29 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            ScytheRates = Config.Bind("Mastery Rates", "Scythe Rates", " 0.125, 0.00125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            CrossbowStats = Config.Bind("Mastery Rates", "Crossbow Stats", " 29 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            CrossbowRates = Config.Bind("Mastery Rates", "Crossbow Rates", " 0.0025", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            MaceStats = Config.Bind("Mastery Rates", "Mace Stats", " 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            MaceRates = Config.Bind("Mastery Rates", "Mace Rates", " 1 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SlasherStats = Config.Bind("Mastery Rates", "Slasher Stats", " 29, 5 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            SlasherRates = Config.Bind("Mastery Rates", "Slasher Rates", " 0.00125, 0.005 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            AxeStats = Config.Bind("Mastery Rates", "Axe Stats", " 0, 4 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            AxeRates = Config.Bind("Mastery Rates", "Axe Rates", " 0.125, 0.5 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            FishingPoleStats = Config.Bind("Mastery Rates", "Fishing Pole Stats", " ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            FishingPoleRates = Config.Bind("Mastery Rates", "Fishing Pole Rates", " ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            SpellStats = Config.Bind("Mastery Rates", "Spell Stats", " 7 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            SpellRates = Config.Bind("Mastery Rates", "Spell Rates", " 100 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            RapierStats = Config.Bind("Mastery Rates", "Rapier Stats", " 29, 32 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            RapierRates = Config.Bind("Mastery Rates", "Rapier Rates", " 0.00125, 0.00125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            PistolStats = Config.Bind("Mastery Rates", "Pistol Stats", " 29, 30 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            PistolRates = Config.Bind("Mastery Rates", "Pistol Rates", " 0.00125, 0.0125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+            GreatswordStats = Config.Bind("Mastery Rates", "Greatsword Stats", " 0, 30 ", "The stat IDs for what this weapon should boost, should be able to handle any number of stats. See the readme for a list of stat IDs.");
+            GreatswordRates = Config.Bind("Mastery Rates", "Greatsword Rates", " 0.125, 0.0125 ", "The amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.");
+
 
             effectivenessSubSystemEnabled = Config.Bind("Mastery", "Enable Effectiveness Subsystem", false, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
             maxEffectiveness = Config.Bind("Mastery", "Maximum Effectiveness", 10f, "The maximum mastery effectiveness where 1 is 100%.");
             growthSubSystemEnabled = Config.Bind("Mastery", "Enable Growth Subsystem", false, "Enables the growth subsystem, when you reset mastery either increases or decreases your matching mastery growth rate, depending on config.");
             minGrowth = Config.Bind("Mastery", "Minimum Growth Rate", 0.1f, "The minimum growth rate, where 1 is 100%");
             maxGrowth = Config.Bind("Mastery", "Maximum Growth Rate", 10f, "the maximum growth rate where 1 is 100%");
-            growthPerEfficency = Config.Bind("Mastery", "Growth per efficency", 10f, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
+            growthPerEfficency = Config.Bind("Mastery", "Growth per efficency", -1f, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
 
             WeaponDecayInterval = Config.Bind("Mastery", "Decay Interval", 60, "Every amount of seconds the user is offline by the configured value will translate as 1 decay tick.");
             Offline_Weapon_MasteryDecayValue = Config.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)");
@@ -309,7 +368,62 @@ namespace RPGMods
             WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.");
             WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Mastery CDR", false, "Changes CDR from mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
             WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Mastery CDR stacks", false, "Allows mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
+
+
+
+            bloodlinesEnabled = Config.Bind("Bloodlines", "Enable Bloodlines", true, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
+            mercilessBloodlines = Config.Bind("Bloodlines", "Merciless Bloodlines", true, "Causes bloodlines to only grow when you kill something with a matching bloodline of higher strength, finally, a reward when you accidentally kill that 100% blood you found");
+            bloodlineGrowthMultiplier = Config.Bind("Bloodlines", "Bloodline growth multiplier", 1.0, "The multiplier applied to all bloodline gains.");
+            bloodlineVBloodMultiplier = Config.Bind("Bloodlines", "Bloodline VBlood Multiplier", 25.0, "The multiplier applied to the effective level of VBlood enemies for bloodline gains.");
+            bloodlineEfficencySubSystem = Config.Bind("Bloodlines", "Enable Effectiveness Subsystem", true, "Enables the Effectiveness bloodline subsystem, which lets you reset your bloodline to gain a multiplier to the effects of the matching bloodline.");
+            bloodlineGrowthSubsystem = Config.Bind("Bloodlines", "Enable Growth Subsystem", true, "Enables the Growth Bloodline subsystem, same as the one for mastery");
+            MaxBloodlineStrength = Config.Bind("Bloodlines", "Maximum Strength", 100.0, "The maximum strength for a bloodline in percentage.");
+            maxBloodlineEfficency = Config.Bind("Bloodlines", "Maximum Effectiveness", 5.0, "The maximum bloodline effectiveness where 1 is 100%.");
+            minBloodlineGrowth = Config.Bind("Bloodlines", "Minimum Growth Rate", 0.1, "The minimum growth rate, where 1 is 100%");
+            maxBloodlineGrowth = Config.Bind("Bloodlines", "Maximum Growth Rate", 10.0, "the maximum growth rate where 1 is 100%");
+            bloodlineGrowthPerEfficency = Config.Bind("Bloodlines", "Growth per efficency", -1.0, "The amount of growth gained per point of efficency gained, if negative will reduce accordingly (gaining 100% efficency with -1 here will halve your current growth)");
+
+
+
+            draculaBloodlineStats = Config.Bind("Bloodline Rates", "Dracula Bloodline Stats", "", "The stat IDs for the frailed bloodline of Dracula the Progenitor, Active only with frailed blood.");
+            draculaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Dracula Bloodline Minimum Strengths", "", "The minimum bloodline strength to recieve the specified stat.");
+            draculaBloodlineRates = Config.Bind("Bloodline Rates", "Dracula Bloodline Rates", "", "The amount per bloodline strength % recieved once strength is met, Note that Dracula's Bloodline recieves a portion of all your other bloodlines.");
+
+
+            arwenBloodlineStats = Config.Bind("Bloodline Rates", "Arwen Bloodline Stats", "10, 5, 39", "The stat IDs for the bloodline of Arwen the Godeater, Active only with creature blood.");
+            arwenBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Arwen Bloodline Minimum Strengths", "0, 50, 100", "The minimum bloodline strength to recieve the specified stat.");
+            arwenBloodlineRates = Config.Bind("Bloodline Rates", "Arwen Bloodline Rates", "0.25, 0.005, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+
+            ilvrisBloodlineStats = Config.Bind("Bloodline Rates", "Ilvris Bloodline Stats", "9, 0, 42", "The stat IDs for the bloodline of Ilvris Dragonblood, Active only with warrior blood.");
+            ilvrisBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Ilvris Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            ilvrisBloodlineRates = Config.Bind("Bloodline Rates", "Ilvris Bloodline Rates", "0.25, 0.1, 0.0025 ", "The amount per bloodline strength % recieved once strength is met.");
+
+            ayaBloodlineStats = Config.Bind("Bloodline Rates", "Aya Bloodline Stats", "19, 29, 44", "The stat IDs for the bloodline of Aya the Shadowlord, Active only with rogue blood.");
+            ayaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Aya Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            ayaBloodlineRates = Config.Bind("Bloodline Rates", "Aya Bloodline Rates", "0.25, 0.001, 0.0025 ", "The amount per bloodline strength % recieved once strength is met.");
+
+            nytheriaBloodlineStats = Config.Bind("Bloodline Rates", "Nytheria Bloodline Stats", "11, 30, 38", "The stat IDs for the bloodline of Nytheria the Destroyer, Active only with brute blood.");
+            nytheriaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Nytheria Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            nytheriaBloodlineRates = Config.Bind("Bloodline Rates", "Nytheria Bloodline Rates", "0.25, 0.01, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
             
+            hadubertBloodlineStats = Config.Bind("Bloodline Rates", "Hadubert Bloodline Stats", "25, 7, 40", "The stat IDs for the bloodline of Hadubert the Inferno, Active only with scholar blood.");
+            hadubertBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Hadubert Bloodline Minimum Strengths", "0, 50, 100 ", "The minimum bloodline strength to recieve the specified stat.");
+            hadubertBloodlineRates = Config.Bind("Bloodline Rates", "Hadubert Bloodline Rates", "0.1, 200, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+
+            reiBloodlineStats = Config.Bind("Bloodline Rates", "Rei Bloodline Stats", "20, 3, 52, 53, 54", "The stat IDs for the bloodline of Rei the Binder, Active only with worker blood.");
+            reiBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Rei Bloodline Minimum Strengths", "0, 50, 100, 100, 100", "The minimum bloodline strength to recieve the specified stat.");
+            reiBloodlineRates = Config.Bind("Bloodline Rates", "Rei Bloodline Rates", "0.25, 0.01, 0.0025, 0.0025, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+
+            semikaBloodlineStats = Config.Bind("Bloodline Rates", "Semika Bloodline Stats", "31, 5, 39", "The stat IDs for the bloodline of Semika the Evershifting, Active only with mutant blood.");
+            semikaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Semika Bloodline Minimum Strengths", "0, 50, 100", "The minimum bloodline strength to recieve the specified stat.");
+            semikaBloodlineRates = Config.Bind("Bloodline Rates", "Semika Bloodline Rates", "0.005, 0.005, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
+
+
+            bloodlineNames = Config.Bind("Bloodline Rates", "Bloodline Names", "Dracula the Progenitor, Arwen the Godeater, Ilvris Dragonblood, Aya the Shadowlord, Nytheria the Destroyer, Hadubert the Inferno, Rei the Binder, Semika the Evershifting", "Rename the bloodlines here, the starting names are from supporters, Seperate names with commas, must contain exactly 8 names.");
+
+
+
+
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
@@ -328,12 +442,12 @@ namespace RPGMods
         {
             InitConfig();
             Logger = Log;
-            harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+            harmony = new Harmony("RPGMods");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             TaskRunner.Initialize();
 
-            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Log.LogInfo("Plugin RPGMods is loaded!");
         }
 
         public override bool Unload()
@@ -354,6 +468,9 @@ namespace RPGMods
 
         public static void Initialize()
         {
+            Logger.LogInfo("Trying to Initalize RPGMods, isInitalized already: " + isInitialized);
+            if (isInitialized) return;
+            Logger.LogInfo("Initalizing RPGMods");
             //-- Initialize System
             Helper.CreatePlayerCache();
             Helper.GetServerGameSettings(out Helper.SGS);
@@ -362,16 +479,17 @@ namespace RPGMods
             ProximityLoop.UpdateCache();
             PvPSystem.Interlocked.isSiegeOn = false;
 
-            if (isInitialized) return;
 
             //-- Commands Related
             AutoSaveSystem.LoadDatabase();
 
             //-- Apply configs
-            CommandHandler.Prefix = Prefix.Value;
-            CommandHandler.DisabledCommands = DisabledCommands.Value;
-            CommandHandler.delay_Cooldown = DelayedCommands.Value;
-            Waypoint.WaypointLimit = WaypointLimit.Value;
+            //CommandHandler.Prefix = Prefix.Value;
+            //CommandHandler.DisabledCommands = DisabledCommands.Value;
+            //CommandHandler.delay_Cooldown = DelayedCommands.Value;
+            CommandRegistry.RegisterAll();
+
+            //Waypoint.WaypointLimit = WaypointLimit.Value;
 
             PermissionSystem.isVIPSystem = EnableVIPSystem.Value;
             PermissionSystem.isVIPWhitelist = EnableVIPWhitelist.Value;
@@ -436,6 +554,7 @@ namespace RPGMods
             ExperienceSystem.EXPConstant = EXPFormula_1.Value;
             ExperienceSystem.GroupModifier = EXPGroupModifier.Value;
             ExperienceSystem.GroupMaxDistance = EXPGroupMaxDistance.Value;
+            ExperienceSystem.easyLvl15 = EasyLevel15.Value;
 
             WeaponMasterSystem.isMasteryEnabled = EnableWeaponMaster.Value;
             WeaponMasterSystem.isDecaySystemEnabled = EnableWeaponMasterDecay.Value;
@@ -450,30 +569,90 @@ namespace RPGMods
             WeaponMasterSystem.spellMasteryNeedsNoneToLearn = WeaponMasterySpellMasteryNeedsNoneToLearn.Value;
             WeaponMasterSystem.linearCDR = WeaponLinearSpellMastery.Value;
             WeaponMasterSystem.CDRStacks = WeaponSpellMasteryCDRStacks.Value;
+            WeaponMasterSystem.growthSubSystemEnabled = growthSubSystemEnabled.Value;
             Mastery.detailedStatements = DetailedMasteryInfo.Value;
 
 
             WeaponMasterSystem.UnarmedStats = parseIntArrayConifg(UnarmedStats.Value);
-            WeaponMasterSystem.UnarmedRates = parseFloatArrayConifg(UnarmedRates.Value);
+            WeaponMasterSystem.UnarmedRates = parseDoubleArrayConifg(UnarmedRates.Value);
             WeaponMasterSystem.SpearStats = parseIntArrayConifg(SpearStats.Value);
-            WeaponMasterSystem.SpearRates = parseFloatArrayConifg(SpearRates.Value);
+            WeaponMasterSystem.SpearRates = parseDoubleArrayConifg(SpearRates.Value);
             WeaponMasterSystem.SwordStats = parseIntArrayConifg(SwordStats.Value);
-            WeaponMasterSystem.SwordRates = parseFloatArrayConifg(SwordRates.Value);
+            WeaponMasterSystem.SwordRates = parseDoubleArrayConifg(SwordRates.Value);
             WeaponMasterSystem.ScytheStats = parseIntArrayConifg(ScytheStats.Value);
-            WeaponMasterSystem.ScytheRates = parseFloatArrayConifg(ScytheRates.Value);
+            WeaponMasterSystem.ScytheRates = parseDoubleArrayConifg(ScytheRates.Value);
             WeaponMasterSystem.CrossbowStats = parseIntArrayConifg(CrossbowStats.Value);
-            WeaponMasterSystem.CrossbowRates = parseFloatArrayConifg(CrossbowRates.Value);
+            WeaponMasterSystem.CrossbowRates = parseDoubleArrayConifg(CrossbowRates.Value);
+            WeaponMasterSystem.SlasherStats = parseIntArrayConifg(SlasherStats.Value);
+            WeaponMasterSystem.SlasherRates = parseDoubleArrayConifg(SlasherRates.Value);
             WeaponMasterSystem.MaceStats = parseIntArrayConifg(MaceStats.Value);
-            WeaponMasterSystem.MaceRates = parseFloatArrayConifg(MaceRates.Value);
+            WeaponMasterSystem.MaceRates = parseDoubleArrayConifg(MaceRates.Value);
             WeaponMasterSystem.AxeStats = parseIntArrayConifg(AxeStats.Value);
-            WeaponMasterSystem.AxeRates = parseFloatArrayConifg(AxeRates.Value);
+            WeaponMasterSystem.AxeRates = parseDoubleArrayConifg(AxeRates.Value);
             WeaponMasterSystem.FishingPoleStats = parseIntArrayConifg(FishingPoleStats.Value);
-            WeaponMasterSystem.FishingPoleRates = parseFloatArrayConifg(FishingPoleRates.Value);
+            WeaponMasterSystem.FishingPoleRates = parseDoubleArrayConifg(FishingPoleRates.Value);
             WeaponMasterSystem.SpellStats = parseIntArrayConifg(SpellStats.Value);
-            WeaponMasterSystem.SpellRates = parseFloatArrayConifg(SpellRates.Value);
+            WeaponMasterSystem.SpellRates = parseDoubleArrayConifg(SpellRates.Value);
+            WeaponMasterSystem.RapierStats = parseIntArrayConifg(RapierStats.Value);
+            WeaponMasterSystem.RapierRates = parseDoubleArrayConifg(RapierRates.Value);
+            WeaponMasterSystem.PistolStats = parseIntArrayConifg(PistolStats.Value);
+            WeaponMasterSystem.PistolRates = parseDoubleArrayConifg(PistolRates.Value);
+            WeaponMasterSystem.GreatSwordStats = parseIntArrayConifg(GreatswordStats.Value);
+            WeaponMasterSystem.GreatSwordRates = parseDoubleArrayConifg(GreatswordRates.Value);
 
-            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats };
-            WeaponMasterSystem.masteryRates = new float[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates };
+
+            Bloodlines.draculaStats = parseIntArrayConifg(draculaBloodlineStats.Value);
+            Bloodlines.draculaMinStrength = parseDoubleArrayConifg(draculaBloodlineMinStrengths.Value);
+            Bloodlines.draculaRates = parseDoubleArrayConifg(draculaBloodlineRates.Value);
+            Bloodlines.arwenStats = parseIntArrayConifg(arwenBloodlineStats.Value);
+            Bloodlines.arwenMinStrength = parseDoubleArrayConifg(arwenBloodlineMinStrengths.Value);
+            Bloodlines.arwenRates = parseDoubleArrayConifg(arwenBloodlineRates.Value);
+            Bloodlines.ilvrisStats = parseIntArrayConifg(ilvrisBloodlineStats.Value);
+            Bloodlines.ilvrisMinStrength = parseDoubleArrayConifg(ilvrisBloodlineMinStrengths.Value);
+            Bloodlines.ilvrisRates = parseDoubleArrayConifg(ilvrisBloodlineRates.Value);
+            Bloodlines.ayaStats = parseIntArrayConifg(ayaBloodlineStats.Value);
+            Bloodlines.ayaMinStrength = parseDoubleArrayConifg(ayaBloodlineMinStrengths.Value);
+            Bloodlines.ayaRates = parseDoubleArrayConifg(ayaBloodlineRates.Value);
+            Bloodlines.nytheriaStats = parseIntArrayConifg(nytheriaBloodlineStats.Value);
+            Bloodlines.nytheriaMinStrength = parseDoubleArrayConifg(nytheriaBloodlineMinStrengths.Value);
+            Bloodlines.nytheriaRates = parseDoubleArrayConifg(nytheriaBloodlineRates.Value);
+            Bloodlines.hadubertStats = parseIntArrayConifg(hadubertBloodlineStats.Value);
+            Bloodlines.hadubertMinStrength = parseDoubleArrayConifg(hadubertBloodlineMinStrengths.Value);
+            Bloodlines.hadubertRates = parseDoubleArrayConifg(hadubertBloodlineRates.Value);
+            Bloodlines.reiStats = parseIntArrayConifg(reiBloodlineStats.Value);
+            Bloodlines.reiMinStrength = parseDoubleArrayConifg(reiBloodlineMinStrengths.Value);
+            Bloodlines.reiRates = parseDoubleArrayConifg(reiBloodlineRates.Value);
+            Bloodlines.semikaStats = parseIntArrayConifg(semikaBloodlineStats.Value);
+            Bloodlines.semikaMinStrength = parseDoubleArrayConifg(semikaBloodlineMinStrengths.Value);
+            Bloodlines.semikaRates = parseDoubleArrayConifg(semikaBloodlineRates.Value);
+            string[] blNames = parseStringArrayConifg(bloodlineNames.Value);
+            Bloodlines.names = blNames;
+            for(int i = 0; i < blNames.Length; i++) {
+                Bloodlines.nameMap.TryAdd(blNames[i].ToLower().Trim(), i);
+            }
+
+            Bloodlines.stats = new int[][] { Bloodlines.draculaStats, Bloodlines.arwenStats, Bloodlines.ilvrisStats, Bloodlines.ayaStats, Bloodlines.nytheriaStats, Bloodlines.hadubertStats, Bloodlines.reiStats, Bloodlines.semikaStats, };
+            Bloodlines.minStrengths = new double[][] { Bloodlines.draculaMinStrength, Bloodlines.arwenMinStrength, Bloodlines.ilvrisMinStrength, Bloodlines.ayaMinStrength, Bloodlines.nytheriaMinStrength, Bloodlines.hadubertMinStrength, Bloodlines.reiMinStrength, Bloodlines.semikaMinStrength };
+            Bloodlines.rates = new double[][] { Bloodlines.draculaRates, Bloodlines.arwenRates, Bloodlines.ilvrisRates, Bloodlines.ayaRates, Bloodlines.nytheriaRates, Bloodlines.hadubertRates, Bloodlines.reiRates, Bloodlines.semikaRates };
+
+            Bloodlines.areBloodlinesEnabled = bloodlinesEnabled.Value;
+            Bloodlines.mercilessBloodlines = mercilessBloodlines.Value;
+            Bloodlines.effectivenessSubSystemEnabled = bloodlineEfficencySubSystem.Value;
+            Bloodlines.growthSubsystemEnabled = bloodlineGrowthSubsystem.Value;
+
+            Bloodlines.MaxBloodlineStrength = MaxBloodlineStrength.Value;
+            Bloodlines.maxBloodlineEfficency = maxBloodlineEfficency.Value;
+            Bloodlines.maxBloodlineGrowth = maxBloodlineGrowth.Value;
+            Bloodlines.minBloodlineGrowth = minBloodlineGrowth.Value;
+            Bloodlines.growthPerEfficency = bloodlineGrowthPerEfficency.Value;
+            Bloodlines.VBloodMultiplier = bloodlineVBloodMultiplier.Value;
+            Bloodlines.growthMultiplier = bloodlineGrowthMultiplier.Value;
+
+
+
+
+            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats, WeaponMasterSystem.RapierStats, WeaponMasterSystem.PistolStats, WeaponMasterSystem.GreatSwordStats };
+            WeaponMasterSystem.masteryRates = new double[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates, WeaponMasterSystem.RapierRates, WeaponMasterSystem.PistolRates, WeaponMasterSystem.GreatSwordRates };
 
             WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
             WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;
@@ -489,46 +668,84 @@ namespace RPGMods
             isInitialized = true;
         }
 
+        private static bool parseLogging = false;
         public static int[] parseIntArrayConifg(string data) {
-            Plugin.Logger.LogInfo(">>>parsing int array: " + data);
+            if (parseLogging) Plugin.Logger.LogInfo(">>>parsing int array: " + data);
             var match = Regex.Match(data, "([0-9]+)");
             List<int> list = new List<int>();
             while (match.Success) {
                 try {
-                    Plugin.Logger.LogInfo(">>>got int: " + match.Value);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>got int: " + match.Value);
                     int temp = int.Parse(match.Value, CultureInfo.InvariantCulture);
-                    Plugin.Logger.LogInfo(">>>int parsed into: " + temp);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>int parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
-                    Plugin.Logger.LogWarning("Error interperting integer value: " + match.ToString());
+                    if (parseLogging) Plugin.Logger.LogWarning("Error interperting integer value: " + match.ToString());
                 }
                 match = match.NextMatch();
             }
-            Plugin.Logger.LogInfo(">>>done parsing int array");
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing int array");
             int[] result = list.ToArray();
             return result;
         }
         public static float[] parseFloatArrayConifg(string data) {
-            Plugin.Logger.LogInfo(">>>parsing float array: " + data);
+            if (parseLogging) Plugin.Logger.LogInfo(">>>parsing float array: " + data);
             var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<float> list = new List<float>();
             while (match.Success) {
                 try {
-                    Plugin.Logger.LogInfo(">>>got float: " + match.Value);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>got float: " + match.Value);
                     float temp = float.Parse(match.Value, CultureInfo.InvariantCulture);
-                    Plugin.Logger.LogInfo(">>>float parsed into: " + temp);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>float parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
                     Plugin.Logger.LogWarning("Error interperting float value: " + match.ToString());
                 }
-                
+
                 match = match.NextMatch();
             }
 
-            Plugin.Logger.LogInfo(">>>done parsing float array");
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing float array");
             float[] result = list.ToArray();
+            return result;
+        }
+        public static double[] parseDoubleArrayConifg(string data) {
+            if(parseLogging) Plugin.Logger.LogInfo(">>>parsing double array: " + data);
+            var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
+            List<double> list = new List<double>();
+            while (match.Success) {
+                try {
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>got double: " + match.Value);
+                    double temp = double.Parse(match.Value, CultureInfo.InvariantCulture);
+                    if (parseLogging) Plugin.Logger.LogInfo(">>>double parsed into: " + temp);
+                    list.Add(temp);
+                }
+                catch {
+                    Plugin.Logger.LogWarning("Error interperting double value: " + match.ToString());
+                }
+
+                match = match.NextMatch();
+            }
+
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing double array");
+            double[] result = list.ToArray();
+            return result;
+        }
+        public static string[] parseStringArrayConifg(string data) {
+            if (parseLogging) Plugin.Logger.LogInfo(">>>parsing comma seperated String array: " + data);
+            List<string> list = new List<string>();
+            while (data.IndexOf(",") > 0) {
+                string str = data.Substring(0, data.IndexOf(","));
+                str.Trim();
+                list.Add(str);
+                data = data.Substring(data.IndexOf(",") + 1);
+            }
+            data.Trim();
+            list.Add(data);
+            if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing string array");
+            string[] result = list.ToArray();
             return result;
         }
     }

@@ -7,7 +7,7 @@ using System.Text.Json;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("worlddynamics, wd", Usage = "wd [<faction>] [<stats>|<save>|<load>|<ignore>|<unignore>] [<npc prefab name>]", Description = "List all faction stats. Save them, or load from the json file.")]
     public static class WorldDynamics
     {
@@ -15,7 +15,7 @@ namespace RPGMods.Commands
         {
             if (WorldDynamicsSystem.isFactionDynamic == false)
             {
-                Output.CustomErrorMessage(ctx, "World dynamics system is not enabled.");
+                ctx.Reply("World dynamics system is not enabled.");
                 return;
             }
 
@@ -40,12 +40,12 @@ namespace RPGMods.Commands
                     {
                         Database.IgnoredMonsters.Add(mobName);
                         Database.IgnoredMonstersGUID.Add(mobGUID);
-                        Output.SendSystemMessage(ctx, $"NPC \"{mobName}\" is now ignored for faction buffing.");
+                        ctx.Reply($"NPC \"{mobName}\" is now ignored for faction buffing.");
                         return;
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, "Specified NPC not found.");
+                        ctx.Reply("Specified NPC not found.");
                         return;
                     }
                 }
@@ -62,11 +62,11 @@ namespace RPGMods.Commands
                     {
                         Database.IgnoredMonsters.Remove(mobName);
                         Database.IgnoredMonstersGUID.Remove(mobGUID);
-                        Output.SendSystemMessage(ctx, $"NPC \"{mobName}\" is removed from faction buff ignore list.");
+                        ctx.Reply($"NPC \"{mobName}\" is removed from faction buff ignore list.");
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, "Specified NPC not found.");
+                        ctx.Reply("Specified NPC not found.");
                         return;
                     }
                 }
@@ -77,28 +77,28 @@ namespace RPGMods.Commands
                     {
                         if (!item.Value.Active) continue;
                         i++;
-                        Output.SendSystemMessage(ctx, $"Name: {Color.Green(item.Value.Name)} [Lv.{Color.Yellow(item.Value.Level.ToString())}]");
-                        Output.SendSystemMessage(ctx, $"Active Pwr: [{Color.White(item.Value.ActivePower.ToString())}] Stored Pwr: [{Color.Yellow(item.Value.StoredPower.ToString())}]");
-                        Output.SendSystemMessage(ctx, $"Daily Pwr: [{Color.Teal(item.Value.DailyPower.ToString())}] Req. Pwr: [{Color.SoftRed(item.Value.RequiredPower.ToString())}]");
+                        ctx.Reply($"Name: {Color.Green(item.Value.Name)} [Lv.{Color.Yellow(item.Value.Level.ToString())}]");
+                        ctx.Reply($"Active Pwr: [{Color.White(item.Value.ActivePower.ToString())}] Stored Pwr: [{Color.Yellow(item.Value.StoredPower.ToString())}]");
+                        ctx.Reply($"Daily Pwr: [{Color.Teal(item.Value.DailyPower.ToString())}] Req. Pwr: [{Color.SoftRed(item.Value.RequiredPower.ToString())}]");
                     }
-                    if (i == 0) Output.SendSystemMessage(ctx, "No active facton.");
+                    if (i == 0) ctx.Reply("No active facton.");
                     return;
                 }
                 if (ctx.Args[1].ToLower().Equals("save"))
                 {
                     WorldDynamicsSystem.SaveFactionStats();
                     WorldDynamicsSystem.SaveIgnoredMobs();
-                    Output.SendSystemMessage(ctx, $"Factions data & ignored mobs saved.");
+                    ctx.Reply($"Factions data & ignored mobs saved.");
                     return;
                 }
                 if (ctx.Args[1].ToLower().Equals("load"))
                 {
                     WorldDynamicsSystem.LoadFactionStats();
                     WorldDynamicsSystem.LoadIgnoredMobs();
-                    Output.SendSystemMessage(ctx, $"Factions & ignored mobs json data loaded.");
+                    ctx.Reply($"Factions & ignored mobs json data loaded.");
                     return;
                 }
             }
         }
-    }
+    }*/
 }

@@ -7,7 +7,7 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace RPGMods.Utils
-{
+{/*
     public class CommandHandler
     {
         public static string Prefix = ".";
@@ -113,5 +113,5 @@ namespace RPGMods.Utils
             }
             return default;
         }
-    }
+    }*/
 }

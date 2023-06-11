@@ -6,7 +6,7 @@ using Unity.Entities;
 using RPGMods.Utils;
 
 namespace RPGMods.Hooks
-{
+{/*
     [HarmonyPatch(typeof(ChatMessageSystem), nameof(ChatMessageSystem.OnUpdate))]
     public class ChatMessageSystem_Patch
     {
@@ -33,5 +33,5 @@ namespace RPGMods.Hooks
             }
             return true;
         }
-    }
+    }*/
 }

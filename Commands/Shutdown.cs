@@ -1,7 +1,7 @@
 ﻿using RPGMods.Utils;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("shutdown, quit, exit", Usage = "shutdown", Description = "Trigger the exit signal & shutdown the server.")]
     public static class Shutdown
     {
@@ -9,5 +9,5 @@ namespace RPGMods.Commands
         {
             UnityEngine.Application.Quit();
         }
-    }
+    }*/
 }

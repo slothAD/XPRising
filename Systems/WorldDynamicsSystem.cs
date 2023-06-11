@@ -142,44 +142,44 @@ namespace RPGMods.Systems
 
             if (HP != 0)
             {
-                unitHealth.MaxHealth.Set(unitHealth.MaxHealth._Value + HP, floatBuffer);
+                unitHealth.MaxHealth.SetBaseValue(unitHealth.MaxHealth._Value + HP, floatBuffer);
                 unitHealth.Value = unitHealth.MaxHealth._Value + HP;
                 em.SetComponentData(entity, unitHealth);
             }
 
-            if (PhysicalPower != 0) unitStats.PhysicalPower.Set(unitStats.PhysicalPower._Value + PhysicalPower, floatBuffer);
-            if (PhysicalResistance != 0) unitStats.PhysicalResistance.Set(PhysicalResistance, floatBuffer);
-            if (PhysicalCriticalStrikeChance != 0) unitStats.PhysicalCriticalStrikeChance.Set(unitStats.PhysicalCriticalStrikeChance._Value + PhysicalCriticalStrikeChance, floatBuffer);
-            if (PhysicalCriticalStrikeDamage != 0) unitStats.PhysicalCriticalStrikeDamage.Set(unitStats.PhysicalCriticalStrikeDamage._Value + PhysicalCriticalStrikeDamage, floatBuffer);
-            if (SpellPower != 0) unitStats.SpellPower.Set(unitStats.SpellPower._Value + SpellPower, floatBuffer);
-            if (SpellResistance != 0) unitStats.SpellResistance.Set(SpellResistance, floatBuffer);
-            if (SpellCriticalStrikeChance != 0) unitStats.SpellCriticalStrikeChance.Set(unitStats.SpellCriticalStrikeChance._Value + SpellCriticalStrikeChance, floatBuffer);
-            if (SpellCriticalStrikeDamage != 0) unitStats.SpellCriticalStrikeDamage.Set(unitStats.SpellCriticalStrikeDamage._Value + SpellCriticalStrikeDamage, floatBuffer);
-            if (DamageVsPlayerVampires != 0) unitStats.DamageVsPlayerVampires.Set(DamageVsPlayerVampires, floatBuffer);
-            if (ResistVsPlayerVampires != 0) unitStats.ResistVsPlayerVampires.Set(ResistVsPlayerVampires, floatBuffer);
-            if (FireResistance != 0) unitStats.FireResistance.Set(unitStats.FireResistance._Value + FireResistance, intBuffer);
-            unitStats.PvPProtected.Set(false, boolBuffer);
+            if (PhysicalPower != 0) unitStats.PhysicalPower.SetBaseValue(unitStats.PhysicalPower._Value + PhysicalPower, floatBuffer);
+            if (PhysicalResistance != 0) unitStats.PhysicalResistance.SetBaseValue(PhysicalResistance, floatBuffer);
+            if (PhysicalCriticalStrikeChance != 0) unitStats.PhysicalCriticalStrikeChance.SetBaseValue(unitStats.PhysicalCriticalStrikeChance._Value + PhysicalCriticalStrikeChance, floatBuffer);
+            if (PhysicalCriticalStrikeDamage != 0) unitStats.PhysicalCriticalStrikeDamage.SetBaseValue(unitStats.PhysicalCriticalStrikeDamage._Value + PhysicalCriticalStrikeDamage, floatBuffer);
+            if (SpellPower != 0) unitStats.SpellPower.SetBaseValue(unitStats.SpellPower._Value + SpellPower, floatBuffer);
+            if (SpellResistance != 0) unitStats.SpellResistance.SetBaseValue(SpellResistance, floatBuffer);
+            if (SpellCriticalStrikeChance != 0) unitStats.SpellCriticalStrikeChance.SetBaseValue(unitStats.SpellCriticalStrikeChance._Value + SpellCriticalStrikeChance, floatBuffer);
+            if (SpellCriticalStrikeDamage != 0) unitStats.SpellCriticalStrikeDamage.SetBaseValue(unitStats.SpellCriticalStrikeDamage._Value + SpellCriticalStrikeDamage, floatBuffer);
+            //if (DamageVsPlayerVampires != 0) unitStats.DamageVsPlayerVampires.Set(DamageVsPlayerVampires, floatBuffer);
+            //if (ResistVsPlayerVampires != 0) unitStats.ResistVsPlayerVampires.Set(ResistVsPlayerVampires, floatBuffer);
+            if (FireResistance != 0) unitStats.FireResistance.SetBaseValue(unitStats.FireResistance._Value + FireResistance, intBuffer);
+            unitStats.PvPProtected.SetBaseValue(false, boolBuffer);
             em.SetComponentData(entity, unitStats);
         }
 
         public static void SaveFactionStats()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/factionstats.json", JsonSerializer.Serialize(Database.FactionStats, Database.Pretty_JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"factionstats.json", JsonSerializer.Serialize(Database.FactionStats, Database.Pretty_JSON_options));
         }
 
         public static void SaveIgnoredMobs()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/ignoredmonsters.json", JsonSerializer.Serialize(Database.IgnoredMonsters, Database.Pretty_JSON_options));
+            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json", JsonSerializer.Serialize(Database.IgnoredMonsters, Database.Pretty_JSON_options));
         }
 
         public static void LoadIgnoredMobs()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/ignoredmonsters.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/ignoredmonsters.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json");
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/RPGMods/Saves/ignoredmonsters.json");
+            string content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json");
             try
             {
                 Database.IgnoredMonsters = JsonSerializer.Deserialize<HashSet<string>>(content);
@@ -209,12 +209,12 @@ namespace RPGMods.Systems
 
         public static void LoadFactionStats()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/factionstats.json"))
+            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"factionstats.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/factionstats.json");
+                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"factionstats.json");
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/RPGMods/Saves/factionstats.json");
+            string content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"factionstats.json");
             try
             {
                 Database.FactionStats = JsonSerializer.Deserialize<ConcurrentDictionary<int, FactionData>>(content);

@@ -2,14 +2,19 @@
 using RPGMods.Utils;
 using System;
 using Unity.Entities;
+using static RootMotion.FinalIK.Grounding;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("bloodpotion, bp", Usage = "bloodpotion <Type> [<Quality>]", Description = "Creates a Potion with specified Blood Type, Quality and Value")]
     public static class BloodPotion
     {
         public static void Initialize(Context ctx)
         {
+
+            Output.SendSystemMessage(ctx.Event, $"Command currently non functional due to gloomrot updates, fix incoming");
+            return;
+            
             if (ctx.Args.Length != 0)
             {
                 try
@@ -44,5 +49,5 @@ namespace RPGMods.Commands
                 Output.MissingArguments(ctx);
             }
         }
-    }
+    }*/
 }

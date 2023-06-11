@@ -5,7 +5,7 @@ using System.Linq;
 using System;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("ban", Usage = "ban <playername> <days> <reason>", Description = "Check the status of specified player, or ban them. 0 is permanent.")]
     public static class BanUser
     {
@@ -21,21 +21,21 @@ namespace RPGMods.Commands
                     if (BanSystem.IsUserBanned(targetData_.PlatformId, out var banData_))
                     {
                         TimeSpan duration = banData_.BanUntil - DateTime.Now;
-                        Output.SendSystemMessage(ctx, $"Player:<color=#fffffffe> {args[0]}</color>");
-                        Output.SendSystemMessage(ctx, $"Status:<color=#fffffffe> Banned</color> | By:<color=#fffffffe> {banData_.BannedBy}</color>");
-                        Output.SendSystemMessage(ctx, $"Duration:<color=#fffffffe> {Math.Round(duration.TotalDays)}</color> day(s) [<color=#fffffffe>{banData_.BanUntil}</color>]");
-                        Output.SendSystemMessage(ctx, $"Reason:<color=#fffffffe> {banData_.Reason}</color>");
+                        ctx.Reply($"Player:<color=#fffffffe> {args[0]}</color>");
+                        ctx.Reply($"Status:<color=#fffffffe> Banned</color> | By:<color=#fffffffe> {banData_.BannedBy}</color>");
+                        ctx.Reply($"Duration:<color=#fffffffe> {Math.Round(duration.TotalDays)}</color> day(s) [<color=#fffffffe>{banData_.BanUntil}</color>]");
+                        ctx.Reply($"Reason:<color=#fffffffe> {banData_.Reason}</color>");
                         return;
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, "Specified user is not banned.");
+                        ctx.Reply("Specified user is not banned.");
                         return;
                     }
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, "Unable to find the specified player.");
+                    ctx.Reply("Unable to find the specified player.");
                     return;
                 }
             }
@@ -56,7 +56,7 @@ namespace RPGMods.Commands
             var reason = string.Join(' ', args.Skip(2));
             if (reason.Length > 150)
             {
-                Output.CustomErrorMessage(ctx, "Keep the reason short will ya?!");
+                ctx.Reply("Keep the reason short will ya?!");
                 return;
             }
 
@@ -66,20 +66,20 @@ namespace RPGMods.Commands
                 {
                     var user = ctx.Event.User;
                     Helper.KickPlayer(targetUserEntity);
-                    Output.SendSystemMessage(ctx, $"Player \"{name}\" is now banned.");
-                    Output.SendSystemMessage(ctx, $"Banned Until:<color=#fffffffe> {banData.BanUntil}</color>");
-                    Output.SendSystemMessage(ctx, $"Reason:<color=#fffffffe> {reason}</color>");
+                    ctx.Reply($"Player \"{name}\" is now banned.");
+                    ctx.Reply($"Banned Until:<color=#fffffffe> {banData.BanUntil}</color>");
+                    ctx.Reply($"Reason:<color=#fffffffe> {reason}</color>");
                     return;
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, $"Failed to ban \"{name}\".");
+                    ctx.Reply($"Failed to ban \"{name}\".");
                     return;
                 }
             }
             else
             {
-                Output.CustomErrorMessage(ctx, "Specified player not found.");
+                ctx.Reply("Specified player not found.");
                 return;
             }
         }
@@ -101,20 +101,20 @@ namespace RPGMods.Commands
             {
                 if (BanSystem.UnbanUser(targetUserEntity))
                 {
-                    Output.SendSystemMessage(ctx, $"Player \"{args[0]}\" is no longer banned.");
+                    ctx.Reply($"Player \"{args[0]}\" is no longer banned.");
                     return;
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, $"Specified player does not exist in the ban database.");
+                    ctx.Reply($"Specified player does not exist in the ban database.");
                     return;
                 }
             }
             else
             {
-                Output.CustomErrorMessage(ctx, "Specified player not found.");
+                ctx.Reply("Specified player not found.");
                 return;
             }
         }
     }
-}
+*/}

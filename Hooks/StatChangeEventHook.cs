@@ -6,6 +6,7 @@ using ProjectM.CastleBuilding;
 using RPGMods.Systems;
 using Unity.Entities;
 using System;
+using ProjectM.Gameplay.Systems;
 
 namespace RPGMods.Hooks
 {

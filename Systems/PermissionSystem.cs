@@ -63,12 +63,12 @@ namespace RPGMods.Systems
             bool isAllowed = GetUserPermission(steamID) >= GetCommandPermission(command);
             return isAllowed;
         }
-
+        /*
         private static object SendPermissionList(Context ctx, List<string> messages)
         {
             foreach(var m in messages)
             {
-                Output.SendSystemMessage(ctx, m);
+                ctx.Reply(m);
             }
             return new object();
         }
@@ -96,7 +96,7 @@ namespace RPGMods.Systems
             messages.Add($"===================================");
 
             TaskRunner.Start(taskWorld => SendPermissionList(ctx, messages), false);
-        }
+        }*/
 
         public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
         {
@@ -104,7 +104,7 @@ namespace RPGMods.Systems
             var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
 
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity;
             var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
 
             if (IsUserVIP(SteamID))
@@ -223,7 +223,7 @@ namespace RPGMods.Systems
 
         public static void SavePermissions()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/command_permission.json", JsonSerializer.Serialize(Database.command_permission, Database.Pretty_JSON_options));
+            File.WriteAllText("BepInEx/config/RPGMods/command_permission.json", JsonSerializer.Serialize(Database.command_permission/*, Database.Pretty_JSON_options*/));
         }
 
         public static void SaveUserPermission()

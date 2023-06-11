@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{
+{/*
     [Command("siege", Usage = "siege [<on>|<off>]", Description = "Display all players currently in siege mode, or engage siege mode.")]
     public static class Siege
     {
@@ -16,7 +16,7 @@ namespace RPGMods.Commands
         {
             if (PvPSystem.isHonorSystemEnabled == false || PvPSystem.isHonorBenefitEnabled == false)
             {
-                Output.CustomErrorMessage(ctx, "Honor system is not enabled.");
+                ctx.Reply("Honor system is not enabled.");
                 return;
             }
 
@@ -35,16 +35,16 @@ namespace RPGMods.Commands
                 {
                     if (PvPStats.Reputation <= -20000)
                     {
-                        Output.CustomErrorMessage(ctx, $"You're [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], siege mode is enforced.");
+                        ctx.Reply($"You're [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], siege mode is enforced.");
                     }
                     TimeSpan TimeLeft = siegeState.SiegeEndTime - DateTime.Now;
                     double tLeft = Math.Round(TimeLeft.TotalHours, 2);
 
-                    Output.SendSystemMessage(ctx, $"Siege mode will end in {Color.White(tLeft.ToString())} hour(s)");
+                    ctx.Reply($"Siege mode will end in {Color.White(tLeft.ToString())} hour(s)");
                 }
                 else
                 {
-                    Output.SendSystemMessage(ctx, $"You're currently in defensive mode.");
+                    ctx.Reply($"You're currently in defensive mode.");
                 }
 
                 _ = PvPSystem.SiegeList(ctx);
@@ -69,16 +69,16 @@ namespace RPGMods.Commands
                     {
                         if (siegeData.IsSiegeOn)
                         {
-                            Output.CustomErrorMessage(ctx, "You're already in active siege mode.");
+                            ctx.Reply("You're already in active siege mode.");
                             return;
                         }
                     }
 
-                    Output.SendSystemMessage(ctx, "Are you sure you want to enter castle siege mode?");
+                    ctx.Reply("Are you sure you want to enter castle siege mode?");
                     TimeSpan TimeLeft = DateTime.Now.AddMinutes(PvPSystem.SiegeDuration) - DateTime.Now;
                     double calcHours = Math.Round(TimeLeft.TotalHours, 2);
-                    Output.SendSystemMessage(ctx, "You and your allies will not be able to exit siege mode for (" + calcHours + ") hours once you start.");
-                    Output.SendSystemMessage(ctx, "Type \"" + CommandHandler.Prefix + "siege on\" again to confirm.");
+                    ctx.Reply("You and your allies will not be able to exit siege mode for (" + calcHours + ") hours once you start.");
+                    ctx.Reply("Type \"" + CommandHandler.Prefix + "siege on\" again to confirm.");
                     SiegeConfirm.Add(SteamID, DateTime.Now);
                     return;
                 }
@@ -86,7 +86,7 @@ namespace RPGMods.Commands
                 {
                     PvPSystem.SiegeON(SteamID, charEntity, userEntity);
                     SiegeConfirm.Remove(SteamID);
-                    Output.SendSystemMessage(ctx, "Active siege mode engaged.");
+                    ctx.Reply("Active siege mode engaged.");
                     return;
                 }
             }
@@ -110,7 +110,7 @@ namespace RPGMods.Commands
 
                 if (PvPStats.Reputation <= -20000)
                 {
-                    Output.CustomErrorMessage(ctx, $"You or your allies are [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], siege mode is enforced.");
+                    ctx.Reply($"You or your allies are [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], siege mode is enforced.");
                     return;
                 }
                 TimeSpan TimeLeft = siegeState.SiegeEndTime - DateTime.Now;
@@ -118,13 +118,13 @@ namespace RPGMods.Commands
                 if (TimeLeft.TotalSeconds <= 0)
                 {
                     PvPSystem.SiegeOFF(SteamID, charEntity);
-                    Output.SendSystemMessage(ctx, "Defensive siege mode engaged.");
+                    ctx.Reply("Defensive siege mode engaged.");
                     return;
                 }
                 else
                 {
                     double tLeft = Math.Round(TimeLeft.TotalHours, 2);
-                    Output.SendSystemMessage(ctx, $"Siege mode cannot be ended until {Color.White(tLeft.ToString())} more hour(s)");
+                    ctx.Reply($"Siege mode cannot be ended until {Color.White(tLeft.ToString())} more hour(s)");
                     return;
                 }
             }
@@ -146,5 +146,5 @@ namespace RPGMods.Commands
                 Output.InvalidArguments(ctx);
             }
         }
-    }
+    }*/
 }
