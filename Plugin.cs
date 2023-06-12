@@ -440,6 +440,12 @@ namespace RPGMods
 
         public override void Load()
         {
+            if(!IsServer)
+            {
+                Log.LogWarning("RPGMods is a server plugin. Not continuing to load on client.");
+                return;
+            }
+            
             InitConfig();
             Logger = Log;
             harmony = new Harmony("RPGMods");
