@@ -49,7 +49,7 @@ namespace RPGMods.Commands
                         ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
                     name = Bloodlines.names[bl];
                     masteryPercent = bld.strength[bl];
-                    print = $"{name}:<color=#fffffffe> {masteryPercent}%</color> (";
+                    print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
                     for (int i = 0; i < Bloodlines.stats[bl].Length; i++)
                     {
                         if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i])
@@ -58,7 +58,7 @@ namespace RPGMods.Commands
                                 print += ",";
                             print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
                             print += " <color=#75FF33>";
-                            print += Bloodlines.calcBuffValue(bl, SteamID, i);
+                            print += $"{Bloodlines.calcBuffValue(bl, SteamID, i):F3}";
                             print += "</color>";
                         }
                     }
@@ -75,7 +75,7 @@ namespace RPGMods.Commands
                     ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
                 name = Bloodlines.names[bl];
                 masteryPercent = bld.strength[bl];
-                print = $"{name}:<color=#fffffffe> {masteryPercent}%</color> (";
+                print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
                 for (int i = 0; i < Bloodlines.stats[bl].Length; i++)
                 {
                     if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i])
@@ -84,7 +84,7 @@ namespace RPGMods.Commands
                             print += ",";
                         print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
                         print += " <color=#75FF33>";
-                        print += Bloodlines.calcBuffValue(bl, SteamID, i);
+                        print += $"{Bloodlines.calcBuffValue(bl, SteamID, i):F3}";
                         print += "</color>";
                     }
                 }
@@ -133,8 +133,8 @@ namespace RPGMods.Commands
             Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]
-        public static void setMastery(ChatCommandContext ctx, string name, string type, double value) {
+        [Command("set", "s", "[playerName, bloodline, value]", "Sets the specified players bloodline to a specific value", adminOnly: true)]
+        public static void setBloodline(ChatCommandContext ctx, string name, string type, double value) {
             if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
@@ -180,22 +180,22 @@ namespace RPGMods.Commands
         }
 
         [Command("reset", "r", "[BloodlineName]", "Resets a bloodline to gain more power with it.", adminOnly: false)]
-        public static void resetBloodline(ChatCommandContext ctx, string MasteryType)
+        public static void resetBloodline(ChatCommandContext ctx, string BloodlineName)
         {
             ulong SteamID;
             var UserEntity = ctx.Event.SenderUserEntity;
             SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
             int type;
-            if (!Bloodlines.nameMap.TryGetValue(MasteryType, out type))
+            if (!Bloodlines.nameMap.TryGetValue(BloodlineName, out type))
             {
-                MasteryType = MasteryType.ToLower();
-                if (MasteryType.Equals("dracula")) type = 0;
-                else if (MasteryType.Equals("arwen")) type = 1;
-                else if (MasteryType.Equals("ilvris")) type = 2;
-                else if (MasteryType.Equals("aya")) type = 3;
-                else if (MasteryType.Equals("nytheria")) type = 4;
-                else if (MasteryType.Equals("hadubert")) type = 5;
-                else if (MasteryType.Equals("semika")) type = 7;
+                BloodlineName = BloodlineName.ToLower();
+                if (BloodlineName.Equals("dracula")) type = 0;
+                else if (BloodlineName.Equals("arwen")) type = 1;
+                else if (BloodlineName.Equals("ilvris")) type = 2;
+                else if (BloodlineName.Equals("aya")) type = 3;
+                else if (BloodlineName.Equals("nytheria")) type = 4;
+                else if (BloodlineName.Equals("hadubert")) type = 5;
+                else if (BloodlineName.Equals("semika")) type = 7;
                 else
                 {
                     ctx.Reply("Invalid Arguments");

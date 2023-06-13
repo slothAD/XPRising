@@ -133,15 +133,20 @@ namespace RPGMods.Systems
                 }
             }
 
-            if (exp <= 0) Database.player_experience[SteamID] = EXPGained;
-            else Database.player_experience[SteamID] = exp + EXPGained;
+            int currentXP = exp <= 0 ? EXPGained : exp + EXPGained;
+            Database.player_experience[SteamID] = currentXP;
 
             SetLevel(killerEntity, userEntity, SteamID);
             if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging))
             {
-                if (isLogging)
-                {
-                    Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGained} experience points by slaying a Lv.{UnitLevel.Level} enemy.</color>");
+                if (isLogging) {
+                    int currentLevel = convertXpToLevel(currentXP);
+                    int currentLevelXP = convertLevelToXp(currentLevel);
+                    int nextLevelXP = convertLevelToXp(currentLevel + 1);
+
+                    double neededXP = nextLevelXP - currentLevelXP;
+                    double earnedXP = currentXP - currentLevelXP;
+                    Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGained} XP by slaying a Lv.{UnitLevel.Level} enemy.</color> [ XP: <color=#fffffffe> {earnedXP}</color>/<color=#fffffffe>{neededXP}</color> ]");
                 }
             }
         }

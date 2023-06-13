@@ -7,7 +7,7 @@ using VampireCommandFramework;
 
 namespace RPGMods.Commands
 {
-    //[Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>] [<ability> \"ability\"", Description = "Shows your currect experience and progression to next level, toggle the exp gain notification, or spend earned ability points.")]
+    //[Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>] [<ability> \"ability\"", Description = "Shows your current experience and progression to next level, toggle the exp gain notification, or spend earned ability points.")]
 
     [CommandGroup("experience","xp")]
     public static class Experience{
@@ -27,7 +27,7 @@ namespace RPGMods.Commands
             string response = "-- <color=#fffffffe>" + CharName + "</color> --\n";
             response += $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) ";
             response += $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]";
-            if (ExperienceSystem.LevelRewardsOn) response += $"You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.";
+            if (ExperienceSystem.LevelRewardsOn) response += $" You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.";
             ctx.Reply(response);
         }
 
@@ -54,7 +54,7 @@ namespace RPGMods.Commands
         }
 
         [Command("log", "l", "<On, Off>", "Turns on or off logging of xp gain.", adminOnly: false)]
-        public static void logBloodline(ChatCommandContext ctx, string flag){
+        public static void logExperience(ChatCommandContext ctx, string flag){
             if (!ExperienceSystem.isEXPActive){
                 ctx.Reply("Experience system is not enabled.");
                 return;
@@ -135,7 +135,7 @@ namespace RPGMods.Commands
                         break;
                     default:
                         ctx.Reply("Type \".xp ability show\" to see current buffs.");
-                        ctx.Reply($"Type .xp ability <ability> to sepend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
+                        ctx.Reply($"Type .xp ability <ability> to spend ability points. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
                         ctx.Reply("You can spend ability points on:");
                         ctx.Reply("health, spower, ppower, presist, sresist, beasthunter, demonhunter, manhunter, undeadhunter, farmer");
                         break;

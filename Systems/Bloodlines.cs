@@ -205,8 +205,8 @@ namespace RPGMods.Systems
             {
                 if (isLogging)
                 {
-
-                    Output.SendLore(userEntity, "<color=#ffb700>"+names[bloodlineIndex]+"'s bloodline has increased by "+ growthVal + "%</color>");
+                    double updatedValue = getBloodlineData(SteamID).strength[bloodlineIndex];
+                    Output.SendLore(userEntity, $"<color=#ffb700>{names[bloodlineIndex]}'s bloodline has increased by {growthVal:F3}% [ {updatedValue:F3}%]</color>");
                 }
             }
         }
@@ -229,7 +229,7 @@ namespace RPGMods.Systems
         public static void resetBloodline(ulong SteamID, int type) {
             if (!effectivenessSubSystemEnabled) {
                 if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)) {
-                    Output.SendLore(targetUserEntity, $"Effectiveness Subsystem disabled, not resetting mastery.");
+                    Output.SendLore(targetUserEntity, $"Effectiveness Subsystem disabled, not resetting bloodline.");
                 }
                 return;
             }

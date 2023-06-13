@@ -1,6 +1,6 @@
 ﻿namespace RPGMods.Utils
 {
-    public class Color
+    public static class Color
     {
         private static string ColorText(string color, string text)
         {
