@@ -485,6 +485,7 @@ namespace RPGMods
             AutoSaveSystem.LoadDatabase();
 
             //-- Apply configs
+            Logger.LogInfo("Registering commands");
             //CommandHandler.Prefix = Prefix.Value;
             //CommandHandler.DisabledCommands = DisabledCommands.Value;
             //CommandHandler.delay_Cooldown = DelayedCommands.Value;
@@ -492,6 +493,7 @@ namespace RPGMods
 
             //Waypoint.WaypointLimit = WaypointLimit.Value;
 
+            Logger.LogInfo("Loading permission config");
             PermissionSystem.isVIPSystem = EnableVIPSystem.Value;
             PermissionSystem.isVIPWhitelist = EnableVIPWhitelist.Value;
             PermissionSystem.VIP_Permission = VIP_Permission.Value;
@@ -508,6 +510,7 @@ namespace RPGMods
             PermissionSystem.VIP_OutCombat_GarlicResistance = VIP_OutCombat_GarlicResistance.Value;
             PermissionSystem.VIP_OutCombat_SilverResistance = VIP_OutCombat_SilverResistance.Value;
 
+            Logger.LogInfo("Loading HunterHunted config");
             HunterHuntedSystem.isActive = HunterHuntedEnabled.Value;
             HunterHuntedSystem.heat_cooldown = HeatCooldown.Value;
             HunterHuntedSystem.bandit_heat_cooldown = BanditHeatCooldown.Value;
@@ -518,6 +521,7 @@ namespace RPGMods
             if (Ambush_Despawn_Unit_Timer.Value < 1) Ambush_Despawn_Unit_Timer.Value = 300f;
             HunterHuntedSystem.ambush_despawn_timer = Ambush_Despawn_Unit_Timer.Value + 0.44444f;
 
+            Logger.LogInfo("Loading PvP config");
             PvPSystem.isPvPToggleEnabled = EnablePvPToggle.Value;
             PvPSystem.isAnnounceKills = AnnouncePvPKills.Value;
 
@@ -545,6 +549,7 @@ namespace RPGMods
             SiegeSystem.GolemPDef.Value = GolemPhysicalReduction.Value;
             SiegeSystem.GolemSDef.Value = GolemSpellReduction.Value;
 
+            Logger.LogInfo("Loading XP config");
             ExperienceSystem.isEXPActive = EnableExperienceSystem.Value;
             ExperienceSystem.ShouldAllowGearLevel = ShouldAllowGearLevel.Value;
             ExperienceSystem.LevelRewardsOn = EnableLevelRewards.Value;
@@ -557,6 +562,7 @@ namespace RPGMods
             ExperienceSystem.GroupMaxDistance = EXPGroupMaxDistance.Value;
             ExperienceSystem.easyLvl15 = EasyLevel15.Value;
 
+            Logger.LogInfo("Loading weapon mastery config");
             WeaponMasterSystem.isMasteryEnabled = EnableWeaponMaster.Value;
             WeaponMasterSystem.isDecaySystemEnabled = EnableWeaponMasterDecay.Value;
             WeaponMasterSystem.Offline_DecayValue = Offline_Weapon_MasteryDecayValue.Value;
@@ -572,7 +578,6 @@ namespace RPGMods
             WeaponMasterSystem.CDRStacks = WeaponSpellMasteryCDRStacks.Value;
             WeaponMasterSystem.growthSubSystemEnabled = growthSubSystemEnabled.Value;
             Mastery.detailedStatements = DetailedMasteryInfo.Value;
-
 
             WeaponMasterSystem.UnarmedStats = parseIntArrayConifg(UnarmedStats.Value);
             WeaponMasterSystem.UnarmedRates = parseDoubleArrayConifg(UnarmedRates.Value);
@@ -601,7 +606,18 @@ namespace RPGMods
             WeaponMasterSystem.GreatSwordStats = parseIntArrayConifg(GreatswordStats.Value);
             WeaponMasterSystem.GreatSwordRates = parseDoubleArrayConifg(GreatswordRates.Value);
 
+            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats, WeaponMasterSystem.RapierStats, WeaponMasterSystem.PistolStats, WeaponMasterSystem.GreatSwordStats };
+            WeaponMasterSystem.masteryRates = new double[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates, WeaponMasterSystem.RapierRates, WeaponMasterSystem.PistolRates, WeaponMasterSystem.GreatSwordRates };
 
+            WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
+            WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;
+            WeaponMasterSystem.growthSubSystemEnabled = effectivenessSubSystemEnabled.Value;
+            WeaponMasterSystem.minGrowth = minGrowth.Value;
+            WeaponMasterSystem.maxGrowth = maxGrowth.Value;
+            WeaponMasterSystem.growthPerEfficency = growthPerEfficency.Value;
+
+
+            Logger.LogInfo("Loading bloodlines config");
             Bloodlines.draculaStats = parseIntArrayConifg(draculaBloodlineStats.Value);
             Bloodlines.draculaMinStrength = parseDoubleArrayConifg(draculaBloodlineMinStrengths.Value);
             Bloodlines.draculaRates = parseDoubleArrayConifg(draculaBloodlineRates.Value);
@@ -649,20 +665,7 @@ namespace RPGMods
             Bloodlines.VBloodMultiplier = bloodlineVBloodMultiplier.Value;
             Bloodlines.growthMultiplier = bloodlineGrowthMultiplier.Value;
 
-
-
-
-            WeaponMasterSystem.masteryStats = new int[][] { WeaponMasterSystem.SpellStats, WeaponMasterSystem.UnarmedStats, WeaponMasterSystem.SpearStats, WeaponMasterSystem.SwordStats, WeaponMasterSystem.ScytheStats, WeaponMasterSystem.CrossbowStats, WeaponMasterSystem.MaceStats, WeaponMasterSystem.SlasherStats, WeaponMasterSystem.AxeStats, WeaponMasterSystem.FishingPoleStats, WeaponMasterSystem.RapierStats, WeaponMasterSystem.PistolStats, WeaponMasterSystem.GreatSwordStats };
-            WeaponMasterSystem.masteryRates = new double[][] { WeaponMasterSystem.SpellRates, WeaponMasterSystem.UnarmedRates, WeaponMasterSystem.SpearRates, WeaponMasterSystem.SwordRates, WeaponMasterSystem.ScytheRates, WeaponMasterSystem.CrossbowRates, WeaponMasterSystem.MaceRates, WeaponMasterSystem.SlasherRates, WeaponMasterSystem.AxeRates, WeaponMasterSystem.FishingPoleRates, WeaponMasterSystem.RapierRates, WeaponMasterSystem.PistolRates, WeaponMasterSystem.GreatSwordRates };
-
-            WeaponMasterSystem.effectivenessSubSystemEnabled = effectivenessSubSystemEnabled.Value;
-            WeaponMasterSystem.maxEffectiveness = maxEffectiveness.Value;
-            WeaponMasterSystem.growthSubSystemEnabled = effectivenessSubSystemEnabled.Value;
-            WeaponMasterSystem.minGrowth = minGrowth.Value;
-            WeaponMasterSystem.maxGrowth = maxGrowth.Value;
-            WeaponMasterSystem.growthPerEfficency = growthPerEfficency.Value;
-
-
+            Logger.LogInfo("Loading world dynamics config");
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
             WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
 
