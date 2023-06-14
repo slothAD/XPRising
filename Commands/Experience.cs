@@ -23,10 +23,12 @@ namespace RPGMods.Commands
             var user = ctx.Event.User;
             var CharName = user.CharacterName.ToString();
             var SteamID = user.PlatformId;
-            int userLevel = ExperienceSystem.getLevel(SteamID);
+            int userXP = ExperienceSystem.getXp(SteamID);
+            ExperienceSystem.GetLevelAndProgress(userXP, out int progress, out int earnedXp, out int neededXp);
+            int userLevel = ExperienceSystem.convertXpToLevel(userXP);
             string response = "-- <color=#fffffffe>" + CharName + "</color> --\n";
-            response += $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) ";
-            response += $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]";
+            response += $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{progress}%</color>) ";
+            response += $" [ XP:<color=#fffffffe> {earnedXp}</color>/<color=#fffffffe>{neededXp}</color> ]";
             if (ExperienceSystem.LevelRewardsOn) response += $" You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.";
             ctx.Reply(response);
         }

@@ -430,6 +430,7 @@ namespace RPGMods
 
             if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
             if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
+            if (!Directory.Exists("BepInEx/config/RPGMods/Saves/Backup")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves/Backup");
 
             if (!File.Exists("BepInEx/config/RPGMods/kits.json"))
             {
