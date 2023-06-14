@@ -116,6 +116,8 @@ namespace RPGMods.Systems
         private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
 
         private static readonly Random rand = new Random();
+        
+        public static bool pluginLogging = false;
 
         public static void UpdateBloodline(Entity Killer, Entity Victim)
         {
@@ -165,15 +167,15 @@ namespace RPGMods.Systems
                 if (em.HasComponent<BloodConsumeSource>(Victim)){
                     victimBlood = em.GetComponentData<BloodConsumeSource>(Victim);
                     if (!(victimBlood.UnitBloodType.GuidHash == bloodline.BloodType.GuidHash|| isVBlood)){
-                        Plugin.Logger.LogInfo("Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
+                        if (pluginLogging) Plugin.Logger.LogInfo("Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
                         return;
                     }
                     if (!(isVBlood || victimBlood.BloodQuality > getBloodlineData(SteamID).strength[bloodlineIndex])) {
-                        Plugin.Logger.LogInfo("Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
+                        if (pluginLogging) Plugin.Logger.LogInfo("Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
                     if (!(isVBlood || bloodline.Quality > getBloodlineData(SteamID).strength[bloodlineIndex])){
-                        Plugin.Logger.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
+                        if (pluginLogging) Plugin.Logger.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
 
