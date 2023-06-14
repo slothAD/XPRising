@@ -9,11 +9,13 @@ using Unity.Entities;
 
 namespace RPGMods.Commands
 {
-    [CommandGroup("experience","xp")]
+    // Disabling as auto-respawn does not yet work
+    //[CommandGroup("autorespawn","ar")]
     public static class AutoRespawn
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        [Command("toggle", "t", "[playerName]", "Toggle auto respawn on the same position on death", adminOnly: true)]
+        // Disabling as auto-respawn does not yet work
+        //[Command("toggle", "t", "[playerName]", "Toggle auto respawn on the same position on death", adminOnly: true)]
         public static void Initialize(ChatCommandContext ctx, string targetName)
         {
             var user = ctx.Event.User;
