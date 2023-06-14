@@ -8,37 +8,37 @@ using System.Text.Json;
 using Unity.Entities;
 
 namespace RPGMods.Commands
-{/*
-    [Command("autorespawn", usage = "autorespawn [<PlayerName>]", Description = "Toggle auto respawn on the same position on death.")]
+{
+    [CommandGroup("experience","xp")]
     public static class AutoRespawn
     {
-        public static void Initialize(Context ctx)
+        private static EntityManager entityManager = Plugin.Server.EntityManager;
+        [Command("toggle", "t", "[playerName]", "Toggle auto respawn on the same position on death", adminOnly: true)]
+        public static void Initialize(ChatCommandContext ctx, string targetName)
         {
-            var entityManager = ctx.EntityManager;
-            ulong SteamID = ctx.Event.User.PlatformId;
-            string PlayerName = ctx.Event.User.CharacterName.ToString();
+            var user = ctx.Event.User;
+            var CharName = user.CharacterName.ToString();
+            var SteamID = user.PlatformId;
             bool isServerWide = false;
 
             bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "autorespawn_args");
-            if (ctx.Args.Length > 0 && isAllowed)
+            if (isAllowed)
             {
-                string TargetName = string.Join(' ', ctx.Args);
-                if (TargetName.ToLower().Equals("all"))
+                if (targetName.ToLower().Equals("all"))
                 {
                     SteamID = 1;
                     isServerWide = true;
                 }
                 else
                 {
-                    if (Helper.FindPlayer(TargetName, false, out Entity targetEntity, out Entity targetUserEntity))
+                    if (Helper.FindPlayer(targetName, false, out Entity targetEntity, out Entity targetUserEntity))
                     {
                         var user_component = entityManager.GetComponentData<User>(targetUserEntity);
                         SteamID = user_component.PlatformId;
-                        PlayerName = TargetName;
                     }
                     else
                     {
-                        ctx.Reply($"Player \"{TargetName}\" not found!");
+                        ctx.Reply($"Player \"{targetName}\" not found!");
                         return;
                     }
                 }
@@ -54,7 +54,7 @@ namespace RPGMods.Commands
             }
             else
             {
-                ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Player \"{targetName}\" Auto Respawn <color=#ffff00>{s}</color>");
             }
         }
 
@@ -100,5 +100,5 @@ namespace RPGMods.Commands
                 Plugin.Logger.LogWarning("AutoRespawn DB Created.");
             }
         }
-    }*/
+    }
 }
