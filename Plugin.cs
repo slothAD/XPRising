@@ -81,7 +81,6 @@ namespace RPGMods
 
         private static ConfigEntry<bool> HunterHuntedEnabled;
         private static ConfigEntry<int> HeatCooldown;
-        private static ConfigEntry<int> BanditHeatCooldown;
         private static ConfigEntry<int> CoolDown_Interval;
         private static ConfigEntry<int> Ambush_Interval;
         private static ConfigEntry<int> Ambush_Chance;
@@ -276,7 +275,6 @@ namespace RPGMods
 
             HunterHuntedEnabled = Config.Bind("HunterHunted", "Enable", true, "Enable/disable the HunterHunted system.");
             HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 25, "Set the reduction value for player heat for every cooldown interval.");
-            BanditHeatCooldown = Config.Bind("HunterHunted", "Bandit Heat Cooldown", 5, "Set the reduction value for player heat from the bandits faction for every cooldown interval.");
             CoolDown_Interval = Config.Bind("HunterHunted", "Cooldown Interval", 60, "Set every how many seconds should the cooldown interval trigger.");
             Ambush_Interval = Config.Bind("HunterHunted", "Ambush Interval", 300, "Set how many seconds player can be ambushed again since last ambush.");
             Ambush_Chance = Config.Bind("HunterHunted", "Ambush Chance", 50, "Set the percentage that an ambush may occur for every cooldown interval.");
@@ -514,7 +512,6 @@ namespace RPGMods
             Logger.LogInfo("Loading HunterHunted config");
             HunterHuntedSystem.isActive = HunterHuntedEnabled.Value;
             HunterHuntedSystem.heat_cooldown = HeatCooldown.Value;
-            HunterHuntedSystem.bandit_heat_cooldown = BanditHeatCooldown.Value;
             HunterHuntedSystem.cooldown_timer = CoolDown_Interval.Value;
             HunterHuntedSystem.ambush_interval = Ambush_Interval.Value;
             HunterHuntedSystem.ambush_chance = Ambush_Chance.Value;

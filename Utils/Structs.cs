@@ -5,6 +5,7 @@ using RPGMods.Systems;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -72,6 +73,27 @@ namespace RPGMods.Utils
         public int DailyPower { get; set; }
         public int RequiredPower { get; set; }
         public StatsBonus FactionBonus { get; set; }
+    }
+
+    public struct PlayerHeatData {
+        public struct Heat {
+            public int level { get; set; }
+            public DateTime lastAmbushed { get; set; }
+        }
+        public Dictionary<FactionHeat.Faction, Heat> heat { get; } = new();
+        public DateTime lastUpdate { get; set; }
+
+        public PlayerHeatData() {
+        }
+
+        public override string ToString() {
+            StringBuilder sb = new StringBuilder();
+            foreach (FactionHeat.Faction faction in Enum.GetValues<FactionHeat.Faction>()) {
+                sb.AppendJoin(" | ", $"{Enum.GetName(faction)}: {Color.White(heat[faction].level.ToString())}");
+            }
+
+            return sb.ToString();
+        }
     }
 
     public struct PlayerGroup

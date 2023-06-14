@@ -25,12 +25,7 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, float> command_Cooldown = new();
 
         //-- -- HunterHunted System
-        public static Dictionary<ulong, int> heatlevel = new();
-        public static Dictionary<ulong, int> bandit_heatlevel = new();
-        public static Dictionary<ulong, int> undead_heatlevel = new();    //-- Not Implemented Yet
-        public static Dictionary<ulong, DateTime> player_heat_timestamp = new();
-        public static Dictionary<ulong, DateTime> player_last_ambushed = new();
-        public static Dictionary<ulong, DateTime> bandit_last_ambushed = new();
+        public static Dictionary<ulong, PlayerHeatData> heatCache = new();
 
         //-- -- Mastery System
         public static Dictionary<ulong, DateTime> player_last_combat = new();

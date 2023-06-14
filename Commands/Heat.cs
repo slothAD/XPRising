@@ -3,83 +3,102 @@ using ProjectM.Network;
 using RPGMods.Systems;
 using RPGMods.Utils;
 using System;
+using System.Collections.Generic;
+using BepInEx;
 using Unity.Entities;
 using VampireCommandFramework;
+using Color = RPGMods.Utils.Color;
 
 namespace RPGMods.Commands
 {
-    //[Command("heat", Usage = "heat", Description = "Shows your current wanted level.")]
-    [CommandGroup("heat")]
+    [CommandGroup("heat", "ht")]
     public static class Heat{
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static void Initialize(ChatCommandContext ctx){
-            var user = ctx.Event.User;
-            var SteamID = user.PlatformId;
-            var userEntity = ctx.Event.SenderUserEntity;
-            var charEntity = ctx.Event.SenderCharacterEntity;
+        
+        [Command("get","g", "", "Shows your current wanted level", adminOnly: false)]
+        public static void GetHeat(ChatCommandContext ctx){
             if (!HunterHuntedSystem.isActive){
                 ctx.Reply("HunterHunted system is not enabled.");
                 return;
             }
-            /*
-            bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "heat_args");
-            if (ctx.Args.Length >= 2 && isAllowed){
-                string CharName = ctx.Event.User.CharacterName.ToString();
-                if (ctx.Args.Length == 3)
-                {
-                    string name = ctx.Args[2];
-                    if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
-                    {
-                        SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
-                        CharName = name;
-                        userEntity = targetUserEntity;
-                        charEntity = targetEntity;
-                    }
-                    else
-                    {
-                        ctx.Reply($"Could not find specified player \"{name}\".");
-                        return;
-                    }
-                }
-                if (int.TryParse(ctx.Args[0], out var n)) Cache.heatlevel[SteamID] = n;
-                if (int.TryParse(ctx.Args[1], out var nm)) Cache.bandit_heatlevel[SteamID] = nm;
-                ctx.Reply($"Player \"{CharName}\" heat value changed.");
-                ctx.Reply($"Human: <color=#ffff00>{Cache.heatlevel[SteamID]}</color> | Bandit: <color=#ffff00>{Cache.bandit_heatlevel[SteamID]}</color>");
-                HunterHuntedSystem.HeatManager(userEntity);
-                return;
-            }*/
+            var user = ctx.Event.User;
+            var SteamID = user.PlatformId;
+            var userEntity = ctx.Event.SenderUserEntity;
 
             HunterHuntedSystem.HeatManager(userEntity);
 
-            Cache.heatlevel.TryGetValue(SteamID, out var human_heatlevel);
-            if (human_heatlevel >= 1500) Output.SendLore(userEntity,$"<color=#0048ffff>[Humans]</color> <color=#c90e21ff>YOU ARE A MENACE...</color>");
-            else if (human_heatlevel >= 1000) Output.SendLore(userEntity, $"<color=#0048ffff>[Humans]</color> <color=#c90e21ff>The Vampire Hunters are hunting you...</color>");
-            else if (human_heatlevel >= 500) Output.SendLore(userEntity, $"<color=#0048ffff>[Humans]</color> <color=#c90e21ff>Humans elite squads are hunting you...</color>");
-            else if (human_heatlevel >= 250) Output.SendLore(userEntity, $"<color=#0048ffff>[Humans]</color> <color=#c4515cff>Humans soldiers are hunting you...</color>");
-            else if (human_heatlevel >= 150) Output.SendLore(userEntity, $"<color=#0048ffff>[Humans]</color> <color=#c9999eff>The humans are hunting you...</color>");
-            else Output.SendLore(userEntity, $"<color=#0048ffff>[Humans]</color> <color=#ffffffff>You're currently anonymous...</color>");
+            // Note that the HeatManager call above should initialise the heat data for us.
+            if (!Cache.heatCache.TryGetValue(SteamID, out var heatData)) return;
 
-            Cache.bandit_heatlevel.TryGetValue(SteamID, out var bandit_heatlevel);
-            if (bandit_heatlevel >= 650) Output.SendLore(userEntity, $"<color=#ff0000ff>[Bandits]</color> <color=#c90e21ff>The bandits really wants you dead...</color>");
-            else if (bandit_heatlevel >= 450) Output.SendLore(userEntity, $"<color=#ff0000ff>[Bandits]</color> <color=#c90e21ff>A large bandit squads are hunting you...</color>");
-            else if (bandit_heatlevel >= 250) Output.SendLore(userEntity, $"<color=#ff0000ff>[Bandits]</color> <color=#c4515cff>A small bandit squads are hunting you...</color>");
-            else if (bandit_heatlevel >= 150) Output.SendLore(userEntity,$"<color=#ff0000ff>[Bandits]</color> <color=#c9999eff>The bandits are hunting you...</color>");
-            else Output.SendLore(userEntity, $"<color=#ff0000ff>[Bandits]</color> <color=#ffffffff>The bandits doesn't recognize you...</color>");
+            
+            foreach (FactionHeat.Faction faction in Enum.GetValues<FactionHeat.Faction>()) {
+                var heat = heatData.heat[faction];
+                Output.SendLore(userEntity, FactionHeat.GetFactionStatus(faction, heat.level));
+                
+                if (user.IsAdmin)
+                {
+                    TimeSpan since_ambush = DateTime.Now - heat.lastAmbushed;
+                    int NextAmbush = (int)(HunterHuntedSystem.ambush_interval - since_ambush.TotalSeconds);
+                    if (NextAmbush < 0) NextAmbush = 0;
 
-            /*
-            if (ctx.Args.Length == 1 && user.IsAdmin)
-            {
-                if (!ctx.Args[0].Equals("debug") && ctx.Args.Length != 2) return;
+                    ctx.Reply($"Next Possible Ambush in {Color.White(NextAmbush.ToString())}s");
+                    ctx.Reply($"Ambush Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
+                    ctx.Reply(heatData.ToString());
+                }
+            }
+        }
+        
+        [Command("test","t", "", "Displays additional heat information", adminOnly: true)]
+        public static void TestHeat(ChatCommandContext ctx){
+            if (!HunterHuntedSystem.isActive){
+                ctx.Reply("HunterHunted system is not enabled.");
+                return;
+            }
+            var user = ctx.Event.User;
+            var SteamID = user.PlatformId;
+            var userEntity = ctx.Event.SenderUserEntity;
 
-                Cache.player_last_ambushed.TryGetValue(SteamID, out var last_ambushed);
-                TimeSpan since_ambush = DateTime.Now - last_ambushed;
-                int NextAmbush = (int)(HunterHuntedSystem.ambush_interval - since_ambush.TotalSeconds);
-                if (NextAmbush < 0) NextAmbush = 0;
+            
+        }
 
-                ctx.Reply($"Next Possible Ambush in {Color.White(NextAmbush.ToString())}s");
-                ctx.Reply($"Ambush Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
-                ctx.Reply($"Human: {Color.White(human_heatlevel.ToString())} | Bandit: {Color.White(bandit_heatlevel.ToString())}");
-            }*/
+        [Command("set","s", "[name, faction, value]", "Sets the current wanted level", adminOnly: true)]
+        public static void SetHeat(ChatCommandContext ctx, string name, string faction, int value) {
+            bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "heat_args");
+            if (isAllowed && !name.IsNullOrWhiteSpace()){
+                var user = ctx.Event.User;
+                var SteamID = user.PlatformId;
+                var userEntity = ctx.Event.SenderUserEntity;
+                
+                if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
+                {
+                    SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
+                    userEntity = targetUserEntity;
+                }
+                else
+                {
+                    ctx.Reply($"Could not find specified player \"{name}\".");
+                    return;
+                }
+
+                if (!Enum.TryParse(faction, true, out FactionHeat.Faction heatFaction)) {
+                    ctx.Reply("Faction not yet supported");
+                    return;
+                }
+
+                if (!Cache.heatCache.TryGetValue(SteamID, out PlayerHeatData heatData)) {
+                    heatData = new PlayerHeatData();
+                }
+
+                // Update faction heat
+                var heat = heatData.heat[heatFaction];
+                heat.level = value;
+                heatData.heat[heatFaction] = heat;
+                Cache.heatCache[SteamID] = heatData;
+                
+                ctx.Reply($"Player \"{name}\" heat value changed.");
+                ctx.Reply(heatData.ToString());
+                HunterHuntedSystem.HeatManager(userEntity);
+            }
         }
     }
 }

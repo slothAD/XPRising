@@ -513,8 +513,7 @@ namespace RPGMods.Hooks
                     if (HunterHuntedSystem.isActive)
                     {
                         HunterHuntedSystem.HeatManager(e_User);
-                        HunterHuntedSystem.HumanAmbusher(e_User, e_Owner, true);
-                        HunterHuntedSystem.BanditAmbusher(e_User, e_Owner, true);
+                        HunterHuntedSystem.CheckForAmbush(e_User, e_Owner, true);
                     }
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.LoopMastery(e_User, e_Owner);
                     if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive) PvPSystem.OnCombatEngaged(entity, e_Owner);

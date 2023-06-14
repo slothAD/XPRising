@@ -57,10 +57,13 @@ public class DeathEventListenerSystem_Patch
                     ulong SteamID = user.PlatformId;
 
                     //-- Reset the heat level of the player
-                    if (HunterHuntedSystem.isActive)
-                    {
-                        Cache.bandit_heatlevel[SteamID] = 0;
-                        Cache.heatlevel[SteamID] = 0;
+                    if (HunterHuntedSystem.isActive && Cache.heatCache.TryGetValue(SteamID, out var heatData)) {
+                        foreach (var faction in Enum.GetValues<FactionHeat.Faction>()) {
+                            var heat = heatData.heat[faction];
+                            heat.level = 0;
+                            heatData.heat[faction] = heat;
+                            Cache.heatCache[SteamID] = heatData;
+                        }
                     }
                     //-- ----------------------------------
 

@@ -98,7 +98,7 @@ namespace RPGMods.Utils
                 if (isFound)
                 {
                     Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, f3pos, unitSpawn, 1, 5, HunterHuntedSystem.ambush_despawn_timer);
-                    total_units = total_units + unitSpawn;
+                    total_units += unitSpawn;
                 }
             }
         }
