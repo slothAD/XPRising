@@ -98,8 +98,6 @@ namespace RPGMods.Utils
                 Options = EntityQueryOptions.IncludeDisabled
             });
             allyBuffer = query.ToEntityArray(Allocator.Temp);
-            //NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
-            //Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
             if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got connected PC entities buffer of length " + allyBuffer.Length);
 
             int allyCount = 0;
@@ -115,7 +113,6 @@ namespace RPGMods.Utils
                     }
                     bool allies = false;
                     try {
-                            //allies = Helper.SGM.IsAllies(entity, PlayerCharacter);
                             if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get teams ");
                             bool team1Found = Plugin.Server.EntityManager.TryGetComponentData<Team>(entity, out Team t1);
                             if (ExperienceSystem.xpLogging) {
@@ -753,10 +750,20 @@ namespace RPGMods.Utils
 
         };
 
-        public static void confirmFile (string address) {
-            if (!File.Exists(address)) {
-                FileStream stream = File.Create(address);
-                stream.Dispose();
+        public static void confirmFile (string address, string file) {
+            try {
+                Directory.CreateDirectory(address);
+            }
+            catch (Exception e) {
+                Plugin.Logger.LogWarning(DateTime.Now +": Error creating directory at " + address + "\n Error is: " + e.Message);
+            }
+            try {
+                if (!File.Exists(address + file)) {
+                    FileStream stream = File.Create(address + file);
+                    stream.Dispose();
+                }
+            } catch (Exception e) {
+                Plugin.Logger.LogWarning(DateTime.Now + ": Error creating directory at " + address + "\n Error is: " + e.Message);
             }
         }
         public static String statTypeToString(UnitStatType type)

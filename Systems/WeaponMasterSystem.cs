@@ -558,8 +558,8 @@ namespace RPGMods.Systems
         public static void LoadWeaponMastery() {
 
             string specificName = "weaponMastery.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"weaponMastery.json");
             try {
                 Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
@@ -574,8 +574,8 @@ namespace RPGMods.Systems
             }
 
             specificName = "weaponMastery.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
             try{
                 Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
@@ -591,8 +591,8 @@ namespace RPGMods.Systems
             }
 
             specificName = "player_log_mastery.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
             try{
                 Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

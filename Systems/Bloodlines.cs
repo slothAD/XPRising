@@ -394,8 +394,8 @@ namespace RPGMods.Systems
 
         public static void loadBloodlines() {
             string specificName = "bloodlines.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
 
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
             try {
@@ -412,8 +412,8 @@ namespace RPGMods.Systems
 
 
             specificName = "bloodline_decay.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
             try {
                 Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
@@ -429,8 +429,8 @@ namespace RPGMods.Systems
 
 
             specificName = "player_log_bloodlines.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"player_log_bloodlines.json");
             try {
                 Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

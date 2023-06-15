@@ -361,8 +361,8 @@ namespace RPGMods.Systems
 
         public static void LoadEXPData() {
             string specificName = "player_experience.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
             try{
                 Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -387,7 +387,7 @@ namespace RPGMods.Systems
                 wasExperienceClassesCreated = true;
                 stream.Dispose();
             }
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
             try{
                 Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
@@ -408,8 +408,8 @@ namespace RPGMods.Systems
             }
 
             specificName = "player_abilitypoints.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
             try{
                 Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -426,8 +426,8 @@ namespace RPGMods.Systems
 
 
             specificName = "player_level_stats.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
             try{
                 Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(json);
@@ -443,8 +443,8 @@ namespace RPGMods.Systems
             }
 
             specificName = "player_log_exp.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
             try{
                 Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

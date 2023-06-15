@@ -5,7 +5,6 @@ using ProjectM.Network;
 using ProjectM;
 using RPGMods.Utils;
 using RPGMods.Systems;
-using static ProjectM.UI.PowerSelectionMenu;
 using System.Collections.Generic;
 using ProjectM.Scripting;
 

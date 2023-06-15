@@ -45,8 +45,8 @@ namespace RPGMods.Commands
 
         public static void LoadGodMode() {
             string specificName = "godmode.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificName);
             try {
                 Database.godmode = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

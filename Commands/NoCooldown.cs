@@ -50,8 +50,8 @@ namespace RPGMods.Commands
 
         public static void LoadNoCooldown() {
             string specificName = "nocooldown.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
             try {
                 Database.nocooldownlist = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

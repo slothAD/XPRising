@@ -78,8 +78,8 @@ namespace RPGMods.Commands
 
         public static void LoadPowerUp() {
             string specificName = "powerup.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder + specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder + specificName);
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
             if (!File.Exists(AutoSaveSystem.mainSaveFolder+ specificName))
             {
                 var stream = File.Create(AutoSaveSystem.mainSaveFolder+specificName);
