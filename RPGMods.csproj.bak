@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>RPGMods</AssemblyName>
     <Description>RPG Mods combined with ChatCommands</Description>
-    <Version>1.5.0</Version>
+    <Version>1.6.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -20,7 +20,7 @@
   <ItemGroup>
 	<PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be*" IncludeAssets="compile" />
 	<PackageReference Include="BepInEx.Core" Version="6.0.0-be*" IncludeAssets="compile" />
-	<PackageReference Include="VRising.Unhollowed.Client" Version="0.6.1.*" />
+	<PackageReference Include="VRising.Unhollowed.Client" Version="0.6.5.57575003" />
     <PackageReference Include="VRising.VampireCommandFramework" Version="[0.4.12,0.5.0)" />
     <PackageReference Include="Costura.Fody" Version="5.8.0-alpha0098">
       <PrivateAssets>all</PrivateAssets>

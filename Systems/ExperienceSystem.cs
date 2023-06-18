@@ -15,6 +15,7 @@ using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
 using Unity.Entities.UniversalDelegates;
 using MS.Internal.Xml.XPath;
+using Steamworks;
 
 namespace RPGMods.Systems
 {
@@ -151,6 +152,7 @@ namespace RPGMods.Systems
             //var user_component = entityManager.GetComponentData<User>(user);
             if (EXPGain > 0) {
                 bool gotUser = entityManager.TryGetComponentData<User>(user, out User user_component);
+                ulong SteamID;
                 if (!gotUser) {
                     bool gotPC = entityManager.TryGetComponentData<PlayerCharacter>(user, out PlayerCharacter pc);
                     if (!gotPC) {
@@ -160,17 +162,23 @@ namespace RPGMods.Systems
                         bool gotUserComponent = entityManager.TryGetComponentData<User>(userEntity, out user_component);
                         if (!gotUserComponent) {
                             Plugin.Logger.LogInfo(DateTime.Now + ": User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(userEntity));
-
+                        }
+                        SteamID = user_component.PlatformId;
+                        if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging)) {
+                            if (isLogging) {
+                                Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGain} experience points by participating in the killing of an enemy.</color>");
+                            }
                         }
                     }
                     
                 }
+                SteamID = user_component.PlatformId;
                 if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get allies exp");
-                Database.player_experience.TryGetValue(user_component.PlatformId, out var exp);
+                Database.player_experience.TryGetValue(SteamID, out var exp);
                 if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to set allies exp");
-                Database.player_experience[user_component.PlatformId] = exp + EXPGain;
+                Database.player_experience[SteamID] = exp + EXPGain;
                 if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Set Level for Ally");
-                SetLevel(user_component.LocalCharacter._Entity, user, user_component.PlatformId);
+                SetLevel(user_component.LocalCharacter._Entity, user, SteamID);
             }
         }
 

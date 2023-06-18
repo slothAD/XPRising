@@ -23,22 +23,13 @@ using Wetstone.API;
 
 namespace RPGMods
 {
-    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.5.1")]
+    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.6.2")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
 
-#if WETSTONE
-    [BepInDependency("xyz.molenzwiebel.wetstone")]
-    [Reloadable]
-    public class Plugin : BasePlugin, IRunOnInitialized
-#else
     public class Plugin : BasePlugin
-#endif
     {
         public static Harmony harmony;
 
-        private static ConfigEntry<string> Prefix;
-        private static ConfigEntry<string> DisabledCommands;
-        private static ConfigEntry<float> DelayedCommands;
         private static ConfigEntry<int> WaypointLimit;
 
         private static ConfigEntry<bool> EnableVIPSystem;
@@ -196,6 +187,9 @@ namespace RPGMods
         private static ConfigEntry<bool> EnableWorldDynamics;
         private static ConfigEntry<bool> WDGrowOnKill;
 
+        private static ConfigEntry<bool> buffLogging;
+        private static ConfigEntry<bool> xpLogging;
+
 
         public static bool isInitialized = false;
 
@@ -228,13 +222,8 @@ namespace RPGMods
             return null;
         }
 
-        public void InitConfig()
-        {
-            Prefix = Config.Bind("Config", "Prefix", ".", "The prefix used for chat commands.");
-            DelayedCommands = Config.Bind("Config", "Command Delay", 5f, "The number of seconds user need to wait out before sending another command.\n" +
-                "Admin will always bypass this.");
-            DisabledCommands = Config.Bind("Config", "Disabled Commands", "", "Enter command names to disable them, abbreviation are included automatically. Seperated by commas.\n" +
-                "Ex.: save,godmode");
+        public void InitConfig(){
+
             WaypointLimit = Config.Bind("Config", "Waypoint Limit", 3, "Set a waypoint limit per user.");
 
             EnableVIPSystem = Config.Bind("VIP", "Enable VIP System", false, "Enable the VIP System.");
@@ -425,8 +414,11 @@ namespace RPGMods
 
 
 
-            EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
+            EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
+
+            xpLogging = Config.Bind("Debug", "XP system logging", false, "Logs detailed information about the experience system in your console, enable before sending me any errors with the xp system!");
+            buffLogging = Config.Bind("Debug", "Buff system logging", false, "Logs detailed information about the buff system in your console, enable before sending me any errors with the buff system!");
 
             if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
             if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
@@ -440,6 +432,10 @@ namespace RPGMods
 
         public override void Load()
         {
+            if (!IsServer) {
+                Log.LogWarning("RPGMods is a server plugin. Not continuing to load on client.");
+                return;
+            }
             InitConfig();
             Logger = Log;
             harmony = new Harmony("RPGMods");
@@ -664,6 +660,9 @@ namespace RPGMods
 
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
             WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
+
+            ExperienceSystem.xpLogging = xpLogging.Value;
+            ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging = buffLogging.Value;
 
             isInitialized = true;
         }
