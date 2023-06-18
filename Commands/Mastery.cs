@@ -1,17 +1,14 @@
 ﻿using ProjectM;
+using ProjectM.Behaviours;
 using ProjectM.Network;
 using RPGMods.Systems;
 using RPGMods.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands
-{
-    //[Command("mastery, m", Usage = "mastery [<log> <on>|<off>] [<reset> all|(mastery type)]", Description = "Display your current mastery progression, toggle the gain notification, or reset your mastery to gain effectiveness.")]
-
+namespace RPGMods.Commands{
     [CommandGroup("mastery", "m")]
-    public static class Mastery
-    {
+    public static class Mastery{
         private static EntityManager entityManager = Plugin.Server.EntityManager;
         public static bool detailedStatements = true;
 
@@ -120,17 +117,6 @@ namespace RPGMods.Commands
                 ctx.Reply($"{name.ToUpper()} Mastery type not found! did you typo?");
                 return;
             }
-            /*
-            if (MasteryType.Equals("sword")) type = (int)WeaponType.Sword + 1;
-            else if (MasteryType.Equals("none") || MasteryType.Equals("unarmed")) type = (int)WeaponType.None + 1;
-            else if (MasteryType.Equals("spear")) type = (int)WeaponType.Spear + 1;
-            else if (MasteryType.Equals("crossbow")) type = (int)WeaponType.Crossbow + 1;
-            else if (MasteryType.Equals("slashers")) type = (int)WeaponType.Slashers + 1;
-            else if (MasteryType.Equals("scythe")) type = (int)WeaponType.Scythe + 1;
-            else if (MasteryType.Equals("fishingpole")) type = (int)WeaponType.FishingPole + 1;
-            else if (MasteryType.Equals("mace")) type = (int)WeaponType.Mace + 1;
-            else if (MasteryType.Equals("axes")) type = (int)WeaponType.Axes + 1;
-            else if (MasteryType.Equals("spell")) type = 0;*/
 
             WeaponMasterSystem.modMastery(SteamID, type, (amount));
             ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount:F2}%</color>");
@@ -189,25 +175,17 @@ namespace RPGMods.Commands
         [Command("reset", "r", "[weaponType]", "Resets a mastery to gain more power with it.", adminOnly: false)]
         public static void resetMastery(ChatCommandContext ctx, string name)
         {
-            if (!WeaponMasterSystem.isMasteryEnabled)
-            {
+            if (!WeaponMasterSystem.isMasteryEnabled){
                 ctx.Reply("Weapon Mastery system is not enabled.");
                 return;
             }
             var SteamID = ctx.Event.User.PlatformId;
             string MasteryType = name.ToLower();
-            int type = 0;
-            if (MasteryType.Equals("sword")) type = (int)WeaponType.Sword + 1;
-            else if (MasteryType.Equals("none") || MasteryType.Equals("unarmed")) type = (int)WeaponType.None + 1;
-            else if (MasteryType.Equals("spear")) type = (int)WeaponType.Spear + 1;
-            else if (MasteryType.Equals("crossbow")) type = (int)WeaponType.Crossbow + 1;
-            else if (MasteryType.Equals("slashers")) type = (int)WeaponType.Slashers + 1;
-            else if (MasteryType.Equals("scythe")) type = (int)WeaponType.Scythe + 1;
-            else if (MasteryType.Equals("fishingpole")) type = (int)WeaponType.FishingPole + 1;
-            else if (MasteryType.Equals("mace")) type = (int)WeaponType.Mace + 1;
-            else if (MasteryType.Equals("axes")) type = (int)WeaponType.Axes + 1;
-            else if (MasteryType.Equals("spell")) type = 0;
-            else if (MasteryType.Equals("all")) type = -1;
+            bool typeFound = WeaponMasterSystem.nameMap.TryGetValue(MasteryType, out int type);
+            if (!typeFound) {
+                ctx.Reply($"{name.ToUpper()} Mastery type not found! did you typo?");
+                return;
+            }
             ctx.Reply("Resetting " + WeaponMasterSystem.typeToName(type) + " Mastery");
             WeaponMasterSystem.resetMastery(SteamID, type);
         }

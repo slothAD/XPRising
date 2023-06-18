@@ -458,7 +458,7 @@ namespace RPGMods.Systems
                     else {
                         double gpe = -1 * growthPerEfficency;
                         value = value / (value + gpe);
-                        wd.growth[type] = Math.Max(minGrowth, wd.growth[type] * value );
+                        wd.growth[type] = Math.Max(minGrowth, wd.growth[type] * (1-value) );
                     }
                 }
             }

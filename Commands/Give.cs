@@ -5,8 +5,6 @@ using System.Linq;
 using VampireCommandFramework;
 
 namespace RPGMods.Commands{
-    //[Command("give, g", Usage = "give <itemname> [<amount>]", Description = "Adds specified items to your inventory")]
-    //[CommandGroup("Give", "g")]
     public static class Give{
 
         [Command("Give", "g", "\"<itemName>\" <amount>", "Adds specified items to your inventory", adminOnly: true)]

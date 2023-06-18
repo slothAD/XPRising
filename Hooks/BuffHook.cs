@@ -266,7 +266,7 @@ namespace RPGMods.Hooks
             {
                 Buffer.Add(Cooldown);
             }
-            /*
+            
             if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Sun Immunity Command");
             if (Database.sunimmunity.ContainsKey(Data.PlatformId))
             {
@@ -300,7 +300,7 @@ namespace RPGMods.Hooks
                 Buffer.Add(SunCharge);
                 Buffer.Add(DurabilityLoss);
             }
-            */
+            
             if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Done Adding, Buffer length: " + Buffer.Length);
 
         }

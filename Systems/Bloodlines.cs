@@ -263,7 +263,7 @@ namespace RPGMods.Systems
                 else {
                     double gpe = -1 * growthPerEfficency;
                     value = value / (value + gpe);
-                    bld.growth[type] = Math.Max(minBloodlineGrowth, bld.growth[type] * value);
+                    bld.growth[type] = Math.Max(minBloodlineGrowth, bld.growth[type] * (1-value));
                 }
             }
             Database.playerBloodline[SteamID] = bld;

@@ -7,7 +7,6 @@ using VampireCommandFramework;
 
 namespace RPGMods.Commands
 {
-    //[Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>] [<ability> \"ability\"", Description = "Shows your current experience and progression to next level, toggle the exp gain notification, or spend earned ability points.")]
 
     [CommandGroup("experience","xp")]
     public static class Experience{

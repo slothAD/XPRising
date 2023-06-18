@@ -1,15 +1,16 @@
-﻿using RPGMods.Utils;
+﻿using ProjectM;
+using RPGMods.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using VampireCommandFramework;
 
 namespace RPGMods.Commands
-{/*
-    [Command("speed", Usage = "speed", Description = "Toggles increased movement speed.")]
+{
 
-    public static class Speed
-    {
-        public static void Initialize(Context ctx)
+    public static class Speed {
+        [Command("speed", description: "Toggles increased movement speed.", adminOnly:true )]
+        public static void Initialize(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isSpeeding = Database.speeding.TryGetValue(SteamID, out bool isSpeeding_);
@@ -21,7 +22,7 @@ namespace RPGMods.Commands
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        public static bool UpdateSpeed(Context ctx, bool isGodMode)
+        public static bool UpdateSpeed(ChatCommandContext ctx, bool isGodMode)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.speeding.TryGetValue(SteamID, out bool isSpeeding_);
@@ -35,7 +36,7 @@ namespace RPGMods.Commands
             File.WriteAllText(AutoSaveSystem.mainSaveFolder+"speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
         }
 
-        public static bool RemoveSpeed(Context ctx)
+        public static bool RemoveSpeed(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId; ;
             if (Database.speeding.TryGetValue(SteamID, out bool isGodMode_))
@@ -46,24 +47,24 @@ namespace RPGMods.Commands
             return false;
         }
 
-        public static void LoadSpeed()
-        {
-            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"speeding.json"))
-            {
-                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"speeding.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"speeding.json");
-            try
-            {
+        public static void LoadSpeed(){
+
+
+            string specificFile = "speeding.json";
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificFile);
+            try {
                 Database.speeding = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                if (Database.speeding == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificFile);
+                    Database.speeding = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
+                }
                 Plugin.Logger.LogWarning("Speed DB Populated.");
-            }
-            catch
-            {
+            } catch {
                 Database.speeding = new Dictionary<ulong, bool>();
                 Plugin.Logger.LogWarning("Speed DB Created.");
             }
         }
-    }*/
+    }
 }
