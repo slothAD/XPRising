@@ -21,8 +21,9 @@ namespace RPGMods.Hooks
                     var Duration = __instance.EntityManager.GetComponentData<LifeTime>(entity).Duration;
                     if (Duration == HunterHuntedSystem.ambush_despawn_timer)
                     {
+                        // Change faction to Vampire Hunters for spawned units
                         var Faction = __instance.EntityManager.GetComponentData<FactionReference>(entity);
-                        Faction.FactionGuid.ApplyModification(Helper.SGM, entity, entity, ModificationType.Set, new PrefabGUID(2120169232));
+                        Faction.FactionGuid = ModifiablePrefabGUID.Create(entity, __instance.EntityManager, new PrefabGUID(2120169232));
                         __instance.EntityManager.SetComponentData(entity, Faction);
                     }
 

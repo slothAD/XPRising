@@ -49,11 +49,11 @@ namespace RPGMods.Utils
             GodMode.LoadGodMode();
             PowerUp.LoadPowerUp();
 
+            AutoRespawn.LoadAutoRespawn();
             /*
             SunImmunity.LoadSunImmunity();
             Waypoint.LoadWaypoints();
             Speed.LoadSpeed();
-            AutoRespawn.LoadAutoRespawn();
             Kit.LoadKits();*/
 
             //-- System Related
