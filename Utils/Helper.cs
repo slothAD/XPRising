@@ -763,7 +763,7 @@ namespace RPGMods.Utils
                     stream.Dispose();
                 }
             } catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now + ": Error creating directory at " + address + "\n Error is: " + e.Message);
+                Plugin.Logger.LogWarning(DateTime.Now + ": Error creating file at " + address + "\n Error is: " + e.Message);
             }
         }
         public static String statTypeToString(UnitStatType type)

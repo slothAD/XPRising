@@ -199,9 +199,10 @@ namespace RPGMods.Systems
 
             if (Database.player_log_mastery.TryGetValue(SteamID, out bool isLogging))
             {
-                if (isLogging)
-                {
-                    Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {MasteryValue}%</color>");
+                if (isLogging) {
+                    string weaponTypeName = typeToName(weapon);
+                    double currentMastery = masteryDataByType(weapon, SteamID);
+                    Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {MasteryValue:#.###}% [ {weaponTypeName}: {currentMastery:F2}% ]</color>");
                 }
             }
         }
@@ -269,7 +270,7 @@ namespace RPGMods.Systems
                 {
                     int DecayValue = Offline_DecayValue * DecayTicks *-1;
 
-                    Output.SendLore(userEntity, $"You've been sleeping for {(int)elapsed_time.TotalMinutes} minute(s). Your mastery has decayed by {DecayValue * 0.001}%");
+                    Output.SendLore(userEntity, $"You've been sleeping for {(int)elapsed_time.TotalMinutes} minute(s). Your mastery has decayed by {DecayValue * 0.001:F3}%");
 
                     for(int i = 0; i < masteryStats.Length; i++){
                         modMastery(SteamID, i, DecayValue);

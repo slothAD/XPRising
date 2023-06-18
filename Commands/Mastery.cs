@@ -87,14 +87,14 @@ namespace RPGMods.Commands
                 effectiveness = wd.efficency[weapon];
                 growth = wd.growth[weapon];
             }
-            print = $"{name}:<color=#fffffffe> {masteryPercent}%</color> (";
+            print = $"{name}:<color=#fffffffe> {masteryPercent:F2}%</color> (";
             for (int i = 0; i < WeaponMasterSystem.masteryStats[weapon].Length; i++)
             {
                 if (i > 0)
                     print += ",";
                 print += Helper.statTypeToString((UnitStatType)WeaponMasterSystem.masteryStats[weapon][i]);
                 print += " <color=#75FF33>";
-                print += WeaponMasterSystem.calcBuffValue(weapon, masteryPercent, SteamID, i);
+                print += $"{WeaponMasterSystem.calcBuffValue(weapon, masteryPercent, SteamID, i):F2}";
                 print += "</color>";
             }
             print += $") Effectiveness: {effectiveness * 100}%, Growth: {growth * 100}%";
@@ -133,7 +133,7 @@ namespace RPGMods.Commands
             else if (MasteryType.Equals("spell")) type = 0;*/
 
             WeaponMasterSystem.modMastery(SteamID, type, (amount));
-            ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount}%</color>");
+            ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount:F2}%</color>");
             Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
         
@@ -160,7 +160,7 @@ namespace RPGMods.Commands
 
             WeaponMasterSystem.modMastery(SteamID, type, -100000);
             WeaponMasterSystem.modMastery(SteamID, type, (value));
-            ctx.Reply($"{MasteryType} Mastery for \"{name}\" set to <color=#fffffffe>{value}%</color>");
+            ctx.Reply($"{MasteryType} Mastery for \"{name}\" set to <color=#fffffffe>{value:F2}%</color>");
         }
 
         [Command("log", "l", "<On, Off>", "Turns on or off logging of mastery gain.", adminOnly: false)]

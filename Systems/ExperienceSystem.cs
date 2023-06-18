@@ -134,15 +134,15 @@ namespace RPGMods.Systems
                 }
             }
 
-            if (exp <= 0) Database.player_experience[SteamID] = EXPGained;
-            else Database.player_experience[SteamID] = exp + EXPGained;
+            int currentXP = exp <= 0 ? EXPGained : exp + EXPGained;
+            Database.player_experience[SteamID] = currentXP;
 
             SetLevel(killerEntity, userEntity, SteamID);
             if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging))
             {
-                if (isLogging)
-                {
-                    Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGained} experience points by slaying a Lv.{UnitLevel.Level} enemy.</color>");
+                if (isLogging) {
+                    GetLevelAndProgress(currentXP, out int progress, out int earned, out int needed);
+                    Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGained} XP by slaying a Lv.{UnitLevel.Level} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
                 }
             }
         }
@@ -198,10 +198,12 @@ namespace RPGMods.Systems
                 EXPLost = (int)(variableEXP * EXPLostOnDeath);
             }
 
-            Database.player_experience[SteamID] = exp - EXPLost;
+            int currentXp = exp - EXPLost;
+            Database.player_experience[SteamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, SteamID);
-            Output.SendLore(userEntity, $"You've been defeated,<color=#fffffffe> {EXPLostOnDeath * 100}%</color> experience is lost.");
+            GetLevelAndProgress(currentXp, out int progress, out int earned, out int needed);
+            Output.SendLore(userEntity, $"You've been defeated,<color=#fffffffe> {EXPLostOnDeath * 100}%</color> XP is lost. [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
         }
 
         public static void BuffReceiver(Entity buffEntity)
@@ -230,8 +232,8 @@ namespace RPGMods.Systems
                 Database.player_experience[SteamID] = convertLevelToXp(MaxLevel);
             }
 
-            bool isLastLevel = Cache.player_level.TryGetValue(SteamID, out var level_);
-            if (isLastLevel){
+            bool levelDataExists = Cache.player_level.TryGetValue(SteamID, out var level_);
+            if (levelDataExists){
                 if (level_ < level) 
                 {
                     Cache.player_level[SteamID] = level;
@@ -346,16 +348,15 @@ namespace RPGMods.Systems
             return convertXpToLevel(getXp(SteamID));
         }
 
-        public static int getLevelProgress(ulong SteamID)
-        {
-            int currentXP = getXp(SteamID);
-            int currentLevelXP = convertLevelToXp(getLevel(SteamID));
-            int nextLevelXP = convertLevelToXp(getLevel(SteamID) + 1);
+        public static void GetLevelAndProgress(int currentXp, out int progressPercent, out int earnedXp, out int neededXp) {
+            var currentLevel = convertXpToLevel(currentXp);
+            var currentLevelXp = convertLevelToXp(currentLevel);
+            var nextLevelXp = convertLevelToXp(currentLevel + 1);
 
-            double neededXP = nextLevelXP - currentLevelXP;
-            double earnedXP = nextLevelXP - currentXP;
-
-            return 100 - (int)Math.Ceiling(earnedXP / neededXP * 100);
+            neededXp = nextLevelXp - currentLevelXp;
+            earnedXp = currentXp - currentLevelXp;
+            
+            progressPercent = (int)Math.Floor((double)earnedXp / neededXp * 100.0);
         }
 
         public static void SaveEXPData(string saveFolder)

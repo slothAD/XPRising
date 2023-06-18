@@ -56,6 +56,7 @@ namespace RPGMods.Utils
             AutoRespawn.LoadAutoRespawn();
             Kit.LoadKits();*/
 
+
             //-- System Related
             PvPSystem.LoadPvPStat();
             ExperienceSystem.LoadEXPData();
