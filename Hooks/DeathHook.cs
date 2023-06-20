@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
 using RPGMods.Commands;
@@ -11,6 +12,7 @@ namespace RPGMods.Hooks {
 [HarmonyPatch]
 public class DeathEventListenerSystem_Patch
 {
+    public static bool deathLogging = false;
     [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
     [HarmonyPostfix]
     public static void Postfix(DeathEventListenerSystem __instance)
@@ -24,13 +26,24 @@ public class DeathEventListenerSystem_Patch
                 if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
 
                 //-- Player Creature Kill Tracking
-                if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died))
+                var killer = ev.Killer;
+                
+                // If the entity killing is a minion, switch the killer to the owner of the minion.
+                if (__instance.EntityManager.HasComponent<Minion>(killer)) {
+                    if (deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Minion killed entity. Getting owner...");
+                    if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner)) {
+                        killer = entityOwner.Owner;
+                        if (deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Owner found, switching killer to owner.");
+                    }
+                }
+                
+                if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died))
                 {
-                    if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(ev.Killer, ev.Died);
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerUpdateHeat(ev.Killer, ev.Died);
-                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(ev.Killer, ev.Died);
-                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(ev.Killer, ev.Died);
-                    if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(ev.Killer, ev.Died);
+                    if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(killer, ev.Died);
+                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerUpdateHeat(killer, ev.Died);
+                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
+                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
+                    if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(killer, ev.Died);
 
                 }
                 //-- ----------------------
