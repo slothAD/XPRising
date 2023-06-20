@@ -186,7 +186,7 @@ namespace RPGMods.Systems
                 Database.IgnoredMonstersGUID = new HashSet<PrefabGUID>();
                 foreach (var item in Database.IgnoredMonsters)
                 {
-                    if (Database.database_units.TryGetValue(item, out var GUID))
+                    if (Prefabs.Units.TryGetValue(item, out var GUID))
                     {
                         Database.IgnoredMonstersGUID.Add(GUID);
                     }
@@ -199,7 +199,7 @@ namespace RPGMods.Systems
                 Database.IgnoredMonstersGUID = new HashSet<PrefabGUID>();
 
                 Database.IgnoredMonsters.Add("CHAR_Undead_Banshee");
-                Database.IgnoredMonstersGUID.Add(Database.database_units["CHAR_Undead_Banshee"]);
+                Database.IgnoredMonstersGUID.Add(Prefabs.Units["CHAR_Undead_Banshee"]);
 
                 SaveIgnoredMobs();
 

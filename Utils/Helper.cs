@@ -573,7 +573,7 @@ namespace RPGMods.Utils
             identifier = 0f;
             float default_duration = 5.0f;
             float duration_final;
-            var isFound = Database.database_units.TryGetValue(name, out var unit);
+            var isFound = Prefabs.Units.TryGetValue(name, out var unit);
             if (!isFound) return false;
 
             float UniqueID = (float)rand.NextDouble();
@@ -600,7 +600,7 @@ namespace RPGMods.Utils
 
         public static bool SpawnAtPosition(Entity user, string name, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
         {
-            var isFound = Database.database_units.TryGetValue(name, out var unit);
+            var isFound = Prefabs.Units.TryGetValue(name, out var unit);
             if (!isFound) return false;
 
             //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
