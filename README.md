@@ -130,14 +130,16 @@ On by default, and only works if efficency is also on, but when you reset, the G
 ## HunterHunted System
 <details>
 <summary>Heat System</summary>
-A new system where every NPC you kill contributes to a heat system,\
-if you kill too many NPCs from that faction, eventually your heat level will rise higher and higher.\
+A new system where every NPC you kill contributes to a wanted level system,\
+if you kill too many NPCs from that faction, eventually your wanted level will rise higher and higher.\
 
-The higher your heat level is, a more difficult squad of ambushers will be sent by that faction to kill you.\
-Heat level will eventually cooldown the longer you go without killing NPCs from that faction,\
+The higher your wanted level is, a more difficult squad of ambushers will be sent by that faction to kill you.\
+Wanted level will eventually cooldown the longer you go without killing NPCs from that faction,\
 space your kills so you don't get hunted by an extremely elite group of assassins.\
 
-Otherwise, if you are dead for any reason at all, your heat/wanted level will reset back to anonymous.\
+Another way of lowering your wanted level is to kill Vampire Hunters.
+
+Otherwise, if you are dead for any reason at all, your wanted level will reset back to anonymous.\
 ```
 Note:
 - Ambush may only occur when the player is in combat.
@@ -576,8 +578,8 @@ The permissions are saved in `BepInEx/config/RPGMods/command_permission.json`
   "pvp_args": 100,
   "siege": 0,
   "siege_args": 100,
-  "heat": 0,
-  "heat_args": 100,
+  "wanted": 0,
+  "wanted_args": 100,
   "experience": 0,
   "experience_args": 100,
   "mastery": 0,

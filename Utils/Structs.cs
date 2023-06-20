@@ -1,11 +1,9 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Commands;
 using RPGMods.Systems;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -79,20 +77,19 @@ namespace RPGMods.Utils
         public struct Heat {
             public int level { get; set; }
             public DateTime lastAmbushed { get; set; }
+
+            public Heat() {
+                level = 0;
+                lastAmbushed = DateTime.Now - TimeSpan.FromSeconds(HunterHuntedSystem.ambush_interval);
+            }
         }
-        public Dictionary<FactionHeat.Faction, Heat> heat { get; } = new();
-        public DateTime lastUpdate { get; set; }
+        public Dictionary<Faction.Type, Heat> heat { get; } = new();
+        public DateTime lastCooldown { get; set; }
 
         public PlayerHeatData() {
-        }
-
-        public override string ToString() {
-            StringBuilder sb = new StringBuilder();
-            foreach (FactionHeat.Faction faction in Enum.GetValues<FactionHeat.Faction>()) {
-                sb.AppendJoin(" | ", $"{Enum.GetName(faction)}: {Color.White(heat[faction].level.ToString())}");
+            foreach (Faction.Type faction in FactionHeat.ActiveFactions) {
+                heat[faction] = new();
             }
-
-            return sb.ToString();
         }
     }
 

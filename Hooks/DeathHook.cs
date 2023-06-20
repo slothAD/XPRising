@@ -40,7 +40,7 @@ public class DeathEventListenerSystem_Patch
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died))
                 {
                     if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(killer, ev.Died);
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerUpdateHeat(killer, ev.Died);
+                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(killer, ev.Died);
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
                     if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
                     if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(killer, ev.Died);
@@ -51,20 +51,12 @@ public class DeathEventListenerSystem_Patch
                 //-- Auto Respawn & HunterHunted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died))
                 {
+                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
+                    
                     PlayerCharacter player = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Died);
                     Entity userEntity = player.UserEntity;
                     User user = __instance.EntityManager.GetComponentData<User>(userEntity);
                     ulong SteamID = user.PlatformId;
-
-                    //-- Reset the heat level of the player
-                    if (HunterHuntedSystem.isActive && Cache.heatCache.TryGetValue(SteamID, out var heatData)) {
-                        foreach (var faction in Enum.GetValues<FactionHeat.Faction>()) {
-                            var heat = heatData.heat[faction];
-                            heat.level = 0;
-                            heatData.heat[faction] = heat;
-                            Cache.heatCache[SteamID] = heatData;
-                        }
-                    }
                     //-- ----------------------------------
 
                     //-- Check for AutoRespawn

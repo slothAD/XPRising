@@ -1,141 +1,209 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using ProjectM;
 using ProjectM.Network;
 using Unity.Entities;
 
 namespace RPGMods.Utils;
 
 public static class FactionHeat {
-    // Ideally this would be a higher level enum to have consistent faction support across features
-    public enum Faction {
-        Human,
-        Bandit,
-        Undead,
-    }
+    public static readonly Faction.Type[] ActiveFactions = { Faction.Type.Militia, Faction.Type.Bandits, Faction.Type.Undead };
     
     private static readonly string[] ColourGradient = { "fef001", "ffce03", "fd9a01", "fd6104", "ff2c05", "f00505" };
 
-    private struct FactionState {
-        public int HeatLevel { get; }
-        public int UpperHeat { get; }
-        public string StateMessage { get; }
-        public string AmbushMessage { get; }
+    private struct UnitSpawn {
+        public int group { get; }
+        public int minCount { get; }
+        public int maxCount { get; }
 
-        public FactionState(int level, int heat, string state, string ambush) {
-            HeatLevel = level;
-            UpperHeat = heat;
-            StateMessage = state;
-            AmbushMessage = ambush;
+        public UnitSpawn(int g, int min, int max) {
+            group = g;
+            minCount = min;
+            maxCount = max;
+        }
+        
+        public UnitSpawn(int g, int count) {
+            group = g;
+            minCount = count;
+            maxCount = count;
+        }
+    }
+    
+    private struct AmbushLevel {
+        public string Message { get; }
+        public UnitSpawn[][] SquadOptions { get; }
+
+        public AmbushLevel(string ambush, UnitSpawn[][] squad) {
+            Message = ambush;
+            SquadOptions = squad;
         }
     }
 
-    private static readonly FactionState[] BanditHeatLevels =
+    private static readonly AmbushLevel[] BanditAmbushLevels =
     {
-        new(0, 150, "The bandits do not recognise you...", ""),
-        new(1, 250, "The bandits are hunting you...", "The bandits are ambushing you!"),
-        new(2, 450, "Small bandit squads are hunting you...", "A small bandit squad is ambushing you!"),
-        new(3, 650, "Large bandit squads are hunting you...", "A large bandit squad is ambushing you!"),
-        new(4, 1000, "The bandits really wants you dead...", "The bandits are ambushing you with as many people they can spare!")
+        new("The bandits are ambushing you!", new[] { new[] { new UnitSpawn(0, 3)} }),
+        new("A small bandit squad is ambushing you!", new[] { new[] { new UnitSpawn(0, 5)} }),
+        new("A large bandit squad is ambushing you!", new[] { new[] { new UnitSpawn(0, 10, 15)} }),
+        new("The bandits are ambushing you with as many people they can spare!", new[] { new[] { new UnitSpawn(0, 20, 25)} })
     };
     
-    private static readonly FactionState[] HumanHeatLevels =
+    private static readonly AmbushLevel[] HumanAmbushLevels =
     {
-        new(0, 150, "The humans do not recognise you...", ""),
-        new(1, 250, "The humans are hunting you...", "A militia squad is ambushing you!"),
-        new(2, 500, "Humans soldiers are hunting you...", "A squad of soldiers is ambushing you!"),
-        new(3, 1000, "Humans elite squads are hunting you...", "An ambush squad from the Church has been sent to kill you!"),
-        new(4, 1500, "The Vampire Hunters are hunting you...", "The Vampire Hunters are ambushing you!"),
-        new(5, 2000, "YOU ARE A MENACE...", "An extermination squad has found you and wants you DEAD.")
+        new("A militia squad is ambushing you!", new[] { new[] { new UnitSpawn(1, 5, 10)} }),
+        new("A squad of soldiers is ambushing you!", new[] { new[] { new UnitSpawn(2, 10, 15)} }),
+        new("An ambush squad from the Church has been sent to kill you!", new[] { new[] { new UnitSpawn(3, 10, 15)} }),
+        new("The Vampire Hunters are ambushing you!", new[] { new[] { new UnitSpawn(4, 15, 20)}, new[] { new UnitSpawn(4, 9), new UnitSpawn(5, 1)} }),
+        new("An extermination squad has found you and wants you DEAD.", new[] { new[] { new UnitSpawn(4, 10, 20), new UnitSpawn(5, 2)} })
+    };
+    
+    private static readonly AmbushLevel[] UndeadAmbushLevels =
+    {
+        new("An undead squad is ambushing you!", new[] { new[] { new UnitSpawn(6, 5, 10)} }),
+        new("More undead are ambushing you!", new[] { new[] { new UnitSpawn(6, 10, 15)} }),
+        new("Strong undead have been summoned at you!", new[] { new[] { new UnitSpawn(7, 10, 15)} }),
+        new("Undead leaders have been summoned at you!", new[] { new[] { new UnitSpawn(7, 15, 20)}, new[] { new UnitSpawn(7, 9), new UnitSpawn(8, 1)} }),
+        new("The undead are here to kill you!", new[] { new[] { new UnitSpawn(7, 5, 10), new UnitSpawn(9, 1)} })
     };
 
-    private static FactionState GetFactionState(Faction faction, int heat) {
-        var factionStates = faction switch {
-                Faction.Human => HumanHeatLevels,
-                _ => BanditHeatLevels
+    private static readonly int[] HeatLevels = { 150, 250, 500, 1000, 1500, 3000 };
+
+    private static readonly AmbushLevel[] UnknownAmbushLevels = {new("", Array.Empty<UnitSpawn[]>())};
+
+    private static AmbushLevel GetFactionAmbushLevel(Faction.Type type, int wantedLevel) {
+        if (wantedLevel == 1) return UnknownAmbushLevels[0];
+        var factionStates = type switch {
+                Faction.Type.Militia => HumanAmbushLevels,
+                Faction.Type.Bandits => BanditAmbushLevels,
+                Faction.Type.Undead => UndeadAmbushLevels,
+                _ => UnknownAmbushLevels
             };
         
-        foreach (var t in factionStates) {
-            if (t.UpperHeat > heat) return t;
-        }
-
-        // Otherwise just return highest status
-        return factionStates[^1];
+        return factionStates[Math.Max(wantedLevel, factionStates.Length) - 1];
     }
 
-    public static string GetFactionStatus(Faction faction, int heat) {
-        return GetFactionState(faction, heat).StateMessage;
-    }
-
-    public static void Ambush(Entity userEntity, Entity playerEntity, Faction faction, int heatLevel, Random rand) {
-        var factionState = GetFactionState(faction, heatLevel);
-
-        if (factionState.HeatLevel == 0) return;
-
+    private static int vBloodMultiplier = 20;
+    public static void GetActiveFactionHeatValue(Faction.Type faction, bool isVBlood, out int heatValue, out Faction.Type activeFaction) {
         switch (faction) {
-            case Faction.Human:
-                HumanAmbush(userEntity, playerEntity, factionState, rand);
+            // Bandit
+            case Faction.Type.Traders_T01:
+                heatValue = 200; // Don't kill the merchants
+                activeFaction = Faction.Type.Bandits;
                 break;
-            case Faction.Bandit:
-                BanditAmbush(userEntity, playerEntity, factionState, rand);
+            case Faction.Type.Bandits:
+                heatValue = 10;
+                activeFaction = Faction.Type.Bandits;
                 break;
-            case Faction.Undead:
+            // Human
+            case Faction.Type.Militia:
+                heatValue = 10;
+                activeFaction = Faction.Type.Militia;
+                break;
+            case Faction.Type.ChurchOfLum_SpotShapeshiftVampire:
+                heatValue = 25;
+                activeFaction = Faction.Type.Militia;
+                break;
+            case Faction.Type.Traders_T02:
+                heatValue = 200; // Don't kill the merchants
+                activeFaction = Faction.Type.Militia;
+                break;
+            case Faction.Type.ChurchOfLum:
+                heatValue = 15;
+                activeFaction = Faction.Type.Militia;
+                break;
+            // Human: gloomrot
+            case Faction.Type.Gloomrot:
+                // TODO
+                heatValue = 0;
+                activeFaction = Faction.Type.Unknown;
+                break;
+            // Nature
+            case Faction.Type.Bear:
+            case Faction.Type.Critters:
+            case Faction.Type.Wolves:
+                // TODO
+                heatValue = 0;
+                activeFaction = Faction.Type.Unknown;
+                break;
+            // Undead
+            case Faction.Type.Undead:
+                heatValue = 3;
+                activeFaction = Faction.Type.Undead;
+                break;
+            // Werewolves
+            case Faction.Type.Werewolf:
+            case Faction.Type.WerewolfHuman:
+                // TODO
+                heatValue = 0;
+                activeFaction = Faction.Type.Unknown;
+                break;
+            case Faction.Type.VampireHunters:
+                heatValue = 10;
+                activeFaction = Faction.Type.VampireHunters;
+                break;
+            // Do nothing
+            case Faction.Type.ChurchOfLum_Slaves:
+            case Faction.Type.ChurchOfLum_Slaves_Rioters:
+            case Faction.Type.Cursed:
+            case Faction.Type.Elementals:
+            case Faction.Type.Ignored:
+            case Faction.Type.Harpy:
+            case Faction.Type.Mutants:
+            case Faction.Type.NatureSpirit:
+            case Faction.Type.Plants:
+            case Faction.Type.Players:
+            case Faction.Type.Players_Castle_Prisoners:
+            case Faction.Type.Players_Mutant:
+            case Faction.Type.Players_Shapeshift_Human:
+            case Faction.Type.Spiders:
+            case Faction.Type.Unknown:
+            case Faction.Type.Wendigo:
+            case Faction.Type.World_Prisoners:
+                heatValue = 0;
+                activeFaction = Faction.Type.Unknown;
                 break;
             default:
-                Plugin.Logger.LogWarning($"Ambush not yet supported for this faction: {Enum.GetName(faction)}");
+                Plugin.Logger.LogWarning($"Faction not handled for active faction: {Enum.GetName(faction)}");
+                heatValue = 0;
+                activeFaction = Faction.Type.Unknown;
                 break;
         }
+
+        if (isVBlood) heatValue *= vBloodMultiplier;
     }
 
-    private static void BanditAmbush(Entity userEntity, Entity playerEntity, FactionState factionState, Random rand) {
-        switch (factionState.HeatLevel) {
-            case 4:
-                SquadList.SpawnSquad(playerEntity, 0, rand.Next(20, 25));
-                break;
-            case 3:
-                SquadList.SpawnSquad(playerEntity, 0, rand.Next(10, 15));
-                break;
-            case 2:
-                SquadList.SpawnSquad(playerEntity, 0, 5);
-                break;
-            case 1:
-                SquadList.SpawnSquad(playerEntity, 0, 3);
-                break;
-            default:
-                // Do nothing
-                return;
-        }
-
-        Output.SendLore(userEntity, $"<color=#{ColourGradient[factionState.HeatLevel]}>{factionState.AmbushMessage}</color>");
+    public static string GetFactionStatus(Faction.Type type, int heat) {
+        var output = $"{Enum.GetName(type)}: ";
+        return HeatLevels.Aggregate(output, (current, t) => current + (heat < t ? "☆" : "★"));
     }
-    
-    private static void HumanAmbush(Entity userEntity, Entity playerEntity, FactionState factionState, Random rand) {
-        switch (factionState.HeatLevel) {
-            case 5:
-                SquadList.SpawnSquad(playerEntity, 4, rand.Next(10, 20));
-                SquadList.SpawnSquad(playerEntity, 5, 2);
-                break;
-            case 4:
-                if (rand.Next(0, 100) < 50) {
-                    SquadList.SpawnSquad(playerEntity, 5, 1);
-                    SquadList.SpawnSquad(playerEntity, 4, 9);
-                }
-                else {
-                    SquadList.SpawnSquad(playerEntity, 4, rand.Next(15, 20));
-                }
-                break;
-            case 3:
-                SquadList.SpawnSquad(playerEntity, 3, rand.Next(10, 15));
-                break;
-            case 2:
-                SquadList.SpawnSquad(playerEntity, 2, rand.Next(10, 15));
-                break;
-            case 1:
-                SquadList.SpawnSquad(playerEntity, 1, rand.Next(5, 10));
-                break;
-            default:
-                // Do nothing
-                return;
+
+    public static int GetWantedLevel(int heat) {
+        for (var i = 0; i < HeatLevels.Length; i++) {
+            if (HeatLevels[i] > heat) return i;
         }
 
-        Output.SendLore(userEntity, $"<color=#{ColourGradient[factionState.HeatLevel]}>{factionState.AmbushMessage}</color>");
+        return HeatLevels.Length;
+    }
+
+    public static void Ambush(Entity userEntity, Entity playerEntity, Faction.Type type, int heatLevel, Random rand) {
+        var wantedLevel = GetWantedLevel(heatLevel);
+        if (wantedLevel == 0) return;
+        
+        SquadList.SpawnSquad(playerEntity, type, wantedLevel);
+        var ambushLevel = GetFactionAmbushLevel(type, wantedLevel);
+        Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel]}>{ambushLevel.Message}</color>");
+        
+        // var ambushLevel = GetFactionAmbushLevel(type, wantedLevel);
+        //
+        // var squadOptions = ambushLevel.SquadOptions;
+        // if (squadOptions.Length > 0) {
+        //     var squadIndex = rand.Next(0, squadOptions.Length);
+        //     var squadDetails = squadOptions[squadIndex];
+        //
+        //     foreach (var spawn in squadDetails) {
+        //         SquadList.SpawnSquad(playerEntity, type, rand.Next(spawn.minCount, spawn.maxCount));
+        //     }
+        //     Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel]}>{ambushLevel.Message}</color>");
+        // }
     }
 }

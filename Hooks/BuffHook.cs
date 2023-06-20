@@ -462,7 +462,7 @@ namespace RPGMods.Hooks
             try
             {
                 if(targetIsInt) {
-                statInt.ApplyModification(sgm, e, e, buff.ModificationType, (int)buff.Value);
+                   statInt.ApplyModification(sgm, e, e, buff.ModificationType, (int)buff.Value);
                 }
                 else{
                     stat.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
@@ -510,11 +510,7 @@ namespace RPGMods.Hooks
                     if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
                     Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
 
-                    if (HunterHuntedSystem.isActive)
-                    {
-                        HunterHuntedSystem.HeatManager(e_User);
-                        HunterHuntedSystem.CheckForAmbush(e_User, e_Owner, true);
-                    }
+                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(e_User, e_Owner, true);
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.LoopMastery(e_User, e_Owner);
                     if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive) PvPSystem.OnCombatEngaged(entity, e_Owner);
                 }

@@ -23,7 +23,7 @@ namespace RPGMods.Hooks
                     {
                         // Change faction to Vampire Hunters for spawned units
                         var Faction = __instance.EntityManager.GetComponentData<FactionReference>(entity);
-                        Faction.FactionGuid = ModifiablePrefabGUID.Create(entity, __instance.EntityManager, new PrefabGUID(2120169232));
+                        Faction.FactionGuid = ModifiablePrefabGUID.Create(entity, __instance.EntityManager, new PrefabGUID((int)Utils.Faction.Type.VampireHunters));
                         __instance.EntityManager.SetComponentData(entity, Faction);
                     }
 

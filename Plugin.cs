@@ -81,7 +81,6 @@ namespace RPGMods
 
         private static ConfigEntry<bool> HunterHuntedEnabled;
         private static ConfigEntry<int> HeatCooldown;
-        private static ConfigEntry<int> CoolDown_Interval;
         private static ConfigEntry<int> Ambush_Interval;
         private static ConfigEntry<int> Ambush_Chance;
         private static ConfigEntry<float> Ambush_Despawn_Unit_Timer;
@@ -274,9 +273,8 @@ namespace RPGMods
             GolemSpellReduction = Config.Bind("Siege", "Spell Damage Reduction", 0.5f, "Reduce incoming spell damage by this much. Ex.: 0.75 -> 75%");
 
             HunterHuntedEnabled = Config.Bind("HunterHunted", "Enable", true, "Enable/disable the HunterHunted system.");
-            HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 25, "Set the reduction value for player heat for every cooldown interval.");
-            CoolDown_Interval = Config.Bind("HunterHunted", "Cooldown Interval", 60, "Set every how many seconds should the cooldown interval trigger.");
-            Ambush_Interval = Config.Bind("HunterHunted", "Ambush Interval", 300, "Set how many seconds player can be ambushed again since last ambush.");
+            HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 10, "Set the reduction value for player heat for every minute.");
+            Ambush_Interval = Config.Bind("HunterHunted", "Ambush Interval", 60, "Set how many seconds player can be ambushed again since last ambush.");
             Ambush_Chance = Config.Bind("HunterHunted", "Ambush Chance", 50, "Set the percentage that an ambush may occur for every cooldown interval.");
             Ambush_Despawn_Unit_Timer = Config.Bind("HunterHunted", "Ambush Despawn Timer", 300f, "Despawn the ambush squad after this many second if they are still alive.\n" +
                 "Must be higher than 1.");
@@ -512,7 +510,6 @@ namespace RPGMods
             Logger.LogInfo("Loading HunterHunted config");
             HunterHuntedSystem.isActive = HunterHuntedEnabled.Value;
             HunterHuntedSystem.heat_cooldown = HeatCooldown.Value;
-            HunterHuntedSystem.cooldown_timer = CoolDown_Interval.Value;
             HunterHuntedSystem.ambush_interval = Ambush_Interval.Value;
             HunterHuntedSystem.ambush_chance = Ambush_Chance.Value;
 
