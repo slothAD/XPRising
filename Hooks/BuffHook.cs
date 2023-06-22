@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using Unity.Entities;
 using Unity.Collections;
 using ProjectM.Network;
@@ -477,11 +478,10 @@ namespace RPGMods.Hooks
     }
 
     [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
-    public class BuffSystem_Spawn_Server_Patch
-    {
+    public class BuffSystem_Spawn_Server_Patch {
+        public static bool buffLogging = false;
         private static void Prefix(BuffSystem_Spawn_Server __instance)
         {
-
             if (PvPSystem.isPunishEnabled || SiegeSystem.isSiegeBuff || PermissionSystem.isVIPSystem || PvPSystem.isHonorSystemEnabled)
             {
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -500,7 +500,7 @@ namespace RPGMods.Hooks
         private static void Postfix(BuffSystem_Spawn_Server __instance)
         {
 
-            if (PvPSystem.isPunishEnabled || HunterHuntedSystem.isActive || WeaponMasterSystem.isMasteryEnabled)
+            if (PvPSystem.isPunishEnabled || WeaponMasterSystem.isMasteryEnabled)
             {
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities)
@@ -509,10 +509,53 @@ namespace RPGMods.Hooks
                     Entity e_Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
                     Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
-
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(e_User, e_Owner, true);
+                    
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.LoopMastery(e_User, e_Owner);
                     if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive) PvPSystem.OnCombatEngaged(entity, e_Owner);
+                }
+            }
+        }
+    }
+    
+    [HarmonyPatch(typeof(BuffDebugSystem), nameof(BuffDebugSystem.OnUpdate))]
+    public class DebugBuffSystem_Patch
+    {
+        public static bool buffLogging = false;
+        private static void Prefix(BuffDebugSystem __instance)
+        {
+            if (HunterHuntedSystem.isActive) {
+                NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+                foreach (var entity in entities) {
+                    var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
+
+                    var combatStart = guid.GetHashCode() == (int)Prefabs.Buffs.Buff_InCombat;
+                    var combatEnd = guid.GetHashCode() == (int)Prefabs.Buffs.Buff_OutOfCombat;
+                    if (!combatStart && !combatEnd) continue;
+                    
+                    // Get entity owner: This will be the entity that actually gets the buff
+                    var ownerEntity = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
+                    // If the owner is not a player character, ignore this entity
+                    if (!__instance.EntityManager.TryGetComponentData(ownerEntity, out PlayerCharacter playerCharacter)) continue;
+                    
+                    var userEntity = playerCharacter.UserEntity;
+                    var steamID = __instance.EntityManager.GetComponentData<User>(userEntity).PlatformId;
+
+                    // Update player combat status
+                    // Notes:
+                    // - only update combatStart if we are not already in combat. It gets sent multiple times as
+                    //   mobs refresh their combat state with the PC
+                    // - Buff_OutOfCombat only seems to be sent once.
+                    var inCombat = Cache.GetCombatStart(steamID) > Cache.GetCombatEnd(steamID);
+                    if (combatStart && !inCombat) {
+                        if (buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat start");
+                        Cache.playerCombatStart[steamID] = DateTime.Now;
+                        
+                        // Actions to check on combat start
+                        if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(userEntity, ownerEntity);
+                    } else if (combatEnd) {
+                        if (buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat end");
+                        Cache.playerCombatEnd[steamID] = DateTime.Now;
+                    }
                 }
             }
         }

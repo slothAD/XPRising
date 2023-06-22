@@ -73,6 +73,26 @@ namespace RPGMods.Commands
             }
         }
         
+        [Command("log", "l", "<On, Off>", "Turns on or off logging of heat data.", adminOnly: true)]
+        public static void LogWanted(ChatCommandContext ctx, string flag){
+            if (!HunterHuntedSystem.isActive){
+                ctx.Reply("Wanted system is not enabled.");
+                return;
+            }
+
+            var userEntity = ctx.Event.SenderUserEntity;
+            switch (flag.ToLower()) {
+                case "on":
+                    HunterHuntedSystem.SetLogging(userEntity, true);
+                    ctx.Reply("Heat levels now being logged.");
+                    return;
+                case "off":
+                    HunterHuntedSystem.SetLogging(userEntity, true);
+                    ctx.Reply($"Heat levels are no longer being logged.");
+                    break;
+            }
+        }
+
         [Command("spawn","sp", "[name, faction]", "Spawns the current wanted level on the user", adminOnly: true)]
         public static void SpawnFaction(ChatCommandContext ctx, string name, string faction) {
             var isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "wanted_args");
@@ -94,10 +114,16 @@ namespace RPGMods.Commands
             var heatData = HunterHuntedSystem.GetPlayerHeat(userEntity);
 
             var heat = heatData.heat[heatFaction];
+            var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
+            if (wantedLevel < 1) {
+                ctx.Reply("User wanted level too low to spawn ambushers");
+                return;
+            }
+            
             // Update faction spawn time (or else as soon as they are in combat it might spawn more)
             HunterHuntedSystem.SetPlayerHeat(userEntity, heatFaction, heat.level, DateTime.Now);
-
-            FactionHeat.Ambush(userEntity, targetUserEntity, heatFaction, heat.level, generate);
+            
+            FactionHeat.Ambush(userEntity, targetUserEntity, heatFaction, wantedLevel);
         }
     }
 }

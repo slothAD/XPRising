@@ -23,6 +23,11 @@ namespace RPGMods.Utils
 
         //-- -- Commands
         public static Dictionary<ulong, float> command_Cooldown = new();
+        
+        //-- -- Combat
+        // Note: These are currently only used in the HunterHunted system, but are able to be used generically
+        public static Dictionary<ulong, DateTime> playerCombatStart = new();
+        public static Dictionary<ulong, DateTime> playerCombatEnd = new();
 
         //-- -- HunterHunted System
         public static Dictionary<ulong, PlayerHeatData> heatCache = new();
@@ -43,6 +48,22 @@ namespace RPGMods.Utils
 
         //-- -- CustomNPC Spawner
         public static SizedDictionaryAsync<float, SpawnNPCListen> spawnNPC_Listen = new(500);
+
+
+        public static DateTime GetCombatStart(ulong steamID) {
+            if (!playerCombatStart.TryGetValue(steamID, out var start)) {
+                start = DateTime.MinValue;
+            }
+
+            return start;
+        }
+        public static DateTime GetCombatEnd(ulong steamID) {
+            if (!playerCombatEnd.TryGetValue(steamID, out var start)) {
+                start = DateTime.MinValue;
+            }
+
+            return start;
+        }
     }
 
     public static class Database

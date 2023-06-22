@@ -77,7 +77,7 @@ public static class FactionHeat {
                 _ => UnknownAmbushLevels
             };
         
-        return factionStates[Math.Max(wantedLevel, factionStates.Length) - 1];
+        return factionStates[Math.Min(wantedLevel, factionStates.Length) - 1];
     }
 
     private static int vBloodMultiplier = 20;
@@ -183,25 +183,11 @@ public static class FactionHeat {
         return HeatLevels.Length;
     }
 
-    public static void Ambush(Entity userEntity, Entity playerEntity, Faction.Type type, int heatLevel, Random rand) {
-        var wantedLevel = GetWantedLevel(heatLevel);
-        if (wantedLevel == 0) return;
+    public static void Ambush(Entity userEntity, Entity playerEntity, Faction faction, int wantedLevel) {
+        if (wantedLevel < 1) return;
         
-        SquadList.SpawnSquad(playerEntity, type, wantedLevel);
-        var ambushLevel = GetFactionAmbushLevel(type, wantedLevel);
+        SquadList.SpawnSquad(userEntity, playerEntity, faction, wantedLevel);
+        var ambushLevel = GetFactionAmbushLevel(faction, wantedLevel);
         Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel]}>{ambushLevel.Message}</color>");
-        
-        // var ambushLevel = GetFactionAmbushLevel(type, wantedLevel);
-        //
-        // var squadOptions = ambushLevel.SquadOptions;
-        // if (squadOptions.Length > 0) {
-        //     var squadIndex = rand.Next(0, squadOptions.Length);
-        //     var squadDetails = squadOptions[squadIndex];
-        //
-        //     foreach (var spawn in squadDetails) {
-        //         SquadList.SpawnSquad(playerEntity, type, rand.Next(spawn.minCount, spawn.maxCount));
-        //     }
-        //     Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel]}>{ambushLevel.Message}</color>");
-        // }
     }
 }
