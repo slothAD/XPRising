@@ -2,20 +2,15 @@
 using ProjectM.Network;
 using System;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
-using RPGMods.Utils;
 using RPGMods.Hooks;
 using RPGMods.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
 using VampireCommandFramework;
-using UnityEngine;
-using Il2CppSystem.Net;
 using System.IO;
 
 namespace RPGMods.Utils
@@ -573,7 +568,7 @@ namespace RPGMods.Utils
             identifier = 0f;
             float default_duration = 5.0f;
             float duration_final;
-            var isFound = Prefabs.Units.TryGetValue(name, out var unit);
+            var isFound = Enum.TryParse(name, true, out Prefabs.Units unit);
             if (!isFound) return false;
 
             float UniqueID = (float)rand.NextDouble();
@@ -594,30 +589,18 @@ namespace RPGMods.Utils
             var Data = new SpawnNPCListen(duration, default, default, default, false);
             Cache.spawnNPC_Listen.Add(duration_final, Data);
 
-            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, 1, minRange, maxRange, duration_final);
+            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, new PrefabGUID((int)unit), position, 1, minRange, maxRange, duration_final);
             return true;
         }
 
-        public static bool SpawnAtPosition(Entity user, string name, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
-        {
-            var isFound = Prefabs.Units.TryGetValue(name, out var unit);
-            if (!isFound) return false;
-
-            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            //var f3pos = new float3(position.x, translation.Value.y, position.y);
-            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, count, minRange, maxRange, duration);
-            return true;
-        }
-
-        public static bool SpawnAtPosition(Entity user, int GUID, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
-        {
-            var unit = new PrefabGUID(GUID);
+        public static bool SpawnAtPosition(Entity user, Prefabs.Units unit, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1) {
+            var guid = new PrefabGUID((int)unit);
 
             //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
             //var f3pos = new float3(position.x, translation.Value.y, position.y);
             try
             {
-                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, unit, position, count, minRange, maxRange, duration);
+                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, guid, position, count, minRange, maxRange, duration);
             }
             catch
             {
@@ -651,13 +634,18 @@ namespace RPGMods.Utils
             }
             try
             {
-                name = s.PrefabLookupMap[hashCode].ToString();
+                name = s.PrefabGuidToNameDictionary[hashCode];
             }
             catch
             {
                 name = "NoPrefabName";
             }
             return name;
+        }
+        
+        public static Prefabs.Faction ConvertGuidToFaction(PrefabGUID guid) {
+            if (Enum.IsDefined(typeof(Prefabs.Faction), guid.GetHashCode())) return (Prefabs.Faction)guid.GetHashCode();
+            return Prefabs.Faction.Unknown;
         }
 
         /*
@@ -695,20 +683,13 @@ namespace RPGMods.Utils
             Brute = 581377887,
             Scholar = -586506765,
             Worker = -540707191,
-            Mutant = -2017994753
+            Mutant = -2017994753,
         }
-        public enum BloodCategory {
-            Frailed = 0,
-            Creature = 1,
-            Warrior = 2,
-            Rogue = 3,
-            Brute = 4,
-            Scholar = 5,
-            Worker = 6
-        }
+        
+        public static PrefabGUID vBloodType = new(1557174542);
 
 
-        // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the thing, and 0.75 quarters it.
+        // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the stat, and 0.75 quarters it.
         // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
         public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
             {(int)UnitStatType.CooldownModifier },
@@ -780,116 +761,11 @@ namespace RPGMods.Utils
                 Plugin.Logger.LogWarning(DateTime.Now + ": Error creating file at " + address + "\n Error is: " + e.Message);
             }
         }
-        public static String statTypeToString(UnitStatType type)
-        {
-            String name = "Unknown";
-            if (type == UnitStatType.PhysicalPower)
-                name = "Physical Power";
-            if (type == UnitStatType.ResourcePower)
-                name = "Resource Power";
-            if (type == UnitStatType.SiegePower)
-                name = "Siege Power";
-            if (type == UnitStatType.ResourceYield)
-                name = "Resource Yield";
-            if (type == UnitStatType.MaxHealth)
-                name = "Max Health";
-            if (type == UnitStatType.MovementSpeed)
-                name = "MovementSpeed";
-            if (type == UnitStatType.CooldownModifier)
-                name = "CooldownModifier";
-            if (type == UnitStatType.PhysicalResistance)
-                name = "PhysicalResistance";
-            if (type == UnitStatType.FireResistance)
-                name = "FireResistance";
-            if (type == UnitStatType.HolyResistance)
-                name = "HolyResistance";
-            if (type == UnitStatType.SilverResistance)
-                name = "SilverResistance";
-            if (type == UnitStatType.SunChargeTime)
-                name = "SunChargeTime";
-            if (type == UnitStatType.EnergyGain)
-                name = "EnergyGain";
-            if (type == UnitStatType.MaxEnergy)
-                name = "MaxEnergy";
-            if (type == UnitStatType.SunResistance)
-                name = "SunResistance";
-            if (type == UnitStatType.GarlicResistance)
-                name = "GarlicResistance";
-            if (type == UnitStatType.Vision)
-                name = "Vision";
-            if (type == UnitStatType.SpellResistance)
-                name = "SpellResistance";
-            if (type == UnitStatType.Radial_SpellResistance)
-                name = "Radial_SpellResistance";
-            if (type == UnitStatType.SpellPower)
-                name = "SpellPower";
-            if (type == UnitStatType.PassiveHealthRegen)
-                name = "PassiveHealthRegen";
-            if (type == UnitStatType.PhysicalLifeLeech)
-                name = "PhysicalLifeLeech";
-            if (type == UnitStatType.SpellLifeLeech)
-                name = "SpellLifeLeech";
-            if (type == UnitStatType.PhysicalCriticalStrikeChance)
-                name = "PhysicalCriticalStrikeChance";
-            if (type == UnitStatType.PhysicalCriticalStrikeDamage)
-                name = "PhysicalCriticalStrikeDamage";
-            if (type == UnitStatType.SpellCriticalStrikeChance)
-                name = "SpellCriticalStrikeChance";
-            if (type == UnitStatType.SpellCriticalStrikeDamage)
-                name = "SpellCriticalStrikeDamage";
-            if (type == UnitStatType.AttackSpeed)
-                name = "AttackSpeed";
-            if (type == UnitStatType.DamageVsUndeads)
-                name = "DamageVsUndead";
-            if (type == UnitStatType.DamageVsHumans)
-                name = "DamageVsHumans";
-            if (type == UnitStatType.DamageVsDemons)
-                name = "DamageVsDemons";
-            if (type == UnitStatType.DamageVsMechanical)
-                name = "DamageVsMechanical";
-            if (type == UnitStatType.DamageVsBeasts)
-                name = "DamageVsBeasts";
-            if (type == UnitStatType.DamageVsCastleObjects)
-                name = "DamageVsCastleObjects";
-            if (type == UnitStatType.DamageVsPlayerVampires)
-                name = "DamageVsPlayerVampires";
-            if (type == UnitStatType.ResistVsUndeads)
-                name = "ResistVsUndead";
-            if (type == UnitStatType.ResistVsHumans)
-                name = "ResistVsHumans";
-            if (type == UnitStatType.ResistVsDemons)
-                name = "ResistVsDemons";
-            if (type == UnitStatType.ResistVsMechanical)
-                name = "ResistVsMechanical";
-            if (type == UnitStatType.ResistVsBeasts)
-                name = "ResistVsBeasts";
-            if (type == UnitStatType.ResistVsCastleObjects)
-                name = "ResistVsCastleObjects";
-            if (type == UnitStatType.ResistVsPlayerVampires)
-                name = "ResistVsPlayerVampires";
-            if (type == UnitStatType.DamageVsWood)
-                name = "DamageVsWood";
-            if (type == UnitStatType.DamageVsMineral)
-                name = "DamageVsMineral";
-            if (type == UnitStatType.DamageVsVegetation)
-                name = "DamageVsVegetation";
-            if (type == UnitStatType.DamageVsLightArmor)
-                name = "DamageVsLightArmor";
-            if (type == UnitStatType.DamageVsHeavyArmor)
-                name = "DamageVsHeavyArmor";
-            if (type == UnitStatType.DamageVsMagic)
-                name = "DamageVsMagic";
-            if (type == UnitStatType.ReducedResourceDurabilityLoss)
-                name = "ReducedResourceDurabilityLoss";
-            if (type == UnitStatType.PrimaryAttackSpeed)
-                name = "PrimaryAttackSpeed";
-            if (type == UnitStatType.ImmuneToHazards)
-                name = "ImmuneToHazards";
-            if (type == UnitStatType.PrimaryLifeLeech)
-                name = "PrimaryLifeLeech";
-            if (type == UnitStatType.HealthRecovery)
-                name = "HealthRecovery";
-            return name;
+        public static string statTypeToString(UnitStatType type) {
+            var name = Enum.GetName(type);
+            // Split words by camel case
+            // ie, PhysicalPower => "Physical Power"
+            return Regex.Replace(name, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
         }
     }
 }

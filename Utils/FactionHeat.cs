@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using ProjectM;
-using ProjectM.Network;
 using Unity.Entities;
+using Faction = RPGMods.Utils.Prefabs.Faction;
 
 namespace RPGMods.Utils;
 
 public static class FactionHeat {
-    public static readonly Faction.Type[] ActiveFactions = { Faction.Type.Militia, Faction.Type.Bandits, Faction.Type.Undead };
+    public static readonly Faction[] ActiveFactions = { Faction.Militia, Faction.Bandits, Faction.Undead };
     
     private static readonly string[] ColourGradient = { "fef001", "ffce03", "fd9a01", "fd6104", "ff2c05", "f00505" };
 
@@ -70,12 +68,12 @@ public static class FactionHeat {
 
     private static readonly AmbushLevel[] UnknownAmbushLevels = {new("", Array.Empty<UnitSpawn[]>())};
 
-    private static AmbushLevel GetFactionAmbushLevel(Faction.Type type, int wantedLevel) {
-        if (wantedLevel == 1) return UnknownAmbushLevels[0];
-        var factionStates = type switch {
-                Faction.Type.Militia => HumanAmbushLevels,
-                Faction.Type.Bandits => BanditAmbushLevels,
-                Faction.Type.Undead => UndeadAmbushLevels,
+    private static AmbushLevel GetFactionAmbushLevel(Faction faction, int wantedLevel) {
+        if (wantedLevel == 0) return UnknownAmbushLevels[0];
+        var factionStates = faction switch {
+                Faction.Militia => HumanAmbushLevels,
+                Faction.Bandits => BanditAmbushLevels,
+                Faction.Undead => UndeadAmbushLevels,
                 _ => UnknownAmbushLevels
             };
         
@@ -83,97 +81,97 @@ public static class FactionHeat {
     }
 
     private static int vBloodMultiplier = 20;
-    public static void GetActiveFactionHeatValue(Faction.Type faction, bool isVBlood, out int heatValue, out Faction.Type activeFaction) {
+    public static void GetActiveFactionHeatValue(Faction faction, bool isVBlood, out int heatValue, out Faction activeFaction) {
         switch (faction) {
             // Bandit
-            case Faction.Type.Traders_T01:
+            case Faction.Traders_T01:
                 heatValue = 200; // Don't kill the merchants
-                activeFaction = Faction.Type.Bandits;
+                activeFaction = Faction.Bandits;
                 break;
-            case Faction.Type.Bandits:
+            case Faction.Bandits:
                 heatValue = 10;
-                activeFaction = Faction.Type.Bandits;
+                activeFaction = Faction.Bandits;
                 break;
             // Human
-            case Faction.Type.Militia:
+            case Faction.Militia:
                 heatValue = 10;
-                activeFaction = Faction.Type.Militia;
+                activeFaction = Faction.Militia;
                 break;
-            case Faction.Type.ChurchOfLum_SpotShapeshiftVampire:
+            case Faction.ChurchOfLum_SpotShapeshiftVampire:
                 heatValue = 25;
-                activeFaction = Faction.Type.Militia;
+                activeFaction = Faction.Militia;
                 break;
-            case Faction.Type.Traders_T02:
+            case Faction.Traders_T02:
                 heatValue = 200; // Don't kill the merchants
-                activeFaction = Faction.Type.Militia;
+                activeFaction = Faction.Militia;
                 break;
-            case Faction.Type.ChurchOfLum:
+            case Faction.ChurchOfLum:
                 heatValue = 15;
-                activeFaction = Faction.Type.Militia;
+                activeFaction = Faction.Militia;
                 break;
             // Human: gloomrot
-            case Faction.Type.Gloomrot:
+            case Faction.Gloomrot:
                 // TODO
                 heatValue = 0;
-                activeFaction = Faction.Type.Unknown;
+                activeFaction = Faction.Unknown;
                 break;
             // Nature
-            case Faction.Type.Bear:
-            case Faction.Type.Critters:
-            case Faction.Type.Wolves:
+            case Faction.Bear:
+            case Faction.Critters:
+            case Faction.Wolves:
                 // TODO
                 heatValue = 0;
-                activeFaction = Faction.Type.Unknown;
+                activeFaction = Faction.Unknown;
                 break;
             // Undead
-            case Faction.Type.Undead:
+            case Faction.Undead:
                 heatValue = 3;
-                activeFaction = Faction.Type.Undead;
+                activeFaction = Faction.Undead;
                 break;
             // Werewolves
-            case Faction.Type.Werewolf:
-            case Faction.Type.WerewolfHuman:
+            case Faction.Werewolf:
+            case Faction.WerewolfHuman:
                 // TODO
                 heatValue = 0;
-                activeFaction = Faction.Type.Unknown;
+                activeFaction = Faction.Unknown;
                 break;
-            case Faction.Type.VampireHunters:
-                heatValue = 10;
-                activeFaction = Faction.Type.VampireHunters;
+            case Faction.VampireHunters:
+                heatValue = 2;
+                activeFaction = Faction.VampireHunters;
                 break;
             // Do nothing
-            case Faction.Type.ChurchOfLum_Slaves:
-            case Faction.Type.ChurchOfLum_Slaves_Rioters:
-            case Faction.Type.Cursed:
-            case Faction.Type.Elementals:
-            case Faction.Type.Ignored:
-            case Faction.Type.Harpy:
-            case Faction.Type.Mutants:
-            case Faction.Type.NatureSpirit:
-            case Faction.Type.Plants:
-            case Faction.Type.Players:
-            case Faction.Type.Players_Castle_Prisoners:
-            case Faction.Type.Players_Mutant:
-            case Faction.Type.Players_Shapeshift_Human:
-            case Faction.Type.Spiders:
-            case Faction.Type.Unknown:
-            case Faction.Type.Wendigo:
-            case Faction.Type.World_Prisoners:
+            case Faction.ChurchOfLum_Slaves:
+            case Faction.ChurchOfLum_Slaves_Rioters:
+            case Faction.Cursed:
+            case Faction.Elementals:
+            case Faction.Ignored:
+            case Faction.Harpy:
+            case Faction.Mutants:
+            case Faction.NatureSpirit:
+            case Faction.Plants:
+            case Faction.Players:
+            case Faction.Players_Castle_Prisoners:
+            case Faction.Players_Mutant:
+            case Faction.Players_Shapeshift_Human:
+            case Faction.Spiders:
+            case Faction.Unknown:
+            case Faction.Wendigo:
+            case Faction.World_Prisoners:
                 heatValue = 0;
-                activeFaction = Faction.Type.Unknown;
+                activeFaction = Faction.Unknown;
                 break;
             default:
                 Plugin.Logger.LogWarning($"Faction not handled for active faction: {Enum.GetName(faction)}");
                 heatValue = 0;
-                activeFaction = Faction.Type.Unknown;
+                activeFaction = Faction.Unknown;
                 break;
         }
 
         if (isVBlood) heatValue *= vBloodMultiplier;
     }
 
-    public static string GetFactionStatus(Faction.Type type, int heat) {
-        var output = $"{Enum.GetName(type)}: ";
+    public static string GetFactionStatus(Faction faction, int heat) {
+        var output = $"{Enum.GetName(faction)}: ";
         return HeatLevels.Aggregate(output, (current, t) => current + (heat < t ? "☆" : "★"));
     }
 

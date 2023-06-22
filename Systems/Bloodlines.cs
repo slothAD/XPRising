@@ -6,8 +6,6 @@ using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 using RPGMods.Utils;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace RPGMods.Systems
 {
@@ -113,8 +111,6 @@ namespace RPGMods.Systems
             { 7, "Semika" },
         };
 
-        private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
-
         private static readonly Random rand = new Random();
         public static bool pluginLogging = false;
 
@@ -154,7 +150,7 @@ namespace RPGMods.Systems
             bool isVBlood;
             if (em.HasComponent<BloodConsumeSource>(Victim)) {
                 BloodConsumeSource BloodSource = em.GetComponentData<BloodConsumeSource>(Victim);
-                isVBlood = BloodSource.UnitBloodType.Equals(vBloodType);
+                isVBlood = BloodSource.UnitBloodType.Equals(Helper.vBloodType);
             }
             else {
                 isVBlood = false;

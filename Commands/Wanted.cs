@@ -1,17 +1,11 @@
-﻿using ProjectM;
-using ProjectM.Network;
-using RPGMods.Systems;
+﻿using RPGMods.Systems;
 using RPGMods.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using BepInEx;
 using Unity.Entities;
-using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
 using Color = RPGMods.Utils.Color;
-using Faction = RPGMods.Utils.Faction;
+using Faction = RPGMods.Utils.Prefabs.Faction;
 using Random = System.Random;
 
 namespace RPGMods.Commands
@@ -33,7 +27,7 @@ namespace RPGMods.Commands
             
             var heatData = HunterHuntedSystem.GetPlayerHeat(userEntity);
 
-            foreach (Faction.Type faction in FactionHeat.ActiveFactions) {
+            foreach (Faction faction in FactionHeat.ActiveFactions) {
                 var heat = heatData.heat[faction];
                 Output.SendLore(userEntity, FactionHeat.GetFactionStatus(faction, heat.level));
                 
@@ -50,13 +44,10 @@ namespace RPGMods.Commands
         public static void SetWanted(ChatCommandContext ctx, string name, string faction, int value) {
             bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "wanted_args");
             if (isAllowed){
-                var user = ctx.Event.User;
-                var SteamID = user.PlatformId;
                 var userEntity = ctx.Event.SenderUserEntity;
                 
                 if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
                 {
-                    SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
                     userEntity = targetUserEntity;
                 }
                 else
@@ -65,7 +56,7 @@ namespace RPGMods.Commands
                     return;
                 }
 
-                if (!Enum.TryParse(faction, true, out Faction.Type heatFaction)) {
+                if (!Enum.TryParse(faction, true, out Faction heatFaction)) {
                     ctx.Reply("Faction not yet supported");
                     return;
                 }
@@ -95,7 +86,7 @@ namespace RPGMods.Commands
                 return;
             }
 
-            if (!Enum.TryParse(faction, true, out Faction.Type heatFaction)) {
+            if (!Enum.TryParse(faction, true, out Faction heatFaction)) {
                 ctx.Reply("Faction not yet supported");
                 return;
             }

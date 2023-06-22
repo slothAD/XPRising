@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Faction = RPGMods.Utils.Prefabs.Faction;
 
 namespace RPGMods.Utils
 {
@@ -77,17 +78,14 @@ namespace RPGMods.Utils
         public struct Heat {
             public int level { get; set; }
             public DateTime lastAmbushed { get; set; }
-
-            public Heat() {
-                level = 0;
-                lastAmbushed = DateTime.Now - TimeSpan.FromSeconds(HunterHuntedSystem.ambush_interval);
-            }
         }
-        public Dictionary<Faction.Type, Heat> heat { get; } = new();
+        
+        public Dictionary<Faction, Heat> heat { get; } = new();
         public DateTime lastCooldown { get; set; }
+        public bool isLogging { get; set; }
 
         public PlayerHeatData() {
-            foreach (Faction.Type faction in FactionHeat.ActiveFactions) {
+            foreach (Faction faction in FactionHeat.ActiveFactions) {
                 heat[faction] = new();
             }
         }
