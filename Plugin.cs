@@ -668,8 +668,15 @@ namespace RPGMods
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
             WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
 
+            // Debug logging
             ExperienceSystem.xpLogging = xpLogging.Value;
             ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging = buffLogging.Value;
+            DebugBuffSystem_Patch.buffLogging = buffLogging.Value;
+            BuffSystem_Spawn_Server_Patch.buffLogging = buffLogging.Value;
+            DeathEventListenerSystem_Patch.deathLogging = false;
+            HunterHuntedSystem.isDebugging = false;
+
+            Logger.LogInfo("Finished initialising");
 
             isInitialized = true;
         }
