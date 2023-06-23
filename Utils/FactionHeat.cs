@@ -6,7 +6,7 @@ using Faction = RPGMods.Utils.Prefabs.Faction;
 namespace RPGMods.Utils;
 
 public static class FactionHeat {
-    public static readonly Faction[] ActiveFactions = { Faction.Militia, Faction.Bandits, Faction.Undead };
+    public static readonly Faction[] ActiveFactions = { Faction.Militia, Faction.Bandits, Faction.Undead, Faction.Gloomrot };
     
     private static readonly string[] ColourGradient = { "fef001", "ffce03", "fd9a01", "fd6104", "ff2c05", "f00505" };
 
@@ -43,9 +43,8 @@ public static class FactionHeat {
                 break;
             // Human: gloomrot
             case Faction.Gloomrot:
-                // TODO
-                heatValue = 0;
-                activeFaction = Faction.Unknown;
+                heatValue = 10;
+                activeFaction = Faction.Gloomrot;
                 break;
             // Nature
             case Faction.Bear:

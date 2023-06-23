@@ -185,6 +185,37 @@ namespace RPGMods.Utils {
                     }
 
                     break;
+                case Faction.Gloomrot:
+                    if (chance > 95) {
+                        // TANKS!
+                        Units mainUnit;
+                        switch (generate.Next(2)) {
+                            case 0:
+                                mainUnit = Units.CHAR_Gloomrot_SpiderTank_Gattler;
+                                break;
+                            case 1:
+                                mainUnit = Units.CHAR_Gloomrot_SpiderTank_Zapper;
+                                break;
+                            case 2:
+                            default:
+                                mainUnit = Units.CHAR_Gloomrot_SpiderTank_LightningRod;
+                                break;
+                        }
+
+                        return new Squad($"The {faction} want to TANK YOU VERY MUCH!",
+                            new List<UnitDetails>() {
+                                new(mainUnit, 1 * (int)Math.Ceiling(wantedLevel * 0.5), playerLevel, 5),
+                                new(Units.CHAR_Gloomrot_Technician, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
+                            });
+                    }
+                    if (chance > 85) {
+                        // TURRETS!
+                        return new Squad($"The {faction} turrets have come out to play!",
+                            new List<UnitDetails>() {
+                                new(Units.CHAR_Gloomrot_SentryTurret, 4 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
+                            });
+                    }
+                    break;
                 default:
                     Plugin.Logger.LogWarning($"No specific squad generation handling has been added for {faction}");
                     break;
