@@ -191,6 +191,7 @@ namespace RPGMods
         private static ConfigEntry<bool> xpLogging;
         private static ConfigEntry<bool> deathLogging;
         private static ConfigEntry<bool> factionLogging;
+        private static ConfigEntry<bool> squadSpawnLogging;
 
 
         public static bool isInitialized = false;
@@ -419,8 +420,9 @@ namespace RPGMods
             
             xpLogging = Config.Bind("Debug", "XP system logging", false, "Logs detailed information about the experience system in your console, enable before sending me any errors with the xp system!");
             buffLogging = Config.Bind("Debug", "Buff system logging", false, "Logs detailed information about the buff system in your console, enable before sending me any errors with the buff system!");
-            deathLogging = Config.Bind("Debug", "Death hook logging", false, "Logs detailed information about the death hook in your console.");
+            deathLogging = Config.Bind("Debug", "Death hook logging", false, "Logs information about the death hook in your console.");
             factionLogging = Config.Bind("Debug", "Wanted system logging", false, "Logs detailed information about the wanted system in your console, enable before sending me any errors with the wanted system!");
+            squadSpawnLogging = Config.Bind("Debug", "Squad spawn logging", false, "Logs information about squads spawning into your console.");
 
             if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
             if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
@@ -678,6 +680,7 @@ namespace RPGMods
             BuffSystem_Spawn_Server_Patch.buffLogging = buffLogging.Value;
             DeathEventListenerSystem_Patch.deathLogging = deathLogging.Value;
             HunterHuntedSystem.factionLogging = factionLogging.Value;
+            SquadList.showDebugLogs = squadSpawnLogging.Value;
 
             Logger.LogInfo("Finished initialising");
 
