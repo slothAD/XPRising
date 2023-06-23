@@ -15,7 +15,6 @@ using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
 using Unity.Entities.UniversalDelegates;
 using MS.Internal.Xml.XPath;
-using Steamworks;
 
 namespace RPGMods.Systems
 {
@@ -57,145 +56,122 @@ namespace RPGMods.Systems
         public static bool xpLogging = false;
         public static void EXPMonitor(Entity killerEntity, Entity victimEntity)
         {
-            //-- Check victim is not a summon
             if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Kill Found, Handling XP");
-            if (entityManager.HasComponent<Minion>(victimEntity)) return;
-
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Not a Minion, checking level");
+            
+            //-- Check victim is not a summon
+            if (entityManager.HasComponent<Minion>(victimEntity)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Minion killed, exiting XP");
+                return;
+            }
+            
             //-- Check victim has a level
-            if (!entityManager.HasComponent<UnitLevel>(victimEntity)) return;
-
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has Level, fetching allies");
+            if (!entityManager.HasComponent<UnitLevel>(victimEntity)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has no level, exiting XP");
+                return;
+            }
+            
             //-- Must be executed from main thread
-            Helper.GetAllies(killerEntity, out var PlayerGroup);
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Fetching allies...");
+            Helper.GetAllies(killerEntity, out var playerGroup);
             //-- ---------------------------------
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Fetched, player group is " + PlayerGroup + ", Total ally count of " + PlayerGroup.AllyCount);
-            UpdateEXP(killerEntity, victimEntity, PlayerGroup);
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Fetched, Total ally count of " + playerGroup.AllyCount);
+            UpdateEXP(killerEntity, victimEntity, playerGroup);
         }
 
-        public static void UpdateEXP(Entity killerEntity, Entity victimEntity, PlayerGroup PlayerGroup) {
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Began XP Update, player group is size " + PlayerGroup.AllyCount);
-            PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(killerEntity);
-            Entity userEntity = player.UserEntity;
-            User user = entityManager.GetComponentData<User>(userEntity);
-            ulong SteamID = user.PlatformId;
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": SteamID of killer is " + SteamID);
-
-            int player_level = 0;
-            if (Database.player_experience.TryGetValue(SteamID, out int exp))
-            {
-                player_level = convertXpToLevel(exp);
-                if (exp >= convertLevelToXp(MaxLevel)) return;
+        public static void UpdateEXP(Entity killerEntity, Entity victimEntity, PlayerGroup playerGroup) {
+            if (xpLogging) {
+                Plugin.Logger.LogInfo($"{DateTime.Now}: Killer entity: {killerEntity}");
+                Plugin.Logger.LogInfo($"{DateTime.Now}: Began XP Update, current ally count: {playerGroup.AllyCount}");
             }
 
-            UnitLevel UnitLevel = entityManager.GetComponentData<UnitLevel>(victimEntity);
+            var unitLevel = entityManager.GetComponentData<UnitLevel>(victimEntity);
 
             bool isVBlood;
             if (entityManager.HasComponent<BloodConsumeSource>(victimEntity))
             {
-                BloodConsumeSource BloodSource = entityManager.GetComponentData<BloodConsumeSource>(victimEntity);
-                isVBlood = BloodSource.UnitBloodType.Equals(vBloodType);
+                BloodConsumeSource bloodSource = entityManager.GetComponentData<BloodConsumeSource>(victimEntity);
+                isVBlood = bloodSource.UnitBloodType.Equals(vBloodType);
             }
             else
             {
                 isVBlood = false;
             }
 
-            int EXPGained;
-            if (isVBlood) EXPGained = (int)(UnitLevel.Level * VBloodMultiplier);
-            else EXPGained = UnitLevel.Level;
-
-            int level_diff = UnitLevel.Level - player_level;
-            //if (level_diff > 10) level_diff = 10;
-
-            if (level_diff >= 0) EXPGained = (int)(EXPGained * (1 + level_diff * 0.1) * EXPMultiplier);
-            else{
-                float xpMult = level_diff * -1.0f;
-                xpMult = xpMult / (xpMult + 10.0f);
-                EXPGained = (int)(EXPGained * (1-xpMult));
-            }
-            /*
-            else if (level_diff <= -20) EXPGained = (int) Math.Ceiling(EXPGained * 0.10 * EXPMultiplier);
-            else if (level_diff <= -15) EXPGained = (int) Math.Ceiling(EXPGained * 0.25 * EXPMultiplier);
-            else if (level_diff <= -10) EXPGained = (int) Math.Ceiling(EXPGained * 0.50 * EXPMultiplier);
-            else if (level_diff <= -5) EXPGained = (int) Math.Ceiling(EXPGained * 0.75 * EXPMultiplier);
-            else EXPGained = (int)(EXPGained * EXPMultiplier);*/
-
-            if (PlayerGroup.AllyCount > 0) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Beginning XP Sharing");
-                List<Entity> CloseAllies = new();
-                if (Cache.PlayerLocations.TryGetValue(killerEntity, out var playerPos)) {
-                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Got Player Position from Cache");
-                    foreach (var ally in PlayerGroup.Allies) {
-                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Iterating over allies, ally is " + ally.GetHashCode());
-                        if (Cache.PlayerLocations.TryGetValue(ally.Value, out var allyPos)) {
-                            if (xpLogging) Plugin.Logger.LogInfo(   DateTime.Now + ": Got Ally Position");
-                            var Distance = math.distance(playerPos.Position.xz, allyPos.Position.xz);
-                            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Distance is " + Distance + ", Max Distance is " + GroupMaxDistance);
-                            if (Distance <= GroupMaxDistance) {
-                                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Adjusting XP Gain and adding ally to the close allies list");
-                                EXPGained = (int)(EXPGained * GroupModifier);
-                                CloseAllies.Add(ally.Key);
-                            }
-                        } else {
-                            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Could not get position, update the cache!");
-                        }
+            var killerLocation = entityManager.GetComponentData<LocalToWorld>(killerEntity);
+            
+            List<Entity> closeAllies = new();
+            foreach (var ally in playerGroup.Allies) {
+                if (xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Getting close allies");
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Iterating over allies, ally is " + ally.GetHashCode());
+                if (Cache.PlayerLocations.TryGetValue(ally.Value, out var allyPos)) {
+                    if (xpLogging) Plugin.Logger.LogInfo(   DateTime.Now + ": Got Ally Position");
+                    var distance = math.distance(killerLocation.Position.xz, allyPos.Position.xz);
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Distance is " + distance + ", Max Distance is " + GroupMaxDistance);
+                    if (distance <= GroupMaxDistance) {
+                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Adjusting XP Gain and adding ally to the close allies list");
+                        closeAllies.Add(ally.Key);
                     }
-                }
-
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Share EXP");
-                foreach (var teammate in CloseAllies) {
-                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Sharing EXP to " + teammate.GetHashCode());
-                    ShareEXP(teammate, EXPGained);
+                } else {
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Could not get position, update the cache!");
                 }
             }
 
-            int currentXP = exp <= 0 ? EXPGained : exp + EXPGained;
-            Database.player_experience[SteamID] = currentXP;
-
-            SetLevel(killerEntity, userEntity, SteamID);
-            if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging))
-            {
-                if (isLogging) {
-                    GetLevelAndProgress(currentXP, out int progress, out int earned, out int needed);
-                    Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGained} XP by slaying a Lv.{UnitLevel.Level} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
-                }
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Assign EXP for all close allied players");
+            var isGroup = closeAllies.Count > 1;
+            foreach (var teammate in closeAllies) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Assigning EXP to " + teammate.GetHashCode());
+                AssignExp(teammate, unitLevel.Level, isVBlood, isGroup);
             }
         }
 
-        public static void ShareEXP(Entity user, int EXPGain) {
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Getting User Component from Ally");
-            //var user_component = entityManager.GetComponentData<User>(user);
-            if (EXPGain > 0) {
-                bool gotUser = entityManager.TryGetComponentData<User>(user, out User user_component);
-                ulong SteamID;
-                if (!gotUser) {
-                    bool gotPC = entityManager.TryGetComponentData<PlayerCharacter>(user, out PlayerCharacter pc);
-                    if (!gotPC) {
-                        Plugin.Logger.LogInfo(DateTime.Now + ": Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(user));
-                    } else {
-                        Entity userEntity = pc.UserEntity;
-                        bool gotUserComponent = entityManager.TryGetComponentData<User>(userEntity, out user_component);
-                        if (!gotUserComponent) {
-                            Plugin.Logger.LogInfo(DateTime.Now + ": User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(userEntity));
-                        }
-                        SteamID = user_component.PlatformId;
-                        if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging)) {
-                            if (isLogging) {
-                                Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGain} experience points by participating in the killing of an enemy.</color>");
-                            }
-                        }
-                    }
-                    
-                }
-                SteamID = user_component.PlatformId;
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get allies exp");
-                Database.player_experience.TryGetValue(SteamID, out var exp);
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Trying to set allies exp");
-                Database.player_experience[SteamID] = exp + EXPGain;
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Set Level for Ally");
-                SetLevel(user_component.LocalCharacter._Entity, user, SteamID);
+        public static void AssignExp(Entity entity, int mobLevel, bool isVBlood, bool isGroup) {
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Getting User Component from entity");
+
+            if (!entityManager.TryGetComponentData(entity, out PlayerCharacter pc)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
+                return;
+            } 
+            var user = pc.UserEntity;
+            if (!entityManager.TryGetComponentData(user, out User userComponent)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(user));
+                // Can't really do anything at this point
+                return;
             }
+
+            var steamID = userComponent.PlatformId;
+            int playerLevel = 0;
+            if (Database.player_experience.TryGetValue(steamID, out int currentXp))
+            {
+                playerLevel = convertXpToLevel(currentXp);
+                if (currentXp >= convertLevelToXp(MaxLevel)) return;
+            }
+
+            var xpGained = isVBlood ? (int)(mobLevel * VBloodMultiplier) : mobLevel;
+
+            var levelDiff = mobLevel - playerLevel;
+            
+            if (levelDiff >= 0) xpGained = (int)(xpGained * (1 + levelDiff * 0.1) * EXPMultiplier);
+            else{
+                float xpMult = levelDiff * -1.0f;
+                xpMult = xpMult / (xpMult + 10.0f);
+                xpGained = (int)(xpGained * (1-xpMult));
+            }
+
+            if (isGroup) {
+                xpGained = (int)(xpGained * GroupModifier);
+            }
+            
+            Database.player_experience[steamID] = Math.Max(currentXp, 0) + xpGained;;
+
+            if (Database.player_log_exp.TryGetValue(steamID, out bool isLogging))
+            {
+                if (isLogging) {
+                    GetLevelAndProgress(currentXp, out int progress, out int earned, out int needed);
+                    Output.SendLore(user, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
+                }
+            }
+            
+            SetLevel(userComponent.LocalCharacter._Entity, user, steamID);
         }
 
         public static void loseEXP(Entity playerEntity, int xpLost) {
@@ -304,8 +280,8 @@ namespace RPGMods.Systems
 
         public static void SetLevel(Entity entity, Entity user, ulong SteamID)
         {
-            if (!Database.player_experience.ContainsKey(SteamID)) Database.player_experience[SteamID] = 0;
-            if (!Database.player_abilityIncrease.ContainsKey(SteamID)) Database.player_abilityIncrease[SteamID] = 0;
+            Database.player_experience.TryAdd(SteamID, 0);
+            Database.player_abilityIncrease.TryAdd(SteamID, 0);
 
             float level = convertXpToLevel(Database.player_experience[SteamID]);
             if (level < 0) return;
@@ -314,9 +290,9 @@ namespace RPGMods.Systems
                 Database.player_experience[SteamID] = convertLevelToXp(MaxLevel);
             }
 
-            bool levelDataExists = Cache.player_level.TryGetValue(SteamID, out var level_);
+            bool levelDataExists = Cache.player_level.TryGetValue(SteamID, out var storedLevel);
             if (levelDataExists){
-                if (level_ < level) 
+                if (storedLevel < level) 
                 {
                     Cache.player_level[SteamID] = level;
                     Helper.ApplyBuff(user, entity, Database.Buff.LevelUp_Buff);
@@ -324,7 +300,7 @@ namespace RPGMods.Systems
                     if (LevelRewardsOn)
                     {
                         //increases by level
-                        for (var i = level_+1; i <= level; i++)
+                        for (var i = storedLevel+1; i <= level; i++)
                         {
                             //default rewards for leveling up
                             Database.player_abilityIncrease[SteamID] += 1;
