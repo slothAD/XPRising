@@ -130,7 +130,7 @@ namespace RPGMods.Commands
             }
             Bloodlines.modBloodline(SteamID, type, amount);
             ctx.Reply($"{Bloodlines.names[type]}'s bloodline for \"{name}\" adjusted by <color=#fffffffe>{amount}%</color>");
-            Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+            Helper.ApplyBuff(UserEntity, CharEntity, Helper.appliedBuff);
         }
 
         [Command("set", "s", "[playerName, bloodline, value]", "Sets the specified players bloodline to a specific value", adminOnly: true)]

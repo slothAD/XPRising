@@ -120,7 +120,7 @@ namespace RPGMods.Commands{
 
             WeaponMasterSystem.modMastery(SteamID, type, (amount));
             ctx.Reply($"{name.ToUpper()} Mastery for \"{CharName}\" adjusted by <color=#fffffffe>{amount:F2}%</color>");
-            Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+            Helper.ApplyBuff(UserEntity, CharEntity, Helper.appliedBuff);
         }
         
         [Command("set", "s", "[playerName, XP]", "Sets the specified players current xp to a specific value", adminOnly: true)]

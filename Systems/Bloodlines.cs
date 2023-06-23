@@ -15,6 +15,8 @@ namespace RPGMods.Systems
     {
         public static EntityManager em = Plugin.Server.EntityManager;
 
+        public static bool bloodAmountModification = true;
+
         public static bool isDecaySystemEnabled = false;
         public static double growthMultiplier = 1;
         public static int DecayInterval = 60;
@@ -176,6 +178,10 @@ namespace RPGMods.Systems
                     if (!(isVBlood || bloodline.Quality > getBloodlineData(SteamID).strength[bloodlineIndex])){
                         if (pluginLogging) Plugin.Logger.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
+                    }
+
+                    if (bloodAmountModification) {
+                        bloodline.MaxBlood.SetBaseValue(50000, bloodline.MaxBlood.GetOrAddModificationsBuffer(em, Killer));
                     }
 
                     growthVal *= 1 + ((victimBlood.BloodQuality+bloodline.Quality) - (getBloodlineData(SteamID).strength[bloodlineIndex]*2))/100;

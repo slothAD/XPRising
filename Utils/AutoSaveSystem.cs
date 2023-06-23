@@ -21,10 +21,10 @@ namespace RPGMods.Utils
             PermissionSystem.SaveUserPermission(); //-- Nothing new to save.
             GodMode.SaveGodMode(saveFolder);
             
-            //SunImmunity.SaveImmunity();
+            SunImmunity.SaveImmunity();
             //Waypoint.SaveWaypoints();
             NoCooldown.SaveCooldown(saveFolder);
-            //Speed.SaveSpeed();
+            Speed.SaveSpeed();
             //AutoRespawn.SaveAutoRespawn();
             //Kit.SaveKits();   //-- Nothing to save here for now.
             PowerUp.SavePowerUp(saveFolder);
@@ -38,7 +38,7 @@ namespace RPGMods.Utils
             //WorldDynamicsSystem.SaveFactionStats(saveFolder);
             //WorldDynamicsSystem.SaveIgnoredMobs(saveFolder);
 
-            Plugin.Logger.LogInfo(DateTime.Now+"All database saved to JSON file.");
+            Plugin.Logger.LogInfo(DateTime.Now+": All databases saved to JSON file.");
         }
 
         public static void LoadDatabase()
@@ -49,10 +49,11 @@ namespace RPGMods.Utils
             GodMode.LoadGodMode();
             PowerUp.LoadPowerUp();
 
-            /*
             SunImmunity.LoadSunImmunity();
-            Waypoint.LoadWaypoints();
             Speed.LoadSpeed();
+
+            /*
+            Waypoint.LoadWaypoints();
             AutoRespawn.LoadAutoRespawn();
             Kit.LoadKits();*/
 

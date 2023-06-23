@@ -35,7 +35,7 @@ namespace RPGMods.Commands{
                 try
                 {
                     var item = managed.GetOrDefault<ManagedItemData>(entry.Key);
-                    if (item.PrefabName.StartsWith("Item_VBloodSource") || item.PrefabName.StartsWith("GM_Unit_Creature_Base") || item.PrefabName == "Item_Cloak_ShadowPriest" || item.PrefabName.StartsWith("FakeItem")) continue;
+                    //if (item.PrefabName.StartsWith("Item_VBloodSource") || item.PrefabName.StartsWith("GM_Unit_Creature_Base") || item.PrefabName == "Item_Cloak_ShadowPriest" || item.PrefabName.StartsWith("FakeItem")) continue;
                     //ctx.Reply(item.Name.ToString());
                     ctx.Reply(item.PrefabName);
                     Plugin.Logger.LogInfo("Prefab Name: " + item.PrefabName);

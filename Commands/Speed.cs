@@ -19,7 +19,7 @@ namespace RPGMods.Commands
             UpdateSpeed(ctx, isSpeeding);
             string s = isSpeeding ? "Activated" : "Deactivated";
             ctx.Reply($"Speed buff <color=#ffff00>{s}</color>");
-            Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+            Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Helper.appliedBuff);
         }
 
         public static bool UpdateSpeed(ChatCommandContext ctx, bool isGodMode)
@@ -48,8 +48,6 @@ namespace RPGMods.Commands
         }
 
         public static void LoadSpeed(){
-
-
             string specificFile = "speeding.json";
             Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
             Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);

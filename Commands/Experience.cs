@@ -114,7 +114,7 @@ namespace RPGMods.Commands
                     }
 
                     Database.player_abilityIncrease[SteamID] -= spendPoints;
-                    Helper.ApplyBuff(UserEntity, PlayerCharacter, Database.Buff.Buff_VBlood_Perk_Moose);
+                    Helper.ApplyBuff(UserEntity, PlayerCharacter, Helper.appliedBuff);
                     ctx.Reply($"Spent {spendPoints}. You have {Database.player_abilityIncrease[SteamID]} points left to spend.");
                     foreach (var buff in Database.player_level_stats[SteamID]){
                         ctx.Reply($"{buff.Key} : {buff.Value}");

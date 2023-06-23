@@ -42,7 +42,7 @@ namespace RPGMods.Commands
             if (flag.ToLower().Equals("remove")) {
                 if (powerupLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Flag is Remove");
                 Database.PowerUpList.Remove(SteamID);
-                Helper.ApplyBuff(userEntity, playerEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+                Helper.ApplyBuff(userEntity, playerEntity, Helper.appliedBuff);
                 ctx.Reply("PowerUp removed from specified player.");
                 return;
             }
@@ -61,7 +61,7 @@ namespace RPGMods.Commands
                 };
 
                 Database.PowerUpList[SteamID] = PowerUpData;
-                Helper.ApplyBuff(userEntity, playerEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+                Helper.ApplyBuff(userEntity, playerEntity, Helper.appliedBuff);
                 ctx.Reply("PowerUp added to specified player.");
             }
             else{

@@ -430,7 +430,8 @@ namespace RPGMods.Utils
 1243275376		BloodQualityUnitBuff_Warrior Entity(3616:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
 2089547928		BloodQualityUnitBuff_Worker Entity(3617:3)  - Entity  - PrefabGUID  - Prefab  - PrefabCollectionPrefabTag
                 */
-
+            // 1409441911
+            public static PrefabGUID cloakBuff = new PrefabGUID(1409441911);
 
             public static PrefabGUID SiegeGolem_T01 = new PrefabGUID(-148535031);
             public static PrefabGUID SiegeGolem_T02 = new PrefabGUID(914043867);

@@ -98,7 +98,7 @@ namespace RPGMods.Hooks
                     if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                     {
                         Plugin.Logger.LogInfo(System.DateTime.Now + " Applying Moose buff");
-                        Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
+                        Helper.ApplyBuff(User, Owner, Helper.appliedBuff);
                     }
                     if (ExperienceSystem.isEXPActive)
                     {
@@ -185,7 +185,7 @@ namespace RPGMods.Hooks
                         //might need a better data structure...but should be fine in the cache only.
                     }
                     //reset buffs for being unarmed
-                    Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
+                    Helper.ApplyBuff(User, Owner, Helper.appliedBuff);
                 }
             }
         }

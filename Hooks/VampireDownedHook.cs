@@ -5,7 +5,7 @@ using Unity.Collections;
 using Unity.Entities;
 
 namespace RPGMods.Hooks
-{
+{/*
     [HarmonyPatch(typeof(VampireDownedServerEventSystem), nameof(VampireDownedServerEventSystem.OnUpdate))]
     public class VampireDownedServerEventSystem_Patch
     {
@@ -48,5 +48,5 @@ namespace RPGMods.Hooks
                 //-- ----------------------------------
             }
         }
-    }
+    }*/
 }

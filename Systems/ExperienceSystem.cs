@@ -35,6 +35,19 @@ namespace RPGMods.Systems
         public static bool LevelRewardsOn = true;
         public static bool easyLvl15 = true;
 
+        public static float pvpXPLoss = 0;
+        public static float pvpXPLossPerLevel = 0;
+        public static float pvpXPLossPercent = 0;
+        public static float pvpXPLossPercentPerLevel = 0;
+        public static float pvpXPLossMultPerLvlDiff = 0;
+        public static float pvpXPLossMultPerLvlDiffSq = 0;
+        public static float pveXPLoss = 0;
+        public static float pveXPLossPerLevel = 0;
+        public static float pveXPLossPercent = 10;
+        public static float pveXPLossPercentPerLevel = 0;
+        public static float pveXPLossMultPerLvlDiff = 0;
+        public static float pveXPLossMultPerLvlDiffSq = 0;
+
         public static double EXPLostOnDeath = 0.10;
 
         private static readonly PrefabGUID vBloodType = new PrefabGUID(1557174542);
@@ -182,28 +195,61 @@ namespace RPGMods.Systems
             }
         }
 
-        public static void LoseEXP(Entity playerEntity)
-        {
+        public static void loseEXP(Entity playerEntity, int xpLost) {
             PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
             Entity userEntity = player.UserEntity;
             User user = entityManager.GetComponentData<User>(userEntity);
             ulong SteamID = user.PlatformId;
+            Database.player_experience.TryGetValue(SteamID, out int xp);
+            Database.player_experience[SteamID] = xp - xpLost;
 
-            int EXPLost;
+            SetLevel(playerEntity, userEntity, SteamID);
+        }
+        public static void deathXPLoss(Entity playerEntity, Entity killerEntity) {
+            PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
+            Entity userEntity = player.UserEntity;
+            User user = entityManager.GetComponentData<User>(userEntity);
+            ulong SteamID = user.PlatformId;
+            float xpLost;
             Database.player_experience.TryGetValue(SteamID, out int exp);
-            if (exp <= 0) EXPLost = 0;
-            else
-            {
-                int variableEXP = convertLevelToXp(convertXpToLevel(exp) + 1) - convertLevelToXp(convertXpToLevel(exp));
-                EXPLost = (int)(variableEXP * EXPLostOnDeath);
+            int killerLvl = 0;
+            if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
+            int pLvl = convertXpToLevel(exp);
+            float xpLossPerLevel = pveXPLossPerLevel;
+            float xpLossPercentPerLevel = pveXPLossPercentPerLevel;
+            float xpLoss = pveXPLoss;
+            float xpLossPercent = pveXPLossPercent;
+            int lvlDiff = pLvl - killerLvl;
+            if(xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
+            float xpLossMult = 1 + (lvlDiff*pveXPLossMultPerLvlDiff + lvlDiff*lvlDiff*pveXPLossMultPerLvlDiffSq);
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
+
+
+            if (entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter killer)) {
+
+                xpLossPerLevel = pvpXPLossPerLevel;
+                xpLossPercentPerLevel = pvpXPLossPercentPerLevel;
+                xpLoss = pvpXPLoss;
+                xpLossPercent = pvpXPLossPercent;
+                xpLossMult = 1 - (lvlDiff * pvpXPLossMultPerLvlDiff + lvlDiff * lvlDiff * pvpXPLossMultPerLvlDiffSq);
             }
 
-            int currentXp = exp - EXPLost;
+
+            if (exp <= 0 || xpLossMult <= 0) xpLost = 0;
+            else {
+                int lvlXP = convertLevelToXp(pLvl + 1) - convertLevelToXp(pLvl);
+                xpLost = xpLoss + (xpLossPerLevel * pLvl);
+                xpLost += (lvlXP * xpLossPercent + lvlXP * xpLossPercentPerLevel * pLvl) / 100;
+                xpLost *= xpLossMult;
+
+            }
+
+            int currentXp = exp - (int)xpLost;
             Database.player_experience[SteamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, SteamID);
             GetLevelAndProgress(currentXp, out int progress, out int earned, out int needed);
-            Output.SendLore(userEntity, $"You've been defeated,<color=#fffffffe> {EXPLostOnDeath * 100}%</color> XP is lost. [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
+            Output.SendLore(userEntity, $"You've been defeated,<color=#fffffffe> {xpLost}</color> XP is lost. [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
         }
 
         public static void BuffReceiver(Entity buffEntity)
@@ -248,7 +294,7 @@ namespace RPGMods.Systems
                             Database.player_abilityIncrease[SteamID] += 1;
                             Database.player_level_stats[SteamID][UnitStatType.MaxHealth] += .5f;
 
-                            Helper.ApplyBuff(user, entity, Database.Buff.Buff_VBlood_Perk_Moose);
+                            Helper.ApplyBuff(user, entity, Helper.appliedBuff);
 
                             //extra ability point rewards to spend for achieve certain level milestones
                             switch (i)

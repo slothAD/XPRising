@@ -45,6 +45,10 @@ namespace RPGMods.Utils
         public static ServerGameManager SGM = default;
         public static UserActivityGridSystem UAGS = default;
         public static int groupRange = 50;
+        
+        public static int buffGUID = -1465458722;
+        public static bool buffLogging = false;
+        public static PrefabGUID appliedBuff = Database.Buff.Buff_VBlood_Perk_Moose;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
         

@@ -167,21 +167,19 @@ namespace RPGMods.Hooks
         };
         #endregion
 
-        public static bool buffLogging = false;
-
         private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
         {
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entered Buff System, attempting Old Style");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entered Buff System, attempting Old Style");
             oldStyleBuffHook(__instance);
-            //if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Old Style Done, attemping New Style, just cause");
+            //if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Old Style Done, attemping New Style, just cause");
             //rebuiltBuffHook(__instance);
         }
 
         public static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
 
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Applying RPGMods Buffs");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Applying RPGMods Buffs");
             Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Owner found, hash: " + Owner.GetHashCode());
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Owner found, hash: " + Owner.GetHashCode());
             if (!entityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
             PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
@@ -189,21 +187,21 @@ namespace RPGMods.Hooks
             User Data = entityManager.GetComponentData<User>(User);
 
             var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
 
             //Buffer.Clear();
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
 
 
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
             if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
             if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
             if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
 
 
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing PowerUp Command");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing PowerUp Command");
             if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)) {
                 if (powerUpData.Equals(null)) {
                     powerUpData = new PowerUpData();
@@ -261,27 +259,26 @@ namespace RPGMods.Hooks
 
 
             
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing NoCD Command");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing NoCD Command");
             if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
             {
                 Buffer.Add(Cooldown);
             }
             
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Sun Immunity Command");
-            if (Database.sunimmunity.ContainsKey(Data.PlatformId))
-            {
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Sun Immunity Command");
+            if (Database.sunimmunity.ContainsKey(Data.PlatformId)) {
                 Buffer.Add(SunCharge);
                 Buffer.Add(Hazard);
                 Buffer.Add(SunResist);
             }
 
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Speeding Command");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Speeding Command");
             if (Database.speeding.ContainsKey(Data.PlatformId))
             {
                 Buffer.Add(Speed);
             }
 
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing GodMode Command");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing GodMode Command");
             if (Database.godmode.ContainsKey(Data.PlatformId))
             {
                 Buffer.Add(PResist);
@@ -301,7 +298,7 @@ namespace RPGMods.Hooks
                 Buffer.Add(DurabilityLoss);
             }
             
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Done Adding, Buffer length: " + Buffer.Length);
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Done Adding, Buffer length: " + Buffer.Length);
 
         }
 
@@ -312,11 +309,12 @@ namespace RPGMods.Hooks
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 
-            if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entities Length of " + entities.Length);
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entities Length of " + entities.Length);
             foreach (var entity in entities){
                 PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-                if (buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID of " + GUID.GuidHash + ": Compared to moose blood of " + Database.Buff.Buff_VBlood_Perk_Moose.GuidHash);
-                if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1465458722)
+                if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID of " + GUID.GuidHash);
+                //if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1465458722)
+                if(GUID.GuidHash == Helper.buffGUID)
                 {
                     oldStyleBuffApplicaiton(entity, entityManager);
                 }
@@ -342,7 +340,7 @@ namespace RPGMods.Hooks
                 Options = EntityQueryOptions.IncludeDisabled
             });
             NativeArray<Entity> pcArray = query.ToEntityArray(Allocator.Temp);
-            if (buffLogging) Plugin.Logger.LogInfo("got connected Players, array of length " + pcArray.Length);
+            if (Helper.buffLogging) Plugin.Logger.LogInfo("got connected Players, array of length " + pcArray.Length);
             foreach (var entity in pcArray)
             {
                 em.TryGetComponentData<PlayerCharacter>(entity, out PlayerCharacter pc);
@@ -356,8 +354,8 @@ namespace RPGMods.Hooks
 
                 em.TryGetBuffer<ModifyUnitStats>(entity, out var stats);
 
-                if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuffDOTS buffer of length " + Buffer.Length);
-                if (buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + stats.Length);
+                if (Helper.buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuffDOTS buffer of length " + Buffer.Length);
+                if (Helper.buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + stats.Length);
 
                 foreach (BuffData bd in bdl)
                 {
@@ -470,7 +468,7 @@ namespace RPGMods.Hooks
                 applied = true;
             }
             catch{
-                if (buffLogging) Plugin.Logger.LogInfo("Failed to apply buff to statID: " + tar);
+                if (Helper.buffLogging) Plugin.Logger.LogInfo("Failed to apply buff to statID: " + tar);
             }
             return applied;
         }
