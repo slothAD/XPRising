@@ -473,7 +473,7 @@ namespace RPGMods.Utils
             var remainingSquadValue = wantedLevel * 5;
             
             if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawn started (spawn value: {remainingSquadValue})");
-
+            
             var position = entityManager.GetComponentData<LocalToWorld>(player).Position;
             while (remainingSquadValue > 0) {
                 var nextUnitIndex = generate.Next(0, units.Count);
@@ -482,9 +482,15 @@ namespace RPGMods.Utils
                 var unitValue = Math.Max(unit.level - playerLevel, 1);
                 var possibleSpawnLimit = Math.Clamp(remainingSquadValue / unitValue, 1, 5);
                 var unitSpawn = generate.Next(1, possibleSpawnLimit);
+
+                // Set the unit level to playerLevel, or to the expected level of the unit (if that is lower).
+                // This scales the squad down to the PC level (or retains their own level) to help ensure the PC has a
+                // chance to kill them.
+                var level = Math.Min(unit.level, playerLevel);
+                var lifetime = HunterHuntedSystem.EncodeLifetime(Math.Clamp(level, 0, 99));
                 
-                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, new PrefabGUID((int)unit.type), position,
-                    unitSpawn, 1, 5, HunterHuntedSystem.ambush_despawn_timer);
+                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(
+                    empty_entity, new PrefabGUID((int)unit.type), position, unitSpawn, 1, 5, lifetime);
                 remainingSquadValue -= unitSpawn * unitValue;
                 if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawning: {unitSpawn}*{unit.type}");
             }

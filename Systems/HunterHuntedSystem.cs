@@ -160,6 +160,28 @@ namespace RPGMods.Systems
             LogHeatData(heatData, userEntity, $"log({on})");
         }
 
+        // Encodes the unit level into the lifetime
+        // This uses the decimal portion of the float value to encode the value into the lifetime.
+        public static float EncodeLifetime(int level) {
+            level = Math.Clamp(level, 0, 99);
+            // Adds level and level "checksum" - this assumes a level cap of 99
+            return ambush_despawn_timer + (level / 100f) + (level / 10_000f);
+        }
+
+        // Decodes a unit level out of the lifetime
+        // Returns whether true if the level decodes correctly
+        public static bool DecodeLifetime(float lifetime, out int level) {
+            if (lifetime >= ambush_despawn_timer && lifetime < ambush_despawn_timer + 1) {
+                var encoded = (lifetime - ambush_despawn_timer) * 100;
+                // This works better than rounding as this value will always be slightly above the expected level due to the checksum
+                level = (int)encoded;
+                var levelChecksum = (int)Math.Round((encoded - level) * 100);
+                return level == levelChecksum;
+            }
+            level = 0;
+            return false;
+        }
+
         private static void HeatManager(Entity userEntity, out PlayerHeatData heatData, out ulong steamID) {
             steamID = entityManager.GetComponentData<User>(userEntity).PlatformId;
             var cooldownPerSecond = (double)heat_cooldown / 60;
