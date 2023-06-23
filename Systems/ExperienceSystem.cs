@@ -48,6 +48,9 @@ namespace RPGMods.Systems
         public static float pveXPLossMultPerLvlDiff = 0;
         public static float pveXPLossMultPerLvlDiffSq = 0;
 
+        public static bool xpLostOnDown = false;
+        public static bool xpLostOnRelease = true;
+
         public static double EXPLostOnDeath = 0.10;
 
         private static readonly PrefabGUID vBloodType = new PrefabGUID(1557174542);
@@ -212,39 +215,72 @@ namespace RPGMods.Systems
             ulong SteamID = user.PlatformId;
             float xpLost;
             Database.player_experience.TryGetValue(SteamID, out int exp);
-            int killerLvl = 0;
-            if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
             int pLvl = convertXpToLevel(exp);
+            int killerLvl = pLvl;
+            bool pvpKill = false;
+            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter killer);
+            if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
+            else {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
+                if (entityManager.TryGetComponentData<EntityOwner>(killerEntity, out EntityOwner eOwn)) {
+                    if (entityManager.TryGetComponentData<UnitLevel>(eOwn, out killerUnitLevel)) {
+                        killerLvl = killerUnitLevel.Level;
+                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityOwner has level: " + killerLvl);
+                        if (!pvpKill) {
+                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eOwn, out killer);
+                        }
+                    }
+                    else if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityOwner has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eOwn));
+                }
+                if (entityManager.TryGetComponentData<EntityCreator>(killerEntity, out EntityCreator eCreator)) {
+                    if (entityManager.TryGetComponentData<UnitLevel>(eCreator.Creator._Entity, out killerUnitLevel)) {
+                        killerLvl = killerUnitLevel.Level;
+                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityCreator has level: " + killerLvl);
+                        if (!pvpKill) {
+                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eCreator.Creator._Entity, out killer);
+                        }
+                    } else if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityCreator has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eCreator.Creator._Entity));
+                }
+            }
             float xpLossPerLevel = pveXPLossPerLevel;
             float xpLossPercentPerLevel = pveXPLossPercentPerLevel;
             float xpLoss = pveXPLoss;
             float xpLossPercent = pveXPLossPercent;
             int lvlDiff = pLvl - killerLvl;
-            if(xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
-            float xpLossMult = 1 + (lvlDiff*pveXPLossMultPerLvlDiff + lvlDiff*lvlDiff*pveXPLossMultPerLvlDiffSq);
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
+            float lossMultPerDiff = pveXPLossMultPerLvlDiff;
+            float lossMultPerDiffsq = pveXPLossMultPerLvlDiffSq;
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
 
-
-            if (entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter killer)) {
-
+            if (pvpKill) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": PvP Kill");
                 xpLossPerLevel = pvpXPLossPerLevel;
                 xpLossPercentPerLevel = pvpXPLossPercentPerLevel;
                 xpLoss = pvpXPLoss;
                 xpLossPercent = pvpXPLossPercent;
-                xpLossMult = 1 - (lvlDiff * pvpXPLossMultPerLvlDiff + lvlDiff * lvlDiff * pvpXPLossMultPerLvlDiffSq);
+                lossMultPerDiff = pvpXPLossMultPerLvlDiff;
+                lossMultPerDiffsq = pvpXPLossMultPerLvlDiffSq;
             }
+            float xpLossMult = 1 - (lvlDiff * lossMultPerDiff + lvlDiff * lvlDiff * lossMultPerDiffsq);
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": xpLossMult per level " + lossMultPerDiff + " xpLossMultPerDiffSquared: " + lossMultPerDiffsq);
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Flat Loss: " + xpLoss + ", Loss per level: " + xpLossPerLevel + ", Percent Loss: " + xpLossPercent + ", Percent Loss Per Level: " + xpLossPercentPerLevel);
 
 
             if (exp <= 0 || xpLossMult <= 0) xpLost = 0;
             else {
                 int lvlXP = convertLevelToXp(pLvl + 1) - convertLevelToXp(pLvl);
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": lvlXP is "+ lvlXP);
                 xpLost = xpLoss + (xpLossPerLevel * pLvl);
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": so our static XP Loss is " + xpLost);
                 xpLost += (lvlXP * xpLossPercent + lvlXP * xpLossPercentPerLevel * pLvl) / 100;
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": adding on the percentile loss we have " + xpLost);
                 xpLost *= xpLossMult;
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": then multiplying by the loss mult we get " + xpLost);
 
             }
 
             int currentXp = exp - (int)xpLost;
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": subtracing that from our " + exp + " we get " + currentXp);
             Database.player_experience[SteamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, SteamID);

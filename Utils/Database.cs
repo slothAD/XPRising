@@ -102,6 +102,7 @@ namespace RPGMods.Utils
         //-- -- -- NEW Database
         public static ConcurrentDictionary<ulong, PvPData> PvPStats { get; set; }
         public static Dictionary<ulong, SiegeData> SiegeState = new();
+        public static Dictionary<Entity, Entity> killMap { get; set; }
         //-- -- -- OLD Database (To be removed)
         public static Dictionary<ulong, int> pvpkills { get; set; }
         public static Dictionary<ulong, int> pvpdeath { get; set; }
