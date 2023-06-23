@@ -18,7 +18,7 @@ namespace RPGMods.Systems
         public static int ambush_chance = 50;
         public static float ambush_despawn_timer = 300;
 
-        public static bool isDebugging = false;
+        public static bool factionLogging = false;
 
         private static Random rand = new();
 
@@ -30,8 +30,8 @@ namespace RPGMods.Systems
             var victimFaction = victim.FactionGuid._Value;
 
             var faction = Helper.ConvertGuidToFaction(victimFaction);
-            if (isDebugging || faction == Faction.Unknown) {
-                var factionString = $"{DateTime.Now}: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}";
+            if (factionLogging || faction == Faction.Unknown) {
+                var factionString = $"{DateTime.Now}: Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}";
                 Plugin.Logger.LogWarning(factionString);
             }
 
@@ -117,10 +117,10 @@ namespace RPGMods.Systems
                 var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
 
                 if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
-                    if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} can ambush");
+                    if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} can ambush");
                     if (rand.Next(0, 100) <= ambush_chance) {
                         if (heatData.isLogging) Output.SendLore(userEntity, $"{faction} is ambushing you!");
-                        if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} is ambushing");
+                        if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} is ambushing");
                         FactionHeat.Ambush(userEntity, playerEntity, faction, wantedLevel);
                         heat.lastAmbushed = DateTime.Now;
                         heatData.heat[faction] = heat;
@@ -197,11 +197,11 @@ namespace RPGMods.Systems
             var lastCombatEnd = Cache.GetCombatEnd(steamID);
 
             var elapsedTime = CooldownPeriod(heatData.lastCooldown, lastCombatStart, lastCombatEnd);
-            if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
+            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
 
             if (elapsedTime > 0) {
                 var cooldownValue = (int)Math.Floor(elapsedTime * cooldownPerSecond);
-                if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
+                if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
 
                 // Update all heat levels
                 foreach (var faction in FactionHeat.ActiveFactions) {
@@ -224,7 +224,7 @@ namespace RPGMods.Systems
             var cdPeriodEnd = DateTime.Now;
             
             var inCombat = lastCombatStart > lastCombatEnd;
-            if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: combat: {inCombat}");
+            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: combat: {inCombat}");
             if (inCombat) {
                 // If we are in combat, cdPeriodEnd is the start of combat;
                 cdPeriodEnd = lastCombatStart;
@@ -234,7 +234,7 @@ namespace RPGMods.Systems
             var cdPeriodStartAfterCombat = lastCombatEnd + TimeSpan.FromSeconds(20);
             cdPeriodStart = lastCooldown > cdPeriodStartAfterCombat ? lastCooldown : cdPeriodStartAfterCombat;
             
-            if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: end before start: {cdPeriodEnd < cdPeriodStart}");
+            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: end before start: {cdPeriodEnd < cdPeriodStart}");
             // If cdPeriodEnd is earlier than cdPeriodStart, 0 seconds have elapsed in the cooldown period
             return cdPeriodEnd < cdPeriodStart ? 0 : (cdPeriodEnd - cdPeriodStart).TotalSeconds;
         }
@@ -254,7 +254,7 @@ namespace RPGMods.Systems
 
         private static void LogHeatData(PlayerHeatData heatData, Entity userEntity, string origin) {
             if (heatData.isLogging) Output.SendLore(userEntity, HeatDataString(heatData, true));
-            if (isDebugging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat({origin}): {HeatDataString(heatData, false)}");
+            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat({origin}): {HeatDataString(heatData, false)}");
         }
     }
 }

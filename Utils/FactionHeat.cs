@@ -64,7 +64,7 @@ public static class FactionHeat {
         new("The undead are here to kill you!", new[] { new[] { new UnitSpawn(7, 5, 10), new UnitSpawn(9, 1)} })
     };
 
-    private static readonly int[] HeatLevels = { 150, 250, 500, 1000, 1500, 3000 };
+    public static readonly int[] HeatLevels = { 150, 250, 500, 1000, 1500, 3000 };
 
     private static readonly AmbushLevel[] UnknownAmbushLevels = {new("", Array.Empty<UnitSpawn[]>())};
 

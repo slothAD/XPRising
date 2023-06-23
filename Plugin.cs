@@ -189,6 +189,8 @@ namespace RPGMods
 
         private static ConfigEntry<bool> buffLogging;
         private static ConfigEntry<bool> xpLogging;
+        private static ConfigEntry<bool> deathLogging;
+        private static ConfigEntry<bool> factionLogging;
 
 
         public static bool isInitialized = false;
@@ -273,7 +275,7 @@ namespace RPGMods
             GolemSpellReduction = Config.Bind("Siege", "Spell Damage Reduction", 0.5f, "Reduce incoming spell damage by this much. Ex.: 0.75 -> 75%");
 
             HunterHuntedEnabled = Config.Bind("HunterHunted", "Enable", true, "Enable/disable the HunterHunted system.");
-            HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 10, "Set the reduction value for player heat for every minute.");
+            HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 10, "Set the reduction value for player heat per minute.");
             Ambush_Interval = Config.Bind("HunterHunted", "Ambush Interval", 60, "Set how many seconds player can be ambushed again since last ambush.");
             Ambush_Chance = Config.Bind("HunterHunted", "Ambush Chance", 50, "Set the percentage that an ambush may occur for every cooldown interval.");
             Ambush_Despawn_Unit_Timer = Config.Bind("HunterHunted", "Ambush Despawn Timer", 300f, "Despawn the ambush squad after this many second if they are still alive.\n" +
@@ -406,18 +408,19 @@ namespace RPGMods
             semikaBloodlineMinStrengths = Config.Bind("Bloodline Rates", "Semika Bloodline Minimum Strengths", "0, 50, 100", "The minimum bloodline strength to recieve the specified stat.");
             semikaBloodlineRates = Config.Bind("Bloodline Rates", "Semika Bloodline Rates", "0.005, 0.005, 0.0025", "The amount per bloodline strength % recieved once strength is met.");
 
-
             bloodlineNames = Config.Bind("Bloodline Rates", "Bloodline Names", "Dracula the Progenitor, Arwen the Godeater, Ilvris Dragonblood, Aya the Shadowlord, Nytheria the Destroyer, Hadubert the Inferno, Rei the Binder, Semika the Evershifting", "Rename the bloodlines here, the starting names are from supporters, Seperate names with commas, must contain exactly 8 names.");
 
-
-
-
-
+            
+            
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
 
+            
+            
             xpLogging = Config.Bind("Debug", "XP system logging", false, "Logs detailed information about the experience system in your console, enable before sending me any errors with the xp system!");
             buffLogging = Config.Bind("Debug", "Buff system logging", false, "Logs detailed information about the buff system in your console, enable before sending me any errors with the buff system!");
+            deathLogging = Config.Bind("Debug", "Death hook logging", false, "Logs detailed information about the death hook in your console.");
+            factionLogging = Config.Bind("Debug", "Wanted system logging", false, "Logs detailed information about the wanted system in your console, enable before sending me any errors with the wanted system!");
 
             if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
             if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
@@ -673,8 +676,8 @@ namespace RPGMods
             ModifyUnitStatBuffSystem_Spawn_Patch.buffLogging = buffLogging.Value;
             DebugBuffSystem_Patch.buffLogging = buffLogging.Value;
             BuffSystem_Spawn_Server_Patch.buffLogging = buffLogging.Value;
-            DeathEventListenerSystem_Patch.deathLogging = false;
-            HunterHuntedSystem.isDebugging = false;
+            DeathEventListenerSystem_Patch.deathLogging = deathLogging.Value;
+            HunterHuntedSystem.factionLogging = factionLogging.Value;
 
             Logger.LogInfo("Finished initialising");
 

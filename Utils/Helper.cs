@@ -118,10 +118,10 @@ namespace RPGMods.Utils
             foreach (var entity in allyBuffer) {
                 if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got Entity " + entity);
                 if (Plugin.Server.EntityManager.HasComponent<PlayerCharacter>(entity)) {
-                    if (ExperienceSystem.xpLogging)
-                        Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity);
+                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity);
                     if (entity.Equals(playerCharacter)) {
-                        Plugin.Logger.LogInfo(DateTime.Now + ": Entity is self");
+                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is self");
+                        // We are an ally of ourself.
                         group[entity] = entity;
                         continue;
                     }
