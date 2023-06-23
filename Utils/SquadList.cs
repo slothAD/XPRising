@@ -224,7 +224,6 @@ namespace RPGMods.Utils {
                         new List<UnitDetails>() {
                             new(Units.CHAR_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
                         });
-                    break;
                 default:
                     Plugin.Logger.LogWarning($"No specific squad generation handling has been added for {faction}");
                     break;

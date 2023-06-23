@@ -17,6 +17,7 @@ namespace RPGMods.Systems
         public static int ambush_interval = 60;
         public static int ambush_chance = 50;
         public static float ambush_despawn_timer = 300;
+        public static int vBloodMultiplier = 20;
 
         public static bool factionLogging = false;
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using RPGMods.Systems;
 using Unity.Entities;
 using Faction = RPGMods.Utils.Prefabs.Faction;
 
@@ -18,8 +19,7 @@ public static class FactionHeat {
     private static readonly string[] ColourGradient = { "fef001", "ffce03", "fd9a01", "fd6104", "ff2c05", "f00505" };
 
     public static readonly int[] HeatLevels = { 150, 250, 500, 1000, 1500, 3000 };
-
-    private static int vBloodMultiplier = 20;
+    
     public static void GetActiveFactionHeatValue(Faction faction, bool isVBlood, out int heatValue, out Faction activeFaction) {
         switch (faction) {
             // Bandit
@@ -103,7 +103,7 @@ public static class FactionHeat {
                 break;
         }
 
-        if (isVBlood) heatValue *= vBloodMultiplier;
+        if (isVBlood) heatValue *= HunterHuntedSystem.vBloodMultiplier;
     }
 
     public static string GetFactionStatus(Faction faction, int heat) {
