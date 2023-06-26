@@ -467,7 +467,7 @@ Set the modifier for EXP gained for each ally(player) in vicinity.\
 Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)
 - `Ally Max Distance` [default `50`]\
 Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player
-- `Group Level Scheme` [default `2`]\
+- `Group Level Scheme` [default `3`]\
 Set the group levelling scheme for allied players. See experience section for scheme options.
 
 </details>
