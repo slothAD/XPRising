@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using BepInEx.Logging;
@@ -94,6 +95,7 @@ namespace RPGMods
         private static ConfigEntry<float> EXPFormula_1;
         private static ConfigEntry<double> EXPGroupModifier;
         private static ConfigEntry<float> EXPGroupMaxDistance;
+        private static ConfigEntry<int> EXPGroupLevelScheme;
 
         private static ConfigEntry<bool> EnableWeaponMaster;
         private static ConfigEntry<bool> EnableWeaponMasterDecay;
@@ -299,7 +301,7 @@ namespace RPGMods
             EXPGroupModifier = Config.Bind("Experience", "Group Modifier", 0.75, "Set the modifier for EXP gained for each ally(player) in vicinity.\n" +
                 "Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)");
             EXPGroupMaxDistance = Config.Bind("Experience", "Ally Max Distance", 50f, "Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player");
-            
+            EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 3, "Configure the group levelling scheme. See documentation.");
 
             EnableWeaponMaster = Config.Bind("Mastery", "Enable Weapon Mastery", true, "Enable/disable the weapon mastery system.");
             EnableWeaponMasterDecay = Config.Bind("Mastery", "Enable Mastery Decay", true, "Enable/disable the decay of weapon mastery when the user is offline.");
@@ -560,6 +562,10 @@ namespace RPGMods
             ExperienceSystem.GroupModifier = EXPGroupModifier.Value;
             ExperienceSystem.GroupMaxDistance = EXPGroupMaxDistance.Value;
             ExperienceSystem.easyLvl15 = EasyLevel15.Value;
+
+            if (Enum.IsDefined(typeof(ExperienceSystem.GroupLevelScheme), EXPGroupLevelScheme.Value)) {
+                ExperienceSystem.groupLevelScheme = (ExperienceSystem.GroupLevelScheme)EXPGroupLevelScheme.Value;
+            }
 
             Logger.LogInfo("Loading weapon mastery config");
             WeaponMasterSystem.isMasteryEnabled = EnableWeaponMaster.Value;
