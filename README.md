@@ -13,6 +13,34 @@ complete with exp sharing between clan members or other players designated as al
 </details>
 Now with a class system, currently undocumented.
 
+#### Group XP
+Killing with other vampires can provide group XP. This is governed by `Group Modifier`, `Group Level Scheme` and `Ally Max Distance`.
+<details>
+<summary>Group XP options</summary>
+
+A vampire is considered to be in your group if they are in the same clan and within the distance specified by `Ally Max Distance`.
+
+Group XP is modified by the `Group Modifier` and `Group Level Scheme`.
+
+Given a scenario of 2 allied vampires close together, PC 1 (lvl 10), PC 2 (lvl 20), where PC 1 kills the mob, the following table shows the level used to calculate each players XP:
+
+| Scheme | Name        | PC 1 | PC 2 |
+|--------|-------------|------|------|
+| 0      | None        | 10   | N/A  |
+| 1      | Average     | 15   | 15   |
+| 2      | Max         | 20   | 20   |
+| 3      | Each player | 10   | 20   |
+| 4      | Killer      | 10   | 10   |
+
+Notes:
+- `0`: Effectively disables group XP. Each vampire only gets XP for mobs that they get the killing blow on
+- `1`: Higher level vampires get more XP when grouped with lower level vampires
+- `2`: Lower level players are penalised when playing with higher level players
+- `3`: Each player gets XP based on their own level (Default behaviour)
+- `4`: Each player gets XP based on who killed the mob (Previous version behaviour)
+
+</details>
+
 ## Mastery System
 <details>
 <summary>Mastery System</summary>
@@ -439,6 +467,8 @@ Set the modifier for EXP gained for each ally(player) in vicinity.\
 Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)
 - `Ally Max Distance` [default `50`]\
 Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player
+- `Group Level Scheme` [default `3`]\
+Set the group levelling scheme for allied players. See experience section for scheme options.
 
 </details>
 

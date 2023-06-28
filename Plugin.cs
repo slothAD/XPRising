@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using BepInEx.Logging;
@@ -95,6 +96,7 @@ namespace RPGMods
         private static ConfigEntry<float> EXPFormula_1;
         private static ConfigEntry<double> EXPGroupModifier;
         private static ConfigEntry<float> EXPGroupMaxDistance;
+        private static ConfigEntry<int> EXPGroupLevelScheme;
 
         private static ConfigEntry<float> pvpXPLoss;
         private static ConfigEntry<float> pvpXPLossPerLevel;
@@ -318,6 +320,7 @@ namespace RPGMods
             EXPGroupModifier = Config.Bind("Experience", "Group Modifier", 0.75, "Set the modifier for EXP gained for each ally(player) in vicinity.\n" +
                 "Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)");
             EXPGroupMaxDistance = Config.Bind("Experience", "Group Range", 50f, "Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player");
+            EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 3, "Configure the group levelling scheme. See documentation.");
 
 
 
@@ -615,6 +618,9 @@ namespace RPGMods
             ExperienceSystem.pveXPLossPercentPerLevel = pveXPLossPercentPerLevel.Value;
             ExperienceSystem.pveXPLossMultPerLvlDiff = pveXPLossMultPerLvlDiff.Value;
             ExperienceSystem.pveXPLossMultPerLvlDiffSq = pveXPLossMultPerLvlDiffSq.Value;
+            if (Enum.IsDefined(typeof(ExperienceSystem.GroupLevelScheme), EXPGroupLevelScheme.Value)) {
+                ExperienceSystem.groupLevelScheme = (ExperienceSystem.GroupLevelScheme)EXPGroupLevelScheme.Value;
+            }
 
             Logger.LogInfo("Loading weapon mastery config");
             WeaponMasterSystem.isMasteryEnabled = EnableWeaponMaster.Value;
