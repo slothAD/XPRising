@@ -1,9 +1,30 @@
-# RPGMods
+# RPGMods - Gloomrot Update
 ### Server Only Mod
 Server only mod for RPG systems, which also includes ChatCommands with bug fixes.
 Read the changelog for extra details.
 My Fork adds a number of config options to mastery and allows you to invert the dynamic faction system, making them stronger when killed.
 #### [Video Demo of Experience & Mastery](https://streamable.com/k2p3bm)
+
+## Important Changes
+If you are updating from before 1.7.0 and you had custom rates for bloodlines or mastery, you will need to manually move them to their new names of Rates, Bloodline and Rates, Mastery which will be created when you next launch, this was done to make the config more readable in the future.
+
+## Gloomrot changes
+To get out for gloomrot through all the issues on my end, several systems are temporarily not active, and there is a workaround for buffing.\
+Currently you NEED to reequip boots to calculate mastery and bloodlines, they will take a snapshot of your current.  This is because the previous method no longer works\
+Backup saves are added in case of a crash, you might need to make the folders yourself however.
+Experience, Mastery, and Bloodlines are all that really work right now, and only some of the commands.
+PvP Content will be rebuilt later, and likely pulled out into a seperate mod.
+
+Many commands are now in community commands, Use that!
+
+1.6.3 has several bug fixes, some formatting updates and bug fixes from Aontas, and a compatability fix for serverlaunchfix by Deca
+It also has new debug log config options, turn them on if you need to give me the logs
+
+1.7.0 has a bevy of new configuration options for how to handle XP loss under the new Rates, Experience section, and merged in an XP sharing rework from aontas.
+It also includes config options for what buff to hijack, and what buff to apply when your mastery or bloodline changes, found in the Buff System section.
+It also changes the names of Mastery rates and Bloodline Rates config options to Rates, Mastery and Rates, Bloodline respectively
+
+
 
 ## Experience System
 <details>
