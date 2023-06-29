@@ -38,7 +38,7 @@ namespace RPGMods.Utils
             //BanSystem.SaveBanList();
             //WorldDynamicsSystem.SaveFactionStats(saveFolder);
             //WorldDynamicsSystem.SaveIgnoredMobs(saveFolder);
-            VampireDownedServerEventSystem_Patch.saveKillMap();
+            //VampireDownedServerEventSystem_Patch.saveKillMap();
 
             Plugin.Logger.LogInfo(DateTime.Now+": All databases saved to JSON file.");
         }
@@ -68,7 +68,7 @@ namespace RPGMods.Utils
             //BanSystem.LoadBanList();
             WorldDynamicsSystem.LoadFactionStats();
             WorldDynamicsSystem.LoadIgnoredMobs();
-            VampireDownedServerEventSystem_Patch.loadKillMap();
+            //VampireDownedServerEventSystem_Patch.loadKillMap();
 
             Plugin.Logger.LogInfo("All database is now loaded.");
         }

@@ -25,7 +25,7 @@ using Wetstone.API;
 
 namespace RPGMods
 {
-    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.6.2")]
+    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.7.1")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
 
     public class Plugin : BasePlugin

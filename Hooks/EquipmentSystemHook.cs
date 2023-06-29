@@ -85,7 +85,7 @@ namespace RPGMods.Hooks
         {
             //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
-            Plugin.Logger.LogInfo(System.DateTime.Now + ": Weapon System Patch Entry");
+            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Weapon System Patch Entry");
             if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
             {
                 EntityManager entityManager = __instance.EntityManager;
@@ -97,7 +97,7 @@ namespace RPGMods.Hooks
                     Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                     if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                     {
-                        Plugin.Logger.LogInfo(System.DateTime.Now + " Applying Moose buff");
+                        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + " Applying Moose buff");
                         Helper.ApplyBuff(User, Owner, Helper.appliedBuff);
                     }
                     if (ExperienceSystem.isEXPActive)
