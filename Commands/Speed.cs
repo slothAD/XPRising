@@ -31,9 +31,9 @@ namespace RPGMods.Commands
             return true;
         }
 
-        public static void SaveSpeed()
+        public static void SaveSpeed(string saveFolder)
         {
-            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
+            File.WriteAllText(saveFolder +"speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
         }
 
         public static bool RemoveSpeed(ChatCommandContext ctx)

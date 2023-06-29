@@ -11,30 +11,41 @@ namespace RPGMods.Utils
         //-- AutoSave is now directly hooked into the Server game save activity.
         public const string mainSaveFolder = "BepInEx/config/RPGMods/Saves/";
         public const string backupSaveFolder = "BepInEx/config/RPGMods/Saves/Backup/";
-        public static int saveCount = 0;
-        private static int backupFrequency = 5;
+        private static int saveCount = 0;
+        public static int backupFrequency = 5;
+        public static bool saveLogging = true;
         public static void SaveDatabase(){
             saveCount++;
             string saveFolder = mainSaveFolder;
             if(saveCount % backupFrequency == 0) {
                 saveFolder = backupSaveFolder;
             }
-            PermissionSystem.SaveUserPermission(); //-- Nothing new to save.
+            //PermissionSystem.SaveUserPermission(); //-- Nothing new to save.
             GodMode.SaveGodMode(saveFolder);
-            
-            SunImmunity.SaveImmunity();
-            //Waypoint.SaveWaypoints();
+            if(saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": God Mode Saved.");
+
+
+            SunImmunity.SaveImmunity(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Sun Immunity Saved.");
+            Waypoint.SaveWaypoints(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Waypoints Saved.");
             NoCooldown.SaveCooldown(saveFolder);
-            Speed.SaveSpeed();
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": No CD Saved.");
+            Speed.SaveSpeed(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Speed Saved.");
             //AutoRespawn.SaveAutoRespawn();
             //Kit.SaveKits();   //-- Nothing to save here for now.
             PowerUp.SavePowerUp(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Powerup Saved.");
 
             //-- System Related
             ExperienceSystem.SaveEXPData(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Experience Saved.");
             //PvPSystem.SavePvPStat();
             WeaponMasterSystem.SaveWeaponMastery(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Mastery Saved.");
             Bloodlines.saveBloodlines(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Bloodlines Saved.");
             //BanSystem.SaveBanList();
             //WorldDynamicsSystem.SaveFactionStats(saveFolder);
             //WorldDynamicsSystem.SaveIgnoredMobs(saveFolder);
@@ -54,10 +65,10 @@ namespace RPGMods.Utils
             SunImmunity.LoadSunImmunity();
             Speed.LoadSpeed();
 
-            /*
+            
             Waypoint.LoadWaypoints();
-            AutoRespawn.LoadAutoRespawn();
-            Kit.LoadKits();*/
+            //AutoRespawn.LoadAutoRespawn();
+            //Kit.LoadKits();
 
 
             //-- System Related

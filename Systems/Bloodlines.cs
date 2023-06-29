@@ -8,6 +8,7 @@ using Unity.Entities;
 using RPGMods.Utils;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using ProjectM.UI;
 
 namespace RPGMods.Systems
 {
@@ -130,6 +131,9 @@ namespace RPGMods.Systems
             Entity userEntity = em.GetComponentData<PlayerCharacter>(Killer).UserEntity;
             User User = em.GetComponentData<User>(userEntity);
             ulong SteamID = User.PlatformId;
+
+            
+                
 
             Blood bloodline;
             int bloodlineIndex = -1;
@@ -411,10 +415,10 @@ namespace RPGMods.Systems
                     json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
                     Database.playerBloodline = JsonSerializer.Deserialize<Dictionary<ulong, BloodlineData>>(json);
                 }
-                Plugin.Logger.LogWarning(DateTime.Now + "Bloodline DB Populated.");
+                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline DB Populated.");
             } catch {
                 Database.playerBloodline = new Dictionary<ulong, BloodlineData>();
-                Plugin.Logger.LogWarning(DateTime.Now+"Bloodline DB Created.");
+                Plugin.Logger.LogWarning(DateTime.Now+": Bloodline DB Created.");
             }
 
 
@@ -428,10 +432,10 @@ namespace RPGMods.Systems
                     json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
                     Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
                 }
-                Plugin.Logger.LogWarning(DateTime.Now + "Bloodline Decay DB Populated.");
+                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Decay DB Populated.");
             } catch {
                 Database.playerDecayBloodlineLogout = new Dictionary<ulong, DateTime>();
-                Plugin.Logger.LogWarning(DateTime.Now + "Bloodline Decay DB Created.");
+                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Decay DB Created.");
             }
 
 
@@ -445,10 +449,10 @@ namespace RPGMods.Systems
                     json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
                     Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
                 }
-                Plugin.Logger.LogWarning("Player Bloodline Logging DB Populated.");
+                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Logging DB Populated.");
             } catch {
                 Database.playerLogBloodline = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning("Player Bloodline Logging DB Created.");
+                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Logging DB Created.");
             }
         }
     }

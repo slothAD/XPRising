@@ -30,9 +30,9 @@ namespace RPGMods.Commands
             return true;
         }
 
-        public static void SaveImmunity()
+        public static void SaveImmunity(string saveFolder)
         {
-            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
+            File.WriteAllText(saveFolder + "sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
         }
 
         public static bool RemoveImmunity(ChatCommandContext ctx)

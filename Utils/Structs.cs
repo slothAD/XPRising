@@ -196,8 +196,14 @@ namespace RPGMods.Utils
             y = Y;
         }
     }
+    public struct newWaypointData {
+        public float x;
+        public float y;
+        public float z;
+        public newWaypointData(float X, float Y, float Z) {x = X; y = Y; z = Z; }
+    }
 
-    public struct WaypointData
+        public struct WaypointData
     {
         public string Name { get; set; }
         public ulong Owner { get; set; }

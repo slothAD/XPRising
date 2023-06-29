@@ -17,6 +17,9 @@ using VampireCommandFramework;
 using UnityEngine;
 using Il2CppSystem.Net;
 using System.IO;
+using System.Reflection;
+using System.Collections;
+using System.Text.Json;
 
 namespace RPGMods.Utils
 {
@@ -192,20 +195,16 @@ namespace RPGMods.Utils
             return name;
         }
 
-        public static void CreatePlayerCache()
-        {
-            if (PvPSystem.isHonorSystemEnabled)
-            {
-                if (Database.PvPStats == null)
-                {
+        public static void CreatePlayerCache() {
+            if (PvPSystem.isHonorSystemEnabled) {
+                if (Database.PvPStats == null) {
                     PvPSystem.LoadPvPStat();
                 }
             }
 
             Cache.NamePlayerCache.Clear();
             Cache.SteamPlayerCache.Clear();
-            EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
-            {
+            EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc() {
                 All = new ComponentType[]
                     {
                         ComponentType.ReadOnly<User>()
@@ -213,30 +212,26 @@ namespace RPGMods.Utils
                 Options = EntityQueryOptions.IncludeDisabled
             });
             var userEntities = query.ToEntityArray(Allocator.Temp);
-            foreach (var entity in userEntities)
-            {
+            foreach (var entity in userEntities) {
                 var userData = Plugin.Server.EntityManager.GetComponentData<User>(entity);
                 PlayerData playerData = new PlayerData(userData.CharacterName, userData.PlatformId, userData.IsConnected, entity, userData.LocalCharacter._Entity);
 
                 Cache.NamePlayerCache.TryAdd(GetTrueName(userData.CharacterName.ToString().ToLower()), playerData);
                 Cache.SteamPlayerCache.TryAdd(userData.PlatformId, playerData);
 
-                if (PvPSystem.isHonorSystemEnabled)
-                {
+                if (PvPSystem.isHonorSystemEnabled) {
                     Database.PvPStats.TryGetValue(userData.PlatformId, out var pvpStats);
                     Database.SiegeState.TryGetValue(userData.PlatformId, out var siegeData);
 
                     bool isHostile = HasBuff(userData.LocalCharacter._Entity, PvPSystem.HostileBuff);
-                    if ((pvpStats.Reputation <= -1000 || siegeData.IsSiegeOn) && isHostile == false)
-                    {
+                    if ((pvpStats.Reputation <= -1000 || siegeData.IsSiegeOn) && isHostile == false) {
                         isHostile = true;
                         if (PvPSystem.isEnableHostileGlow && !PvPSystem.isUseProximityGlow) ApplyBuff(entity, userData.LocalCharacter._Entity, PvPSystem.HostileBuff);
                     }
 
                     Cache.HostilityState[userData.LocalCharacter._Entity] = new StateData(userData.PlatformId, isHostile);
 
-                    if (siegeData.IsSiegeOn)
-                    {
+                    if (siegeData.IsSiegeOn) {
                         bool forceSiege = (siegeData.SiegeEndTime == DateTime.MinValue);
                         PvPSystem.SiegeON(userData.PlatformId, userData.LocalCharacter._Entity, entity, forceSiege, false);
                     }
@@ -246,6 +241,40 @@ namespace RPGMods.Utils
             Plugin.Logger.LogWarning("Player Cache Created.");
         }
 
+        public static Dictionary<TKey, TVal> LoadDB<TKey,TVal>(string specificFile) {
+            Dictionary<TKey, TVal> dict;
+            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
+            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);
+            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificFile);
+            try {
+                dict = JsonSerializer.Deserialize<Dictionary<TKey, TVal>>(json);
+                if (dict == null) {
+                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificFile);
+                    dict = JsonSerializer.Deserialize<Dictionary<TKey, TVal>>(json);
+                }
+            } catch {
+                dict = new Dictionary<TKey, TVal>();
+                Plugin.Logger.LogWarning(DateTime.Now+ ": DB Created for " + specificFile);
+            }
+            return dict;
+        }
+        public static void TeleportTo(ChatCommandContext ctx, newWaypointData position) {
+
+            var entity = Plugin.Server.EntityManager.CreateEntity(
+                    ComponentType.ReadWrite<FromCharacter>(),
+                    ComponentType.ReadWrite<PlayerTeleportDebugEvent>()
+                );
+
+            Plugin.Server.EntityManager.SetComponentData<FromCharacter>(entity, new() {
+                User = ctx.Event.SenderUserEntity,
+                Character = ctx.Event.SenderCharacterEntity
+            });
+
+            Plugin.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new() {
+                Position = new float3(position.x, position.y, position.z),
+                Target = PlayerTeleportDebugEvent.TeleportTarget.Self
+            });
+        }
         public static void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
         {
             var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
