@@ -344,9 +344,9 @@ namespace RPGMods.Systems
             strength *= (bld.strength[0] / 100) * bld.efficency[0] / stats.Length;
             Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity);
             // For some reason buffs are doubled if not wielding a none type weapon, so gotta check for that and halve it
-            if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
+            /*if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
                 strength /= 2;
-            }
+            }*/
             if (Helper.inverseMultiplierStats.Contains(stats[type][stat])) {
                 value = strength * effectiveness;
                 value = value / (value + rates[type][stat]);
@@ -369,9 +369,9 @@ namespace RPGMods.Systems
             }
             Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity);
             // For some reason buffs are doubled if not wielding a none type weapon, so gotta check for that and halve it
-            if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
+            /*if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
                 strength /= 2;
-            }
+            }*/
             if (Helper.inverseMultiplierStats.Contains(stats[type][stat])) {
                 value = strength * effectiveness;
                 value = value / (value + rates[type][stat]);
