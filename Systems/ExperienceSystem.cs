@@ -4,18 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
 using RPGMods.Utils;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.Linq;
-using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
-using Unity.Entities.UniversalDelegates;
-using MS.Internal.Xml.XPath;
 
 namespace RPGMods.Systems
 {
@@ -63,7 +57,6 @@ namespace RPGMods.Systems
 
         public static GroupLevelScheme groupLevelScheme = GroupLevelScheme.Average;
 
-        private static readonly PrefabGUID vBloodType = new PrefabGUID(1557174542);
         public static bool xpLogging = false;
         
         private struct CloseAlly {
@@ -168,7 +161,7 @@ namespace RPGMods.Systems
             if (entityManager.HasComponent<BloodConsumeSource>(victimEntity))
             {
                 var bloodSource = entityManager.GetComponentData<BloodConsumeSource>(victimEntity);
-                isVBlood = bloodSource.UnitBloodType.Equals(vBloodType);
+                isVBlood = bloodSource.UnitBloodType.Equals(Helper.vBloodType);
             }
             else
             {

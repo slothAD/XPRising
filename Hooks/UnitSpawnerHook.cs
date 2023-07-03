@@ -1,4 +1,5 @@
-﻿using ProjectM;
+﻿using System;
+using ProjectM;
 using HarmonyLib;
 using RPGMods.Utils;
 using RPGMods.Systems;
@@ -19,12 +20,16 @@ namespace RPGMods.Hooks
                     if (!__instance.EntityManager.HasComponent<LifeTime>(entity)) return;
 
                     var Duration = __instance.EntityManager.GetComponentData<LifeTime>(entity).Duration;
-                    if (Duration == HunterHuntedSystem.ambush_despawn_timer)
+                    // If this successfully gets decoded, then this is a spawn from the HunterHuntedSystem
+                    // ... or just extremely lucky.
+                    if (HunterHuntedSystem.DecodeLifetime(Duration, out var level))
                     {
                         // Change faction to Vampire Hunters for spawned units
                         var Faction = __instance.EntityManager.GetComponentData<FactionReference>(entity);
-                        Faction.FactionGuid = ModifiablePrefabGUID.Create(entity, __instance.EntityManager, new PrefabGUID(2120169232));
+                        Faction.FactionGuid = ModifiablePrefabGUID.Create(entity, __instance.EntityManager, new PrefabGUID((int)Prefabs.Faction.VampireHunters));
                         __instance.EntityManager.SetComponentData(entity, Faction);
+                        // Set the spawned unit level to the provided level
+                        __instance.EntityManager.SetComponentData(entity, new UnitLevel() {Level = level});
                     }
 
                     if (listen)

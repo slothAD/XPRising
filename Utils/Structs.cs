@@ -1,6 +1,5 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Commands;
 using RPGMods.Systems;
 using System;
 using System.Collections.Concurrent;
@@ -8,6 +7,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Faction = RPGMods.Utils.Prefabs.Faction;
 
 namespace RPGMods.Utils
 {
@@ -72,6 +72,23 @@ namespace RPGMods.Utils
         public int DailyPower { get; set; }
         public int RequiredPower { get; set; }
         public StatsBonus FactionBonus { get; set; }
+    }
+
+    public struct PlayerHeatData {
+        public struct Heat {
+            public int level { get; set; }
+            public DateTime lastAmbushed { get; set; }
+        }
+        
+        public Dictionary<Faction, Heat> heat { get; } = new();
+        public DateTime lastCooldown { get; set; }
+        public bool isLogging { get; set; }
+
+        public PlayerHeatData() {
+            foreach (Faction faction in FactionHeat.ActiveFactions) {
+                heat[faction] = new();
+            }
+        }
     }
 
     public struct PlayerGroup

@@ -6,10 +6,6 @@ using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 using RPGMods.Utils;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using Il2CppSystem.Net;
 
 namespace RPGMods.Systems
 {
@@ -32,8 +28,6 @@ namespace RPGMods.Systems
         public static Boolean spellMasteryNeedsNoneToLearn = true;
         public static Boolean linearCDR = false;
         public static Boolean CDRStacks = false;
-
-        private static PrefabGUID vBloodType = new PrefabGUID(1557174542);
 
         private static readonly Random rand = new Random();
 
@@ -170,7 +164,7 @@ namespace RPGMods.Systems
             if (em.HasComponent<BloodConsumeSource>(Victim))
             {
                 BloodConsumeSource BloodSource = em.GetComponentData<BloodConsumeSource>(Victim);
-                isVBlood = BloodSource.UnitBloodType.Equals(vBloodType);
+                isVBlood = BloodSource.UnitBloodType.Equals(Helper.vBloodType);
             }
             else
             {

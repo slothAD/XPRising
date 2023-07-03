@@ -271,8 +271,8 @@ namespace RPGMods.Systems
                 Database.command_permission["pvp_args"] = 100;
                 Database.command_permission["siege"] = 0;
                 Database.command_permission["siege_args"] = 100;
-                Database.command_permission["heat"] = 0;
-                Database.command_permission["heat_args"] = 100;
+                Database.command_permission["wanted"] = 0;
+                Database.command_permission["wanted_args"] = 100;
                 Database.command_permission["experience"] = 0;
                 Database.command_permission["experience_args"] = 100;
                 Database.command_permission["mastery"] = 0;

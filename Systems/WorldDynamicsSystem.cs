@@ -186,9 +186,9 @@ namespace RPGMods.Systems
                 Database.IgnoredMonstersGUID = new HashSet<PrefabGUID>();
                 foreach (var item in Database.IgnoredMonsters)
                 {
-                    if (Database.database_units.TryGetValue(item, out var GUID))
+                    if (Enum.TryParse(item, true, out Prefabs.Units unit))
                     {
-                        Database.IgnoredMonstersGUID.Add(GUID);
+                        Database.IgnoredMonstersGUID.Add(new PrefabGUID((int)unit));
                     }
                 }
                 Plugin.Logger.LogWarning("IgnoredMonsters DB Populated.");
@@ -198,8 +198,8 @@ namespace RPGMods.Systems
                 Database.IgnoredMonsters = new HashSet<string>();
                 Database.IgnoredMonstersGUID = new HashSet<PrefabGUID>();
 
-                Database.IgnoredMonsters.Add("CHAR_Undead_Banshee");
-                Database.IgnoredMonstersGUID.Add(Database.database_units["CHAR_Undead_Banshee"]);
+                Database.IgnoredMonsters.Add(Enum.GetName(Prefabs.Units.CHAR_Undead_GhostBanshee));
+                Database.IgnoredMonstersGUID.Add(new PrefabGUID((int)Prefabs.Units.CHAR_Undead_GhostBanshee));
 
                 SaveIgnoredMobs();
 
