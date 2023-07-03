@@ -51,6 +51,7 @@ namespace RPGMods.Utils
         
         public static int buffGUID = -1465458722;
         public static bool buffLogging = false;
+        public static bool deathLogging = true;
         public static PrefabGUID appliedBuff = Database.Buff.Buff_VBlood_Perk_Moose;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");

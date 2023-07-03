@@ -208,6 +208,8 @@ namespace RPGMods
 
         private static ConfigEntry<bool> buffLogging;
         private static ConfigEntry<bool> xpLogging;
+        private static ConfigEntry<bool> deathLogging;
+        private static ConfigEntry<bool> saveLogging;
 
         private static ConfigEntry<int> buffID;
         private static ConfigEntry<int> appliedBuff;
@@ -464,6 +466,8 @@ namespace RPGMods
 
             xpLogging = Config.Bind("Debug", "XP system logging", false, "Logs detailed information about the experience system in your console, enable before sending me any errors with the xp system!");
             buffLogging = Config.Bind("Debug", "Buff system logging", false, "Logs detailed information about the buff system in your console, enable before sending me any errors with the buff system!");
+            deathLogging = Config.Bind("Debug", "Death logging", false, "Logs detailed information about death events in your console, enable before sending me any errors with the xp system!");
+            saveLogging = Config.Bind("Debug", "Save system logging", false, "Logs detailed information about the save system in your console, enable before sending me any errors with the buff system!");
 
             if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
             if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
@@ -731,6 +735,10 @@ namespace RPGMods
 
             ExperienceSystem.xpLogging = xpLogging.Value;
             Helper.buffLogging = buffLogging.Value;
+            AutoSaveSystem.saveLogging = saveLogging.Value;
+            Helper.deathLogging = deathLogging.Value;
+
+
             Helper.buffGUID = buffID.Value;
             Helper.appliedBuff = new PrefabGUID(appliedBuff.Value);
 
