@@ -258,7 +258,7 @@ namespace RPGMods.Utils
             }
             return dict;
         }
-        public static void TeleportTo(ChatCommandContext ctx, newWaypointData position) {
+        public static void TeleportTo(ChatCommandContext ctx, Tuple<float,float,float> position) {
 
             var entity = Plugin.Server.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
@@ -271,7 +271,7 @@ namespace RPGMods.Utils
             });
 
             Plugin.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new() {
-                Position = new float3(position.x, position.y, position.z),
+                Position = new float3(position.Item1, position.Item2, position.Item3),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
         }

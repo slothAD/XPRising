@@ -12,7 +12,7 @@ namespace RPGMods.Commands {
     public static class Waypoint {
         public static int WaypointLimit = 3;
 
-        [Command("go", "g", "<waypoint Name>", "Teleports you to the specified waypoint", adminOnly:true)]
+        [Command("go", "g", "<waypoint Name>", "Teleports you to the specified waypoint", adminOnly: false)]
         public static void goToWaypoint(ChatCommandContext ctx, string waypoint) {
             var PlayerEntity = ctx.Event.SenderCharacterEntity;
             var SteamID = ctx.Event.User.PlatformId;
@@ -34,7 +34,7 @@ namespace RPGMods.Commands {
         }
 
 
-        [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: true)]
+        [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: false)]
         public static void setWaypoint(ChatCommandContext ctx, string name) {
             var SteamID = ctx.Event.User.PlatformId;
             if (Database.waypointDBNew.TryGetValue(name, out _)) {
@@ -53,7 +53,7 @@ namespace RPGMods.Commands {
                 return;
             }
             var location = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-            var f3_location = new newWaypointData(location.x, location.y, location.z);
+            var f3_location = new Tuple<float, float, float>(location.x, location.y, location.z);
             AddWaypoint(SteamID, f3_location, wp_name, name, false);
             ctx.Reply("Successfully added Waypoint.");
         }
@@ -62,7 +62,7 @@ namespace RPGMods.Commands {
         public static void setGlobalWaypoint(ChatCommandContext ctx, string name) {
             var SteamID = ctx.Event.User.PlatformId;
             var location = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-            var f3_location = new newWaypointData(location.x, location.y, location.z);
+            var f3_location = new Tuple<float, float, float>(location.x, location.y, location.z);
             AddWaypoint(SteamID, f3_location, name, name, true);
             ctx.Reply("Successfully added Waypoint.");
         }
@@ -74,7 +74,7 @@ namespace RPGMods.Commands {
             ctx.Reply("Successfully removed Waypoint.");
         }
 
-        [Command("remove", "r", "<waypoint name>", "Removes the specified personal waypoint", adminOnly: true)]
+        [Command("remove", "r", "<waypoint name>", "Removes the specified personal waypoint", adminOnly: false)]
         public static void removeWaypoint(ChatCommandContext ctx, string name) {
             var SteamID = ctx.Event.User.PlatformId;
             string wp_name = name + "_" + SteamID;
@@ -86,7 +86,7 @@ namespace RPGMods.Commands {
             ctx.Reply("Successfully removed Waypoint.");
         }
 
-        [Command("list", "l", "", "lists waypoints available to you", adminOnly: true)]
+        [Command("list", "l", "", "lists waypoints available to you", adminOnly: false)]
         public static void listWaypoints(ChatCommandContext ctx) {
             var SteamID = ctx.Event.User.PlatformId;
             int total_wp = 0;
@@ -126,7 +126,7 @@ namespace RPGMods.Commands {
 
         }
 
-        public static void AddWaypoint(ulong owner, newWaypointData location, string name, string true_name, bool isGlobal) {
+        public static void AddWaypoint(ulong owner, Tuple<float, float, float> location, string name, string true_name, bool isGlobal) {
             //var WaypointData = new WaypointData(true_name, owner, location);
             if (isGlobal) Database.waypointDBNew[true_name] = location;
             else Database.waypointDBNew[name] = location;
@@ -213,7 +213,7 @@ namespace RPGMods.Commands {
             Database.waypoints_owned = Helper.LoadDB<ulong, int>("total_waypoints.json");
             Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Populated.");
 
-            Database.waypointDBNew = Helper.LoadDB<string, newWaypointData>("waypointsNewDB.json");
+            Database.waypointDBNew = Helper.LoadDB<string, Tuple<float, float, float>>("waypointsNewDB.json");
             Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint New DB Populated.");
 
         }

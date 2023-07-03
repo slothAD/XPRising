@@ -74,7 +74,7 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, bool> godmode { get; set; }
         public static Dictionary<ulong, bool> speeding { get; set; }
         public static Dictionary<ulong, bool> autoRespawn { get; set; }
-        public static Dictionary<string, newWaypointData> waypointDBNew { get; set; }
+        public static Dictionary<string, Tuple<float,float,float>> waypointDBNew { get; set; }
 
         public static Dictionary<string, WaypointData> globalWaypoint { get; set; }
         public static Dictionary<string, WaypointData> waypoints { get; set; }
