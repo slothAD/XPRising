@@ -13,7 +13,7 @@ namespace RPGMods.Utils
         public const string backupSaveFolder = "BepInEx/config/RPGMods/Saves/Backup/";
         private static int saveCount = 0;
         public static int backupFrequency = 5;
-        public static bool saveLogging = true;
+        public static bool saveLogging = false;
         public static void SaveDatabase(){
             saveCount++;
             string saveFolder = mainSaveFolder;

@@ -24,7 +24,7 @@ It also has new debug log config options, turn them on if you need to give me th
 It also includes config options for what buff to hijack, and what buff to apply when your mastery or bloodline changes, found in the Buff System section.
 It also changes the names of Mastery rates and Bloodline Rates config options to Rates, Mastery and Rates, Bloodline respectively
 
-1.7.2 brings back waypoints, along with some bug fixes.
+
 
 ## Experience System
 <details>
