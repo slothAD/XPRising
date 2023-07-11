@@ -214,6 +214,8 @@ namespace RPGMods
 
         private static ConfigEntry<int> buffID;
         private static ConfigEntry<int> appliedBuff;
+        private static ConfigEntry<bool> humanReadablePercentageStats;
+        private static ConfigEntry<bool> inverseMultiplersDisplayReduction;
 
         public static bool isInitialized = false;
 
@@ -459,6 +461,8 @@ namespace RPGMods
 
             buffID = Config.Bind("Buff System", "Buff GUID", -1465458722, "The GUID of the buff you want to hijack for the buffs from mastery, bloodlines, and everything else from this mod\nDefault is boots, 1409441911 is cloak, but you can set anything else too");
             appliedBuff = Config.Bind("Buff System", "Applied Buff", -1464851863, "The GUID of the buff that gets applied when mastery, bloodline, etc changes. Doesnt need to be the same as the Buff GUID.");
+            humanReadablePercentageStats = Config.Bind("Buff System", "Human Readable Percentage Stats", false, "Determines if rates for percentage stats should be read as out of 100 instead of 1, off by default for compatability.");
+            inverseMultiplersDisplayReduction = Config.Bind("Buff System", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats dispay their reduction, or the final value.");
 
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
@@ -543,7 +547,7 @@ namespace RPGMods
             //CommandHandler.delay_Cooldown = DelayedCommands.Value;
             CommandRegistry.RegisterAll();
 
-            //Waypoint.WaypointLimit = WaypointLimit.Value;
+            Waypoint.WaypointLimit = WaypointLimit.Value;
 
             Logger.LogInfo("Loading permission config");
             PermissionSystem.isVIPSystem = EnableVIPSystem.Value;
@@ -742,10 +746,13 @@ namespace RPGMods
             Helper.buffLogging = buffLogging.Value;
             AutoSaveSystem.saveLogging = saveLogging.Value;
             Helper.deathLogging = deathLogging.Value;
-
+            
 
             Helper.buffGUID = buffID.Value;
             Helper.appliedBuff = new PrefabGUID(appliedBuff.Value);
+            Helper.humanReadablePercentageStats = humanReadablePercentageStats.Value;
+            Helper.inverseMultipersDisplayReduction = inverseMultiplersDisplayReduction.Value;
+
             HunterHuntedSystem.factionLogging = factionLogging.Value;
             SquadList.showDebugLogs = squadSpawnLogging.Value;
 

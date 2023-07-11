@@ -311,9 +311,11 @@ namespace RPGMods.Systems
             for (; type < end; type++) {
                 for (int i = 0; i < stats[type].Length; i++) {
                     double value = isDracula ? calcDraculaBuffValue(type, SteamID, i) : calcBuffValue(type, SteamID, i);
+                    Buffer.Add(Helper.makeBuff(stats[type][i], value));
+                    /*
                     var modType = ModificationType.Add;
                     if (Helper.inverseMultiplierStats.Contains(stats[type][i])) {
-                        value = 1.0f - value;
+                        //value = 1.0f - value;
                         modType = ModificationType.Set;
                         if (Helper.multiplierStats.Contains(stats[type][i])) {
                             modType = ModificationType.Multiply;
@@ -324,14 +326,14 @@ namespace RPGMods.Systems
                         Value = (float)value,
                         ModificationType = modType,
                         Id = ModificationId.NewId(0)
-                    });
+                    });*/
                 }
             }
         }
 
         public static double calcDraculaBuffValue(int type, ulong SteamID, int stat) {
             BloodlineData bld = getBloodlineData(SteamID);
-            double effectiveness = 1;
+            double effectiveness;
             effectiveness = bld.efficency[type];
             effectiveness = Math.Max(1.0f, effectiveness);
             double value;
@@ -340,24 +342,14 @@ namespace RPGMods.Systems
                 return 0.0;
             }
             strength *= (bld.strength[0] / 100) * bld.efficency[0] / stats.Length;
-            Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity);
-            // For some reason buffs are doubled if not wielding a none type weapon, so gotta check for that and halve it
-            /*if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
-                strength /= 2;
-            }*/
-            if (Helper.inverseMultiplierStats.Contains(stats[type][stat])) {
-                value = strength * effectiveness;
-                value = value / (value + rates[type][stat]);
-            }
-            else {
-                value = strength * rates[type][stat] * effectiveness;
-            }
+
+            value = Helper.calcBuffValue(strength, effectiveness, rates[type][stat], stats[type][stat]);
             return value;
         }
 
         public static double calcBuffValue(int type, ulong SteamID, int stat) {
             BloodlineData bld = getBloodlineData(SteamID);
-            double effectiveness = 1;
+            double effectiveness;
             effectiveness = bld.efficency[type];
             effectiveness = Math.Max(1.0f, effectiveness);
             double value;
@@ -365,18 +357,7 @@ namespace RPGMods.Systems
             if(strength < minStrengths[type][stat]) {
                 return 0.0;
             }
-            Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity);
-            // For some reason buffs are doubled if not wielding a none type weapon, so gotta check for that and halve it
-            /*if (WeaponMasterSystem.GetWeaponType(targetEntity) != WeaponType.None) {
-                strength /= 2;
-            }*/
-            if (Helper.inverseMultiplierStats.Contains(stats[type][stat])) {
-                value = strength * effectiveness;
-                value = value / (value + rates[type][stat]);
-            }
-            else {
-                value = strength * rates[type][stat] * effectiveness;
-            }
+            value = Helper.calcBuffValue(strength, effectiveness, rates[type][stat], stats[type][stat]);
             return value;
         }
 

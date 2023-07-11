@@ -15,6 +15,9 @@ using System.IO;
 using System.Reflection;
 using System.Collections;
 using System.Text.Json;
+using Epic.OnlineServices.Stats;
+using RPGMods.Commands;
+using Unity.Entities.UniversalDelegates;
 
 namespace RPGMods.Utils
 {
@@ -61,6 +64,45 @@ namespace RPGMods.Utils
         {
             sgm = (ServerGameManager)Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
             return true;
+        }
+
+        public static ModifyUnitStatBuff_DOTS makeBuff(int statID, double strength) {
+            ModifyUnitStatBuff_DOTS buff;
+
+            var modType = ModificationType.Add;
+            if (Helper.inverseMultiplierStats.Contains(statID)) {
+                if (statID == (int)UnitStatType.CooldownModifier && !WeaponMasterSystem.CDRStacks) {
+                    modType = ModificationType.Set;
+                } else if (Helper.multiplierStats.Contains(statID)) {
+                    modType = ModificationType.Multiply;
+                }
+            }
+            buff = (new ModifyUnitStatBuff_DOTS() {
+                StatType = (UnitStatType)statID,
+                Value = (float)strength,
+                ModificationType = modType,
+                Id = ModificationId.NewId(0)
+            });
+            return buff;
+        }
+        public static bool humanReadablePercentageStats = false;
+        public static bool inverseMultipersDisplayReduction = true;
+        public static double calcBuffValue(double strength, double effectiveness, double rate, int statID) {
+
+            if (Helper.percentageStats.Contains(statID) && humanReadablePercentageStats) {
+                rate /= 100;
+            }
+                double value = strength * rate * effectiveness;
+            if (Helper.inverseMultiplierStats.Contains(statID)) {
+                if (WeaponMasterSystem.linearCDR) {
+                    value = strength * effectiveness;
+                    value = value / (value + rate);
+                } else {
+                    value = (strength * effectiveness) / (rate * 2);
+                }
+                value = 1 - value;
+            }
+            return value;
         }
 
         public static bool GetServerGameSettings(out ServerGameSettings settings)
@@ -727,6 +769,7 @@ namespace RPGMods.Utils
         // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
         public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
             {(int)UnitStatType.CooldownModifier },
+            {(int)UnitStatType.PrimaryCooldownModifier },
             {(int)UnitStatType.PhysicalResistance },
             {(int)UnitStatType.SpellResistance },
             {(int)UnitStatType.ResistVsBeasts },
@@ -736,12 +779,30 @@ namespace RPGMods.Utils
             {(int)UnitStatType.ResistVsMechanical },
             {(int)UnitStatType.ResistVsPlayerVampires },
             {(int)UnitStatType.ResistVsUndeads },
+            {(int)UnitStatType.BloodDrain },
             {(int)UnitStatType.ReducedResourceDurabilityLoss }
+        };
+
+        //
+        public static HashSet<int> percentageStats = new HashSet<int> {
+            {(int)UnitStatType.PhysicalCriticalStrikeChance },
+            {(int)UnitStatType.SpellCriticalStrikeChance },
+            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
+            {(int)UnitStatType.SpellCriticalStrikeDamage },
+            {(int)UnitStatType.PhysicalLifeLeech },
+            {(int)UnitStatType.PrimaryLifeLeech },
+            {(int)UnitStatType.SpellLifeLeech },
+            {(int)UnitStatType.AttackSpeed },
+            {(int)UnitStatType.PrimaryAttackSpeed },
+            {(int)UnitStatType.PassiveHealthRegen},
+            {(int)UnitStatType.ResourceYield }
+
         };
 
         //This should be a dictionary lookup for the stats to what mod type they should use, and i should put the name strings in here, i might do it later.
         public static HashSet<int> multiplierStats = new HashSet<int> {
             {(int)UnitStatType.CooldownModifier },
+            {(int)UnitStatType.PrimaryCooldownModifier },
             {(int)UnitStatType.PhysicalResistance },
             {(int)UnitStatType.SpellResistance },
             {(int)UnitStatType.ResistVsBeasts },
@@ -752,6 +813,7 @@ namespace RPGMods.Utils
             {(int)UnitStatType.ResistVsPlayerVampires },
             {(int)UnitStatType.ResistVsUndeads },
             {(int)UnitStatType.ReducedResourceDurabilityLoss },
+            {(int)UnitStatType.BloodDrain },
             {(int)UnitStatType.ResourceYield }
 
         };

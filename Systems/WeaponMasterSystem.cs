@@ -305,13 +305,16 @@ namespace RPGMods.Systems
         }
 
         private static void applyBuff(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, int type, double mastery, ulong SteamID){
-            for (int i = 0; i < masteryStats[type].Length; i++)
-            {
-                double value = calcBuffValue(type, mastery, SteamID, i);
+            for (int i = 0; i < masteryStats[type].Length; i++){
+                double effectiveness = 1;
+                if (Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData wd) && effectivenessSubSystemEnabled)
+                    effectiveness = wd.efficency[type];
+                effectiveness = Math.Max(1.0f, effectiveness);
+                Buffer.Add(Helper.makeBuff(masteryStats[type][i], Helper.calcBuffValue(mastery, effectiveness, masteryRates[type][i], masteryStats[type][i])));/*
                 var modType = ModificationType.Add;
                 if ((UnitStatType)masteryStats[type][i] == UnitStatType.CooldownModifier)
                 {
-                    value = 1.0f - value;
+                    //value = 1.0f - value;
                     modType = ModificationType.Set;
                     if (CDRStacks)
                     {
@@ -324,7 +327,7 @@ namespace RPGMods.Systems
                     Value = (float)value,
                     ModificationType = modType,
                     Id = ModificationId.NewId(0)
-                });
+                });*/
             }
         }
 
@@ -354,7 +357,7 @@ namespace RPGMods.Systems
                 return 0.0f;
             }
             double value = mastery * masteryRates[type][stat] * effectiveness;
-            if ((UnitStatType)masteryStats[type][stat] == UnitStatType.CooldownModifier){
+            /*if ((UnitStatType)masteryStats[type][stat] == UnitStatType.CooldownModifier){
                 if (linearCDR){
                     value = mastery * effectiveness;
                     value = value / (value + masteryRates[type][stat]);
@@ -362,7 +365,8 @@ namespace RPGMods.Systems
                 else{
                     value = (mastery*effectiveness)/(masteryRates[type][stat]*2);
                 }
-            }
+            }*/
+            value = Helper.calcBuffValue(mastery, effectiveness, masteryRates[type][stat], masteryStats[type][stat]);
             return value;
         }
 
