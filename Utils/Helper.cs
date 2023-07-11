@@ -802,7 +802,7 @@ namespace RPGMods.Utils
         //This should be a dictionary lookup for the stats to what mod type they should use, and i should put the name strings in here, i might do it later.
         public static HashSet<int> multiplierStats = new HashSet<int> {
             {(int)UnitStatType.CooldownModifier },
-            {(int)UnitStatType.PrimaryCooldownModifier },
+            {(int)UnitStatType.PrimaryCooldownModifier },/*
             {(int)UnitStatType.PhysicalResistance },
             {(int)UnitStatType.SpellResistance },
             {(int)UnitStatType.ResistVsBeasts },
@@ -813,7 +813,7 @@ namespace RPGMods.Utils
             {(int)UnitStatType.ResistVsPlayerVampires },
             {(int)UnitStatType.ResistVsUndeads },
             {(int)UnitStatType.ReducedResourceDurabilityLoss },
-            {(int)UnitStatType.BloodDrain },
+            {(int)UnitStatType.BloodDrain },*/
             {(int)UnitStatType.ResourceYield }
 
         };

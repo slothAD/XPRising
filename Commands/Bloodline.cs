@@ -15,10 +15,8 @@ namespace RPGMods.Commands
         //[Command("bloodline [<log> <on>|<off>] [<reset> all|(bloodline)]", "Display your current bloodline progression, toggle the gain notification, or reset your bloodline to gain effectiveness.")]
 
         [Command("get", "g", "", "Display your current bloodline progression")]
-        public static void getBloodline(ChatCommandContext ctx)
-        {
-            if (!Bloodlines.areBloodlinesEnabled)
-            {
+        public static void getBloodline(ChatCommandContext ctx) {
+            if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
@@ -29,8 +27,7 @@ namespace RPGMods.Commands
             var SteamID = ctx.Event.User.PlatformId;
 
             bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var MasteryData);
-            if (!isDataExist)
-            {
+            if (!isDataExist) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
@@ -41,25 +38,21 @@ namespace RPGMods.Commands
             double masteryPercent;
             string print;
             BloodlineData bld = Bloodlines.getBloodlineData(SteamID);
-            if (detailedStatements)
-            {
-                for (bl = 0; bl < Bloodlines.stats.Length; bl++)
-                {
+            if (detailedStatements) {
+                for (bl = 0; bl < Bloodlines.stats.Length; bl++) {
                     if (bl >= Bloodlines.stats.Length)
                         ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
                     name = Bloodlines.names[bl];
                     masteryPercent = bld.strength[bl];
                     print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
-                    for (int i = 0; i < Bloodlines.stats[bl].Length; i++)
-                    {
-                        if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i])
-                        {
+                    for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
+                        if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
                             if (i > 0)
                                 print += ",";
                             print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
                             print += " <color=#75FF33>";
                             double val = Bloodlines.calcBuffValue(bl, SteamID, i);
-                            if(Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
+                            if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
                                 val = 1 - val;
                             }
                             print += $"{val:F3}";
@@ -69,10 +62,7 @@ namespace RPGMods.Commands
                     print += $") Effectiveness: {bld.efficency[bl] * 100}%";
                     ctx.Reply(print);
                 }
-            }
-
-            else
-            {
+            } else {
                 Blood blood = entityManager.GetComponentData<Blood>(ctx.Event.SenderCharacterEntity);
                 Bloodlines.bloodlineMap.TryGetValue(blood.BloodType, out bl);
                 if (bl >= Bloodlines.stats.Length)
@@ -80,15 +70,61 @@ namespace RPGMods.Commands
                 name = Bloodlines.names[bl];
                 masteryPercent = bld.strength[bl];
                 print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
-                for (int i = 0; i < Bloodlines.stats[bl].Length; i++)
-                {
-                    if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i])
-                    {
+                for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
+                    if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
                         if (i > 0)
                             print += ",";
                         print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
                         print += " <color=#75FF33>";
                         print += $"{Bloodlines.calcBuffValue(bl, SteamID, i):F3}";
+                        print += "</color>";
+                    }
+                }
+                print += $") Effectiveness: {bld.efficency[bl] * 100}%";
+                ctx.Reply(print);
+            }
+        }
+        [Command("get all", "ga", "", "Display all your bloodline progressions")]
+        public static void getAllBloodlines(ChatCommandContext ctx) {
+            if (!Bloodlines.areBloodlinesEnabled) {
+                ctx.Reply("Bloodline system is not enabled.");
+                return;
+            }
+            /*else {
+                ctx.Reply("The Bloodline system command is not yet coded.");
+                return;
+            }*/
+            var SteamID = ctx.Event.User.PlatformId;
+
+            bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var MasteryData);
+            if (!isDataExist) {
+                ctx.Reply("You haven't developed any bloodline...");
+                return;
+            }
+
+            ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
+            int bl;
+            string name;
+            double masteryPercent;
+            string print;
+            BloodlineData bld = Bloodlines.getBloodlineData(SteamID);
+            for (bl = 0; bl < Bloodlines.stats.Length; bl++) {
+                if (bl >= Bloodlines.stats.Length)
+                    ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
+                name = Bloodlines.names[bl];
+                masteryPercent = bld.strength[bl];
+                print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
+                for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
+                    if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
+                        if (i > 0)
+                            print += ",";
+                        print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
+                        print += " <color=#75FF33>";
+                        double val = Bloodlines.calcBuffValue(bl, SteamID, i);
+                        if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
+                            val = 1 - val;
+                        }
+                        print += $"{val:F3}";
                         print += "</color>";
                     }
                 }
