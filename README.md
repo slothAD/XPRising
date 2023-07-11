@@ -26,6 +26,8 @@ It also changes the names of Mastery rates and Bloodline Rates config options to
 
 1.7.2 brings back waypoints, along with some bug fixes.
 
+1.7.3 adds some bug fixes, waypoints should be linked to the config properly for example.
+
 ## Experience System
 <details>
 <summary>Experience System</summary>
