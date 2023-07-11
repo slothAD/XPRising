@@ -6,68 +6,48 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using VampireCommandFramework;
 
-namespace RPGMods.Commands
-{/*
-    [Command("kit", "kit <Name>", "Gives you a previously specified set of items.")]
-    public static class Kit
-    {
+namespace RPGMods.Commands {
+    public static class Kit {
         private static List<ItemKit> kits;
 
-        public static void Initialize(Context ctx)
-        {
-            if (ctx.Args.Length < 1)
-            {
-                ctx.Reply($"Kit name missing.");
-                return;
-            }
+        [Command("kit", usage:"kit <Name>", description:"Gives you a previously specified set of items.")]
+        public static void Initialize(ChatCommandContext ctx, string name) {
 
-            string name = string.Join(' ', ctx.Args);
-
-            try
-            {
+            try {
                 ItemKit kit = kits.First(x => x.Name.ToLower() == name.ToLower());
-                foreach (var guid in kit.PrefabGUIDs)
-                {
+                foreach (var guid in kit.PrefabGUIDs) {
                     Helper.AddItemToInventory(ctx, new PrefabGUID(guid.Key), guid.Value);
                 }
                 ctx.Reply($"You got the kit: <color=#ffff00>{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
-            }
-            catch
-            {
+            } catch {
                 ctx.Reply($"Kit doesn't exist.");
                 return;
             }
         }
 
-        public static void LoadKits()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/kits.json"))
-            {
+        public static void LoadKits() {
+            if (!File.Exists("BepInEx/config/RPGMods/kits.json")) {
                 var stream = File.Create("BepInEx/config/RPGMods/kits.json");
                 stream.Dispose();
             }
             string json = File.ReadAllText("BepInEx/config/RPGMods/kits.json");
-            try
-            {
+            try {
                 kits = JsonSerializer.Deserialize<List<ItemKit>>(json);
                 Plugin.Logger.LogWarning("Kits DB Populated.");
-            }
-            catch
-            {
+            } catch {
                 kits = new List<ItemKit>();
                 Plugin.Logger.LogWarning("Kits DB Created.");
             }
         }
 
-        public static void SaveKits()
-        {
-            var options = new JsonSerializerOptions()
-            {
+        public static void SaveKits() {
+            var options = new JsonSerializerOptions() {
                 WriteIndented = true,
                 IncludeFields = true
             };
             File.WriteAllText("BepInEx/config/RPGMods/kits.json", JsonSerializer.Serialize(kits, options));
         }
-    }*/
+    }
 }

@@ -3,6 +3,7 @@ using ProjectM.Behaviours;
 using ProjectM.Network;
 using RPGMods.Systems;
 using RPGMods.Utils;
+using System.Linq;
 using Unity.Entities;
 using VampireCommandFramework;
 
@@ -91,7 +92,11 @@ namespace RPGMods.Commands{
                     print += ",";
                 print += Helper.statTypeToString((UnitStatType)WeaponMasterSystem.masteryStats[weapon][i]);
                 print += " <color=#75FF33>";
-                print += $"{WeaponMasterSystem.calcBuffValue(weapon, masteryPercent, SteamID, i):F2}";
+                double val = WeaponMasterSystem.calcBuffValue(weapon, masteryPercent, SteamID, i);
+                if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(WeaponMasterSystem.masteryStats[weapon][i])) {
+                    val = 1 - val;
+                }
+                print += $"{val:F3}";
                 print += "</color>";
             }
             print += $") Effectiveness: {effectiveness * 100}%, Growth: {growth * 100}%";

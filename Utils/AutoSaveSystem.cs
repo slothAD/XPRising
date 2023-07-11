@@ -33,7 +33,8 @@ namespace RPGMods.Utils
             if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": No CD Saved.");
             Speed.SaveSpeed(saveFolder);
             if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Speed Saved.");
-            //AutoRespawn.SaveAutoRespawn();
+            AutoRespawn.SaveAutoRespawn(saveFolder);
+            if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Auto Respawn Saved.");
             //Kit.SaveKits();   //-- Nothing to save here for now.
             PowerUp.SavePowerUp(saveFolder);
             if (saveLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Powerup Saved.");
@@ -67,8 +68,8 @@ namespace RPGMods.Utils
 
             
             Waypoint.LoadWaypoints();
-            //AutoRespawn.LoadAutoRespawn();
-            //Kit.LoadKits();
+            AutoRespawn.LoadAutoRespawn();
+            Kit.LoadKits();
 
 
             //-- System Related
@@ -79,7 +80,7 @@ namespace RPGMods.Utils
             //BanSystem.LoadBanList();
             WorldDynamicsSystem.LoadFactionStats();
             WorldDynamicsSystem.LoadIgnoredMobs();
-            //VampireDownedServerEventSystem_Patch.loadKillMap();
+            VampireDownedServerEventSystem_Patch.loadKillMap();
 
             Plugin.Logger.LogInfo("All database is now loaded.");
         }

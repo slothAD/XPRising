@@ -15,7 +15,7 @@ namespace RPGMods.Commands
         //[Command("bloodline [<log> <on>|<off>] [<reset> all|(bloodline)]", "Display your current bloodline progression, toggle the gain notification, or reset your bloodline to gain effectiveness.")]
 
         [Command("get", "g", "", "Display your current bloodline progression")]
-        public static void bloodline(ChatCommandContext ctx)
+        public static void getBloodline(ChatCommandContext ctx)
         {
             if (!Bloodlines.areBloodlinesEnabled)
             {
@@ -58,7 +58,11 @@ namespace RPGMods.Commands
                                 print += ",";
                             print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
                             print += " <color=#75FF33>";
-                            print += $"{Bloodlines.calcBuffValue(bl, SteamID, i):F3}";
+                            double val = Bloodlines.calcBuffValue(bl, SteamID, i);
+                            if(Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
+                                val = 1 - val;
+                            }
+                            print += $"{val:F3}";
                             print += "</color>";
                         }
                     }

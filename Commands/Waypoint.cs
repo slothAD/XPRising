@@ -220,9 +220,9 @@ namespace RPGMods.Commands {
 
         public static void SaveWaypoints(string saveFolder) {
             saveOwned(saveFolder);
-            Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Saved.");
+            //Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Saved.");
             saveWPNew(saveFolder);
-            Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint new DB saved.");
+            //Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint new DB saved.");
         }
         public static void saveOwned(string saveFolder) {
             File.WriteAllText(saveFolder + "total_waypoints.json", JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));

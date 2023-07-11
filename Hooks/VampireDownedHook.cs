@@ -65,6 +65,9 @@ namespace RPGMods.Hooks
         }
 
         public static void loadKillMap() {
+            Database.killMap = new Dictionary<Entity, Entity>();
+            Plugin.Logger.LogWarning("KillData DB Created.");
+            /*
             Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
             Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);
             string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificFile);
@@ -79,7 +82,7 @@ namespace RPGMods.Hooks
                 Database.killMap = new Dictionary<Entity, Entity>();
                 Plugin.Logger.LogWarning("KillData DB Created.");
             }
-
+            */
         }
     }
 }
