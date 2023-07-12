@@ -27,6 +27,13 @@ namespace RPGMods.Commands {
             }
 
             if (Database.waypointDBNew.TryGetValue(waypoint + "_" + SteamID, out var WPData_)) {
+                if (WaypointLimit <= 0 && !ctx.Event.User.IsAdmin) {
+                    ctx.Reply("Personal Waypoints are forbidden to you.");
+                    if(Database.waypointDBNew.Remove(waypoint + "_" + SteamID)) {
+                        ctx.Reply("The forbidden waypoint has been destroyed.");
+                    }
+                    return;
+                }
                 Helper.TeleportTo(ctx, WPData_);
                 return;
             }
@@ -36,6 +43,10 @@ namespace RPGMods.Commands {
 
         [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: false)]
         public static void setWaypoint(ChatCommandContext ctx, string name) {
+            if(WaypointLimit <= 0 && !ctx.Event.User.IsAdmin) {
+                ctx.Reply("You may not create waypoints.");
+                return;
+            }
             var SteamID = ctx.Event.User.PlatformId;
             if (Database.waypointDBNew.TryGetValue(name, out _)) {
                 ctx.Reply($"A global waypoint with the \"{name}\" name existed. Please rename your waypoint.");

@@ -43,7 +43,7 @@ namespace RPGMods.Systems
         public static float pveXPLossMultPerLvlDiffSq = 0;
 
         public static bool xpLostOnDown = false;
-        public static bool xpLostOnRelease = true;
+        public static bool xpLostOnRelease = false;
 
         public static double EXPLostOnDeath = 0.10;
         

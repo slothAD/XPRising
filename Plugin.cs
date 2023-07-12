@@ -630,6 +630,10 @@ namespace RPGMods
             ExperienceSystem.pveXPLossPercentPerLevel = pveXPLossPercentPerLevel.Value;
             ExperienceSystem.pveXPLossMultPerLvlDiff = pveXPLossMultPerLvlDiff.Value;
             ExperienceSystem.pveXPLossMultPerLvlDiffSq = pveXPLossMultPerLvlDiffSq.Value;
+
+            ExperienceSystem.xpLostOnDown = xpLossOnDown.Value;
+            ExperienceSystem.xpLostOnRelease = xpLossOnRelease.Value;
+
             if (Enum.IsDefined(typeof(ExperienceSystem.GroupLevelScheme), EXPGroupLevelScheme.Value)) {
                 ExperienceSystem.groupLevelScheme = (ExperienceSystem.GroupLevelScheme)EXPGroupLevelScheme.Value;
             }
