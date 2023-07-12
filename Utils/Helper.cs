@@ -234,11 +234,6 @@ namespace RPGMods.Utils
         }
 
         public static void CreatePlayerCache() {
-            if (PvPSystem.isHonorSystemEnabled) {
-                if (Database.PvPStats == null) {
-                    PvPSystem.LoadPvPStat();
-                }
-            }
 
             Cache.NamePlayerCache.Clear();
             Cache.SteamPlayerCache.Clear();
@@ -257,23 +252,6 @@ namespace RPGMods.Utils
                 Cache.NamePlayerCache.TryAdd(GetTrueName(userData.CharacterName.ToString().ToLower()), playerData);
                 Cache.SteamPlayerCache.TryAdd(userData.PlatformId, playerData);
 
-                if (PvPSystem.isHonorSystemEnabled) {
-                    Database.PvPStats.TryGetValue(userData.PlatformId, out var pvpStats);
-                    Database.SiegeState.TryGetValue(userData.PlatformId, out var siegeData);
-
-                    bool isHostile = HasBuff(userData.LocalCharacter._Entity, PvPSystem.HostileBuff);
-                    if ((pvpStats.Reputation <= -1000 || siegeData.IsSiegeOn) && isHostile == false) {
-                        isHostile = true;
-                        if (PvPSystem.isEnableHostileGlow && !PvPSystem.isUseProximityGlow) ApplyBuff(entity, userData.LocalCharacter._Entity, PvPSystem.HostileBuff);
-                    }
-
-                    Cache.HostilityState[userData.LocalCharacter._Entity] = new StateData(userData.PlatformId, isHostile);
-
-                    if (siegeData.IsSiegeOn) {
-                        bool forceSiege = (siegeData.SiegeEndTime == DateTime.MinValue);
-                        PvPSystem.SiegeON(userData.PlatformId, userData.LocalCharacter._Entity, entity, forceSiege, false);
-                    }
-                }
             }
 
             Plugin.Logger.LogWarning("Player Cache Created.");
@@ -334,20 +312,6 @@ namespace RPGMods.Utils
             //}
 
             var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
-            if (PvPSystem.isHonorSystemEnabled && PvPSystem.isHonorTitleEnabled)
-            {
-                var vampire_name = GetTrueName(newName.ToString());
-
-                if (Database.PvPStats.TryGetValue(userData.PlatformId, out var PvPData))
-                {
-                    vampire_name = "[" + PvPSystem.GetHonorTitle(PvPData.Reputation).Title + "]" + vampire_name;
-                }
-                else
-                {
-                    vampire_name = "[" + PvPSystem.GetHonorTitle(0).Title + "]" + vampire_name;
-                }
-                newName = vampire_name;
-            }
             UpdatePlayerCache(userEntity, userData.CharacterName.ToString(), newName.ToString());
 
             var des = Plugin.Server.GetExistingSystem<DebugEventsSystem>();

@@ -42,11 +42,6 @@ namespace RPGMods.Hooks
                         }
                     }
 
-                    //-- Update PvP Stats & Check
-                    if (em.HasComponent<PlayerCharacter>(Killer) && em.HasComponent<PlayerCharacter>(Victim) && !Killer.Equals(Victim)){
-                        PvPSystem.Monitor(Killer, Victim);
-                        if (PvPSystem.isPunishEnabled) PvPSystem.PunishCheck(Killer, Victim);
-                    }
                 }
                 catch {
                     // The above code currently results in the following error:

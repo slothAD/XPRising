@@ -53,32 +53,6 @@ namespace RPGMods
         private static ConfigEntry<double> VIP_OutCombat_GarlicResistance;
         private static ConfigEntry<double> VIP_OutCombat_SilverResistance;
 
-        private static ConfigEntry<bool> AnnouncePvPKills;
-        private static ConfigEntry<bool> EnablePvPToggle;
-
-        private static ConfigEntry<bool> EnablePvPLadder;
-        private static ConfigEntry<int> PvPLadderLength;
-        private static ConfigEntry<bool> HonorSortLadder;
-        
-        private static ConfigEntry<bool> EnablePvPPunish;
-        private static ConfigEntry<bool> EnablePvPPunishAnnounce;
-        private static ConfigEntry<bool> ExcludeOfflineKills;
-        private static ConfigEntry<int> PunishLevelDiff;
-        private static ConfigEntry<float> PunishDuration;
-        private static ConfigEntry<int> PunishOffenseLimit;
-        private static ConfigEntry<float> PunishOffenseCooldown;
-
-        private static ConfigEntry<bool> EnableHonorSystem;
-        private static ConfigEntry<bool> EnableHonorTitle;
-        private static ConfigEntry<int> MaxHonorGainPerSpan;
-        private static ConfigEntry<bool> EnableHonorBenefit;
-        private static ConfigEntry<int> HonorSiegeDuration;
-        private static ConfigEntry<bool> EnableHostileGlow;
-        private static ConfigEntry<bool> UseProximityGlow;
-
-        private static ConfigEntry<bool> BuffSiegeGolem;
-        private static ConfigEntry<float> GolemPhysicalReduction;
-        private static ConfigEntry<float> GolemSpellReduction;
 
         private static ConfigEntry<bool> HunterHuntedEnabled;
         private static ConfigEntry<int> HeatCooldown;
@@ -270,33 +244,6 @@ namespace RPGMods
             VIP_OutCombat_MoveSpeed = Config.Bind("VIP.OutCombat", "Move Speed Multiplier", 1.25, "Multiply move speed when user is out of combat. -1.0 to disable.");
             VIP_OutCombat_ResYield = Config.Bind("VIP.OutCombat", "Resource Yield Multiplier", 2.0, "Multiply resource yield (not item drop) when user is out of combat. -1.0 to disable.");
 
-            AnnouncePvPKills = Config.Bind("PvP", "Announce PvP Kills", true, "Make a server wide announcement for all PvP kills.");
-            EnableHonorSystem = Config.Bind("PvP", "Enable Honor System", false, "Enable the honor system.");
-            EnableHonorTitle = Config.Bind("PvP", "Enable Honor Title", true, "When enabled, the system will append the title to their name.\nHonor system will leave the player name untouched if disabled.");
-            MaxHonorGainPerSpan = Config.Bind("PvP", "Max Honor Gain/Hour", 250, "Maximum amount of honor points the player can gain per hour.");
-            EnableHonorBenefit = Config.Bind("PvP", "Enable Honor Benefit & Penalties", true, "If disabled, the hostility state and custom siege system will be disabled.\n" +
-                "All other bonus is also not applied.");
-            HonorSiegeDuration = Config.Bind("PvP", "Custom Siege Duration", 180, "In minutes. Player will automatically exit siege mode after this many minutes has passed.\n" +
-                "Siege mode cannot be exited while duration has not passed.");
-            EnableHostileGlow = Config.Bind("PvP", "Enable Hostile Glow", true, "When set to true, hostile players will glow red.");
-            UseProximityGlow = Config.Bind("PvP", "Enable Proximity Hostile Glow", true, "If enabled, hostile players will only glow when they are close to other online player.\n" +
-                "If disabled, hostile players will always glow red.");
-            EnablePvPLadder = Config.Bind("PvP", "Enable PvP Ladder", true, "Enables the PvP Ladder in the PvP command.");
-            PvPLadderLength = Config.Bind("PvP", "Ladder Length", 10, "How many players should be displayed in the PvP Ladders.");
-            HonorSortLadder = Config.Bind("PvP", "Sort PvP Ladder by Honor", true, "This will automatically be false if honor system is not enabled.");
-            EnablePvPToggle = Config.Bind("PvP", "Enable PvP Toggle", false, "Enable/disable the pvp toggle feature in the pvp command.");
-
-            EnablePvPPunish = Config.Bind("PvP", "Enable PvP Punishment", false, "Enables the punishment system for killing lower level player.");
-            EnablePvPPunishAnnounce = Config.Bind("PvP", "Enable PvP Punish Announcement", true, "Announce all grief-kills that occured.");
-            ExcludeOfflineKills = Config.Bind("PvP", "Exclude Offline Grief", true, "Do not punish the killer if the victim is offline.");
-            PunishLevelDiff = Config.Bind("PvP", "Punish Level Difference", -10, "Only punish the killer if the victim level is this much lower.");
-            PunishOffenseLimit = Config.Bind("PvP", "Offense Limit", 3, "Killer must make this many offense before the punishment debuff is applied.");
-            PunishOffenseCooldown = Config.Bind("PvP", "Offense Cooldown", 300f, "Reset the offense counter after this many seconds has passed since last offense.");
-            PunishDuration = Config.Bind("PvP", "Debuff Duration", 1800f, "Apply the punishment debuff for this amount of time.");
-
-            BuffSiegeGolem = Config.Bind("Siege", "Buff Siege Golem", false, "Enabling this will reduce all incoming physical and spell damage according to config.");
-            GolemPhysicalReduction = Config.Bind("Siege", "Physical Damage Reduction", 0.5f, "Reduce incoming damage by this much. Ex.: 0.25 -> 25%");
-            GolemSpellReduction = Config.Bind("Siege", "Spell Damage Reduction", 0.5f, "Reduce incoming spell damage by this much. Ex.: 0.75 -> 75%");
 
             HunterHuntedEnabled = Config.Bind("HunterHunted", "Enable", true, "Enable/disable the HunterHunted system.");
             HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 10, "Set the reduction value for player heat per minute.");
@@ -533,8 +480,6 @@ namespace RPGMods
             Helper.GetServerGameSettings(out Helper.SGS);
             Helper.GetServerGameManager(out Helper.SGM);
             Helper.GetUserActivityGridSystem(out Helper.UAGS);
-            ProximityLoop.UpdateCache();
-            PvPSystem.Interlocked.isSiegeOn = false;
 
 
             //-- Commands Related
@@ -576,33 +521,6 @@ namespace RPGMods
             if (Ambush_Despawn_Unit_Timer.Value < 1) Ambush_Despawn_Unit_Timer.Value = 300f;
             HunterHuntedSystem.ambush_despawn_timer = Ambush_Despawn_Unit_Timer.Value + 0.44444f;
 
-            Logger.LogInfo("Loading PvP config");
-            PvPSystem.isPvPToggleEnabled = EnablePvPToggle.Value;
-            PvPSystem.isAnnounceKills = AnnouncePvPKills.Value;
-
-            PvPSystem.isHonorSystemEnabled = EnableHonorSystem.Value;
-            PvPSystem.isHonorTitleEnabled = EnableHonorTitle.Value;
-            PvPSystem.MaxHonorGainPerSpan = MaxHonorGainPerSpan.Value;
-            PvPSystem.SiegeDuration = HonorSiegeDuration.Value;
-            PvPSystem.isHonorBenefitEnabled = EnableHonorBenefit.Value;
-            PvPSystem.isEnableHostileGlow = EnableHostileGlow.Value;
-            PvPSystem.isUseProximityGlow = UseProximityGlow.Value;
-
-            PvPSystem.isLadderEnabled = EnablePvPLadder.Value;
-            PvPSystem.LadderLength = PvPLadderLength.Value;
-            PvPSystem.isSortByHonor = HonorSortLadder.Value;
-            
-            PvPSystem.isPunishEnabled = EnablePvPPunish.Value;
-            PvPSystem.isAnnounceGrief = EnablePvPPunishAnnounce.Value;
-            PvPSystem.isExcludeOffline = ExcludeOfflineKills.Value;
-            PvPSystem.PunishLevelDiff = PunishLevelDiff.Value;
-            PvPSystem.PunishDuration = PunishDuration.Value;
-            PvPSystem.OffenseLimit = PunishOffenseLimit.Value;
-            PvPSystem.Offense_Cooldown = PunishOffenseCooldown.Value;
-
-            SiegeSystem.isSiegeBuff = BuffSiegeGolem.Value;
-            SiegeSystem.GolemPDef.Value = GolemPhysicalReduction.Value;
-            SiegeSystem.GolemSDef.Value = GolemSpellReduction.Value;
 
             Logger.LogInfo("Loading XP config");
             ExperienceSystem.isEXPActive = EnableExperienceSystem.Value;

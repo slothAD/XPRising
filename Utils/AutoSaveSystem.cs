@@ -73,7 +73,6 @@ namespace RPGMods.Utils
 
 
             //-- System Related
-            PvPSystem.LoadPvPStat();
             ExperienceSystem.LoadEXPData();
             WeaponMasterSystem.LoadWeaponMastery();
             Bloodlines.loadBloodlines();

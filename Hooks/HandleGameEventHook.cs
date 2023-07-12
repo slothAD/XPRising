@@ -15,10 +15,6 @@ namespace RPGMods.Hooks
         //private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
-            //-- Player Location Caching
-            if (ExperienceSystem.isEXPActive || (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow)) ProximityLoop.UpdateCache();
-            //-- HonorSystem Hostile Glow
-            if (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow) ProximityLoop.HostileProximityGlow();
             /*
             //-- Day Cycle Tracking
             var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();

@@ -40,7 +40,6 @@ namespace RPGMods.Hooks {
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(killer, ev.Died);
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
                     if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
-                    if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(killer, ev.Died);
 
                 }
 

@@ -60,22 +60,6 @@ namespace RPGMods.Hooks
             }
         }
 
-        private static void Postfix(ArmorLevelSystem_Spawn __instance)
-        {
-            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
-
-            if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive)
-            {
-                NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-
-                foreach (var entity in entities)
-                {
-                    Entity Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
-                    if (PvPSystem.isPunishEnabled) PvPSystem.OnEquipChange(Owner);
-                }
-            }
-        }
     }
 
     [HarmonyPatch(typeof(WeaponLevelSystem_Spawn), nameof(WeaponLevelSystem_Spawn.OnUpdate))]
@@ -144,21 +128,6 @@ namespace RPGMods.Hooks
             }
         }
 
-        private static void Postfix(WeaponLevelSystem_Spawn __instance)
-        {
-            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
-
-            if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive)
-            {
-                NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-                foreach (var entity in entities)
-                {
-                    Entity Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                    if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
-                    if (PvPSystem.isPunishEnabled) PvPSystem.OnEquipChange(Owner);
-                }
-            }
-        }
     }
 
     [HarmonyPatch(typeof(WeaponLevelSystem_Destroy), nameof(WeaponLevelSystem_Destroy.OnUpdate))]
@@ -227,14 +196,13 @@ namespace RPGMods.Hooks
         {
             //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
-            if (ExperienceSystem.isEXPActive || PvPSystem.isPunishEnabled)
+            if (ExperienceSystem.isEXPActive)
             {
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities)
                 {
                     Entity Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
-                    if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive) PvPSystem.OnEquipChange(Owner);
                     if (ExperienceSystem.isEXPActive)
                     {
                         Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
