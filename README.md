@@ -28,6 +28,8 @@ It also changes the names of Mastery rates and Bloodline Rates config options to
 
 1.7.3 adds some bug fixes, waypoints should be linked to the config properly for example.
 
+1.7.4 removes the PvP stuff and fixes a major dumb bug from 1.7.3 DO NOT use 1.7.3. PvPMods coming soon with the pvp content, currently on patreon.
+
 ## Experience System
 <details>
 <summary>Experience System</summary>

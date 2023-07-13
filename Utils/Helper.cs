@@ -100,7 +100,7 @@ namespace RPGMods.Utils
                 } else {
                     value = (strength * effectiveness) / (rate * 2);
                 }
-                value = 1 - value;
+                //value = 1 - value;
             }
             return value;
         }
