@@ -223,13 +223,14 @@ namespace RPGMods.Systems
             if (isGroup) {
                 xpGained = (int)(xpGained * GroupModifier);
             }
-            
-            Database.player_experience[ally.steamID] = Math.Max(ally.currentXp, 0) + xpGained;;
+
+            var newXp = Math.Max(ally.currentXp, 0) + xpGained;
+            Database.player_experience[ally.steamID] = newXp;
 
             if (Database.player_log_exp.TryGetValue(ally.steamID, out bool isLogging))
             {
                 if (isLogging) {
-                    GetLevelAndProgress(ally.currentXp, out int progress, out int earned, out int needed);
+                    GetLevelAndProgress(newXp, out int progress, out int earned, out int needed);
                     Output.SendLore(ally.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
                 }
             }
