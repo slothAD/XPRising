@@ -46,8 +46,9 @@ namespace RPGMods.Utils
         public static ServerGameManager SGM = default;
         public static UserActivityGridSystem UAGS = default;
         public static int groupRange = 50;
-        
-        public static int buffGUID = -1465458722;
+
+        public static int buffGUID = 1444835872;
+        public static int forbiddenBuffGUID = -161632603;
         public static bool buffLogging = false;
         public static bool deathLogging = true;
         public static PrefabGUID appliedBuff = Database.Buff.Buff_VBlood_Perk_Moose;
@@ -100,7 +101,7 @@ namespace RPGMods.Utils
                 } else {
                     value = (strength * effectiveness) / (rate * 2);
                 }
-                //value = 1 - value;
+                value = 1 - value;
             }
             return value;
         }

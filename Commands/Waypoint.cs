@@ -143,7 +143,7 @@ namespace RPGMods.Commands {
             else Database.waypointDBNew[name] = location;
             if (!isGlobal && Database.waypoints_owned.TryGetValue(owner, out var total)) {
                 Database.waypoints_owned[owner] = total + 1;
-            } else Database.waypoints_owned[owner] = 0;
+            } else if(!isGlobal) Database.waypoints_owned[owner] = 1;
         }
 
         public static void RemoveWaypoint(ulong owner, string name, bool global) {

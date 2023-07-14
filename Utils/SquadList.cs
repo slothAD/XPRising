@@ -191,14 +191,14 @@ namespace RPGMods.Utils {
                         Units mainUnit;
                         switch (generate.Next(2)) {
                             case 0:
-                                mainUnit = Units.CHAR_Gloomrot_SpiderTank_Gattler;
+                                mainUnit = Units.CHAR_Gloomrot_Railgunner;
                                 break;
                             case 1:
-                                mainUnit = Units.CHAR_Gloomrot_SpiderTank_Zapper;
+                                mainUnit = Units.CHAR_Gloomrot_Pyro;
                                 break;
                             case 2:
                             default:
-                                mainUnit = Units.CHAR_Gloomrot_SpiderTank_LightningRod;
+                                mainUnit = Units.CHAR_Gloomrot_AceIncinerator;
                                 break;
                         }
 

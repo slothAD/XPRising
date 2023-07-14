@@ -279,16 +279,23 @@ namespace RPGMods.Hooks {
         }
 
         public static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
-            //if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 
             if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entities Length of " + entities.Length);
+
+            foreach (var entity in entities) {
+                PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+                if (GUID.GuidHash == Helper.forbiddenBuffGUID) {
+                    if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Forbidden buff found with GUID of " + GUID.GuidHash);
+                    return;
+                }
+            }
+
             foreach (var entity in entities) {
                 PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
                 if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID of " + GUID.GuidHash);
-                //if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose) || GUID.GuidHash == -1465458722)
                 if (GUID.GuidHash == Helper.buffGUID) {
                     oldStyleBuffApplicaiton(entity, entityManager);
                 }

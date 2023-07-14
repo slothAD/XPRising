@@ -15,6 +15,9 @@ namespace RPGMods.Hooks
         //private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
+            //-- Player Location Caching
+            if (ExperienceSystem.isEXPActive) ProximityLoop.UpdateCache();
+            //-- HonorSystem Hostile Glow
             /*
             //-- Day Cycle Tracking
             var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();

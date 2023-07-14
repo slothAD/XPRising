@@ -11,7 +11,8 @@ using Stunlock.Network;
 using System;
 using System.Reflection;
 
-namespace RPGMods.Hooks {
+namespace RPGMods.Hooks
+{
     /*
     [HarmonyPatch(typeof(LoadPersistenceSystemV2), nameof(LoadPersistenceSystemV2.SetLoadState))]
     public class PersistenceSystem_Patch
@@ -25,12 +26,15 @@ namespace RPGMods.Hooks {
         }
     }*/
 
-
+    
     [HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
-    public class ServerGameSetting_Patch {
+    public class ServerGameSetting_Patch
+    {
         private static bool isInitialized = false;
-        public static void Postfix() {
-            if (isInitialized == false) {
+        public static void Postfix()
+        {
+            if (isInitialized == false)
+            {
                 Plugin.Initialize();
                 isInitialized = true;
             }
@@ -49,23 +53,30 @@ namespace RPGMods.Hooks {
     }*/
 
     [HarmonyPatch(typeof(GameBootstrap), nameof(GameBootstrap.Start))]
-    public static class GameBootstrap_Patch {
-        public static void Postfix() {
+    public static class GameBootstrap_Patch
+    {
+        public static void Postfix()
+        {
             Plugin.Initialize();
         }
     }
 
     [HarmonyPatch(typeof(GameBootstrap), nameof(GameBootstrap.OnApplicationQuit))]
-    public static class GameBootstrapQuit_Patch {
-        public static void Prefix() {
+    public static class GameBootstrapQuit_Patch
+    {
+        public static void Prefix()
+        {
             AutoSaveSystem.SaveDatabase();
         }
     }
 
     [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserConnected))]
-    public static class OnUserConnected_Patch {
-        public static void Postfix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId) {
-            try {
+    public static class OnUserConnected_Patch
+    {
+        public static void Postfix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId)
+        {
+            try
+            {
                 var em = __instance.EntityManager;
                 var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
                 var serverClient = __instance._ApprovedUsersLookup[userIndex];
@@ -73,14 +84,20 @@ namespace RPGMods.Hooks {
                 var userData = __instance.EntityManager.GetComponentData<User>(userEntity);
                 bool isNewVampire = userData.CharacterName.IsEmpty;
 
-                if (!isNewVampire) {
-                    var playerName = userData.CharacterName.ToString();
-                    Helper.UpdatePlayerCache(userEntity, playerName, playerName);
-                    if (WeaponMasterSystem.isDecaySystemEnabled && WeaponMasterSystem.isMasteryEnabled) {
+                if (!isNewVampire)
+                {
+                   
+                    {
+                        var playerName = userData.CharacterName.ToString();
+                        Helper.UpdatePlayerCache(userEntity, playerName, playerName);
+                    }
+                    if (WeaponMasterSystem.isDecaySystemEnabled && WeaponMasterSystem.isMasteryEnabled)
+                    {
                         WeaponMasterSystem.DecayMastery(userEntity);
                     }
                 }
-            } catch { }
+            }
+            catch { }
         }
     }
     /*

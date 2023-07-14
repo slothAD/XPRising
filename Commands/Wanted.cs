@@ -84,7 +84,7 @@ namespace RPGMods.Commands
             }
         }
         
-        [Command("log", "l", "<On, Off>", "Turns on or off logging of heat data.", adminOnly: true)]
+        [Command("log", "l", "<On, Off>", "Turns on or off logging of heat data.", adminOnly: false)]
         public static void LogWanted(ChatCommandContext ctx, string flag){
             if (!HunterHuntedSystem.isActive){
                 ctx.Reply("Wanted system is not enabled.");
