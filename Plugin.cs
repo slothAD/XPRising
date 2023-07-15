@@ -165,6 +165,7 @@ namespace RPGMods
 
         private static ConfigEntry<bool> bloodlinesEnabled;
         private static ConfigEntry<bool> mercilessBloodlines;
+        private static ConfigEntry<bool>  draculaGetsAll;
         private static ConfigEntry<double> bloodlineGrowthMultiplier;
         private static ConfigEntry<double> bloodlineVBloodMultiplier;
         private static ConfigEntry<bool> bloodlineEfficencySubSystem;
@@ -351,6 +352,7 @@ namespace RPGMods
 
             bloodlinesEnabled = Config.Bind("Bloodlines", "Enable Bloodlines", true, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
             mercilessBloodlines = Config.Bind("Bloodlines", "Merciless Bloodlines", true, "Causes bloodlines to only grow when you kill something with a matching bloodline of higher strength, finally, a reward when you accidentally kill that 100% blood you found");
+            draculaGetsAll = Config.Bind("Bloodlines", "Dracula inherits all bloodlines", true, "Determines if Dracula (Frail) blood should inherit a portion of the other bloodlines.");
             bloodlineGrowthMultiplier = Config.Bind("Bloodlines", "Bloodline growth multiplier", 1.0, "The multiplier applied to all bloodline gains.");
             bloodlineVBloodMultiplier = Config.Bind("Bloodlines", "Bloodline VBlood Multiplier", 25.0, "The multiplier applied to the effective level of VBlood enemies for bloodline gains.");
             bloodlineEfficencySubSystem = Config.Bind("Bloodlines", "Enable Effectiveness Subsystem", true, "Enables the Effectiveness bloodline subsystem, which lets you reset your bloodline to gain a multiplier to the effects of the matching bloodline.");
@@ -644,6 +646,7 @@ namespace RPGMods
 
             Bloodlines.areBloodlinesEnabled = bloodlinesEnabled.Value;
             Bloodlines.mercilessBloodlines = mercilessBloodlines.Value;
+            Bloodlines.draculaGetsAll = draculaGetsAll.Value;
             Bloodlines.effectivenessSubSystemEnabled = bloodlineEfficencySubSystem.Value;
             Bloodlines.growthSubsystemEnabled = bloodlineGrowthSubsystem.Value;
 

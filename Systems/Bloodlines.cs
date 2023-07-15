@@ -19,6 +19,7 @@ namespace RPGMods.Systems
         public static bool bloodAmountModification = true;
 
         public static bool isDecaySystemEnabled = false;
+        public static bool draculaGetsAll = true;
         public static double growthMultiplier = 1;
         public static int DecayInterval = 60;
         public static int Online_DecayValue = 0;
@@ -141,8 +142,7 @@ namespace RPGMods.Systems
                 bloodline = em.GetComponentData<Blood>(Killer);
                 growthVal = UnitLevel.Level;
                 if(!bloodlineMap.TryGetValue(bloodline.BloodType, out bloodlineIndex)) {
-                    if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity))
-                    {
+                    if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)){
 
                         Plugin.Logger.LogWarning("Bloodline DB Populated.");
                         Output.SendLore(targetUserEntity, "Bloodline not found for guid of " + bloodline.BloodType.GuidHash);
@@ -306,7 +306,7 @@ namespace RPGMods.Systems
         }
         private static void applyBloodlineBuffs(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, int type, ulong SteamID) {
             int end = type + 1;
-            bool isDracula = type == 0;
+            bool isDracula = (type == 0 && draculaGetsAll);
             if (isDracula) { end = stats.Length; }
             for (; type < end; type++) {
                 for (int i = 0; i < stats[type].Length; i++) {
