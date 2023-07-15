@@ -4,6 +4,7 @@
 // Thanks https://github.com/decaprime
 public static class Prefabs {
     public enum Units {
+        Unknown = 0,
         CHAR_ArchMage_FlameSphere = 2138173476,
         CHAR_ArchMage_Summon = 805231073,
         CHAR_ArchMage_VBlood = -2013903325,

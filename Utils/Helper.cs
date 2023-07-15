@@ -723,6 +723,11 @@ namespace RPGMods.Utils
             if (Enum.IsDefined(typeof(Prefabs.Faction), guid.GetHashCode())) return (Prefabs.Faction)guid.GetHashCode();
             return Prefabs.Faction.Unknown;
         }
+        
+        public static Prefabs.Units ConvertGuidToUnit(PrefabGUID guid) {
+            if (Enum.IsDefined(typeof(Prefabs.Units), guid.GetHashCode())) return (Prefabs.Units)guid.GetHashCode();
+            return Prefabs.Units.Unknown;
+        }
 
         /*
         public static void TeleportTo(Context ctx, float3 position)

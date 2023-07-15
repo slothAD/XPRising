@@ -12,7 +12,6 @@ namespace RPGMods.Utils {
     public static class SquadList {
 
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        private static Entity emptyEntity = new();
         private static Random generate = new();
         public static bool showDebugLogs = false;
 
@@ -245,10 +244,8 @@ namespace RPGMods.Utils {
 
             var position = entityManager.GetComponentData<LocalToWorld>(player).Position;
             foreach (var unit in squad.units) {
-                var lifetime = HunterHuntedSystem.EncodeLifetime(Math.Clamp(unit.level, 0, 99));
-                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(
-                    emptyEntity, new PrefabGUID((int)unit.type), position, unit.count, unit.range, unit.range + 4,
-                    lifetime);
+                var lifetime = SpawnUnit.EncodeLifetime((int)HunterHuntedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
+                SpawnUnit.Spawn(unit.type, position, unit.count, unit.range, unit.range + 4f, lifetime);
                 if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawning: {unit.count}*{unit.type}");
             }
 
