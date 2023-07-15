@@ -477,7 +477,6 @@ namespace RPGMods.Hooks
 
     [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
     public class BuffSystem_Spawn_Server_Patch {
-        public static bool buffLogging = false;
         private static void Prefix(BuffSystem_Spawn_Server __instance)
         {
             if (PvPSystem.isPunishEnabled || SiegeSystem.isSiegeBuff || PermissionSystem.isVIPSystem || PvPSystem.isHonorSystemEnabled)
@@ -518,7 +517,6 @@ namespace RPGMods.Hooks
     [HarmonyPatch(typeof(BuffDebugSystem), nameof(BuffDebugSystem.OnUpdate))]
     public class DebugBuffSystem_Patch
     {
-        public static bool buffLogging = false;
         private static void Prefix(BuffDebugSystem __instance)
         {
             if (HunterHuntedSystem.isActive) {
@@ -545,13 +543,13 @@ namespace RPGMods.Hooks
                     // - Buff_OutOfCombat only seems to be sent once.
                     var inCombat = Cache.GetCombatStart(steamID) > Cache.GetCombatEnd(steamID);
                     if (combatStart && !inCombat) {
-                        if (buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat start");
+                        if (Helper.buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat start");
                         Cache.playerCombatStart[steamID] = DateTime.Now;
                         
                         // Actions to check on combat start
                         if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(userEntity, ownerEntity);
                     } else if (combatEnd) {
-                        if (buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat end");
+                        if (Helper.buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat end");
                         Cache.playerCombatEnd[steamID] = DateTime.Now;
                     }
                 }
