@@ -36,12 +36,45 @@ namespace RPGMods.Hooks {
 
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
                     if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer is a player, running xp and heat and the like");
-                    if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(killer, ev.Died);
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(killer, ev.Died);
+
+                    if (ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive) {
+                        var ignoreKill = false;
+                        //-- Check victim is not a summon
+                        if (Plugin.Server.EntityManager.HasComponent<Minion>(ev.Died)) {
+                            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Minion killed, ignoring");
+                            ignoreKill = true;
+                        }
+            
+                        //-- Check victim has a level
+                        if (!Plugin.Server.EntityManager.HasComponent<UnitLevel>(ev.Died)) {
+                            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has no level, ignoring");
+                            ignoreKill = true;
+                        }
+
+                        if (!ignoreKill) {
+                            if (Helper.deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Killer entity: {killer}");
+                            
+                            bool isVBlood;
+                            if (Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bloodSource)) {
+                                isVBlood = bloodSource.UnitBloodType.Equals(Helper.vBloodType);
+                            }
+                            else {
+                                isVBlood = false;
+                            }
+
+                            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier == 0;
+                            var closeAllies = Alliance.GetCloseAllies(
+                                ev.Died, killer, ExperienceSystem.GroupMaxDistance, useGroup, Helper.deathLogging);
+
+                            // If you get experience for the kill, you get heat for the kill
+                            if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(closeAllies, ev.Died, isVBlood);
+                            if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
+                        }
+                    }
+
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
                     if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
                     if (PvPSystem.isHonorSystemEnabled) PvPSystem.MobKillMonitor(killer, ev.Died);
-
                 }
 
                 //-- Auto Respawn & HunterHunted System Begin

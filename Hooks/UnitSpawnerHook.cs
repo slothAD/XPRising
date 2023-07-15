@@ -1,5 +1,4 @@
-﻿using System;
-using ProjectM;
+﻿using ProjectM;
 using HarmonyLib;
 using ProjectM.Shared;
 using RPGMods.Utils;
@@ -15,7 +14,6 @@ namespace RPGMods.Hooks
             {
                 var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
                 foreach (var entity in entities) {
-                    Plugin.Logger.LogInfo($"{DateTime.Now}: unit spawn {Helper.GetPrefabName(Helper.GetPrefabGUID(entity))}");
                     if (!__instance.EntityManager.HasComponent<LifeTime>(entity)) return;
 
                     var lifetime = __instance.EntityManager.GetComponentData<LifeTime>(entity);

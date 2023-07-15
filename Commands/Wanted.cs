@@ -112,13 +112,13 @@ namespace RPGMods.Commands
             var isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "wanted_args");
             if (!isAllowed) return;
                 
-            if (!Helper.FindPlayer(name, true, out var playerEntity, out var userEntity))
+            if (!Helper.FindPlayer(name, true, out var playerEntity, out _))
             {
                 ctx.Reply($"Could not find specified player \"{name}\".");
                 return;
             }
             
-            HunterHuntedSystem.CheckForAmbush(userEntity, playerEntity);
+            HunterHuntedSystem.CheckForAmbush(playerEntity);
             ctx.Reply($"Successfully triggered ambush check for \"{name}\"");
         }
 

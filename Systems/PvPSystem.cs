@@ -295,9 +295,9 @@ namespace RPGMods.Systems
 
         public static void SiegeON(ulong SteamID, Entity playerEntity, Entity userEntity, bool forceSiege = false, bool seekAlly = true)
         {
-            if (seekAlly)
-            {
-                if (Helper.GetAllies(playerEntity, out var playerGroup) > 0)
+            if (seekAlly) {
+                Alliance.GetAllies(playerEntity, false, out var playerGroup);
+                if (playerGroup.AllyCount > 0)
                 {
                     playerGroup.Allies.Add(userEntity, playerEntity);
                     if (forceSiege == false)

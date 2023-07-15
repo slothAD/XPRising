@@ -101,7 +101,7 @@ namespace RPGMods.Hooks
 
                         if (pvpStats.Reputation >= 5000)
                         {
-                            Helper.GetAllies(Cache.SteamPlayerCache[OwnerData.PlatformId].CharEntity, out var AllyData);
+                            Alliance.GetAllies(Cache.SteamPlayerCache[OwnerData.PlatformId].CharEntity, false, out var AllyData);
                             if (AllyData.AllyCount > 0)
                             {
                                 foreach (var ally in AllyData.Allies)
