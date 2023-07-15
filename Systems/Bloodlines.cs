@@ -339,7 +339,7 @@ namespace RPGMods.Systems
             double value;
             double strength = bld.strength[type];
             if (strength < minStrengths[type][stat] || bld.strength[0] < minStrengths[type][stat]) {
-                return 0.0;
+                return stats[type][stat] == (int)UnitStatType.CooldownModifier ? 1.0 :  0.0;
             }
             strength *= (bld.strength[0] / 100) * bld.efficency[0] / stats.Length;
 
@@ -355,7 +355,7 @@ namespace RPGMods.Systems
             double value;
             double strength = bld.strength[type];
             if(strength < minStrengths[type][stat]) {
-                return 0.0;
+                return stats[type][stat] == (int)UnitStatType.CooldownModifier ? 1.0 : 0.0;
             }
             value = Helper.calcBuffValue(strength, effectiveness, rates[type][stat], stats[type][stat]);
             return value;
