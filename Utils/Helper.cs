@@ -51,7 +51,7 @@ namespace RPGMods.Utils
         public static int forbiddenBuffGUID = -161632603;
         public static bool buffLogging = false;
         public static bool deathLogging = true;
-        public static PrefabGUID appliedBuff = Database.Buff.Buff_VBlood_Perk_Moose;
+        public static PrefabGUID appliedBuff = Database.Buff.Buff_4pT2;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
         
@@ -734,7 +734,7 @@ namespace RPGMods.Utils
         // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
         public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
             {(int)UnitStatType.CooldownModifier },
-            {(int)UnitStatType.PrimaryCooldownModifier },
+            {(int)UnitStatType.PrimaryCooldownModifier }/*,
             {(int)UnitStatType.PhysicalResistance },
             {(int)UnitStatType.SpellResistance },
             {(int)UnitStatType.ResistVsBeasts },
@@ -745,7 +745,7 @@ namespace RPGMods.Utils
             {(int)UnitStatType.ResistVsPlayerVampires },
             {(int)UnitStatType.ResistVsUndeads },
             {(int)UnitStatType.BloodDrain },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss }
+            {(int)UnitStatType.ReducedResourceDurabilityLoss }*/
         };
 
         //
