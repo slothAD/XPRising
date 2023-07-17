@@ -2,6 +2,9 @@
 using RPGMods.Utils;
 using System;
 using System.Linq;
+using ProjectM;
+using ProjectM.Shared;
+using Unity.Collections;
 using Unity.Entities;
 using VampireCommandFramework;
 using Color = RPGMods.Utils.Color;
@@ -117,6 +120,48 @@ namespace RPGMods.Commands
             
             HunterHuntedSystem.CheckForAmbush(userEntity, playerEntity);
             ctx.Reply($"Successfully triggered ambush check for \"{name}\"");
+        }
+
+        [Command("fixminions", "fm", "", "Remove broken gloomrot technician units", adminOnly: true)]
+        public static void FixGloomrotMinions(ChatCommandContext ctx) {
+            if (!ctx.Event.User.IsAdmin) return;
+
+            var hasErrors = false;
+            var removedCount = 0;
+
+            var query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
+            {
+                All = new ComponentType[]
+                {
+                    ComponentType.ReadOnly<Minion>()
+                },
+                Options = EntityQueryOptions.IncludeDisabled
+            });
+            foreach (var entity in query.ToEntityArray(Allocator.Temp)) {
+                try {
+                    var unitName = Helper.GetPrefabName(Helper.GetPrefabGUID(entity));
+                    // Note that the "broken" units differ from "working" units only by the broken ones missing the
+                    // "PathRequestSolveDebugBuffer [B]" component. Ideally, we would only destroy minions missing the
+                    // component, but we can't test for this case by any means other than checking the string generated
+                    // by Plugin.Server.EntityManager.Debug.GetEntityInfo(entity). We can't test for this case as the
+                    // GetBuffer or HasBuffer commands fail with an AOT code exception.
+                    Plugin.Logger.LogInfo($"{DateTime.Now}: destroying minion {unitName}");
+                    
+                    DestroyUtility.CreateDestroyEvent(Plugin.Server.EntityManager, entity, DestroyReason.Default, DestroyDebugReason.None);
+                    DestroyUtility.Destroy(Plugin.Server.EntityManager, entity);
+                    removedCount++;
+                }
+                catch (Exception e) {
+                    Plugin.Logger.LogInfo(DateTime.Now + ": error doing test other: " + e.Message);
+                    hasErrors = true;
+                }
+            }
+
+            if (hasErrors) {
+                ctx.Reply($"Finished with errors (check logs). Removed {removedCount} units.");
+            } else {
+                ctx.Reply($"Finished successfully. Removed {removedCount} units.");
+            }
         }
     }
 }

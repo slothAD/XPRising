@@ -123,6 +123,6 @@ public static class FactionHeat {
         if (wantedLevel < 1) return;
         
         var squadMessage = SquadList.SpawnSquad(userEntity, playerEntity, faction, wantedLevel);
-        Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel]}>{squadMessage}</color>");
+        Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");
     }
 }
