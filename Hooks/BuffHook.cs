@@ -458,6 +458,8 @@ namespace RPGMods.Hooks {
     {
         private static void Prefix(BuffDebugSystem __instance)
         {
+            // Currently, the cached in-combat/out-of-combat status is only updated when HunterHuntedSystem is active.
+            // To enable this for other systems, add them here (or remove the if).
             if (HunterHuntedSystem.isActive) {
                 NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
                 foreach (var entity in entities) {
@@ -486,7 +488,7 @@ namespace RPGMods.Hooks {
                         Cache.playerCombatStart[steamID] = DateTime.Now;
 
                         // Actions to check on combat start
-                        if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(userEntity, ownerEntity);
+                        if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
                     } else if (combatEnd) {
                         if (Helper.buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat end");
                         Cache.playerCombatEnd[steamID] = DateTime.Now;

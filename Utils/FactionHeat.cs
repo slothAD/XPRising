@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using ProjectM.Network;
 using RPGMods.Systems;
 using Unity.Entities;
+using Unity.Mathematics;
 using Faction = RPGMods.Utils.Prefabs.Faction;
 
 namespace RPGMods.Utils;
@@ -48,6 +51,10 @@ public static class FactionHeat {
                 heatValue = 15;
                 activeFaction = Faction.Militia;
                 break;
+            case Faction.World_Prisoners:
+                heatValue = 10;
+                activeFaction = Faction.Militia;
+                break;
             // Human: gloomrot
             case Faction.Gloomrot:
                 heatValue = 10;
@@ -62,7 +69,7 @@ public static class FactionHeat {
                 break;
             // Undead
             case Faction.Undead:
-                heatValue = 3;
+                heatValue = 5;
                 activeFaction = Faction.Undead;
                 break;
             // Werewolves
@@ -72,7 +79,7 @@ public static class FactionHeat {
                 activeFaction = Faction.Werewolf;
                 break;
             case Faction.VampireHunters:
-                heatValue = 2;
+                heatValue = 3;
                 activeFaction = Faction.VampireHunters;
                 break;
             // Do nothing
@@ -92,7 +99,6 @@ public static class FactionHeat {
             case Faction.Spiders:
             case Faction.Unknown:
             case Faction.Wendigo:
-            case Faction.World_Prisoners:
                 heatValue = 0;
                 activeFaction = Faction.Unknown;
                 break;
@@ -119,10 +125,31 @@ public static class FactionHeat {
         return HeatLevels.Length;
     }
 
-    public static void Ambush(Entity userEntity, Entity playerEntity, Faction faction, int wantedLevel) {
+    public static void Ambush(Entity userEntity, float3 position, Faction faction, int wantedLevel) {
         if (wantedLevel < 1) return;
         
-        var squadMessage = SquadList.SpawnSquad(userEntity, playerEntity, faction, wantedLevel);
+        var steamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
+        var playerLevel = 0;
+        if (Database.player_experience.TryGetValue(steamID, out int exp)) {
+            playerLevel = ExperienceSystem.convertXpToLevel(exp);
+        }
+        
+        var squadMessage = SquadList.SpawnSquad(playerLevel, position, faction, wantedLevel);
         Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");
+    }
+
+    public static void Ambush(List<Alliance.CloseAlly> closeAllies, Faction faction, int wantedLevel) {
+        if (wantedLevel < 1 || closeAllies.Count == 0) return;
+
+        // Currently sorting DESC -> ambushing highest level
+        // The lower level will generally have more difficulty than the higher level so chose the highest to make it
+        // better for them.
+        closeAllies.Sort((ally1, ally2) => ally2.playerLevel.CompareTo(ally1.playerLevel));
+        var chosenAlly = closeAllies[0];
+        var squadMessage = SquadList.SpawnSquad(chosenAlly.playerLevel, chosenAlly.position, faction, wantedLevel);
+        
+        foreach (var ally in closeAllies) {
+            Output.SendLore(ally.userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");
+        }
     }
 }

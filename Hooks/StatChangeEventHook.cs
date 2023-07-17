@@ -1,32 +1,19 @@
 ﻿using HarmonyLib;
-using ProjectM;
-using RPGMods.Utils;
-using ProjectM.Network;
-using ProjectM.CastleBuilding;
-using RPGMods.Systems;
 using Unity.Entities;
 using System;
 using ProjectM.Gameplay.Systems;
 
-namespace RPGMods.Hooks
-{
+namespace RPGMods.Hooks {
     public delegate void OnUpdateEventHandler(World world);
     [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.OnUpdate))]
-    public class SCSHook
-    {
+    public class SCSHook {
         public static event OnUpdateEventHandler OnUpdate;
-        private static void Postfix(StatChangeSystem __instance)
-        {
-            try
-            {
+        private static void Postfix(StatChangeSystem __instance) {
+            try {
                 OnUpdate?.Invoke(__instance.World);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Plugin.Logger.LogError(e);
             }
         }
     }
-
-
 }

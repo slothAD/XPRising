@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using ProjectM;
 using RPGMods.Systems;
-using ProjectM.Network;
 using Unity.Entities;
-using Unity.Transforms;
+using Unity.Mathematics;
 using Faction = RPGMods.Utils.Prefabs.Faction;
+using Random = System.Random;
 using Units = RPGMods.Utils.Prefabs.Units;
 
 namespace RPGMods.Utils {
@@ -233,16 +232,9 @@ namespace RPGMods.Utils {
                 GenerateSquadUnits(units, wantedLevel, playerLevel));
         }
 
-        public static string SpawnSquad(Entity user, Entity player, Faction faction, int wantedLevel) {
-            var steamID = entityManager.GetComponentData<User>(user).PlatformId;
-            var playerLevel = 0;
-            if (Database.player_experience.TryGetValue(steamID, out int exp)) {
-                playerLevel = ExperienceSystem.convertXpToLevel(exp);
-            }
-
+        public static string SpawnSquad(int playerLevel, float3 position, Faction faction, int wantedLevel) {
             var squad = GetSquad(faction, playerLevel, wantedLevel);
-
-            var position = entityManager.GetComponentData<LocalToWorld>(player).Position;
+            
             foreach (var unit in squad.units) {
                 var lifetime = SpawnUnit.EncodeLifetime((int)HunterHuntedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
                 SpawnUnit.Spawn(unit.type, position, unit.count, unit.range, unit.range + 4f, lifetime);

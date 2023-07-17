@@ -2,6 +2,7 @@
 using ProjectM.Network;
 using RPGMods.Utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Entities;
@@ -23,35 +24,30 @@ namespace RPGMods.Systems
 
         private static Random rand = new();
 
-        public static void PlayerKillEntity(Entity killerEntity, Entity victimEntity) {
-            var player = entityManager.GetComponentData<PlayerCharacter>(killerEntity);
-            var userEntity = player.UserEntity;
-
+        public static void PlayerKillEntity(List<Alliance.CloseAlly> closeAllies, Entity victimEntity, bool isVBlood) {
             var victim = entityManager.GetComponentData<FactionReference>(victimEntity);
             var victimFaction = victim.FactionGuid._Value;
 
             var faction = Helper.ConvertGuidToFaction(victimFaction);
+            
+            FactionHeat.GetActiveFactionHeatValue(faction, isVBlood, out var heatValue, out var activeFaction);
             if (factionLogging || faction == Faction.Unknown) {
                 var factionString = $"{DateTime.Now}: Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}";
                 Plugin.Logger.LogWarning(factionString);
             }
-
-            bool isVBlood;
-            if (entityManager.HasComponent<BloodConsumeSource>(victimEntity)) {
-                BloodConsumeSource BloodSource = entityManager.GetComponentData<BloodConsumeSource>(victimEntity);
-                isVBlood = BloodSource.UnitBloodType.Equals(Helper.vBloodType);
-            }
-            else {
-                isVBlood = false;
-            }
-
-            FactionHeat.GetActiveFactionHeatValue(faction, isVBlood, out var heatValue, out var activeFaction);
+            
             if (activeFaction == Faction.Unknown || heatValue == 0) return;
             
+            foreach (var ally in closeAllies) {
+                HandlePlayerKill(ally.userEntity, activeFaction, heatValue);
+            }
+        }
+
+        private static void HandlePlayerKill(Entity userEntity, Faction victimFaction, int heatValue) {
             HeatManager(userEntity, out var heatData, out var steamID);
 
             // If the faction is vampire hunters, reduce the heat level of all other active factions
-            if (activeFaction == Faction.VampireHunters) {
+            if (victimFaction == Faction.VampireHunters) {
                 foreach (var (key, value) in heatData.heat) {
                     var heat = value;
                     var oldHeatLevel = FactionHeat.GetWantedLevel(heat.level);
@@ -67,9 +63,9 @@ namespace RPGMods.Systems
                 }
             }
             else {
-                if (!heatData.heat.TryGetValue(activeFaction, out var heat)) {
+                if (!heatData.heat.TryGetValue(victimFaction, out var heat)) {
                     Plugin.Logger.LogWarning(
-                        $"{DateTime.Now}: Attempted to load non-active faction heat data: {Enum.GetName(activeFaction)}");
+                        $"{DateTime.Now}: Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
                     return;
                 }
 
@@ -82,12 +78,12 @@ namespace RPGMods.Systems
                 if (newHeatLevel > oldHeatLevel) {
                     // User has increased in wanted level, so send them an ominous message
                     Output.SendLore(userEntity,
-                        $"Wanted level increased ({FactionHeat.GetFactionStatus(activeFaction, heat.level)})");
+                        $"Wanted level increased ({FactionHeat.GetFactionStatus(victimFaction, heat.level)})");
                     // and reset their last ambushed time so that they can be ambushed again
                     heat.lastAmbushed = DateTime.Now - TimeSpan.FromSeconds(ambush_interval);
                 }
                 
-                heatData.heat[activeFaction] = heat;
+                heatData.heat[victimFaction] = heat;
             }
 
             // Update the heatCache with the new data
@@ -108,29 +104,89 @@ namespace RPGMods.Systems
             LogHeatData(heatData, userEntity, "died");
         }
 
+        private struct AllyHeat {
+            public Alliance.CloseAlly ally;
+            public PlayerHeatData heat;
+
+            public AllyHeat(Alliance.CloseAlly ally, PlayerHeatData heat) {
+                this.ally = ally;
+                this.heat = heat;
+            }
+        }
+
         // This is expected to only be called at the start of combat
-        public static void CheckForAmbush(Entity userEntity, Entity playerEntity) {
-            HeatManager(userEntity, out var heatData, out var steamID);
+        public static void CheckForAmbush(Entity triggeringPlayerEntity) {
+            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier == 0;
+            var closeAllies = Alliance.GetCloseAllies(
+                triggeringPlayerEntity, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, useGroup, factionLogging);
+            var alliesInCombat = false;
+            // Check if there are close allies in combat (we don't want ALL close allies to trigger an ambush at the same time!)
+            foreach (var ally in closeAllies) {
+                if (ally.isTrigger) continue;
+                var inCombat = Cache.GetCombatStart(ally.steamID) > Cache.GetCombatEnd(ally.steamID);
+                alliesInCombat = inCombat || alliesInCombat;
+            }
 
-            foreach (var faction in FactionHeat.ActiveFactions) {
-                var heat = heatData.heat[faction];
-                TimeSpan timeSinceAmbush = DateTime.Now - heat.lastAmbushed;
-                var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
+            // Leave processing
+            if (alliesInCombat) return;
 
-                if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
-                    if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} can ambush");
-                    if (rand.Next(0, 100) <= ambush_chance) {
-                        if (heatData.isLogging) Output.SendLore(userEntity, $"{faction} is ambushing you!");
-                        if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} is ambushing");
-                        FactionHeat.Ambush(userEntity, playerEntity, faction, wantedLevel);
-                        heat.lastAmbushed = DateTime.Now;
-                        heatData.heat[faction] = heat;
+            // Check for ambush-able factions
+            // Note: We could do this in the loop above, but it is likely quicker to iterate over them separately if
+            // alliesInCombat is true.
+            var heatList = new List<AllyHeat>();
+            var ambushFactions = new Dictionary<Faction, int>();
+            foreach (var ally in closeAllies) {
+                HeatManager(ally.userEntity, out var heatData, out var steamID);
+                heatList.Add(new AllyHeat(ally, heatData));
+
+                foreach (var faction in FactionHeat.ActiveFactions) {
+                    var heat = heatData.heat[faction];
+                    TimeSpan timeSinceAmbush = DateTime.Now - heat.lastAmbushed;
+                    var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
+
+                    if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
+                        if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} can ambush");
+
+                        // If there is no stored wanted level yet, or if this ally's wanted level is higher, then set it.
+                        if (!ambushFactions.TryGetValue(faction, out var highestWantedLevel) || wantedLevel > highestWantedLevel) {
+                            ambushFactions[faction] = wantedLevel;
+                        }
                     }
                 }
             }
+            
+            // Check for ambush
+            // (sort for wanted level and only have 1 faction ambush)
+            var sortedFactionList = ambushFactions.ToList();
+            // Sort DESC so that we prioritise the highest wanted level
+            sortedFactionList.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
+            bool isAmbushing = false;
+            var ambushingFaction = Faction.Unknown;
+            var ambushingTime = DateTime.Now;
+            foreach (var faction in sortedFactionList) {
+                if (rand.Next(0, 100) <= ambush_chance) {
+                    FactionHeat.Ambush(closeAllies, faction.Key, faction.Value);
+                    isAmbushing = true;
+                    ambushingFaction = faction.Key;
+                    // Only need 1 ambush at a time!
+                    break;
+                }
+            }
 
-            Cache.heatCache[steamID] = heatData;
-            LogHeatData(heatData, userEntity, "check");
+            // If we are ambushing, update all allies heat data.
+            if (isAmbushing) {
+                foreach (var allyHeat in heatList) {
+                    var heatData = allyHeat.heat;
+
+                    var factionHeat = heatData.heat[ambushingFaction];
+                    factionHeat.lastAmbushed = ambushingTime;
+                    heatData.heat[ambushingFaction] = factionHeat;
+
+                    Cache.heatCache[allyHeat.ally.steamID] = heatData;
+            
+                    LogHeatData(heatData, allyHeat.ally.userEntity, "check");
+                }
+            }
         }
 
         public static PlayerHeatData GetPlayerHeat(Entity userEntity) {
