@@ -9,26 +9,24 @@ My Fork adds a number of config options to mastery and allows you to invert the 
 If you are updating from before 1.7.0 and you had custom rates for bloodlines or mastery, you will need to manually move them to their new names of Rates, Bloodline and Rates, Mastery which will be created when you next launch, this was done to make the config more readable in the future.
 
 ## Gloomrot changes
-To get out for gloomrot through all the issues on my end, several systems are temporarily not active, and there is a workaround for buffing.\
-Currently you NEED to reequip boots to calculate mastery and bloodlines, they will take a snapshot of your current.  This is because the previous method no longer works\
-Backup saves are added in case of a crash, you might need to make the folders yourself however.
-Experience, Mastery, and Bloodlines are all that really work right now, and only some of the commands.
-PvP Content will be rebuilt later, and likely pulled out into a seperate mod.
-
 Many commands are now in community commands, Use that!
 
-1.6.3 has several bug fixes, some formatting updates and bug fixes from Aontas, and a compatability fix for serverlaunchfix by Deca
-It also has new debug log config options, turn them on if you need to give me the logs
+<details>
+1.7.5 Several Heat fixes, returns everything but cdr to normal stats rather than inverse multipliers, and updates default configs.
+
+1.7.4 removes the PvP stuff and fixes a major dumb bug from 1.7.3 DO NOT use 1.7.3. PvPMods coming soon with the pvp content, currently on patreon.
+
+1.7.3 adds some bug fixes, waypoints should be linked to the config properly for example.
+
+1.7.2 brings back waypoints, along with some bug fixes.
 
 1.7.0 has a bevy of new configuration options for how to handle XP loss under the new Rates, Experience section, and merged in an XP sharing rework from aontas.
 It also includes config options for what buff to hijack, and what buff to apply when your mastery or bloodline changes, found in the Buff System section.
 It also changes the names of Mastery rates and Bloodline Rates config options to Rates, Mastery and Rates, Bloodline respectively
 
-1.7.2 brings back waypoints, along with some bug fixes.
-
-1.7.3 adds some bug fixes, waypoints should be linked to the config properly for example.
-
-1.7.4 removes the PvP stuff and fixes a major dumb bug from 1.7.3 DO NOT use 1.7.3. PvPMods coming soon with the pvp content, currently on patreon.
+1.6.3 has several bug fixes, some formatting updates and bug fixes from Aontas, and a compatability fix for serverlaunchfix by Deca
+It also has new debug log config options, turn them on if you need to give me the logs
+</details>
 
 ## Experience System
 <details>
@@ -172,85 +170,6 @@ Note:
 ```
 </details>
 
-## PvP System
-<details>
-<summary>PvP System</summary>
-Configurable PvP kill serverwide announcement.\
-Kill/Death will also be recorded, and a ladder board for the Top 10 K/D on the server.
-> ### Toggle PvP Commnd
-If enabled, players can toggle their pvp status on/off via the pvp command.\
-If their pvp status is off, they are excluded from all PvP damage.\
-Your server must be configured as a PvP server for the toggle to work,\
-players will otherwise never be able to do any pvp damage despite toggling pvp status to be on.
-
-PvP toggle will be overridden by Hostility Mode if the honor system is active.
-> ### Punishment System
-Additionally, there's a punishment system which can be used to punish players who kill lower level players,\
-which is configurable in the config.
-
-The punishment system also has an anti-cheese built-in in case the server is not using the EXP system.\
-Purposefully unequiping gear to appear as lower level to cheese the punishment system will not work.
-
-Punishment will apply a debuff that reduces player combat efficiency.
-* -25% Physical & spell power
-* -15 Physical, spell, holy, and fire resistance
-* Gear level down (Overridden by EXP system if active)
-</details>
-> ### Honor System
-All vampires start with Neutral honor rank.\
-Killing a vampire with a neutral or positive honor rank will deduct some honor points,\
-while killing a vampire with a negative honor rank will reward the player with some honor points.\
-Another way to gain honor is by grinding mobs. Each mob kill will give 1 honor point.\
-There's a hard limit of 250p/hours gain to prevent grind.
-
-The honor title is added as a prefix to the player's name.\
-All chat commands which are included within RPGMods should still be used without the\
-honor title prefix if a player name is required.\
-Other stuff like whispering to other players does require the title prefix to be used.
-
-Honor title prefix is not automatically updated for chat messages,\
-everything else like building ownership and hovering player names are automatically updated.
-
-For all the mechanics to work correctly, please set your server settings to:
-- `Game Mode: PvP`
-- `Castle Damage Mode: Always`
-- `Player Damage Mode: Always`
-#### Hostility Mode
-`[ON] Aggressive`\
-Can damage any player.\
-No reputation loss will be given to the aggressor when killed.
-
-`[OFF] Passive`\
-Cannot damage other players with a positive reputation.
-#### Castle Siege
-`[ON] Sieging`\
-Player castle(s) are now vulnerable, and can damage other sieging player castle(s).\
-Aggressive state is enforced during siege time.\
-Siege mode cannot be exited until a 3 hour window has passed since activation.\
-Activating siege mode will also affect your allies.
-
-`[OFF] Defensive`\
-Exit castle siege mode.\
-Castle(s) are now invulnerable.\
-Player is able to enter passive state again.
-
-`Global Siege`\
-In global siege mode, all castles are vulnerable unless the player's honor bonus says otherwise.\
-Player aggressive state is not enforced during global siege.
-#### All Honor Titles
-| Title | Requirement | Reward/Kill | Bonus |
-| --- | --- | --- | --- |
-| Glorious | 10000 | -1000 | Castle(s) is permanently invulnerable. Bonus is negated if allied with Dreaded players. |
-| Noble | 5000 | -500 | Castle(s) receive -50% reduced damage. Bonus is negated if allied with Dreaded players. |
-| Virtuous | 1500 | -100 | +15% resource gathering. |
-| Reputable | 500 | -50 | -25% durability loss. (Does not affect durability loss from combat.) |
-| Neutral | 0 | -25 | No additional stats. |
-| Suspicious | -1 | 0 | No additional stats. |
-| Infamous | -1000 | 10 | Enforced aggressive state. |
-| Villainous | -3000 | 50 | -20% damage taken from positive rep vampires. |
-| Nefarious | -10000 | 100 | +20% damage dealt to positive rep vampires. |
-| Dreaded | -20000 | 150 | Enforced castle siege participation |
-
 ## World Dynamics
 Each factions in the world will continously gain strength for every in-game day cycle.\
 Vampires will need to regularly cull these factions mobs to prevent or weaken the faction.\
@@ -340,13 +259,6 @@ Now allows all text from RPGMods to be customized to your language, a Language.J
 <details>
 <summary>Basic</summary>
 
-- `Prefix` [default `.`]\
-The prefix use for chat commands.
-- `Command Delay` [default `5`]\
-The number of seconds user need to wait out before sending another command.\
-Admin will always bypass this.
-- `DisabledCommands` [default `empty`]\
-Enter command names to disable them. Seperated by commas.
 - `WayPoint Limits` [default `3`]\
 Set a waypoint limit per user.
 
@@ -398,60 +310,6 @@ Multiply resource yield (not item drop) when user is out of combat. -1.0 to disa
 
 </details>
 
-<details>
-<summary>PvP</summary>
-
-- `Announce PvP Kills` [default `true`]\
-Make a server wide announcement for all PvP kills.
-- `Enable Honor System` [default `false`]\
-Enable the honor system.
-- `Enable Honor Title` [default `true`]\
-When enabled, the system will append the title to their name.\
-Honor system will leave the player name untouched if disabled.
-- `Max Honor Gain/Hour` [default `250`]\
-Maximum amount of honor points the player can gain per hour.
-- `Enable Honor Benefit & Penalties` [default `true`]\
-If disabled, the hostility state and custom siege system will be disabled.\
-All other bonus is also not applied.
-- `Custom Siege Duration` [default `180`]\
-In minutes. Player will automatically exit siege mode after this many minutes has passed.\
-Siege mode cannot be exited while duration has not passed.
-- `Enable Hostile Glow` [default `true`]\
-When set to true, hostile players will glow red.
-- `Enable Proximity Hostile Glow` [default `true`]\
-If enabled, hostile players will only glow when they are close to other online player.
-If disabled, hostile players will always glow red.
-- `Enable the PvP Ladder` [default `true`]\
-Hmm... well it enables the ladder board in .pvp command.
-- `Sort PvP Ladder by Honor` [default `true`]\
-This will automatically be false if honor system is not enabled.
-- `Enable PvP Toggle` [default `true`]\
-Enable/disable the pvp toggle feature in the pvp command.
-- `Enable PvP Punishment` [default `true`]\
-Enables the punishment system for killing lower level player.
-- `Punish Level Difference` [default `-10`]\
-Only punish the killer if the victim level is this much lower.
-- `Offense Limit` [default `3`]\
-Killer must make this many offense before the punishment debuff is applied.
-- `Offense Cooldown` [default `300`]\
-Reset the offense counter after this many seconds has passed since last offense.
-- `Debuff Duration` [default `1800`]\
-Apply the punishment debuff for this amount of time.
-
-
-</details>
-
-<details>
-<summary>Siege</summary>
-
-- `Buff Siege Golem` [default `false`]\
-Enabling this will reduce all incoming physical and spell damage according to config.
-- `Physical Damage Reduction` [default `0.5`]\
-Reduce incoming damage by this much. Ex.: 0.25 -> 25%
-- `Spell Damage Reduction` [default `0.5`]\
-Reduce incoming spell damage by this much. Ex.: 0.75 -> 75%
-
-</details>
 
 <details>
 <summary>HunterHunted</summary>
@@ -582,77 +440,9 @@ HealthRecovery = 62
 
 </details>
 
-## Permissions
-Commands permission uses permission level which start from 0 to 100.\
-Permission level 0 means that it can be used by everyone.\
-User designated as SuperAdmin in your server admin list will always bypass the permission requirement.\
-Special commands params that require admin permission can also be adjusted here.
-
-All abbreviation of the command are automatically included, you need only to put the primary command string.\
-The permissions are saved in `BepInEx/config/RPGMods/command_permission.json`
-
-<details>
-<summary>Default Permission</summary>
-
-```json
-{
-  "help": 0,
-  "ping": 0,
-  "myinfo": 0,
-  "pvp": 0,
-  "pvp_args": 100,
-  "siege": 0,
-  "siege_args": 100,
-  "wanted": 0,
-  "wanted_args": 100,
-  "experience": 0,
-  "experience_args": 100,
-  "mastery": 0,
-  "mastery_args": 100,
-  "autorespawn": 100,
-  "autorespawn_args": 100,
-  "waypoint": 100,
-  "waypoint_args": 100,
-  "ban": 100,
-  "bloodpotion": 100,
-  "blood": 100,
-  "customspawn": 100,
-  "give": 100,
-  "godmode": 100,
-  "health": 100,
-  "kick": 100,
-  "kit": 100,
-  "nocooldown": 100,
-  "permission": 100,
-  "playerinfo": 100,
-  "punish": 100,
-  "rename": 100,
-  "adminrename": 100,
-  "resetcooldown": 100,
-  "save": 100,
-  "shutdown": 100,
-  "spawnnpc": 100,
-  "speed": 100,
-  "sunimmunity": 100,
-  "teleport": 100
-}
-```
-
-</details>
-
-Removing a command from the list will automatically set it's permission requirement value to `100`.
 
 ## Chat Commands
-
-<details>
-<summary>help</summary>
-
-`help [<command>]`\
-Shows a list of all commands.\
-&ensp;&ensp;**Example:** `help experience`
-
-</details>
-
+Use .help to get a list of all commands available to you, and details on them.
 <details>
 <summary>kit</summary>
 
@@ -687,336 +477,6 @@ Gives you a previously specified set of items.\
 
 </details>
 
-<details>
-<summary>blood</summary>
-
-`blood <bloodtype> [<quality>] [<value>]`\
-Sets your Blood type to the specified Type, Quality and Value.\
-&ensp;&ensp;**Example:** `blood Scholar 100 100`
-
-</details>
-
-<details>
-<summary>bloodpotion</summary>
-
-`bloodpotion <bloodtype> [<quality>]`\
-Creates a Potion with specified Blood Type, Quality and Value.\
-&ensp;&ensp;**Example:** `bloodpotion Scholar 100`
-
-</details>
-
-<details>
-<summary>waypoint</summary>
-
-`waypoint <name|set|remove|list> [<name>]`\
-Teleports you to previously created waypoints.\
-&ensp;&ensp;**Example:** `waypoint set home` <-- Creates a local waypoint just for you.\
-&ensp;&ensp;**Example:** `waypoint home` <-- Teleport you to your local waypoint.\
-&ensp;&ensp;**Example:** `waypoint remove home` <-- Remove your local waypoint.\
-&ensp;&ensp;**Example:** `waypoint list` <-- Shows a list of all to you accessible waypoints.
-
-&ensp;&ensp;**Special Params -> `<name|set|remove|list> [<name>] [global]`** ` Creates a global waypoint usable by everyone.`\
-&ensp;&ensp;**Example:** `waypoint set arena global` <-- Creates a global waypoint for everyone (Special Params).\
-&ensp;&ensp;**Example:** `waypoint remove arena global` <-- Remove a global waypoint for everyone (Special Params).
-
-</details>
-
-<details>
-<summary>give</summary>
-
-`give <itemname> [<amount>]`\
-Adds the specified Item to your Inventory.\
-&ensp;&ensp;**Example:** `give Stone Brick 17`
-
-</details>
-
-<details>
-<summary>spawnnpc</summary>
-
-`spawnnpc <prefabname> [<amount>] [<waypoint>]`\
-Spawns a NPC. Optional: To a previously created waypoint.\
-&ensp;&ensp;**Example:** `spawnnpc CHAR_Cursed_MountainBeast_VBlood 1 arena`
-
-</details>
-
-<details>
-<summary>customspawn</summary>
-
-`customspawn <Prefab Name> [<BloodType> <BloodQuality> <BloodConsumeable("true/false")> <Duration>]`\
-Spawns a modified NPC at your current position.\
-&ensp;&ensp;**Example:** `customspawn CHAR_Bandit_Thug creature 100 true -1` -> Spawn Bandit Thug with unlimited lifespan.\
-&ensp;&ensp;**Example:** `customspawn CHAR_Bandit_Thug creature 100 true 5` -> Spawn Bandit Thug with a lifespan of 5 seconds.
-
-</details>
-
-<details>
-<summary>health</summary>
-
-`health <percentage> [<playername>]`\
-Sets your health to the specified percentage (0 will kill the player).\
-&ensp;&ensp;**Example:** `health 100`\
-&ensp;&ensp;**Example:** `health 0 LegendaryVampire`
-
-</details>
-
-<details>
-<summary>speed</summary>
-
-`speed`\
-Toggles speed buff.
-
-</details>
-
-<details>
-<summary>sunimmunity</summary>
-
-`sunimmunity`\
-Toggles sun immunity.
-
-</details>
-
-<details>
-<summary>nocooldown</summary>
-
-`nocooldown`\
-Toggles all skills & abilities to have no cooldown.
-
-</details>
-
-<details>
-<summary>resetcooldown</summary>
-
-`resetcooldown [<playername>]`\
-Reset all skills & abilities cooldown for you or the specified player.\
-&ensp;&ensp;**Example:** `resetcooldown`\
-&ensp;&ensp;**Example:** `resetcooldown LegendaryVampire`
-
-</details>
-
-<details>
-<summary>teleport</summary>
-
-`teleport <playername>`\
-Teleport to another online player within your clan.\
-&ensp;&ensp;**Example:** `teleport LegendaryVampire`
-
-</details>
-
-<details>
-<summary>godmode</summary>
-
-`godmode`\
-Toggles god mode for you.
-
-</details>
-
-<details>
-<summary>autorespawn</summary>
-
-`autorespawn`\
-Toggles auto respawn on same position on death.\
-&ensp;&ensp;**Special Params -> `[<all>|<playername>]`** `Toggle the auto respawn for specified player or server wide.`\
-&ensp;&ensp;**Example:** `autorespawn all`\
-&ensp;&ensp;**Example:** `autorespawn LegendaryVampire`
-
-</details>
-
-<details>
-<summary>heat</summary>
-
-`heat`\
-Checks your heat/wanted level by the factions.\
-&ensp;&ensp;**Special Params -> `[<debug>|<value> <value> [<PlayerName>]]`** `Display numeric heat or set your or the specified player heat.`\
-&ensp;&ensp;**Example:** `heat 500 500`\
-&ensp;&ensp;**Example:** `heat 500 500 LegendaryVampire`
-
-</details>
-
-<details>
-<summary>ping</summary>
-
-`ping`\
-Show you your latency to the server.
-
-</details>
-
-<details>
-<summary>pvp</summary>
-
-`pvp [<on>|<off>|<top>]`\
-Display your PvP statistics or toggle PvP state.\
-&ensp;&ensp;**Example:** `pvp`\
-&ensp;&ensp;**Example:** `pvp top`\
-&ensp;&ensp;**Example:** `pvp on`\
-&ensp;&ensp;**Example:** `pvp off`
-
-&ensp;&ensp;**Special Params -> `<on>|<off> <playername>`** `Toggles PvP state for the specified player.`\
-&ensp;&ensp;**Special Params -> `<rep> <ammount> <playername>`** `Set the specified player reputation points.`\
-&ensp;&ensp;**Example:** `pvp on LegendaryVampire`\
-&ensp;&ensp;**Example:** `pvp off LegendaryVampire`\
-&ensp;&ensp;**Example:** `pvp rep 1000 LegendaryVampire`
-
-
-</details>
-
-<details>
-<summary>siege</summary>
-
-`siege [<on>|<off>]`\
-Display all players currently in siege mode, or engage siege mode.\
-&ensp;&ensp;**Example:** `siege`\
-&ensp;&ensp;**Example:** `siege on`\
-&ensp;&ensp;**Example:** `siege off`
-
-&ensp;&ensp;**Special Params -> `<global>`** `Toggles server-wide siege mode on or off).`
-
-</details>
-
-<details>
-<summary>experience</summary>
-
-`experience [<log> <on>|<off>]`\
-Diplays your current exp and progression to the next level, or toggle the exp gain notification.\
-&ensp;&ensp;**Example:** `experience`\
-&ensp;&ensp;**Example:** `experience log off`
-
-&ensp;&ensp;**Special Params -> `[<set> <value> [<PlayerName>]]`** `Set your or the specified player experience value.`\
-&ensp;&ensp;**Example:** `experience set 1000`\
-&ensp;&ensp;**Example:** `experience set 2000 LegendaryVampire`
-
-</details>
-
-<details>
-<summary>mastery</summary>
-
-`mastery [<log> <on>|<off>]`\
-Display your current mastery progression, or toggle the mastery gain notification.\
-Use .mastery reset all, or .mastery reset [weapon type] to reset it to 0 adding that amount to your efficency, and a configurable % of that to your mastery growth rate for that weapon. A negative number in growth means that it will decrease multiplicitavely based on that, formula of mastery/(mastery + negative growth rate) is multiplied in.\
-&ensp;&ensp;**Example:** `mastery`\
-&ensp;&ensp;**Example:** `mastery log off`
-
-&ensp;&ensp;**Special Params -> `[<set> <type> <value> [<PlayerName>]]`** `Set your or the specified player mastery value.`\
-&ensp;&ensp;**Example:** `mastery set sword 100000`\
-&ensp;&ensp;**Example:** `mastery set spear 2000 LegendaryVampire`
-
-</details>
-
-<details>
-<summary>save</summary>
-
-`save`\
-Trigger the database saving manually.
-
-</details>
-
-<details>
-<summary>punish</summary>
-
-`punish <playername> [<remove>]`\
-Manually punish someone or lift their debuff.\
-This command may still be used even when punishment system is disabled.\
-&ensp;&ensp;**Example:** `punish LegendaryVampire`\
-&ensp;&ensp;**Example:** `punish LegendaryVampire remove`
-
-</details>
-
-<details>
-<summary>permission</summary>
-
-`permission <list>|<save>|<reload>|<set> <0-100> <playername>|<steamid>`\
-Manage commands and user permissions level.\
-&ensp;&ensp;**Example:** `permission list` -> List all users with special permission.\
-&ensp;&ensp;**Example:** `permission save` -> Save the most recent user permission list.\
-&ensp;&ensp;**Example:** `permission reload` -> Directly reload user permission and command permission from the JSON file.\
-&ensp;&ensp;**Example:** `permission set 100 LegendaryVampire`\
-&ensp;&ensp;**Example:** `permission set 0 LegendaryVampire`
-
-</details>
-
-<details>
-<summary>ban/unban</summary>
-
-`ban <playername> [<days> <reason>]`\
-Check the status of specified player, or ban them. 0 days will translate to permanently banned.
-
-`unban <playername>`\
-Remove the specified player from the ban list.
-
-</details>
-
-<details>
-<summary>kick</summary>
-
-`kick <playername>`\
-Kick the specified player from the server.
-
-</details>
-
-<details>
-<summary>shutdown</summary>
-
-`shutdown`\
-Trigger the exit signal & shutdown the server.
-
-</details>
-
-<details>
-<summary>rename</summary>
-
-`rename <player name> <new name>`\
-Rename the specified player.
-
-</details>
-
-<details>
-<summary>adminrename</summary>
-
-`adminrename <player name> <new name>`\
-Rename the specified player. Careful, the new name isn't verified.\
-This means it's possible for names to use color tags or symbols.\
-Adding a color tag to the player name may make it hard for you and other user to `/whisper` or find the player with commands.
-
-</details>
-
-<details>
-<summary>playerinfo</summary>
-
-`playerinfo <player name>`\
-Display the player information details.
-
-</details>
-
-<details>
-<summary>myinfo</summary>
-
-`myinfo`\
-Display your user info and location.
-
-</details>
-
-<details>
-<summary>worlddynamics</summary>
-
-`worlddynamics [<faction>] [<stats>|<save>|<load>|<ignore>|<unignore>] [<npc prefab name>]`\
-List all faction stats. Save them, or load from the json file.\
-&ensp;&ensp;**Example:** `wd faction stats` -> List all active faction stats.\
-&ensp;&ensp;**Example:** `wd faction ignore CHAR_Bandit_Thug` -> Ignore bandit thug for faction buffs.\
-&ensp;&ensp;**Example:** `wd faction unignore CHAR_Bandit_Thug` -> Stop ignoring bandit thug for faction buffs.
-
-</details>
-
-<details>
-<summary>powerup</summary>
-
-`powerup <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>`\
-Buff specified player with the specified value.\
-&ensp;&ensp;**Example:** `pu LegendaryVampire add 1000 50 125 0.5 0.7` -> Buff the player for specified values.\
-&ensp;&ensp;**Example:** `pu LegendaryVampire remove` -> Remove the buff from the specified player.
-
-```
-Notes:
-- Buffing PDef & SDef to 1 will make the player immune to those damage.
-```
 
 </details>
 
@@ -1129,10 +589,10 @@ Notes:
 
 ### [Discord](https://discord.gg/XY5bNtNm4w)
 ### Current Developer
-- `小爛土#7151` - Also known as Shou (like the english word show), Darkon47 on Github.
+- `Dresmyr` - Also known as Shou (like the english word show), Darkon47 on Github.
 If you enjoy the work I have put into this mod, subscribe to my patreon at https://www.patreon.com/user/membership?u=92238426
 
-- `SALTYFLEA#3772` Added the class system, currently otherwise undocumented.
+- `Aontas` Redid heat for gloomrot and has done a fair bit of the xp reworks.
 
 ### Original Developer
 - `Kaltharos#0001`
@@ -1143,6 +603,7 @@ If you enjoy the work I have put into this mod, subscribe to my patreon at https
 - `Nopey#1337`
 - `syllabicat#0692`
 - `errox#7604`
+- `SALTYFLEA#3772` Added the class system, currently otherwise undocumented.
 
 </details>
 
@@ -1150,18 +611,7 @@ If you enjoy the work I have put into this mod, subscribe to my patreon at https
 <summary>Known Issues</summary>
 
 ### General
-- Resetcooldown command does not refresh skills that has charges.
-- Blood command cannot apply "fragile" blood type.
-- Save command is non functional currently.
 
-### Experience System
-- Some blood buff give a gear level to the character, which would be fixed once they kill something or re-equip accessory.
-
-### HunterHunted System
-- There's no known issue yet. Heat level does get reset if you reload the plugin/restart server, this is an intended behaviour.
-
-### PvP System
-- Punishment debuff lower the player gear level, which will be overriden by the experience system if the exp system is active.
 
 </details>
 
@@ -1171,7 +621,6 @@ If you enjoy the work I have put into this mod, subscribe to my patreon at https
 - More optimization! It never hurts to optimize! (not from me)
 - Average reputation of clan members. (Not from me)
 - More dynamic events. (Not from me)
-- Bloodline. Planned for next from me!
 - Kits Option: Limited Uses. (On hold)
 - Explore team/alliance in VRising. (On hold)
 - Need a better name tagging sytem. (On hold)
