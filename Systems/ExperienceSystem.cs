@@ -58,14 +58,119 @@ namespace RPGMods.Systems
         public static GroupLevelScheme groupLevelScheme = GroupLevelScheme.Average;
 
         public static bool xpLogging = false;
+        
+        private struct CloseAlly {
+            public Entity userEntity;
+            public User userComponent;
+            public int currentXp;
+            public int playerLevel;
+            public ulong steamID;
+            public bool isKiller;
+        }
+        
+        private static bool ConvertToAlly(Entity entity, out CloseAlly ally) {
+            if (!entityManager.TryGetComponentData(entity, out PlayerCharacter pc)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
+                ally = new CloseAlly();
+                return false;
+            } 
+            var user = pc.UserEntity;
+            if (!entityManager.TryGetComponentData(user, out User userComponent)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(user));
+                // Can't really do anything at this point
+                ally = new CloseAlly();
+                return false;
+            }
+                        
+            var steamID = userComponent.PlatformId;
+            var playerLevel = 0;
+            if (Database.player_experience.TryGetValue(steamID, out int currentXp))
+            {
+                playerLevel = convertXpToLevel(currentXp);
+            }
+                        
+            ally = new CloseAlly() {
+                currentXp = currentXp,
+                playerLevel = playerLevel,
+                steamID = steamID,
+                userEntity = user,
+                userComponent = userComponent
+            };
+            return true;
+        }
 
-        public static void EXPMonitor(List<Alliance.CloseAlly> closeAllies, Entity victimEntity, bool isVBlood)
+        public static void EXPMonitor(Entity killerEntity, Entity victimEntity)
         {
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Kill Found, Handling XP");
+            
+            //-- Check victim is not a summon
+            if (entityManager.HasComponent<Minion>(victimEntity)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Minion killed, exiting XP");
+                return;
+            }
+            
+            //-- Check victim has a level
+            if (!entityManager.HasComponent<UnitLevel>(victimEntity)) {
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has no level, exiting XP");
+                return;
+            }
+
+            if (xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Killer entity: {killerEntity}");
+            
+            //-- Must be executed from main thread
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Fetching allies...");
+            List<CloseAlly> closeAllies = new();
+            if (groupLevelScheme == GroupLevelScheme.None || GroupModifier == 0) {
+                // If we are using a scheme of None or the Group Modifier is 0, we are our only ally
+                if (ConvertToAlly(killerEntity, out var ally)) {
+                    ally.isKiller = true;
+                    closeAllies.Add(ally);
+                }
+            }
+            else {
+                Helper.GetAllies(killerEntity, out var playerGroup);
+                
+                if (xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Getting close allies");
+                
+                var killerLocation = entityManager.GetComponentData<LocalToWorld>(killerEntity);
+                foreach (var ally in playerGroup.Allies) {
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Iterating over allies, ally is " + ally.GetHashCode());
+                    if (!Cache.PlayerLocations.TryGetValue(ally.Value, out var allyPos)) {
+                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Could not get position, update the cache!");
+                        continue;
+                    }
+                    if (xpLogging) Plugin.Logger.LogInfo(   DateTime.Now + ": Got Ally Position");
+                    var distance = math.distance(killerLocation.Position.xz, allyPos.Position.xz);
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Distance is " + distance + ", Max Distance is " + GroupMaxDistance);
+                    if (!(distance <= GroupMaxDistance)) continue;
+                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Converting entity to ally...");
+
+                    if (ConvertToAlly(ally.Key, out var closeAlly)) {
+                        closeAlly.isKiller = killerEntity.Equals(ally.Key);
+                        closeAllies.Add(closeAlly);
+                    }
+                }
+            }
+            
+            //-- ---------------------------------
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Fetched, Total ally count of " + closeAllies.Count);
+            
             var unitLevel = entityManager.GetComponentData<UnitLevel>(victimEntity);
+
+            bool isVBlood;
+            if (entityManager.HasComponent<BloodConsumeSource>(victimEntity))
+            {
+                var bloodSource = entityManager.GetComponentData<BloodConsumeSource>(victimEntity);
+                isVBlood = bloodSource.UnitBloodType.Equals(Helper.vBloodType);
+            }
+            else
+            {
+                isVBlood = false;
+            }
             UpdateEXP(unitLevel.Level, isVBlood, closeAllies);
         }
 
-        private static void UpdateEXP(int mobLevel, bool isVBlood, List<Alliance.CloseAlly> closeAllies) {
+        private static void UpdateEXP(int mobLevel, bool isVBlood, List<CloseAlly> closeAllies) {
             // Calculate the modified player level
             var modifiedPlayerLevel = 0;
             switch (groupLevelScheme) {
@@ -77,7 +182,7 @@ namespace RPGMods.Systems
                     break;
                 case GroupLevelScheme.Killer:
                     // If the killer is not found, use MaxLevel
-                    modifiedPlayerLevel = closeAllies.Where(x => x.isTrigger).Select(x => x.playerLevel).FirstOrDefault(MaxLevel);
+                    modifiedPlayerLevel = closeAllies.Where(x => x.isKiller).Select(x => x.playerLevel).FirstOrDefault(MaxLevel);
                     break;
                 case GroupLevelScheme.EachPlayer:
                 case GroupLevelScheme.None:
@@ -105,12 +210,12 @@ namespace RPGMods.Systems
                         modifiedPlayerLevel = teammate.playerLevel;
                         break;
                 }
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + $": IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel} {groupLevelScheme}");
+                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + $": IsKiller: {teammate.isKiller} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel} {groupLevelScheme}");
                 AssignExp(teammate, mobLevel, modifiedPlayerLevel, isVBlood, isGroup);
             }
         }
 
-        private static void AssignExp(Alliance.CloseAlly ally, int mobLevel, int modifiedPlayerLevel, bool isVBlood, bool isGroup) {
+        private static void AssignExp(CloseAlly ally, int mobLevel, int modifiedPlayerLevel, bool isVBlood, bool isGroup) {
             if (ally.currentXp >= convertLevelToXp(MaxLevel)) return;
 
             var xpGained = CalculateXp(modifiedPlayerLevel, mobLevel, isVBlood);
