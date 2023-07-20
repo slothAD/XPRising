@@ -37,7 +37,7 @@ namespace RPGMods.Hooks {
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
                     if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer is a player, running xp and heat and the like");
                     if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(killer, ev.Died);
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(killer, ev.Died);
+                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.startPlayerKill(killer, ev.Died);
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
                     if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
 
