@@ -11,16 +11,17 @@ namespace RPGMods.Hooks
     [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
     public class HandleGameplayEventsBase_Patch
     {
-        //private static byte CurrentDay = 0;
-        //private static bool isDNInitialized = false;
+        private static byte CurrentDay = 0;
+        private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
             //-- Player Location Caching
             if (ExperienceSystem.isEXPActive) ProximityLoop.UpdateCache();
             //-- HonorSystem Hostile Glow
-            /*
+            
             //-- Day Cycle Tracking
             var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
+            
             if (CurrentDay != DNCycle.GameDateTimeNow.Day)
             {
                 if (!isDNInitialized)
@@ -33,7 +34,7 @@ namespace RPGMods.Hooks
                     CurrentDay = DNCycle.GameDateTimeNow.Day;
                     if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
                 }
-            }*/
+            }
             //-- ------------------
 
             //-- Spawn Custom NPC Task

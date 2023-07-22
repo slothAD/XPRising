@@ -20,7 +20,7 @@ namespace RPGMods.Hooks {
             foreach (DeathEvent ev in deathEvents) {
                 if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Death Event occured");
                 //-- Just track whatever died...
-                //if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
+                if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
 
                 //-- Player Creature Kill Tracking
                 var killer = ev.Killer;
