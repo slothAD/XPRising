@@ -25,39 +25,6 @@ namespace RPGMods.Systems
 
         private static Random rand = new();
 
-        public static void startPlayerKill(Entity killer, Entity Died) {
-            if (ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive) {
-                var ignoreKill = false;
-                //-- Check victim is not a summon
-                if (Plugin.Server.EntityManager.HasComponent<Minion>(Died)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Minion killed, ignoring");
-                    ignoreKill = true;
-                }
-
-                //-- Check victim has a level
-                if (!Plugin.Server.EntityManager.HasComponent<UnitLevel>(Died)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has no level, ignoring");
-                    ignoreKill = true;
-                }
-
-                if (!ignoreKill) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Killer entity: {killer}");
-
-                    bool isVBlood;
-                    if (Plugin.Server.EntityManager.TryGetComponentData(Died, out BloodConsumeSource bloodSource)) {
-                        isVBlood = bloodSource.UnitBloodType.Equals(Helper.vBloodType);
-                    } else {
-                        isVBlood = false;
-                    }
-
-                    var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier == 0;
-                    var closeAllies = Alliance.GetCloseAllies(
-                        Died, killer, ExperienceSystem.GroupMaxDistance, useGroup, Helper.deathLogging);
-
-                }
-            }
-        }
-
         public static void PlayerKillEntity(List<Alliance.CloseAlly> closeAllies, Entity victimEntity, bool isVBlood) {
             var victim = entityManager.GetComponentData<FactionReference>(victimEntity);
             var victimFaction = victim.FactionGuid._Value;
@@ -150,7 +117,7 @@ namespace RPGMods.Systems
 
         // This is expected to only be called at the start of combat
         public static void CheckForAmbush(Entity triggeringPlayerEntity) {
-            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier == 0;
+            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier > 0;
             var closeAllies = Alliance.GetCloseAllies(
                 triggeringPlayerEntity, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, useGroup, factionLogging);
             var alliesInCombat = false;

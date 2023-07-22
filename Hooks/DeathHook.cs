@@ -36,8 +36,19 @@ namespace RPGMods.Hooks {
 
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
                     if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer is a player, running xp and heat and the like");
-                    if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(killer, ev.Died);
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.startPlayerKill(killer, ev.Died);
+                    
+                    if ((ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive) && ExperienceSystem.EntityProvidesExperience(ev.Died)) {
+                        var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) && bS.UnitBloodType.Equals(Helper.vBloodType);
+
+                        var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier > 0;
+                        var closeAllies = Alliance.GetCloseAllies(
+                            ev.Died, killer, ExperienceSystem.GroupMaxDistance, useGroup, Helper.deathLogging);
+
+                        // If you get experience for the kill, you get heat for the kill
+                        if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(closeAllies, ev.Died, isVBlood);
+                        if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
+                    }
+                    
                     if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
                     if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
 

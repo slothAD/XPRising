@@ -135,13 +135,13 @@ public static class FactionUnits {
             new(Units.CHAR_Gloomrot_Technician, 58, 1),
             new(Units.CHAR_Gloomrot_Technician_Labworker, 58, 1),
             new(Units.CHAR_Gloomrot_TractorBeamer, 58, 1),
-            new(Units.CHAR_Gloomrot_SentryOfficer, 60, 1),
+            new(Units.CHAR_Gloomrot_SentryOfficer, 60, 2),
             new(Units.CHAR_Gloomrot_SentryTurret, 60, 1),
-            new(Units.CHAR_Gloomrot_SpiderTank_Driller, 60, 1),
-            new(Units.CHAR_Gloomrot_AceIncinerator, 74, 1),
-            new(Units.CHAR_Gloomrot_SpiderTank_LightningRod, 74, 1),
-            new(Units.CHAR_Gloomrot_SpiderTank_Gattler, 77, 1),
-            new(Units.CHAR_Gloomrot_SpiderTank_Zapper, 77, 1),
+            new(Units.CHAR_Gloomrot_SpiderTank_Driller, 60, 2),
+            new(Units.CHAR_Gloomrot_AceIncinerator, 74, 2),
+            new(Units.CHAR_Gloomrot_SpiderTank_LightningRod, 74, 4),
+            new(Units.CHAR_Gloomrot_SpiderTank_Gattler, 77, 4),
+            new(Units.CHAR_Gloomrot_SpiderTank_Zapper, 77, 4),
             // Units.CHAR_Gloomrot_Iva_VBlood, // 60
             // Units.CHAR_Gloomrot_Purifier_VBlood, // 60
             // Units.CHAR_Gloomrot_Voltage_VBlood, // 60
