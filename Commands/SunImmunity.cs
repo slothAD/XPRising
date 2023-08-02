@@ -31,7 +31,7 @@ namespace OpenRPG.Commands
 
         public static void SaveImmunity()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
         }
 
         public static bool RemoveImmunity(Context ctx)
@@ -47,13 +47,13 @@ namespace OpenRPG.Commands
 
         public static void LoadSunImmunity()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/sunimmunity.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/sunimmunity.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/sunimmunity.json");
+                var stream = File.Create("BepInEx/config/OpenRPG/Saves/sunimmunity.json");
                 stream.Dispose();
             }
 
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/sunimmunity.json");
+            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/sunimmunity.json");
             try
             {
                 Database.sunimmunity = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

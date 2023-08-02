@@ -415,19 +415,19 @@ namespace OpenRPG.Systems
 
         public static void SaveWeaponMastery()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/weapon_mastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
         }
 
         public static void LoadWeaponMastery()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/weapon_mastery.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/weapon_mastery.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+                FileStream stream = File.Create("BepInEx/config/OpenRPG/Saves/weapon_mastery.json");
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/weapon_mastery.json");
+            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/weapon_mastery.json");
             try
             {
                 Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
@@ -439,12 +439,12 @@ namespace OpenRPG.Systems
                 Plugin.Logger.LogWarning("WeaponMastery DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/mastery_decay.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/mastery_decay.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/mastery_decay.json");
+                FileStream stream = File.Create("BepInEx/config/OpenRPG/Saves/mastery_decay.json");
                 stream.Dispose();
             }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/mastery_decay.json");
+            json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/mastery_decay.json");
             try
             {
                 Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
@@ -456,12 +456,12 @@ namespace OpenRPG.Systems
                 Plugin.Logger.LogWarning("WeaponMasteryDecay DB Created.");
             }
 
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/player_log_mastery.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/player_log_mastery.json"))
             {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/Saves/player_log_mastery.json");
+                FileStream stream = File.Create("BepInEx/config/OpenRPG/Saves/player_log_mastery.json");
                 stream.Dispose();
             }
-            json = File.ReadAllText("BepInEx/config/RPGMods/Saves/player_log_mastery.json");
+            json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/player_log_mastery.json");
             try
             {
                 Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

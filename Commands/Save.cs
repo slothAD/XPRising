@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace OpenRPG.Commands
 {
-    [Command("save", Usage = "save [<name>]", Description = "Force the server to save the game as well as write RPGMods DB to a json file.")]
+    [Command("save", Usage = "save [<name>]", Description = "Force the server to save the game as well as write OpenRPG DB to a json file.")]
     public static class Save
     {
         public static void Initialize(Context ctx)

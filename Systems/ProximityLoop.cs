@@ -10,7 +10,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-using Cache = RPGMods.Utils.Cache;
+using Cache = OpenRPG.Utils.Cache;
 
 namespace OpenRPG.Systems
 {

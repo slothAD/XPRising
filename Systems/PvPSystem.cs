@@ -732,19 +732,19 @@ namespace OpenRPG.Systems
         public static void SavePvPStat()
         {
             //-- NEW
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/pvpstats.json", JsonSerializer.Serialize(Database.PvPStats, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/siegestates.json", JsonSerializer.Serialize(Database.SiegeState, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/pvpstats.json", JsonSerializer.Serialize(Database.PvPStats, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/siegestates.json", JsonSerializer.Serialize(Database.SiegeState, Database.JSON_options));
         }
 
         public static void LoadPvPStat()
         {
             //-- NEW
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/pvpstats.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/pvpstats.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/pvpstats.json");
+                var stream = File.Create("BepInEx/config/OpenRPG/Saves/pvpstats.json");
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpstats.json");
+            string content = File.ReadAllText("BepInEx/config/OpenRPG/Saves/pvpstats.json");
             try
             {
                 Database.PvPStats = JsonSerializer.Deserialize<ConcurrentDictionary<ulong, PvPData>>(content);
@@ -757,12 +757,12 @@ namespace OpenRPG.Systems
             }
 
             //-- Siege Mechanic
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/siegestates.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/siegestates.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/siegestates.json");
+                var stream = File.Create("BepInEx/config/OpenRPG/Saves/siegestates.json");
                 stream.Dispose();
             }
-            content = File.ReadAllText("BepInEx/config/RPGMods/Saves/siegestates.json");
+            content = File.ReadAllText("BepInEx/config/OpenRPG/Saves/siegestates.json");
             try
             {
                 Database.SiegeState = JsonSerializer.Deserialize<Dictionary<ulong, SiegeData>>(content);
@@ -775,9 +775,9 @@ namespace OpenRPG.Systems
             }
 
             //-- Transfer OLD Stats to new database.
-            if (File.Exists("BepInEx/config/RPGMods/Saves/pvpkills.json"))
+            if (File.Exists("BepInEx/config/OpenRPG/Saves/pvpkills.json"))
             {
-                string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpkills.json");
+                string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/pvpkills.json");
                 try
                 {
                     Database.pvpkills = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -788,14 +788,14 @@ namespace OpenRPG.Systems
                         Database.PvPStats[item.Key] = data;
                     }
                     Plugin.Logger.LogWarning("PvPKills DB Transfered.");
-                    File.Delete("BepInEx/config/RPGMods/Saves/pvpkills.json");
+                    File.Delete("BepInEx/config/OpenRPG/Saves/pvpkills.json");
                 }
                 catch { }
             }
 
-            if (File.Exists("BepInEx/config/RPGMods/Saves/pvpdeath.json"))
+            if (File.Exists("BepInEx/config/OpenRPG/Saves/pvpdeath.json"))
             {
-                string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpdeath.json");
+                string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/pvpdeath.json");
                 try
                 {
                     Database.pvpdeath = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -806,15 +806,15 @@ namespace OpenRPG.Systems
                         Database.PvPStats[item.Key] = data;
                     }
                     Plugin.Logger.LogWarning("PvPDeath DB Transfered.");
-                    File.Delete("BepInEx/config/RPGMods/Saves/pvpdeath.json");
+                    File.Delete("BepInEx/config/OpenRPG/Saves/pvpdeath.json");
                 }
                 catch { }
             }
             
 
-            if (File.Exists("BepInEx/config/RPGMods/Saves/pvpkd.json"))
+            if (File.Exists("BepInEx/config/OpenRPG/Saves/pvpkd.json"))
             {
-                string json = File.ReadAllText("BepInEx/config/RPGMods/Saves/pvpkd.json");
+                string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/pvpkd.json");
                 try
                 {
                     Database.pvpkd = JsonSerializer.Deserialize<Dictionary<ulong, double>>(json);
@@ -825,7 +825,7 @@ namespace OpenRPG.Systems
                         Database.PvPStats[item.Key] = data;
                     }
                     Plugin.Logger.LogWarning("PvPKD DB Transfered.");
-                    File.Delete("BepInEx/config/RPGMods/Saves/pvpkd.json");
+                    File.Delete("BepInEx/config/OpenRPG/Saves/pvpkd.json");
                 }
                 catch { }
             }

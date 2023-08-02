@@ -43,10 +43,10 @@ namespace OpenRPG.Hooks
     public class InitializationPatch
     {
         [HarmonyPostfix]
-        public static void RPGMods_Initialize_Method()
+        public static void OpenRPG_Initialize_Method()
         {
             Plugin.Initialize();
-            Plugin.harmony.Unpatch(typeof(HandleGameplayEventsSystem).GetMethod("OnUpdate"), typeof(InitializationPatch).GetMethod("RPGMods_Initialize_Method"));
+            Plugin.harmony.Unpatch(typeof(HandleGameplayEventsSystem).GetMethod("OnUpdate"), typeof(InitializationPatch).GetMethod("OpenRPG_Initialize_Method"));
         }
     }
 

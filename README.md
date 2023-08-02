@@ -1,5 +1,5 @@
 # OpenRPG
-### This mod is a Gloomrot update of the original mod from [RPGMods](https://github.com/Kaltharos/RPGMods) by [@Kaltharos](https://github.com/Kaltharos)
+### This mod is a Gloomrot update of the original mod from [OpenRPG](https://github.com/Kaltharos/OpenRPG) by [@Kaltharos](https://github.com/Kaltharos)
 
 ### We are working on it, no release date.
 

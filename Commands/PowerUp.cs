@@ -75,17 +75,17 @@ namespace OpenRPG.Commands
 
         public static void SavePowerUp()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/Saves/powerup.json", JsonSerializer.Serialize(Database.PowerUpList, Database.JSON_options));
+            File.WriteAllText("BepInEx/config/OpenRPG/Saves/powerup.json", JsonSerializer.Serialize(Database.PowerUpList, Database.JSON_options));
         }
 
         public static void LoadPowerUp()
         {
-            if (!File.Exists("BepInEx/config/RPGMods/Saves/powerup.json"))
+            if (!File.Exists("BepInEx/config/OpenRPG/Saves/powerup.json"))
             {
-                var stream = File.Create("BepInEx/config/RPGMods/Saves/powerup.json");
+                var stream = File.Create("BepInEx/config/OpenRPG/Saves/powerup.json");
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/RPGMods/Saves/powerup.json");
+            string content = File.ReadAllText("BepInEx/config/OpenRPG/Saves/powerup.json");
             try
             {
                 Database.PowerUpList = JsonSerializer.Deserialize<Dictionary<ulong, PowerUpData>>(content);

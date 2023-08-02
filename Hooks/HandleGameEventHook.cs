@@ -8,12 +8,12 @@ using OpenRPG.Systems;
 
 namespace OpenRPG.Hooks
 {
-    [HarmonyPatch(typeof(HandleGameplayEventsSystem), nameof(HandleGameplayEventsSystem.OnUpdate))]
+    [HarmonyPatch(typeof(GameplayEventsSystem), nameof(GameplayEventsSystem.OnUpdate))]
     public class HandleGameplayEventsSystem_Patch
     {
         private static byte CurrentDay = 0;
         private static bool isDNInitialized = false;
-        private static void Postfix(HandleGameplayEventsSystem __instance)
+        private static void Postfix(GameplayEventsSystem __instance)
         {
             //-- Player Location Caching
             if (ExperienceSystem.isEXPActive || (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow)) ProximityLoop.UpdateCache();
