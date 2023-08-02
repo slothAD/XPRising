@@ -1,10 +1,10 @@
 ﻿using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("heat", Usage = "heat", Description = "Shows your current wanted level.")]
     public static class Heat

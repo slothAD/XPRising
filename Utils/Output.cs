@@ -1,12 +1,12 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Hooks;
+using OpenRPG.Hooks;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Unity.Entities;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public static class Output
     {

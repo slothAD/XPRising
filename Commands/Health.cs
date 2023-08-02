@@ -1,8 +1,8 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("health, hp", Usage = "health <percentage> [<player name>]", Description = "Sets your current Health")]
     public static class Health

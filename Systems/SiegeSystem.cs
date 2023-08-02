@@ -1,8 +1,8 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using Unity.Entities;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class SiegeSystem
     {

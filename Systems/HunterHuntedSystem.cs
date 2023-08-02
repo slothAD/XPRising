@@ -1,11 +1,11 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System;
 using System.Threading.Tasks;
 using Unity.Entities;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class HunterHuntedSystem
     {

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("sunimmunity, sun", Usage = "sunimmunity", Description = "Toggles sun immunity.")]
     public static class SunImmunity

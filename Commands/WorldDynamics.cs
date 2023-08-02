@@ -1,12 +1,12 @@
 ﻿using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("worlddynamics, wd", Usage = "wd [<faction>] [<stats>|<save>|<load>|<ignore>|<unignore>] [<npc prefab name>]", Description = "List all faction stats. Save them, or load from the json file.")]
     public static class WorldDynamics

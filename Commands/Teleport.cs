@@ -1,10 +1,10 @@
 ﻿using ProjectM;
 using ProjectM.Scripting;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using Unity.Entities;
 using Unity.Transforms;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("teleport, tp", "teleport <Name>", "Teleport you to another online player within your clan.")]
     public static class Teleport

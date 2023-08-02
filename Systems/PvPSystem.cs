@@ -1,6 +1,6 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class PvPSystem
     {

@@ -1,12 +1,12 @@
-﻿using RPGMods.Systems;
-using RPGMods.Utils;
+﻿using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 using Unity.Transforms;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("waypoint, wp", "waypoint <Name|Set|Remove|List> [<Name>] [global]", "Teleports you to previously created waypoints.")]
     public static class Waypoint

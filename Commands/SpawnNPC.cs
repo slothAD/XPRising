@@ -1,9 +1,9 @@
-﻿using RPGMods.Utils;
+﻿using OpenRPG.Utils;
 using System;
 using System.Linq;
 using Unity.Transforms;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("spawnnpc, spn", "spawnnpc <Prefab Name/GUID> [<Amount>] [<Waypoint>]", "Spawns a NPC to a previously created waypoint.")]
     public static class SpawnNPC

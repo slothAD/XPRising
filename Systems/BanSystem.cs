@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using Unity.Entities;
 using ProjectM.Network;
 using System.IO;
 using System.Text.Json;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class BanSystem
     {

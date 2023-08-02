@@ -1,10 +1,10 @@
 ﻿using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("powerup, pu", Usage = "pu <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", Description = "Buff specified player with the specified value.")]
     public static class PowerUp

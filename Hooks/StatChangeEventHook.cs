@@ -1,13 +1,13 @@
 ﻿using HarmonyLib;
 using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using ProjectM.Network;
 using ProjectM.CastleBuilding;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 using Unity.Entities;
 using System;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     public delegate void OnUpdateEventHandler(World world);
     [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.OnUpdate))]

@@ -1,10 +1,10 @@
 ﻿using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System;
 using Unity.Transforms;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("playerinfo, i", Usage = "playerinfo <Name>", Description = "Display the player information details.")]
     public static class PlayerInfo

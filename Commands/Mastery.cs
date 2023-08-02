@@ -1,10 +1,10 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("mastery, m", Usage = "mastery [<log> <on>|<off>]", Description = "Display your current mastery progression, or toggle the gain notification.")]
     public static class Mastery

@@ -1,9 +1,9 @@
 ﻿using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>]", Description = "Shows your currect experience and progression to next level, or toggle the exp gain notification.")]
     public static class Experience

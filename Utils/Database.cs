@@ -7,7 +7,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public class Cache
     {

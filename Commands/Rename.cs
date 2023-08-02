@@ -1,8 +1,8 @@
-﻿using RPGMods.Utils;
+﻿using OpenRPG.Utils;
 using System.Text.RegularExpressions;
 using Unity.Collections;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("rename", Usage = "rename <Player Name/SteamID> <New Name>", Description = "Rename the specified player.")]
     public static class Rename

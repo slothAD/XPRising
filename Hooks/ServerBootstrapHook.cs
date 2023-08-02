@@ -5,13 +5,13 @@ using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
 using ProjectM.Scripting;
 using ProjectM.Terrain;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Stunlock.Network;
 using System;
 using System.Reflection;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     //[HarmonyPatch(typeof(LoadPersistenceSystemV2), nameof(LoadPersistenceSystemV2.SetLoadState))]
     //public class PersistenceSystem_Patch

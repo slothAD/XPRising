@@ -1,10 +1,10 @@
 ﻿using HarmonyLib;
 using ProjectM;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(VampireDownedServerEventSystem), nameof(VampireDownedServerEventSystem.OnUpdate))]
     public class VampireDownedServerEventSystem_Patch

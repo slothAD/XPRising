@@ -8,13 +8,13 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class ExperienceSystem
     {

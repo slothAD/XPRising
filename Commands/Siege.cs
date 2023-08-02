@@ -1,12 +1,12 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("siege", Usage = "siege [<on>|<off>]", Description = "Display all players currently in siege mode, or engage siege mode.")]
     public static class Siege

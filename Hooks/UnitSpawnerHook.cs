@@ -1,9 +1,9 @@
 ﻿using ProjectM;
 using HarmonyLib;
-using RPGMods.Utils;
-using RPGMods.Systems;
+using OpenRPG.Utils;
+using OpenRPG.Systems;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(UnitSpawnerReactSystem), nameof(UnitSpawnerReactSystem.OnUpdate))]
     public static class UnitSpawnerReactSystem_Patch

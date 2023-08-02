@@ -1,13 +1,13 @@
 ﻿using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
-using RPGMods.Commands;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Commands;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace RPGMods.Hooks;
+namespace OpenRPG.Hooks;
 [HarmonyPatch]
 public class DeathEventListenerSystem_Patch
 {

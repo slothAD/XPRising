@@ -1,10 +1,10 @@
 ﻿using ProjectM;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public class SquadList
     {

@@ -7,14 +7,14 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using RPGMods.Utils;
-using RPGMods.Hooks;
-using RPGMods.Systems;
+using OpenRPG.Utils;
+using OpenRPG.Hooks;
+using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public static class Helper
     {

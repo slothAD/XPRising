@@ -1,8 +1,8 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Text.RegularExpressions;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("save", Usage = "save [<name>]", Description = "Force the server to save the game as well as write RPGMods DB to a json file.")]
     public static class Save

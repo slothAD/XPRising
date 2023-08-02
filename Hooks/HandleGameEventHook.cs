@@ -1,12 +1,12 @@
 ﻿using HarmonyLib;
 using ProjectM.Gameplay.Systems;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using ProjectM;
 using Unity.Entities;
 using System;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(HandleGameplayEventsSystem), nameof(HandleGameplayEventsSystem.OnUpdate))]
     public class HandleGameplayEventsSystem_Patch

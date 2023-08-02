@@ -1,5 +1,5 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("kit", "kit <Name>", "Gives you a previously specified set of items.")]
     public static class Kit

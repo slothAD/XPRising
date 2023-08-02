@@ -1,9 +1,9 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Globalization;
 using System.Linq;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("give, g", Usage = "give <itemname> [<amount>]", Description = "Adds specified items to your inventory")]
     public static class Give

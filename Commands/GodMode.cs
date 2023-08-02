@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("godmode, god", Usage = "godmode", Description = "Toggles god mode.")]
     public static class GodMode

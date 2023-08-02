@@ -1,33 +1,25 @@
 ﻿using BepInEx;
+using BepInEx.Unity.IL2CPP;
 using BepInEx.Configuration;
-using BepInEx.IL2CPP;
+using VampireCommandFramework;
 using BepInEx.Logging;
 using HarmonyLib;
-using RPGMods.Commands;
-using RPGMods.Hooks;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Commands;
+using OpenRPG.Hooks;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System.IO;
 using System.Reflection;
-using UnhollowerRuntimeLib;
 using Unity.Entities;
 using UnityEngine;
+using Bloodstone.API;
 
-#if WETSTONE
-    using Wetstone.API;
-#endif
-
-namespace RPGMods
+namespace OpenRPG
 {
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-
-#if WETSTONE
-    [BepInDependency("xyz.molenzwiebel.wetstone")]
-    [Reloadable]
-    public class Plugin : BasePlugin, IRunOnInitialized
-#else
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("gg.deca.VampireCommandFramework")]
+    [BepInDependency("gg.deca.Bloodstone")]
     public class Plugin : BasePlugin
-#endif
     {
         public static Harmony harmony;
 

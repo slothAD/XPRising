@@ -1,6 +1,6 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Cache = RPGMods.Utils.Cache;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class ProximityLoop
     {

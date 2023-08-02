@@ -1,7 +1,7 @@
 ﻿using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("ping, p", Usage = "ping", Description = "Shows your latency.")]
     public static class Ping

@@ -1,8 +1,8 @@
 ﻿using HarmonyLib;
 using ProjectM;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(KickBanSystem_Server), nameof(KickBanSystem_Server.IsBanned))]
     public class KickBanSystem_Server_Patch

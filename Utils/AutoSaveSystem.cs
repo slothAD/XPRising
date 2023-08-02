@@ -1,7 +1,7 @@
-﻿using RPGMods.Commands;
-using RPGMods.Systems;
+﻿using OpenRPG.Commands;
+using OpenRPG.Systems;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public static class AutoSaveSystem
     {

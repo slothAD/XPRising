@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class WeaponMasterSystem
     {

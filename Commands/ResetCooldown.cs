@@ -1,8 +1,8 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("resetcooldown, cd", Usage = "resetcooldown [<Player Name>]", Description = "Instantly cooldown all ability & skills for the player.")]
     public static class ResetCooldown

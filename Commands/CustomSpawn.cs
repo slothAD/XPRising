@@ -1,8 +1,8 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using Unity.Transforms;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("customspawn, cspn", "customspawn <Prefab Name> [<BloodType> <BloodQuality> <BloodConsumeable(\"true/false\")> <Duration>]", "Spawns a modified NPC at your current position.")]
     public static class CustomSpawnNPC

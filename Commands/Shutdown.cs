@@ -1,6 +1,6 @@
-﻿using RPGMods.Utils;
+﻿using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("shutdown, quit, exit", Usage = "shutdown", Description = "Trigger the exit signal & shutdown the server.")]
     public static class Shutdown

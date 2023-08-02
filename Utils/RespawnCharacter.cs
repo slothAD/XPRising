@@ -5,7 +5,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     struct NullableFloat
     {

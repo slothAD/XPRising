@@ -1,5 +1,5 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using Unity.Entities;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class WorldDynamicsSystem
     {

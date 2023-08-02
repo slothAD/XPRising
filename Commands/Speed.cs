@@ -1,9 +1,9 @@
-﻿using RPGMods.Utils;
+﻿using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("speed", Usage = "speed", Description = "Toggles increased movement speed.")]
 

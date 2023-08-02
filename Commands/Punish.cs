@@ -1,7 +1,7 @@
 ﻿using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("punish", Usage = "punish <playername> [<remove>]", Description = "Manually punish someone or lift their debuff.")]
     public static class Punish

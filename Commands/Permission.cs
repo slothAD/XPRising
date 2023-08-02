@@ -1,9 +1,9 @@
 ﻿using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System.Linq;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("permission, perm", Usage = "permission <list>|<save>|<reload>|<set> <0-100> <playername>|<steamid>", Description = "Manage commands and user permissions level.")]
     public static class Permission

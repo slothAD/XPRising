@@ -1,7 +1,7 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods;
-using RPGMods.Utils;
+using OpenRPG;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Unity.Entities;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class PermissionSystem
     {

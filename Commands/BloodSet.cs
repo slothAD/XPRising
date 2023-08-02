@@ -1,8 +1,8 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("blood", Usage = "blood <Type> [<Quality>] [<Value>]", Description = "Sets your current Blood Type, Quality and Value")]
     public static class BloodSet

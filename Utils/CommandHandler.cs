@@ -1,4 +1,4 @@
-﻿using RPGMods.Systems;
+﻿using OpenRPG.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Reflection;
 using Unity.Entities;
 using UnityEngine;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public class CommandHandler
     {

@@ -1,6 +1,6 @@
-﻿using RPGMods.Utils;
+﻿using OpenRPG.Utils;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("kick", Usage = "kick <playername>", Description = "Kick the specified player out of the server.")]
     public static class Kick

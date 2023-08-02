@@ -1,9 +1,9 @@
 ﻿using HarmonyLib;
 using ProjectM;
 using ProjectM.Gameplay;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     //-- Can Intercept Entity Spawn Here! Nice!
     //var GUID = Helper.GetPrefabGUID(entity);

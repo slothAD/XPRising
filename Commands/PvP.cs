@@ -1,11 +1,11 @@
 ﻿using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("pvp", Usage = "pvp [<on>|<off>|<top>]", Description = "Display your PvP statistics or toggle PvP/Castle Siege state")]
     public static class PvP

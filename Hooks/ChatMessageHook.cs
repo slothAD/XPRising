@@ -3,9 +3,9 @@ using ProjectM;
 using ProjectM.Network;
 using Unity.Collections;
 using Unity.Entities;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(ChatMessageSystem), nameof(ChatMessageSystem.OnUpdate))]
     public class ChatMessageSystem_Patch

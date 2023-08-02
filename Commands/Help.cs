@@ -1,10 +1,10 @@
-﻿using RPGMods.Utils;
+﻿using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [Command("help, h", Usage = "help [<command>]", Description = "Shows a list of commands, or details about a command.", ReqPermission = 0)]
     public static class Help
