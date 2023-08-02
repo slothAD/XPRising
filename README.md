@@ -1,4 +1,9 @@
-# RPGMods
+# OpenRPG
+### This mod is a Gloomrot update of the original mod from [RPGMods](https://github.com/Kaltharos/RPGMods) by [@Kaltharos](https://github.com/Kaltharos)
+
+### We are working on it, no release date.
+
+<!---
 ### Server Only Mod
 Server only mod for RPG systems, which also includes ChatCommands with bug fixes.\
 Read the changelog for extra details.
@@ -61,7 +66,7 @@ Another way to gain honor is by grinding mobs. Each mob kill will give 1 honor p
 There's a hard limit of 250p/hours gain to prevent grind.
 
 The honor title is added as a prefix to the player's name.\
-All chat commands which are included within RPGMods should still be used without the\
+All chat commands which are included within OpenRPG should still be used without the\
 honor title prefix if a player name is required.\
 Other stuff like whispering to other players does require the title prefix to be used.
 
@@ -184,7 +189,7 @@ and 100 as the highest permission (admin).
 
 ## Custom Ban System
 You can now ban a player for the specified duration in days using the .ban/.unban command.\
-`WARNING` If you remove RPGMods, all the banned users via the command will no longer be banned!
+`WARNING` If you remove OpenRPG, all the banned users via the command will no longer be banned!
 
 ## Config
 <details>
@@ -378,7 +383,7 @@ User designated as SuperAdmin in your server admin list will always bypass the p
 Special commands params that require admin permission can also be adjusted here.
 
 All abbreviation of the command are automatically included, you need only to put the primary command string.\
-The permissions are saved in `BepInEx/config/RPGMods/command_permission.json`
+The permissions are saved in `BepInEx/config/OpenRPG/command_permission.json`
 
 <details>
 <summary>Default Permission</summary>
@@ -452,7 +457,7 @@ Gives you a previously specified set of items.\
 <details>
 <summary>-- How does kit work?</summary>
 
-&ensp;&ensp;You will get a new config file located in `BepInEx/config/RPGMods/kits.json`
+&ensp;&ensp;You will get a new config file located in `BepInEx/config/OpenRPG/kits.json`
 ```json
 [
   {
@@ -924,3 +929,4 @@ Notes:
 - Need a better name tagging sytem. (On hold)
 
 </details>
+-->
