@@ -15,7 +15,7 @@ public class ArmorLevelSystem_Spawn_Patch
 {
     private static void Prefix(ArmorLevelSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (ExperienceSystem.isEXPActive)
         {
@@ -32,7 +32,7 @@ public class ArmorLevelSystem_Spawn_Patch
 
     private static void Postfix(ArmorLevelSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive)
         {
@@ -53,7 +53,7 @@ public class WeaponLevelSystem_Spawn_Patch
 {
     private static void Prefix(WeaponLevelSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
         {
@@ -74,7 +74,7 @@ public class WeaponLevelSystem_Spawn_Patch
                     if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
 
                     PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-                    Entity User = playerCharacter.UserEntity._Entity;
+                    Entity User = playerCharacter.UserEntity;
 
                     Helper.ApplyBuff(User, Owner, Database.Buff.Buff_VBlood_Perk_Moose);
                 }
@@ -84,7 +84,7 @@ public class WeaponLevelSystem_Spawn_Patch
 
     private static void Postfix(WeaponLevelSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive)
         {
@@ -104,7 +104,7 @@ public class SpellLevelSystem_Spawn_Patch
 {
     private static void Prefix(SpellLevelSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (ExperienceSystem.isEXPActive)
         {
@@ -121,7 +121,7 @@ public class SpellLevelSystem_Spawn_Patch
 
     private static void Postfix(SpellLevelSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (ExperienceSystem.isEXPActive || PvPSystem.isPunishEnabled)
         {
@@ -133,7 +133,7 @@ public class SpellLevelSystem_Spawn_Patch
                 if (PvPSystem.isPunishEnabled && !ExperienceSystem.isEXPActive) PvPSystem.OnEquipChange(Owner);
                 if (ExperienceSystem.isEXPActive)
                 {
-                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                     ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
                     ExperienceSystem.SetLevel(Owner, User, SteamID);
                 }
@@ -147,7 +147,7 @@ public class SpellLevelSystem_Destroy_Patch
 {
     private static void Prefix(SpellLevelSystem_Destroy __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (ExperienceSystem.isEXPActive)
         {
@@ -164,7 +164,7 @@ public class SpellLevelSystem_Destroy_Patch
 
     private static void Postfix(SpellLevelSystem_Destroy __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (ExperienceSystem.isEXPActive)
         {
@@ -177,7 +177,7 @@ public class SpellLevelSystem_Destroy_Patch
                     Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (entityManager.HasComponent<PlayerCharacter>(Owner))
                     {
-                        Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                        Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                         ulong SteamID = entityManager.GetComponentData<User>(User).PlatformId;
                         ExperienceSystem.SetLevel(Owner, User, SteamID);
                     }

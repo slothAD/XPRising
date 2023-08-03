@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace OpenRPG.Commands
@@ -61,7 +62,7 @@ namespace OpenRPG.Commands
                                 return;
                             }
                         }
-                        wp_name = wp_name + "_" +SteamID;
+                        wp_name = wp_name + "_" + SteamID;
                         if (Database.waypoints.TryGetValue(wp_name, out _))
                         {
                             Output.CustomErrorMessage(ctx, $"You already have a waypoint with the same name.");
@@ -69,7 +70,7 @@ namespace OpenRPG.Commands
                         }
                     }
                     var location = ctx.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-                    var f2_location = new Float2(location.x, location.z);
+                    var f2_location = new float3(location.x, location.y, location.z);
                     AddWaypoint(SteamID, f2_location, wp_name, wp_true_name, global);
                     Output.SendSystemMessage(ctx, "Successfully added Waypoint.");
                     return;
@@ -128,7 +129,7 @@ namespace OpenRPG.Commands
             Output.CustomErrorMessage(ctx, "Waypoint not found.");
         }
 
-        public static void AddWaypoint(ulong owner, Float2 location, string name, string true_name, bool isGlobal)
+        public static void AddWaypoint(ulong owner, float3 location, string name, string true_name, bool isGlobal)
         {
             var WaypointData = new WaypointData(true_name, owner, location);
             if (isGlobal) Database.globalWaypoint[name] = WaypointData;
@@ -142,7 +143,7 @@ namespace OpenRPG.Commands
 
         public static void RemoveWaypoint(ulong owner, string name, bool global)
         {
-            if(global)
+            if (global)
             {
                 Database.globalWaypoint.Remove(name);
             }

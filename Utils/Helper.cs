@@ -13,6 +13,10 @@ using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
+using Bloodstone.API;
+using static ProjectM.Terrain.MapMaker.MapMakerDefinition;
+using VRising.GameData;
+using VRising.GameData.Methods;
 
 namespace OpenRPG.Utils
 {
@@ -35,7 +39,7 @@ namespace OpenRPG.Utils
 
         public static bool GetServerGameManager(out ServerGameManager sgm)
         {
-            sgm = Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
+            sgm = (ServerGameManager)(Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager);
             return true;
         }
 
@@ -53,8 +57,8 @@ namespace OpenRPG.Utils
                 if (CacheAge.TotalSeconds < 300) return playerGroup.AllyCount;
             }
 
-            Team team = Helper.SGM._TeamChecker.GetTeam(PlayerCharacter);
-            playerGroup.AllyCount = Helper.SGM._TeamChecker.GetAlliedUsersCount(team)-1;
+            /* Team team = Helper.SGM._TeamChecker.GetTeam(PlayerCharacter);
+             playerGroup.AllyCount = Helper.SGM._TeamChecker.GetAlliedUsersCount(team)-1;*/
             playerGroup.TimeStamp = DateTime.Now;
 
             Dictionary<Entity, Entity> Group = new();
@@ -66,10 +70,10 @@ namespace OpenRPG.Utils
                 return 0;
             }
 
-            NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
-            Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);
+            /*NativeList<Entity> allyBuffer = Helper.SGM._TeamChecker.GetTeamsChecked();
+            Helper.SGM._TeamChecker.GetAlliedUsers(team, allyBuffer);*/
 
-            foreach (var entity in allyBuffer)
+            /*foreach (var entity in allyBuffer)
             {
                 if (Plugin.Server.EntityManager.HasComponent<User>(entity))
                 {
@@ -77,7 +81,7 @@ namespace OpenRPG.Utils
                     if (playerEntity.Equals(PlayerCharacter)) continue;
                     Group[entity] = playerEntity;
                 }
-            }
+            }*/
 
             playerGroup.Allies = Group;
             Cache.PlayerAllies[PlayerCharacter] = playerGroup;
@@ -341,8 +345,9 @@ namespace OpenRPG.Utils
                 }, bytePtr, false);
                 var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
                 var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
-                var hasAdded = InventoryUtilitiesServer.TryAddItem(ctx.EntityManager, gameData.ItemHashLookupMap, ctx.Event.SenderCharacterEntity, guid, amount, out _, out Entity e, default, hack);
-                return e;
+                //var hasAdded = InventoryUtilitiesServer.TryAddItem(ctx.EntityManager, gameData.ItemHashLookupMap, ctx.Event.SenderCharacterEntity, guid, amount, out _, out Entity e, default, hack);
+                //return e;
+                return new Entity();
             }
         }
 
@@ -458,7 +463,7 @@ namespace OpenRPG.Utils
             var em = Plugin.Server.EntityManager;
             var cUnitStats = em.GetComponentData<UnitStats>(character);
             var cBuffer = em.GetBuffer<BoolModificationBuffer>(character);
-            cUnitStats.PvPProtected.Set(value, cBuffer);
+            cUnitStats.PvPProtected.SetBaseValue(value, cBuffer);
             em.SetComponentData(character, cUnitStats);
         }
 
@@ -474,7 +479,7 @@ namespace OpenRPG.Utils
             if (UniqueID == 0.0) UniqueID += 0.00001f;
             else if (UniqueID == 1.0f) UniqueID -= 0.00001f;
             duration_final = default_duration + UniqueID;
-            
+
             while (Cache.spawnNPC_Listen.ContainsKey(duration))
             {
                 UniqueID = (float)rand.NextDouble();
@@ -545,7 +550,7 @@ namespace OpenRPG.Utils
             }
             try
             {
-                name = s.PrefabLookupMap[hashCode]().ToString();
+                name = s.PrefabLookupMap[hashCode].ToString();
             }
             catch
             {
@@ -554,7 +559,7 @@ namespace OpenRPG.Utils
             return name;
         }
 
-        public static void TeleportTo(Context ctx, Float2 position)
+        public static void TeleportTo(Context ctx, float3 position)
         {
             var entity = ctx.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
@@ -569,7 +574,7 @@ namespace OpenRPG.Utils
 
             ctx.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
             {
-                Position = new float2(position.x, position.y),
+                Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
         }

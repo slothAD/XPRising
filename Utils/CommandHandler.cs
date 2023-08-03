@@ -29,7 +29,7 @@ namespace OpenRPG.Utils
                 if (!NameExists(type, command, out var primary)) continue;
                 if (DisabledCommands.Split(',').Any(x => x.ToLower() == primary)) continue;
 
-                if (!PermissionSystem.PermissionCheck(ev.User.PlatformId, primary) && !ev.User.IsAdmin)
+                /*if (!PermissionSystem.PermissionCheck(ev.User.PlatformId, primary) && !ev.User.IsAdmin)
                 {
                     Output.CustomErrorMessage(ev, "You do not have the required permissions to use that.");
                     return;
@@ -42,7 +42,8 @@ namespace OpenRPG.Utils
                     Output.CustomErrorMessage(ev, $"Please wait for {wait} second(s) before sending another command.");
                     return;
                 }
-                Cache.command_Cooldown[ev.User.PlatformId] = getCurrentTime + delay_Cooldown;
+                Cache.command_Cooldown[ev.User.PlatformId] = getCurrentTime + delay_Cooldown;*/
+
                 var cmd = type.GetMethod("Initialize");
                 cmd.Invoke(null, new[] { new Context(Prefix, ev, args) });
                 return;

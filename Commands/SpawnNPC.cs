@@ -1,6 +1,7 @@
 ﻿using OpenRPG.Utils;
 using System;
 using System.Linq;
+using Unity.Mathematics;
 using Unity.Transforms;
 
 namespace OpenRPG.Commands
@@ -58,7 +59,7 @@ namespace OpenRPG.Commands
 
                     if (Database.globalWaypoint.TryGetValue(waypoint, out var WPData))
                     {
-                        Float2 wp = WPData.Location;
+                        float3 wp = WPData.Location;
                         if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
                         {
                             Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
@@ -68,9 +69,9 @@ namespace OpenRPG.Commands
                         return;
                     }
 
-                    if (Database.waypoints.TryGetValue(waypoint+"_"+SteamID, out var WPData_))
+                    if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out var WPData_))
                     {
-                        Float2 wp = WPData_.Location;
+                        float3 wp = WPData_.Location;
                         if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
                         {
                             Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");

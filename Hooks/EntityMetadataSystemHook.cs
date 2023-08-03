@@ -22,29 +22,24 @@ namespace OpenRPG.Hooks
             //-- Spawned mobs appear here!
             if (!WorldDynamicsSystem.isFactionDynamic) return;
 
-            if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
+            var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (var entity in entities)
             {
-                var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
-                foreach (var entity in entities)
+                if (__instance.EntityManager.HasComponent<Movement>(entity) && __instance.EntityManager.HasComponent<FactionReference>(entity))
                 {
-                    if (__instance.EntityManager.HasComponent<Movement>(entity) && __instance.EntityManager.HasComponent<FactionReference>(entity))
-                    {
-                        WorldDynamicsSystem.MobReceiver(entity);
-                    }
+                    WorldDynamicsSystem.MobReceiver(entity);
                 }
             }
 
-            if (__instance.__OnUpdate_LambdaJob1_entityQuery != null)
+            var entities1 = __instance.__OnUpdate_LambdaJob1_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (var entity in entities1)
             {
-                var entities = __instance.__OnUpdate_LambdaJob1_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
-                foreach (var entity in entities)
+                if (__instance.EntityManager.HasComponent<Movement>(entity) && __instance.EntityManager.HasComponent<FactionReference>(entity))
                 {
-                    if (__instance.EntityManager.HasComponent<Movement>(entity) && __instance.EntityManager.HasComponent<FactionReference>(entity))
-                    {
-                        WorldDynamicsSystem.MobReceiver(entity);
-                    }
+                    WorldDynamicsSystem.MobReceiver(entity);
                 }
             }
+            
         }
     }
 }

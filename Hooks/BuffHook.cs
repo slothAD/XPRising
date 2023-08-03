@@ -166,7 +166,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
     private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         EntityManager entityManager = __instance.EntityManager;
         NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -180,7 +180,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                 if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
 
                 PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-                Entity User = playerCharacter.UserEntity._Entity;
+                Entity User = playerCharacter.UserEntity;
                 User Data = entityManager.GetComponentData<User>(User);
 
                 var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
@@ -277,7 +277,7 @@ public class BuffSystem_Spawn_Server_Patch
 {
     private static void Prefix(BuffSystem_Spawn_Server __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (PvPSystem.isPunishEnabled || SiegeSystem.isSiegeBuff || PermissionSystem.isVIPSystem || PvPSystem.isHonorSystemEnabled)
         {
@@ -296,7 +296,7 @@ public class BuffSystem_Spawn_Server_Patch
 
     private static void Postfix(BuffSystem_Spawn_Server __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (PvPSystem.isPunishEnabled || HunterHuntedSystem.isActive || WeaponMasterSystem.isMasteryEnabled)
         {
@@ -306,7 +306,7 @@ public class BuffSystem_Spawn_Server_Patch
                 if (!__instance.EntityManager.HasComponent<InCombatBuff>(entity)) continue;
                 Entity e_Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                 if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
-                Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity._Entity;
+                Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
 
                 if (HunterHuntedSystem.isActive)
                 {
@@ -326,7 +326,7 @@ public class ModifyBloodDrainSystem_Spawn_Patch
 {
     private static void Prefix(ModifyBloodDrainSystem_Spawn __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
+        // if (__instance.__OnUpdate_LambdaJob0_entityQuery == null) return;
 
         if (PermissionSystem.isVIPSystem || PvPSystem.isHonorSystemEnabled)
         {
@@ -347,8 +347,8 @@ public class Destroy_TravelBuffSystem_Patch
 {
     private static void Postfix(Destroy_TravelBuffSystem __instance)
     {
-        if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
-        {
+        //if (__instance.__OnUpdate_LambdaJob0_entityQuery != null)
+        //{
             var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
@@ -359,13 +359,13 @@ public class Destroy_TravelBuffSystem_Patch
                     var Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                     if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
-                    var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity._Entity;
+                    var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                     var playerName = __instance.EntityManager.GetComponentData<User>(userEntity).CharacterName.ToString();
 
                     if (PvPSystem.isHonorSystemEnabled) PvPSystem.NewPlayerReceiver(userEntity, Owner, playerName);
                     else Helper.UpdatePlayerCache(userEntity, playerName, playerName);
                 }
             }
-        }
+        //}
     }
 }

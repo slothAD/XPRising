@@ -28,7 +28,7 @@ namespace OpenRPG.Commands
 
             Output.SendSystemMessage(ctx, $"Saving data....");
             //AutoSaveSystem.SaveDatabase();
-            Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name);
+            //Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name, ServerRuntimeSettings.Save);
             Output.SendSystemMessage(ctx, $"Data save complete.");
         }
     }

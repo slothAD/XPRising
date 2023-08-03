@@ -236,12 +236,12 @@ namespace OpenRPG
         {
             InitConfig();
             Logger = Log;
-            harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+            harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             TaskRunner.Initialize();
 
-            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         }
 
         public override bool Unload()

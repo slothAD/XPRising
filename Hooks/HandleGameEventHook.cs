@@ -8,12 +8,12 @@ using OpenRPG.Systems;
 
 namespace OpenRPG.Hooks
 {
-    [HarmonyPatch(typeof(GameplayEventsSystem), nameof(GameplayEventsSystem.OnUpdate))]
+    [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
     public class HandleGameplayEventsSystem_Patch
     {
         private static byte CurrentDay = 0;
         private static bool isDNInitialized = false;
-        private static void Postfix(GameplayEventsSystem __instance)
+        private static void Postfix(HandleGameplayEventsBase __instance)
         {
             //-- Player Location Caching
             if (ExperienceSystem.isEXPActive || (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow)) ProximityLoop.UpdateCache();
@@ -21,20 +21,22 @@ namespace OpenRPG.Hooks
             if (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow) ProximityLoop.HostileProximityGlow();
 
             //-- Day Cycle Tracking
-            var DNCycle = __instance._DayNightCycle.GetSingleton();
-            if (CurrentDay != DNCycle.GameDateTimeNow.Day)
+            //var dnc = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
+            //var DNCycle = __instance._DayNightCycle.GetSingleton();
+
+            /*if (CurrentDay != dnc.GameDateTimeNow.Day)
             {
                 if (!isDNInitialized)
                 {
-                    CurrentDay = DNCycle.GameDateTimeNow.Day;
+                    CurrentDay = dnc.GameDateTimeNow.Day;
                     isDNInitialized = true;
                 }
                 else
                 {
-                    CurrentDay = DNCycle.GameDateTimeNow.Day;
+                    CurrentDay = dnc.GameDateTimeNow.Day;
                     if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
                 }
-            }
+            }*/
             //-- ------------------
 
             //-- Spawn Custom NPC Task

@@ -1,15 +1,11 @@
 ﻿using HarmonyLib;
 using ProjectM;
-using ProjectM.Auth;
-using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
-using ProjectM.Scripting;
-using ProjectM.Terrain;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Stunlock.Network;
 using System;
-using System.Reflection;
+using ProjectM.Gameplay.Systems;
 
 namespace OpenRPG.Hooks
 {
@@ -39,16 +35,16 @@ namespace OpenRPG.Hooks
     //    }
     //}
 
-    [HarmonyPatch(typeof(HandleGameplayEventsSystem), nameof(HandleGameplayEventsSystem.OnUpdate))]
-    public class InitializationPatch
-    {
-        [HarmonyPostfix]
-        public static void OpenRPG_Initialize_Method()
-        {
-            Plugin.Initialize();
-            Plugin.harmony.Unpatch(typeof(HandleGameplayEventsSystem).GetMethod("OnUpdate"), typeof(InitializationPatch).GetMethod("OpenRPG_Initialize_Method"));
-        }
-    }
+    /* [HarmonyPatch(typeof(HandleGameplayEventsOnHitSystem), nameof(HandleGameplayEventsOnHitSystem.OnUpdate))]
+     public class InitializationPatch
+     {
+         [HarmonyPostfix]
+         public static void OpenRPG_Initialize_Method()
+         {
+             Plugin.Initialize();
+             Plugin.harmony.Unpatch(typeof(HandleGameplayEventsOnHitSystem).GetMethod("OnUpdate"), typeof(InitializationPatch).GetMethod("OpenRPG_Initialize_Method"));
+         }
+     }*/
 
     [HarmonyPatch(typeof(GameBootstrap), nameof(GameBootstrap.Start))]
     public static class GameBootstrap_Patch

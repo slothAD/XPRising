@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace OpenRPG.Utils
 {
@@ -93,7 +94,7 @@ namespace OpenRPG.Utils
         public ulong SteamID { get; set; }
         public bool IsHostile { get; set; }
 
-        public StateData (ulong steamID = 0, bool isHostile = false)
+        public StateData(ulong steamID = 0, bool isHostile = false)
         {
             SteamID = steamID;
             IsHostile = isHostile;
@@ -107,7 +108,7 @@ namespace OpenRPG.Utils
         public bool IsOnline { get; set; }
         public Entity UserEntity { get; set; }
         public Entity CharEntity { get; set; }
-        public PlayerData( FixedString64 characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
+        public PlayerData(FixedString64 characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
         {
             CharacterName = characterName;
             SteamID = steamID;
@@ -145,7 +146,7 @@ namespace OpenRPG.Utils
         public string Title { get; set; }
         public int HonorRank { get; set; }
         public int Rewards { get; set; }
-        public HonorRankInfo( string title = "default", int honorRank = 0, int rewards = 0)
+        public HonorRankInfo(string title = "default", int honorRank = 0, int rewards = 0)
         {
             Title = title;
             HonorRank = honorRank;
@@ -187,8 +188,8 @@ namespace OpenRPG.Utils
     {
         public string Name { get; set; }
         public ulong Owner { get; set; }
-        public Float2 Location { get; set; }
-        public WaypointData(string name, ulong owner, Float2 location)
+        public float3 Location { get; set; }
+        public WaypointData(string name, ulong owner, float3 location)
         {
             Name = name;
             Owner = owner;
