@@ -1,15 +1,18 @@
 ﻿using ProjectM.Network;
 using OpenRPG.Utils;
+using VampireCommandFramework;
+using Bloodstone.API;
 
 namespace OpenRPG.Commands
 {
-    [Command("ping, p", Usage = "ping", Description = "Shows your latency.")]
+    [CommandGroup("rpg")]
     public static class Ping
     {
-        public static void Initialize(Context ctx)
+        [Command("ping", usage: "ping", description: "Shows your latency.")]
+        public static void PingCommand(ChatCommandContext ctx)
         {
-            var ping = ctx.EntityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;
-            Output.SendSystemMessage(ctx, $"Your latency is <color=#ffff00>{ping}</color>s");
+            var ping = VWorld.Server.EntityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;
+            ctx.Reply($"Your latency is <color=#ffff00>{ping}</color>s");
         }
     }
 }

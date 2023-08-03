@@ -4,13 +4,15 @@ using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("pvp", Usage = "pvp [<on>|<off>|<top>]", Description = "Display your PvP statistics or toggle PvP/Castle Siege state")]
+    [CommandGroup("rpg")]
     public static class PvP
     {
-        public static void Initialize(Context ctx)
+        [Command("pvp", usage: "[<on>|<off>|<top> <PlayerName]", description: "Display your PvP statistics or toggle PvP/Castle Siege state")]
+        public static void PvPCommand(ChatCommandContext ctx, string type = null, string playerName = null)
         {
             var user = ctx.Event.User;
             var userEntity = ctx.Event.SenderUserEntity;
@@ -18,11 +20,11 @@ namespace OpenRPG.Commands
             var CharName = user.CharacterName.ToString();
             var SteamID = user.PlatformId;
 
-            if (ctx.Args.Length == 0)
+            if (type == null)
             {
                 Database.PvPStats.TryGetValue(SteamID, out var PvPStats);
 
-                Output.SendSystemMessage(ctx, $"Name: {Color.White(CharName)}");
+                ctx.Reply($"Name: {Utils.Color.White(CharName)}");
                 if (PvPSystem.isHonorSystemEnabled)
                 {
                     Database.SiegeState.TryGetValue(SteamID, out var siegeState);
@@ -55,29 +57,29 @@ namespace OpenRPG.Commands
                         TimeLeftUntilRefresh = 0;
                         RepLog.TotalGained = 0;
                     }
-                    
+
                     int HonorGainLeft = PvPSystem.MaxHonorGainPerSpan - RepLog.TotalGained;
 
-                    Output.SendSystemMessage(ctx, $"Reputation: {Color.White(PvPStats.Reputation.ToString())}");
-                    Output.SendSystemMessage(ctx, $"-- Time Left Until Refresh: {Color.White(TimeLeftUntilRefresh.ToString())} minute(s)");
-                    Output.SendSystemMessage(ctx, $"-- Available Reputation Gain: {Color.White(HonorGainLeft.ToString())} point(s)");
-                    Output.SendSystemMessage(ctx, $"Hostility: {Color.White(hostilityText)}");
-                    Output.SendSystemMessage(ctx, $"Siege: {Color.White(siegeText)}");
-                    Output.SendSystemMessage(ctx, $"-- Time Left: {Color.White(tLeft.ToString())} hour(s)");
+                    ctx.Reply($"Reputation: {Utils.Color.White(PvPStats.Reputation.ToString())}");
+                    ctx.Reply($"-- Time Left Until Refresh: {Utils.Color.White(TimeLeftUntilRefresh.ToString())} minute(s)");
+                    ctx.Reply($"-- Available Reputation Gain: {Utils.Color.White(HonorGainLeft.ToString())} point(s)");
+                    ctx.Reply($"Hostility: {Utils.Color.White(hostilityText)}");
+                    ctx.Reply($"Siege: {Utils.Color.White(siegeText)}");
+                    ctx.Reply($"-- Time Left: {Utils.Color.White(tLeft.ToString())} hour(s)");
                 }
-                Output.SendSystemMessage(ctx, $"K/D: {Color.White(PvPStats.KD.ToString())} [{Color.White(PvPStats.Kills.ToString())}/{Color.White(PvPStats.Deaths.ToString())}]");
+                ctx.Reply($"K/D: {Utils.Color.White(PvPStats.KD.ToString())} [{Utils.Color.White(PvPStats.Kills.ToString())}/{Utils.Color.White(PvPStats.Deaths.ToString())}]");
             }
-
-            if (ctx.Args.Length > 0)
+            else
             {
                 var isPvPShieldON = false;
 
-                if (ctx.Args[0].ToLower().Equals("on")) isPvPShieldON = false;
-                else if (ctx.Args[0].ToLower().Equals("off")) isPvPShieldON = true;
+                if (type.ToLower().Equals("on")) isPvPShieldON = false;
+                else if (type.ToLower().Equals("off")) isPvPShieldON = true;
 
-                if (ctx.Args.Length == 1)
+                if (playerName == null)
                 {
-                    if (ctx.Args[0].ToLower().Equals("top"))
+                    if (type.ToLower().Equals("top"))
+
                     {
                         if (PvPSystem.isLadderEnabled)
                         {
@@ -86,8 +88,7 @@ namespace OpenRPG.Commands
                         }
                         else
                         {
-                            Output.CustomErrorMessage(ctx, "Leaderboard is not enabled.");
-                            return;
+                            throw ctx.Error("Leaderboard is not enabled.");
                         }
                     }
 
@@ -95,34 +96,31 @@ namespace OpenRPG.Commands
                     {
                         if (Helper.IsPlayerInCombat(charEntity))
                         {
-                            Output.CustomErrorMessage(ctx, $"Unable to change state, you are in combat!");
-                            return;
+                            throw ctx.Error($"Unable to change state, you are in combat!");
                         }
 
                         Database.PvPStats.TryGetValue(SteamID, out var PvPStats);
                         Database.SiegeState.TryGetValue(SteamID, out var siegeState);
 
-                        if (ctx.Args[0].ToLower().Equals("on"))
+                        if (type.ToLower().Equals("on"))
                         {
                             PvPSystem.HostileON(SteamID, charEntity, userEntity);
-                            Output.SendSystemMessage(ctx, "Entering aggresive state!");
+                            ctx.Reply("Entering aggresive state!");
                             return;
                         }
-                        else if (ctx.Args[0].ToLower().Equals("off"))
+                        else if (type.ToLower().Equals("off"))
                         {
                             if (PvPStats.Reputation <= -1000)
                             {
-                                Output.CustomErrorMessage(ctx, $"You're [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], aggresive state is enforced.");
-                                return;
+                                throw ctx.Error($"You're [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], aggresive state is enforced.");
                             }
 
                             if (siegeState.IsSiegeOn)
                             {
-                                Output.CustomErrorMessage(ctx, $"You're in siege mode, aggressive state is enforced.");
-                                return;
+                                throw ctx.Error($"You're in siege mode, aggressive state is enforced.");
                             }
                             PvPSystem.HostileOFF(SteamID, charEntity);
-                            Output.SendSystemMessage(ctx, "Entering passive state!");
+                            ctx.Reply("Entering passive state!");
                             return;
                         }
                     }
@@ -130,105 +128,98 @@ namespace OpenRPG.Commands
                     {
                         if (!PvPSystem.isPvPToggleEnabled)
                         {
-                            Output.CustomErrorMessage(ctx, "PvP toggling is not enabled!");
-                            return;
+                            throw ctx.Error("PvP toggling is not enabled!");
                         }
                         if (Helper.IsPlayerInCombat(charEntity))
                         {
-                            Output.CustomErrorMessage(ctx, $"Unable to change PvP Toggle, you are in combat!");
-                            return;
+                            throw ctx.Error($"Unable to change PvP Toggle, you are in combat!");
                         }
                         Helper.SetPvPShield(charEntity, isPvPShieldON);
                         string s = isPvPShieldON ? "OFF" : "ON";
-                        Output.SendSystemMessage(ctx, $"PvP is now {s}");
+                        ctx.Reply($"PvP is now {s}");
+                        return;
                     }
                     return;
                 }
-                else if (ctx.Args.Length >= 2 && (ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "pvp_args")))
+                else if (playerName != null && ctx.Event.User.IsAdmin)
                 {
-                    if (ctx.Args[0].ToLower().Equals("rep") && PvPSystem.isHonorSystemEnabled)
+
+                    if (PvPSystem.isHonorSystemEnabled)
                     {
-                        if (int.TryParse(ctx.Args[1], out var value))
+                        string name = playerName;
+                        if (Helper.FindPlayer(name, false, out Entity targetChar, out Entity targetUser))
                         {
-                            if (value > 9999) value = 9999;
-                            string name = CharName;
-                            if (ctx.Args.Length == 3)
+                            SteamID = Plugin.Server.EntityManager.GetComponentData<User>(targetUser).PlatformId;
+                            Database.PvPStats.TryGetValue(SteamID, out var PvPStats);
+                            if (type.ToLower().Equals("on"))
                             {
-                                name = ctx.Args[2];
-                                if (Helper.FindPlayer(name, false, out _, out var targetUser))
-                                {
-                                    SteamID = Plugin.Server.EntityManager.GetComponentData<User>(targetUser).PlatformId;
-                                }
-                                else
-                                {
-                                    Output.CustomErrorMessage(ctx, $"Unable to find the specified player!");
-                                    return;
-                                }
+                                PvPSystem.HostileON(SteamID, targetChar, targetUser);
+                                ctx.Reply($"Vampire \"{name}\" is now in aggresive state!");
+                                return;
                             }
-                            Database.PvPStats.TryGetValue(SteamID, out var PvPData);
-                            PvPData.Reputation = value;
-                            Database.PvPStats[SteamID] = PvPData;
-                            Output.SendSystemMessage(ctx, $"Player \"{name}\" reputation is now set to {value}");
+                            else if (type.ToLower().Equals("off"))
+                            {
+                                if (PvPStats.Reputation <= -1000)
+                                {
+                                    throw ctx.Error($"Vampire \"{name}\" is [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], aggresive state is enforced.");
+                                }
+                                PvPSystem.HostileOFF(SteamID, targetChar);
+                                ctx.Reply($"Vampire \"{name}\" is now in passive state!");
+                                return;
+                            }
+                            return;
+                        }
+                        else
+                        {
+                            throw ctx.Error($"Unable to find the specified player!");
                         }
                     }
                     else
                     {
-                        if (PvPSystem.isHonorSystemEnabled)
+                        string name = playerName;
+                        if (Helper.FindPlayer(name, false, out Entity targetChar, out _))
                         {
-                            string name = ctx.Args[1];
-                            if (Helper.FindPlayer(name, false, out Entity targetChar, out Entity targetUser))
-                            {
-                                SteamID = Plugin.Server.EntityManager.GetComponentData<User>(targetUser).PlatformId;
-                                Database.PvPStats.TryGetValue(SteamID, out var PvPStats);
-                                if (ctx.Args[0].ToLower().Equals("on"))
-                                {
-                                    PvPSystem.HostileON(SteamID, targetChar, targetUser);
-                                    Output.SendSystemMessage(ctx, $"Vampire \"{name}\" is now in aggresive state!");
-                                    return;
-                                }
-                                else if (ctx.Args[0].ToLower().Equals("off"))
-                                {
-                                    if (PvPStats.Reputation <= -1000)
-                                    {
-                                        Output.CustomErrorMessage(ctx, $"Vampire \"{name}\" is [{PvPSystem.GetHonorTitle(PvPStats.Reputation).Title}], aggresive state is enforced.");
-                                        return;
-                                    }
-                                    PvPSystem.HostileOFF(SteamID, targetChar);
-                                    Output.SendSystemMessage(ctx, $"Vampire \"{name}\" is now in passive state!");
-                                    return;
-                                }
-                                return;
-                            }
-                            else
-                            {
-                                Output.CustomErrorMessage(ctx, $"Unable to find the specified player!");
-                                return;
-                            }
+                            Helper.SetPvPShield(targetChar, isPvPShieldON);
+                            string s = isPvPShieldON ? "OFF" : "ON";
+                            ctx.Reply($"Player \"{name}\" PvP is now {s}");
+                            return;
                         }
                         else
                         {
-                            string name = ctx.Args[1];
-                            if (Helper.FindPlayer(name, false, out Entity targetChar, out _))
-                            {
-                                Helper.SetPvPShield(targetChar, isPvPShieldON);
-                                string s = isPvPShieldON ? "OFF" : "ON";
-                                Output.SendSystemMessage(ctx, $"Player \"{name}\" PvP is now {s}");
-                                return;
-                            }
-                            else
-                            {
-                                Output.CustomErrorMessage(ctx, $"Unable to find the specified player!");
-                                return;
-                            }
+                            throw ctx.Error($"Unable to find the specified player!");
                         }
                     }
                 }
-                else
-                {
-                    Output.InvalidArguments(ctx);
-                    return;
-                }
             }
+        }
+
+        [Command("pvp req", usage: "<ammount> <PlayerName", description: "Display your PvP statistics or toggle PvP/Castle Siege state", adminOnly: true)]
+        public static void PvPReqCommand(ChatCommandContext ctx, int amount, string name)
+        {
+            var user = ctx.Event.User;
+            var userEntity = ctx.Event.SenderUserEntity;
+            var charEntity = ctx.Event.SenderCharacterEntity;
+            var CharName = user.CharacterName.ToString();
+            var SteamID = user.PlatformId;
+
+
+
+            if (amount > 9999) amount = 9999;
+            if (Helper.FindPlayer(name, false, out _, out var targetUser))
+            {
+                SteamID = Plugin.Server.EntityManager.GetComponentData<User>(targetUser).PlatformId;
+            }
+            else
+            {
+                throw ctx.Error($"Unable to find the specified player!");
+            }
+
+            Database.PvPStats.TryGetValue(SteamID, out var PvPData);
+            PvPData.Reputation = amount;
+            Database.PvPStats[SteamID] = PvPData;
+            ctx.Reply($"Player \"{name}\" reputation is now set to {amount}");
+
+
         }
     }
 }

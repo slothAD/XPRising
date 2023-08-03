@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace OpenRPG.Systems
 {
@@ -64,16 +65,16 @@ namespace OpenRPG.Systems
             return isAllowed;
         }
 
-        private static object SendPermissionList(Context ctx, List<string> messages)
+        private static object SendPermissionList(ChatCommandContext ctx, List<string> messages)
         {
             foreach(var m in messages)
             {
-                Output.SendSystemMessage(ctx, m);
+                ctx.Reply(m);
             }
             return new object();
         }
 
-        public static async Task PermissionList(Context ctx)
+        public static async Task PermissionList(ChatCommandContext ctx)
         {
             await Task.Yield();
 

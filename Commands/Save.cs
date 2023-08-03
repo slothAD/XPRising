@@ -1,35 +1,32 @@
 ﻿using ProjectM;
 using OpenRPG.Utils;
 using System.Text.RegularExpressions;
+using VampireCommandFramework;
+using Bloodstone.API;
 
 namespace OpenRPG.Commands
 {
-    [Command("save", Usage = "save [<name>]", Description = "Force the server to save the game as well as write OpenRPG DB to a json file.")]
+    [CommandGroup("rpg")]
     public static class Save
     {
-        public static void Initialize(Context ctx)
+        [Command("save", usage: "[\"<name>\"]", description: "Force the server to save the game as well as write OpenRPG DB to a json file.")]
+        public static void SaveCommand(ChatCommandContext ctx, string name = "Manual Save")
         {
-            var args = ctx.Args;
-            string name = "Manual Save";
-            if (args.Length >= 1)
+
+            if (name.Length > 50)
             {
-                name = string.Join(' ', ctx.Args);
-                if (name.Length > 50)
-                {
-                    Output.CustomErrorMessage(ctx, "Name is too long!");
-                    return;
-                }
-                if (Regex.IsMatch(name, @"[^a-zA-Z0-9\x20]"))
-                {
-                    Output.CustomErrorMessage(ctx, "Name can only contain alphanumeric & space!");
-                    return;
-                }
+                throw ctx.Error("Name is too long!");
+            }
+            if (Regex.IsMatch(name, @"[^a-zA-Z0-9\x20]"))
+            {
+                throw ctx.Error("Name can only contain alphanumeric & space!");
             }
 
-            Output.SendSystemMessage(ctx, $"Saving data....");
-            //AutoSaveSystem.SaveDatabase();
-            //Plugin.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name, ServerRuntimeSettings.Save);
-            Output.SendSystemMessage(ctx, $"Data save complete.");
+
+            ctx.Reply($"Saving data....");
+            AutoSaveSystem.SaveDatabase();
+            //VWorld.Server.GetExistingSystem<TriggerPersistenceSaveSystem>().TriggerSave(SaveReason.ManualSave, name, ServerRuntimeSettings.Save);
+            ctx.Reply($"Data save complete.");
         }
     }
 }

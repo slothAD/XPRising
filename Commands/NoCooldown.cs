@@ -1,15 +1,18 @@
 ﻿using OpenRPG.Utils;
+using ProjectM;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("nocooldown, nocd", Usage = "nocooldown", Description = "Toggles instant cooldown for all abilities.")]
+    [CommandGroup("rpg")]
     public static class NoCooldown
     {
-        public static void Initialize(Context ctx)
+        [Command("nocooldown", usage:"nocooldown", description: "Toggles instant cooldown for all abilities.")]
+        public static void NoCooldownCommand(ChatCommandContext ctx)
         {
             Entity PlayerCharacter = ctx.Event.SenderCharacterEntity;
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -18,11 +21,11 @@ namespace OpenRPG.Commands
             else isNoCD = true;
             UpdateCooldownList(ctx, isNoCD);
             string p = isNoCD ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"No Cooldown is now <color=#ffff00>{p}</color>");
+            ctx.Reply($"No Cooldown is now <color=#ffff00>{p}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        public static bool UpdateCooldownList(Context ctx, bool isNoCooldown)
+        public static bool UpdateCooldownList(ChatCommandContext ctx, bool isNoCooldown)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.nocooldownlist.TryGetValue(SteamID, out bool isNoCooldown_);
@@ -33,10 +36,10 @@ namespace OpenRPG.Commands
 
         public static void SaveCooldown()
         {
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/nocooldown.json", JsonSerializer.Serialize(Database.nocooldownlist, Database.JSON_options));
+            File.WriteAllText(Plugin.NoCooldownJson, JsonSerializer.Serialize(Database.nocooldownlist, Database.JSON_options));
         }
 
-        public static bool RemoveCooldown(Context ctx)
+        public static bool RemoveCooldown(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             if (Database.nocooldownlist.TryGetValue(SteamID, out bool isNoCooldown_))
@@ -49,12 +52,15 @@ namespace OpenRPG.Commands
 
         public static void LoadNoCooldown()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/nocooldown.json"))
+            if (!Directory.Exists(Plugin.ConfigPath)) Directory.CreateDirectory(Plugin.ConfigPath);
+            if (!Directory.Exists(Plugin.SavesPath)) Directory.CreateDirectory(Plugin.SavesPath);
+
+            if (!File.Exists(Plugin.NoCooldownJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/nocooldown.json");
+                var stream = File.Create(Plugin.NoCooldownJson);
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/nocooldown.json");
+            string json = File.ReadAllText(Plugin.NoCooldownJson);
             try
             {
                 Database.nocooldownlist = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

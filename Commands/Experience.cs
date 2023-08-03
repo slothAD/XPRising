@@ -2,14 +2,43 @@
 using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Unity.Entities;
+using ProjectM;
+using VampireCommandFramework;
+using Bloodstone.API;
 
 namespace OpenRPG.Commands
 {
-    [Command("experience, exp, xp", Usage = "experience [<log> <on>|<off>]", Description = "Shows your currect experience and progression to next level, or toggle the exp gain notification.")]
+
+    [CommandGroup("rpg")]
     public static class Experience
     {
-        private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static void Initialize(Context ctx)
+        private static EntityManager entityManager = VWorld.Server.EntityManager;
+
+        [Command("experience log", usage: "<1|0>", description:"Toggle the exp gain notification.")]
+        public static void ExperienceLogCommand(ChatCommandContext ctx, bool log)
+        {
+            var user = ctx.Event.User;
+            var SteamID = user.PlatformId;
+
+            if (!ExperienceSystem.isEXPActive)
+            {
+                throw ctx.Error("Experience system is not enabled.");
+            }
+
+            if (log)
+            {
+                Database.player_log_exp[SteamID] = true;
+                ctx.Reply($"Experience gain is now logged.");
+            }
+            else
+            {
+                Database.player_log_exp[SteamID] = false;
+                ctx.Reply($"Experience gain is no longer being logged.");
+            }
+        }
+
+        [Command("experience set", usage: "<PlayerName> <Value>", description: "Sets the specified players current xp to a specific value")]
+        public static void ExperienceSetCommand(ChatCommandContext ctx, string playerName, int value)
         {
             var user = ctx.Event.User;
             var CharName = user.CharacterName.ToString();
@@ -19,64 +48,39 @@ namespace OpenRPG.Commands
 
             if (!ExperienceSystem.isEXPActive)
             {
-                Output.CustomErrorMessage(ctx, "Experience system is not enabled.");
-                return;
+                throw ctx.Error("Experience system is not enabled.");
             }
 
-            if (ctx.Args.Length >= 2 )
+
+            if (Helper.FindPlayer(playerName, true, out var targetEntity, out var targetUserEntity))
             {
-                bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "experience_args");
-                if (ctx.Args[0].Equals("set") && isAllowed && int.TryParse(ctx.Args[1], out int value))
-                {
-                    if (ctx.Args.Length == 3)
-                    {
-                        string name = ctx.Args[2];
-                        if(Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
-                        {
-                            CharName = name;
-                            SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
-                            PlayerCharacter = targetEntity;
-                            UserEntity = targetUserEntity;
-                        }
-                        else
-                        {
-                            Output.CustomErrorMessage(ctx, $"Could not find specified player \"{name}\".");
-                            return;
-                        }
-                    }
-                    Database.player_experience[SteamID] = value;
-                    ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
-                    Output.SendSystemMessage(ctx, $"Player \"{CharName}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
-                }
-                else if (ctx.Args[0].ToLower().Equals("log"))
-                {
-                    if (ctx.Args[1].ToLower().Equals("on"))
-                    {
-                        Database.player_log_exp[SteamID] = true;
-                        Output.SendSystemMessage(ctx, $"Experience gain is now logged.");
-                        return;
-                    }
-                    else if (ctx.Args[1].ToLower().Equals("off"))
-                    {
-                        Database.player_log_exp[SteamID] = false;
-                        Output.SendSystemMessage(ctx, $"Experience gain is no longer being logged.");
-                        return;
-                    }
-                }
-                else
-                {
-                    Output.InvalidArguments(ctx);
-                    return;
-                }
+                SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
+                PlayerCharacter = targetEntity;
+                UserEntity = targetUserEntity;
             }
             else
             {
-                int userLevel = ExperienceSystem.getLevel(SteamID);
-                Output.SendSystemMessage(ctx, $"-- <color=#fffffffe>{CharName}</color> --");
-                Output.SendSystemMessage(ctx,
-                    $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) " +
-                    $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]");
+                throw ctx.Error($"Could not find specified player \"{playerName}\".");
             }
+
+            Database.player_experience[SteamID] = value;
+            ExperienceSystem.SetLevel(PlayerCharacter, UserEntity, SteamID);
+            ctx.Reply($"Player \"{CharName}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
+            
+        }
+
+        [Command("experience", usage: "", description: "Shows your currect experience and progression to next level")]
+        public static void ExperienceCommand(ChatCommandContext ctx)
+        {
+            var user = ctx.Event.User;
+            var CharName = user.CharacterName.ToString();
+            var SteamID = user.PlatformId;
+
+            int userLevel = ExperienceSystem.getLevel(SteamID);
+            ctx.Reply($"-- <color=#fffffffe>{CharName}</color> --");
+            ctx.Reply(
+                $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{ExperienceSystem.getLevelProgress(SteamID)}%</color>) " +
+                $" [ XP:<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>/<color=#fffffffe>{ExperienceSystem.convertLevelToXp(userLevel + 1)}</color> ]");
         }
     }
 }

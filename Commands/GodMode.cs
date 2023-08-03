@@ -2,13 +2,17 @@
 using System.IO;
 using System.Text.Json;
 using OpenRPG.Utils;
+using ProjectM;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("godmode, god", Usage = "godmode", Description = "Toggles god mode.")]
+
+    [CommandGroup("rpg")]
     public static class GodMode
     {
-        public static void Initialize(Context ctx)
+        [Command("godmode", usage: "", description: "Toggles god mode.")]
+        public static void Initialize(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isGodMode = Database.godmode.TryGetValue(SteamID, out bool isGodMode_);
@@ -16,11 +20,11 @@ namespace OpenRPG.Commands
             else isGodMode = true;
             UpdateGodMode(ctx, isGodMode);
             string s = isGodMode ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"God mode <color=#ffff00>{s}</color>");
+            ctx.Reply($"God mode <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        public static bool UpdateGodMode(Context ctx, bool isGodMode)
+        public static bool UpdateGodMode(ChatCommandContext ctx, bool isGodMode)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.godmode.TryGetValue(SteamID, out bool isGodMode_);
@@ -31,10 +35,10 @@ namespace OpenRPG.Commands
 
         public static void SaveGodMode()
         {
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/godmode.json", JsonSerializer.Serialize(Database.godmode, Database.JSON_options));
+            File.WriteAllText(Plugin.GodModeJson, JsonSerializer.Serialize(Database.godmode, Database.JSON_options));
         }
 
-        public static bool RemoveGodMode(Context ctx)
+        public static bool RemoveGodMode(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             if (Database.godmode.TryGetValue(SteamID, out bool isGodMode_))
@@ -47,12 +51,16 @@ namespace OpenRPG.Commands
 
         public static void LoadGodMode()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/godmode.json"))
+
+            if (!Directory.Exists(Plugin.ConfigPath)) Directory.CreateDirectory(Plugin.ConfigPath);
+            if (!Directory.Exists(Plugin.SavesPath)) Directory.CreateDirectory(Plugin.SavesPath);
+
+            if (!File.Exists(Plugin.GodModeJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/godmode.json");
+                var stream = File.Create(Plugin.GodModeJson);
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/godmode.json");
+            string json = File.ReadAllText(Plugin.GodModeJson);
             try
             {
                 Database.godmode = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

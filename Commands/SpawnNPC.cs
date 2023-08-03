@@ -1,91 +1,58 @@
-﻿using OpenRPG.Utils;
+﻿using Bloodstone.API;
+using OpenRPG.Utils;
 using System;
 using System.Linq;
 using Unity.Mathematics;
 using Unity.Transforms;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("spawnnpc, spn", "spawnnpc <Prefab Name/GUID> [<Amount>] [<Waypoint>]", "Spawns a NPC to a previously created waypoint.")]
+    [CommandGroup("rpg")]
     public static class SpawnNPC
     {
-        public static void Initialize(Context ctx)
+        [Command("spawnnpc", "<Prefab GUID> [<Amount>] [<Waypoint>]", "Spawns a NPC to a previously created waypoint.")]
+        public static void SpawnNPCCommand(ChatCommandContext ctx, int guid, int amount = 1, string waypoint = null)
         {
-            if (ctx.Args.Length != 0)
+
+            if (waypoint == null)
             {
-                string name = "";
-                string waypoint = "";
-                int count = 1;
 
-                int n;
-                bool isParsable = false;
+                var pos = VWorld.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
 
-                bool isUsingGUID = int.TryParse(ctx.Args[0], out var GUID);
-
-                if (ctx.Args.Length >= 2)
+                if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, guid, amount, new(pos.x, pos.z), 1, 2, 1800))
                 {
-                    isParsable = int.TryParse(ctx.Args[1], out n);
-                    if (isParsable) count = Convert.ToInt32(ctx.Args[1]);
-                    else count = 1;
+                    throw ctx.Error($"Failed to spawn: {waypoint}");
                 }
 
-                if (ctx.Args.Length == 1 || ctx.Args.Length == 2 && isParsable)
-                {
-                    name = ctx.Args[0];
-                    var pos = ctx.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-                    if (isUsingGUID)
-                    {
-                        if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, GUID, count, new(pos.x, pos.z), 1, 2, 1800))
-                        {
-                            Output.CustomErrorMessage(ctx, $"Failed to spawn: {name}");
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(pos.x, pos.z), 1, 2, 1800))
-                        {
-                            Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
-                            return;
-                        }
-                    }
-                    Output.SendSystemMessage(ctx, $"Spawning {count} {name} at <{pos.x}, {pos.z}>");
-                }
-                else if (ctx.Args.Length >= 2)
-                {
-                    name = ctx.Args[0];
-                    waypoint = ctx.Args.Last().ToLower();
-                    ulong SteamID = ctx.Event.User.PlatformId;
-
-                    if (Database.globalWaypoint.TryGetValue(waypoint, out var WPData))
-                    {
-                        float3 wp = WPData.Location;
-                        if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
-                        {
-                            Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
-                            return;
-                        }
-                        Output.SendSystemMessage(ctx, $"Spawning {count} {name} at <{wp.x}, {wp.y}>");
-                        return;
-                    }
-
-                    if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out var WPData_))
-                    {
-                        float3 wp = WPData_.Location;
-                        if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, name, count, new(wp.x, wp.y), 1, 2, 1800))
-                        {
-                            Output.CustomErrorMessage(ctx, $"Could not find specified unit: {name}");
-                            return;
-                        }
-                        Output.SendSystemMessage(ctx, $"Spawning {count} {name} at <{wp.x}, {wp.y}>");
-                        return;
-                    }
-                    Output.CustomErrorMessage(ctx, "This waypoint doesn't exist.");
-                }
+                ctx.Reply($"Spawning {amount} {waypoint} at <{pos.x}, {pos.z}>");
             }
             else
             {
-                Output.MissingArguments(ctx);
+                ulong SteamID = ctx.Event.User.PlatformId;
+
+                if (Database.globalWaypoint.TryGetValue(waypoint, out var WPData))
+                {
+                    float3 wp = WPData.Location;
+                    if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, guid, amount, new(wp.x, wp.y), 1, 2, 1800))
+                    {
+                        throw ctx.Error($"Could not find specified unit: {guid}");
+                    }
+                    ctx.Reply($"Spawning {amount} {guid} at <{wp.x}, {wp.y}>");
+                    return;
+                }
+
+                if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out var WPData_))
+                {
+                    float3 wp = WPData_.Location;
+                    if (!Helper.SpawnAtPosition(ctx.Event.SenderUserEntity, guid, amount, new(wp.x, wp.y), 1, 2, 1800))
+                    {
+                        throw ctx.Error($"Could not find specified unit: {guid}");
+                    }
+                    ctx.Reply($"Spawning {amount} {guid} at <{wp.x}, {wp.y}>");
+                    return;
+                }
+                throw ctx.Error("This waypoint doesn't exist.");
             }
         }
     }

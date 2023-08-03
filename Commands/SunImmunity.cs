@@ -2,13 +2,16 @@
 using System.IO;
 using System.Text.Json;
 using OpenRPG.Utils;
+using ProjectM;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("sunimmunity, sun", Usage = "sunimmunity", Description = "Toggles sun immunity.")]
+    [CommandGroup("rpg")]
     public static class SunImmunity
     {
-        public static void Initialize(Context ctx)
+        [Command("sunimmunity", usage: "", description: "Toggles sun immunity.")]
+        public static void SunImmunityCommand(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isSunImmune = Database.sunimmunity.ContainsKey(SteamID);
@@ -16,11 +19,11 @@ namespace OpenRPG.Commands
             else isSunImmune = true;
             UpdateImmunity(ctx, isSunImmune);
             string s = isSunImmune ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"Sun Immunity <color=#ffff00>{s}</color>");
+            ctx.Reply( $"Sun Immunity <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        public static bool UpdateImmunity(Context ctx, bool isSunImmune)
+        public static bool UpdateImmunity(ChatCommandContext ctx, bool isSunImmune)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.sunimmunity.ContainsKey(SteamID);
@@ -31,10 +34,10 @@ namespace OpenRPG.Commands
 
         public static void SaveImmunity()
         {
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
+            File.WriteAllText(Plugin.SunImmunityJson, JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
         }
 
-        public static bool RemoveImmunity(Context ctx)
+        public static bool RemoveImmunity(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             if (Database.sunimmunity.ContainsKey(SteamID))
@@ -47,13 +50,17 @@ namespace OpenRPG.Commands
 
         public static void LoadSunImmunity()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/sunimmunity.json"))
+
+            if (!Directory.Exists(Plugin.ConfigPath)) Directory.CreateDirectory(Plugin.ConfigPath);
+            if (!Directory.Exists(Plugin.SavesPath)) Directory.CreateDirectory(Plugin.SavesPath);
+
+            if (!File.Exists(Plugin.SunImmunityJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/sunimmunity.json");
+                var stream = File.Create(Plugin.SunImmunityJson);
                 stream.Dispose();
             }
 
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/sunimmunity.json");
+            string json = File.ReadAllText(Plugin.SunImmunityJson);
             try
             {
                 Database.sunimmunity = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

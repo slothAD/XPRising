@@ -3,14 +3,18 @@ using OpenRPG.Systems;
 using OpenRPG.Utils;
 using System;
 using Unity.Entities;
+using ProjectM;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("heat", Usage = "heat", Description = "Shows your current wanted level.")]
+    [CommandGroup("rpg")]
     public static class Heat
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static void Initialize(Context ctx)
+
+        [Command("heat", usage: "", description: "Shows your current wanted level.")]
+        public static void HeatCommand(ChatCommandContext ctx)
         {
             var user = ctx.Event.User;
             var SteamID = user.PlatformId;
@@ -19,37 +23,10 @@ namespace OpenRPG.Commands
 
             if (!HunterHuntedSystem.isActive)
             {
-                Output.CustomErrorMessage(ctx, "HunterHunted system is not enabled.");
-                return;
+                throw ctx.Error("HunterHunted system is not enabled.");
             }
 
-            bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "heat_args");
-            if (ctx.Args.Length >= 2 && isAllowed)
-            {
-                string CharName = ctx.Event.User.CharacterName.ToString();
-                if (ctx.Args.Length == 3)
-                {
-                    string name = ctx.Args[2];
-                    if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
-                    {
-                        SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
-                        CharName = name;
-                        userEntity = targetUserEntity;
-                        charEntity = targetEntity;
-                    }
-                    else
-                    {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified player \"{name}\".");
-                        return;
-                    }
-                }
-                if (int.TryParse(ctx.Args[0], out var n)) Cache.heatlevel[SteamID] = n;
-                if (int.TryParse(ctx.Args[1], out var nm)) Cache.bandit_heatlevel[SteamID] = nm;
-                Output.SendSystemMessage(ctx, $"Player \"{CharName}\" heat value changed.");
-                Output.SendSystemMessage(ctx, $"Human: <color=#ffff00>{Cache.heatlevel[SteamID]}</color> | Bandit: <color=#ffff00>{Cache.bandit_heatlevel[SteamID]}</color>");
-                HunterHuntedSystem.HeatManager(userEntity);
-                return;
-            }
+            string CharName = ctx.Event.User.CharacterName.ToString();
 
             HunterHuntedSystem.HeatManager(userEntity);
 
@@ -68,6 +45,44 @@ namespace OpenRPG.Commands
             else if (bandit_heatlevel >= 150) Output.SendLore(userEntity,$"<color=#ff0000ff>[Bandits]</color> <color=#c9999eff>The bandits are hunting you...</color>");
             else Output.SendLore(userEntity, $"<color=#ff0000ff>[Bandits]</color> <color=#ffffffff>The bandits doesn't recognize you...</color>");
 
+        }
+
+        [Command("heat set", usage: "<ValueHeatHumans> <ValueHeatBandits> <PlayerName>", description: "Shows your current wanted level.")]
+        public static void HeatSetCommand(ChatCommandContext ctx,int valueHuman, int valueBandit, string playerName)
+        {
+            var user = ctx.Event.User;
+            var SteamID = user.PlatformId;
+            var userEntity = ctx.Event.SenderUserEntity;
+            var charEntity = ctx.Event.SenderCharacterEntity;
+
+            if (!HunterHuntedSystem.isActive)
+            {
+                throw ctx.Error("HunterHunted system is not enabled.");
+            }
+
+            string CharName = ctx.Event.User.CharacterName.ToString();
+   
+            if (Helper.FindPlayer(playerName, true, out var targetEntity, out var targetUserEntity))
+            {
+                SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
+                CharName = playerName;
+                userEntity = targetUserEntity;
+                charEntity = targetEntity;
+            }
+            else
+            {
+                throw ctx.Error($"Could not find specified player \"{playerName}\".");
+            }
+
+            Cache.heatlevel[SteamID] = valueHuman;
+            Cache.bandit_heatlevel[SteamID] = valueBandit;
+            ctx.Reply($"Player \"{CharName}\" heat value changed.");
+            ctx.Reply($"Human: <color=#ffff00>{Cache.heatlevel[SteamID]}</color> | Bandit: <color=#ffff00>{Cache.bandit_heatlevel[SteamID]}</color>");
+            HunterHuntedSystem.HeatManager(userEntity);
+
+
+            /*
+            // TODO: I don't know what this code does exactly
             if (ctx.Args.Length == 1 && user.IsAdmin)
             {
                 if (!ctx.Args[0].Equals("debug") && ctx.Args.Length != 2) return;
@@ -77,10 +92,10 @@ namespace OpenRPG.Commands
                 int NextAmbush = (int)(HunterHuntedSystem.ambush_interval - since_ambush.TotalSeconds);
                 if (NextAmbush < 0) NextAmbush = 0;
 
-                Output.SendSystemMessage(ctx, $"Next Possible Ambush in {Color.White(NextAmbush.ToString())}s");
-                Output.SendSystemMessage(ctx, $"Ambush Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
-                Output.SendSystemMessage(ctx, $"Human: {Color.White(human_heatlevel.ToString())} | Bandit: {Color.White(bandit_heatlevel.ToString())}");
-            }
+                ctx.Reply( $"Next Possible Ambush in {Color.White(NextAmbush.ToString())}s");
+                ctx.Reply( $"Ambush Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
+                ctx.Reply( $"Human: {Color.White(human_heatlevel.ToString())} | Bandit: {Color.White(bandit_heatlevel.ToString())}");
+            }*/
         }
     }
 }

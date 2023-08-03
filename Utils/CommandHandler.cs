@@ -1,4 +1,9 @@
-﻿using OpenRPG.Systems;
+﻿/*
+ *
+ *
+ * DELETE AFTERUPDATE VCF
+ *
+ *using OpenRPG.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +49,7 @@ namespace OpenRPG.Utils
                 }
                 Cache.command_Cooldown[ev.User.PlatformId] = getCurrentTime + delay_Cooldown;*/
 
-                var cmd = type.GetMethod("Initialize");
+/*var cmd = type.GetMethod("Initialize");
                 cmd.Invoke(null, new[] { new Context(Prefix, ev, args) });
                 return;
             }
@@ -116,3 +121,4 @@ namespace OpenRPG.Utils
         }
     }
 }
+*/

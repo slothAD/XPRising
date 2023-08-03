@@ -1,21 +1,24 @@
 ﻿using ProjectM;
 using OpenRPG.Utils;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("resetcooldown, cd", Usage = "resetcooldown [<Player Name>]", Description = "Instantly cooldown all ability & skills for the player.")]
+
+    [CommandGroup("rpg")]
     public static class ResetCooldown
     {
-        public static void Initialize(Context ctx)
+        [Command("resetcooldown", usage: "[<Player Name>]", description: "Instantly cooldown all ability & skills for the player.")]
+        public static void ResetCooldownCommand(ChatCommandContext ctx, string playerName = null)
         {
             Entity PlayerCharacter = ctx.Event.SenderCharacterEntity;
             string CharName = ctx.Event.User.CharacterName.ToString();
             EntityManager entityManager = Plugin.Server.EntityManager;
 
-            if (ctx.Args.Length >= 1)
+            if (playerName != null && ctx.User.IsAdmin)
             {
-                string name = string.Join(' ', ctx.Args);
+                string name = playerName;
                 if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
                 {
                     PlayerCharacter = targetEntity;
@@ -23,13 +26,16 @@ namespace OpenRPG.Commands
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, $"Could not find the specified player \"{name}\".");
-                    return;
+                    throw ctx.Error($"Could not find the specified player \"{name}\".");
                 }
+            }
+            else
+            {
+                throw ctx.Error($"You don't have access for this operation..");
             }
 
             var AbilityBuffer = entityManager.GetBuffer<AbilityGroupSlotBuffer>(PlayerCharacter);
-            foreach(var ability in AbilityBuffer)
+            foreach (var ability in AbilityBuffer)
             {
                 var AbilitySlot = ability.GroupSlotEntity._Entity;
                 var ActiveAbility = entityManager.GetComponentData<AbilityGroupSlot>(AbilitySlot);
@@ -39,7 +45,7 @@ namespace OpenRPG.Commands
                 if (b.GuidHash == 0) continue;
 
                 var AbilityStateBuffer = entityManager.GetBuffer<AbilityStateBuffer>(ActiveAbility_Entity);
-                foreach(var state in AbilityStateBuffer)
+                foreach (var state in AbilityStateBuffer)
                 {
                     var abilityState = state.StateEntity._Entity;
                     var abilityCooldownState = entityManager.GetComponentData<AbilityCooldownState>(abilityState);
@@ -47,7 +53,7 @@ namespace OpenRPG.Commands
                     entityManager.SetComponentData(abilityState, abilityCooldownState);
                 }
             }
-            Output.SendSystemMessage(ctx, $"Player \"{CharName}\" cooldown resetted.");
+            ctx.Reply($"Player \"{CharName}\" cooldown resetted.");
         }
     }
 }

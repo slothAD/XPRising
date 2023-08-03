@@ -3,116 +3,94 @@ using OpenRPG.Utils;
 using OpenRPG.Systems;
 using System.Linq;
 using System;
+using VampireCommandFramework;
+using ProjectM;
 
 namespace OpenRPG.Commands
 {
-    [Command("ban", Usage = "ban <playername> <days> <reason>", Description = "Check the status of specified player, or ban them. 0 is permanent.")]
+
+    [CommandGroup("rpg")]
     public static class BanUser
     {
-        public static void Initialize(Context ctx)
-        {
-            var args = ctx.Args;
 
-            if (args.Length == 1)
+        [Command("ban info", usage: "<playername>", description: "Check the status of specified player", adminOnly: false)]
+        public static void InfoBan(ChatCommandContext ctx, string playername)
+        {
+            if (Helper.FindPlayer(playername, false, out _, out var targetUserEntity_))
             {
-                if (Helper.FindPlayer(args[0], false, out _, out var targetUserEntity_))
+                var targetData_ = Plugin.Server.EntityManager.GetComponentData<User>(targetUserEntity_);
+                if (BanSystem.IsUserBanned(targetData_.PlatformId, out var banData_))
                 {
-                    var targetData_ = Plugin.Server.EntityManager.GetComponentData<User>(targetUserEntity_);
-                    if (BanSystem.IsUserBanned(targetData_.PlatformId, out var banData_))
-                    {
-                        TimeSpan duration = banData_.BanUntil - DateTime.Now;
-                        Output.SendSystemMessage(ctx, $"Player:<color=#fffffffe> {args[0]}</color>");
-                        Output.SendSystemMessage(ctx, $"Status:<color=#fffffffe> Banned</color> | By:<color=#fffffffe> {banData_.BannedBy}</color>");
-                        Output.SendSystemMessage(ctx, $"Duration:<color=#fffffffe> {Math.Round(duration.TotalDays)}</color> day(s) [<color=#fffffffe>{banData_.BanUntil}</color>]");
-                        Output.SendSystemMessage(ctx, $"Reason:<color=#fffffffe> {banData_.Reason}</color>");
-                        return;
-                    }
-                    else
-                    {
-                        Output.CustomErrorMessage(ctx, "Specified user is not banned.");
-                        return;
-                    }
+                    TimeSpan duration = banData_.BanUntil - DateTime.Now;
+                    ctx.Reply($"Player:<color=#fffffffe> {playername}</color>");
+                    ctx.Reply($"Status:<color=#fffffffe> Banned</color> | By:<color=#fffffffe> {banData_.BannedBy}</color>");
+                    ctx.Reply($"Duration:<color=#fffffffe> {Math.Round(duration.TotalDays)}</color> day(s) [<color=#fffffffe>{banData_.BanUntil}</color>]");
+                    ctx.Reply($"Reason:<color=#fffffffe> {banData_.Reason}</color>");
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, "Unable to find the specified player.");
-                    return;
+                    throw ctx.Error("Specified user is not banned.");
                 }
             }
-
-            if (args.Length < 3)
+            else
             {
-                Output.MissingArguments(ctx);
-                return;
+                throw ctx.Error("Unable to find the specified player.");
             }
+        }
 
-            if (!int.TryParse(args[1], out var days))
-            {
-                Output.InvalidArguments(ctx);
-                return;
-            }
+        [Command("ban", usage: "<playername> <days> \"<reason>\"", description: "Ban a player, 0 days is permanent.", adminOnly: false)]
+        public static void Ban(ChatCommandContext ctx, string playername, int days, string reason)
+        {
 
-            var name = args[0];
-            var reason = string.Join(' ', args.Skip(2));
             if (reason.Length > 150)
             {
-                Output.CustomErrorMessage(ctx, "Keep the reason short will ya?!");
-                return;
+                throw ctx.Error("Keep the reason short will ya?!");
             }
 
-            if (Helper.FindPlayer(name, false, out _, out var targetUserEntity))
+            if (Helper.FindPlayer(playername, false, out _, out var targetUserEntity))
             {
-                if(BanSystem.BanUser(ctx.Event.SenderUserEntity, targetUserEntity, days, reason, out var banData))
+                if (BanSystem.BanUser(ctx.Event.SenderUserEntity, targetUserEntity, days, reason, out var banData))
                 {
                     var user = ctx.Event.User;
                     Helper.KickPlayer(targetUserEntity);
-                    Output.SendSystemMessage(ctx, $"Player \"{name}\" is now banned.");
-                    Output.SendSystemMessage(ctx, $"Banned Until:<color=#fffffffe> {banData.BanUntil}</color>");
-                    Output.SendSystemMessage(ctx, $"Reason:<color=#fffffffe> {reason}</color>");
+                    ctx.Reply($"Player \"{playername}\" is now banned.");
+                    ctx.Reply($"Banned Until:<color=#fffffffe> {banData.BanUntil}</color>");
+                    ctx.Reply($"Reason:<color=#fffffffe> {reason}</color>");
                     return;
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, $"Failed to ban \"{name}\".");
+                    ctx.Error($"Failed to ban \"{playername}\".");
                     return;
                 }
             }
             else
             {
-                Output.CustomErrorMessage(ctx, "Specified player not found.");
+                ctx.Error("Specified player not found.");
                 return;
             }
         }
-    }
 
-    [Command("unban", Usage = "unban <playername>", Description = "Unban the specified player.")]
-    public static class UnbanUser
-    {
-        public static void Initialize(Context ctx)
+        [Command("unban", usage: "<playername>", description: "Unban the specified player.", adminOnly: false)]
+        public static void Unban(ChatCommandContext ctx, string playername)
         {
-            var args = ctx.Args;
-            if (args.Length < 1)
-            {
-                Output.MissingArguments(ctx);
-                return;
-            }
 
-            if (Helper.FindPlayer(args[0], false, out _, out var targetUserEntity))
+            if (Helper.FindPlayer(playername, false, out _, out var targetUserEntity))
             {
                 if (BanSystem.UnbanUser(targetUserEntity))
                 {
-                    Output.SendSystemMessage(ctx, $"Player \"{args[0]}\" is no longer banned.");
+                    ctx.Reply($"Player \"{playername}\" is no longer banned.");
                     return;
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, $"Specified player does not exist in the ban database.");
+                    ctx.Error($"Specified player does not exist in the ban database.");
                     return;
                 }
             }
             else
             {
-                Output.CustomErrorMessage(ctx, "Specified player not found.");
+                ctx.Error("Specified player not found.");
                 return;
             }
         }

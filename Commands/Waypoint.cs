@@ -1,132 +1,131 @@
-﻿using OpenRPG.Systems;
+﻿using Bloodstone.API;
+using OpenRPG.Systems;
 using OpenRPG.Utils;
+using Steamworks;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("waypoint, wp", "waypoint <Name|Set|Remove|List> [<Name>] [global]", "Teleports you to previously created waypoints.")]
+    
     public static class Waypoint
     {
         public static int WaypointLimit = 3;
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static void Initialize(Context ctx)
+
+        [Command("waypoint", usage: "<Name>", description: "Creates the specified personal waypoint")]
+        public static void WaypoinCommand(ChatCommandContext ctx, string name)
         {
             var PlayerEntity = ctx.Event.SenderCharacterEntity;
             var SteamID = ctx.Event.User.PlatformId;
             if (Helper.IsPlayerInCombat(PlayerEntity))
             {
-                Output.CustomErrorMessage(ctx, "Unable to use waypoint! You're in combat!");
-                return;
-            }
-            if (ctx.Args.Length < 1)
-            {
-                Output.MissingArguments(ctx);
-                return;
+                throw ctx.Error("Unable to use waypoint! You're in combat!");
             }
 
-            if (ctx.Args.Length > 1)
-            {
-                string wp_name = ctx.Args[1].ToLower();
-                string wp_true_name = ctx.Args[1].ToLower();
-                bool global = false;
-                bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "waypoint_args");
-                if (ctx.Args.Length > 2)
-                {
-                    var args_2nd = ctx.Args[2].ToLower();
-                    if ((args_2nd.Equals("true") || args_2nd.Equals("global")) && isAllowed) global = true;
-                    else
-                    {
-                        Output.CustomErrorMessage(ctx, "You do not have permission to edit a global waypoint.");
-                        return;
-                    }
-                }
-                if (ctx.Args[0].ToLower().Equals("set"))
-                {
-                    if (Database.globalWaypoint.TryGetValue(wp_name, out _))
-                    {
-                        Output.CustomErrorMessage(ctx, $"A global waypoint with the \"{wp_name}\" name existed. Please rename your waypoint.");
-                        return;
-                    }
-                    if (!global)
-                    {
-                        if (Database.waypoints_owned.TryGetValue(SteamID, out var total) && !isAllowed)
-                        {
-                            if (total >= WaypointLimit)
-                            {
-                                Output.CustomErrorMessage(ctx, "You already have reached your total waypoint limit.");
-                                return;
-                            }
-                        }
-                        wp_name = wp_name + "_" + SteamID;
-                        if (Database.waypoints.TryGetValue(wp_name, out _))
-                        {
-                            Output.CustomErrorMessage(ctx, $"You already have a waypoint with the same name.");
-                            return;
-                        }
-                    }
-                    var location = ctx.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-                    var f2_location = new float3(location.x, location.y, location.z);
-                    AddWaypoint(SteamID, f2_location, wp_name, wp_true_name, global);
-                    Output.SendSystemMessage(ctx, "Successfully added Waypoint.");
-                    return;
-                }
-                if (ctx.Args[0].ToLower().Equals("remove"))
-                {
-                    if (!Database.globalWaypoint.TryGetValue(wp_name, out _) && global)
-                    {
-                        Output.CustomErrorMessage(ctx, $"Global \"{wp_name}\" waypoint not found.");
-                        return;
-                    }
-                    if (!global)
-                    {
-                        wp_name = wp_name + "_" + SteamID;
-                        if (!Database.waypoints.TryGetValue(wp_name, out _))
-                        {
-                            Output.CustomErrorMessage(ctx, $"You do not have any waypoint with this name.");
-                            return;
-                        }
-                    }
-                    Output.SendSystemMessage(ctx, "Successfully removed Waypoint.");
-                    RemoveWaypoint(SteamID, wp_name, global);
-                    return;
-                }
-            }
-
-            if (ctx.Args[0].ToLower().Equals("list"))
-            {
-                int total_wp = 0;
-                foreach (var global_wp in Database.globalWaypoint)
-                {
-                    Output.SendSystemMessage(ctx, $" - <color=#ffff00>{global_wp.Key}</color> [<color=#00dd00>Global</color>]");
-                    total_wp++;
-                }
-                foreach (var wp in Database.waypoints)
-                {
-                    Output.SendSystemMessage(ctx, $" - <color=#ffff00>{wp.Value.Name}</color>");
-                    total_wp++;
-                }
-                if (total_wp == 0) Output.CustomErrorMessage(ctx, "No waypoint available.");
-                return;
-            }
-
-            string waypoint = ctx.Args[0].ToLower();
-            if (Database.globalWaypoint.TryGetValue(waypoint, out var WPData))
+            
+            if (Database.globalWaypoint.TryGetValue(name, out var WPData))
             {
                 Helper.TeleportTo(ctx, WPData.Location);
                 return;
             }
 
-            if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out var WPData_))
+            if (Database.waypoints.TryGetValue(name + "_" + SteamID, out var WPData_))
             {
                 Helper.TeleportTo(ctx, WPData_.Location);
                 return;
             }
-            Output.CustomErrorMessage(ctx, "Waypoint not found.");
+        }
+
+        [Command("waypoint set", usage: "<Name>", description: "Creates the specified personal waypoint")]
+        public static void WaypointSetCommand(ChatCommandContext ctx, string name)
+        {
+            ulong SteamID = ctx.Event.User.PlatformId;
+
+            if (Database.waypoints_owned.TryGetValue(SteamID, out var total) && !ctx.Event.User.IsAdmin && total >= Waypoint.WaypointLimit)
+            {
+                if (total >= WaypointLimit)
+                {
+                    throw ctx.Error("You already have reached your total waypoint limit.");
+                }
+            }
+            var wp_true_name = name + "_" + SteamID;
+            if (Database.waypoints.TryGetValue(name, out _))
+            {
+                throw ctx.Error($"You already have a waypoint with the same name.");
+            }
+
+            float3 location = VWorld.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
+            var f2_location = new float3(location.x, location.y, location.z);
+            AddWaypoint(SteamID, f2_location, name, wp_true_name, false);
+            ctx.Reply("Successfully added Waypoint.");
+        }
+
+        [Command("waypoint set global", usage: "<Name>", description: "Creates the specified global waypoint")]
+        public static void WaypointSetGlobalCommand(ChatCommandContext ctx, string name)
+        {
+            ulong SteamID = ctx.Event.User.PlatformId;
+
+            if (Database.globalWaypoint.TryGetValue(name, out _))
+            {
+                throw ctx.Error($"A global waypoint with the \"{name}\" name existed. Please rename your waypoint.");
+            }
+
+            var wp_true_name = name + "_" + SteamID;
+            if (Database.waypoints.TryGetValue(name, out _))
+            {
+                throw ctx.Error($"You already have a waypoint with the same name.");
+            }
+
+            float3 location = VWorld.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
+            var f2_location = new float3(location.x, location.y, location.z);
+            AddWaypoint(SteamID, f2_location, name, wp_true_name, true);
+            ctx.Reply("Successfully added Waypoint.");
+        }
+
+        [Command("waypoint remove global", usage: "<Name>", description: "Removes the specified global waypoint")]
+        public static void WaypointremoveGlobalCommand(ChatCommandContext ctx, string name)
+        {
+            ulong SteamID = ctx.Event.User.PlatformId;
+            if (!Database.globalWaypoint.TryGetValue(name, out _))
+            {
+                throw ctx.Error($"Global \"{name}\" waypoint not found.");
+            }
+            ctx.Reply("Successfully removed Waypoint.");
+        }
+
+        [Command("waypoint remove", usage: "<Name>", description: "Removes the specified personal waypoint")]
+        public static void WaypointRemoveCommand(ChatCommandContext ctx, string name)
+        {
+            ulong SteamID = ctx.Event.User.PlatformId;
+            var wp_name = name + "_" + SteamID;
+            if (!Database.waypoints.TryGetValue(wp_name, out _))
+            {
+                throw ctx.Error($"You do not have any waypoint with this name.");
+            }
+            ctx.Reply("Successfully removed Waypoint.");
+        }
+
+        [Command("waypoint list", usage: "",  description: "Lists waypoints available to you")]
+        public static void WaypointCommand(ChatCommandContext ctx)
+        {
+            int total_wp = 0;
+            foreach (var global_wp in Database.globalWaypoint)
+            {
+                ctx.Reply($" - <color=#ffff00>{global_wp.Key}</color> [<color=#00dd00>Global</color>]");
+                total_wp++;
+            }
+            foreach (var wp in Database.waypoints)
+            {
+                ctx.Reply($" - <color=#ffff00>{wp.Value.Name}</color>");
+                total_wp++;
+            }
+            if (total_wp == 0) throw ctx.Error("No waypoint available.");
         }
 
         public static void AddWaypoint(ulong owner, float3 location, string name, string true_name, bool isGlobal)
@@ -157,13 +156,13 @@ namespace OpenRPG.Commands
 
         public static void LoadWaypoints()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/waypoints.json"))
+            if (!File.Exists(Plugin.WaypointsJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/waypoints.json");
+                var stream = File.Create(Plugin.WaypointsJson);
                 stream.Dispose();
             }
 
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/waypoints.json");
+            string json = File.ReadAllText(Plugin.WaypointsJson);
             try
             {
                 Database.waypoints = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
@@ -175,13 +174,13 @@ namespace OpenRPG.Commands
                 Plugin.Logger.LogWarning("Waypoints DB Created");
             }
 
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/global_waypoints.json"))
+            if (!File.Exists(Plugin.GlobalWaypointsJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/global_waypoints.json");
+                var stream = File.Create(Plugin.GlobalWaypointsJson);
                 stream.Dispose();
             }
 
-            json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/global_waypoints.json");
+            json = File.ReadAllText(Plugin.GlobalWaypointsJson);
             try
             {
                 Database.globalWaypoint = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
@@ -193,13 +192,13 @@ namespace OpenRPG.Commands
                 Plugin.Logger.LogWarning("GlobalWaypoints DB Created");
             }
 
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/total_waypoints.json"))
+            if (!File.Exists(Plugin.TotalWaypointsJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/total_waypoints.json");
+                var stream = File.Create(Plugin.TotalWaypointsJson);
                 stream.Dispose();
             }
 
-            json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/total_waypoints.json");
+            json = File.ReadAllText(Plugin.TotalWaypointsJson);
             try
             {
                 Database.waypoints_owned = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
@@ -214,9 +213,9 @@ namespace OpenRPG.Commands
 
         public static void SaveWaypoints()
         {
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/waypoints.json", JsonSerializer.Serialize(Database.waypoints, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/global_waypoints.json", JsonSerializer.Serialize(Database.globalWaypoint, Database.JSON_options));
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/total_waypoints.json", JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));
+            File.WriteAllText(Plugin.WaypointsJson, JsonSerializer.Serialize(Database.waypoints, Database.JSON_options));
+            File.WriteAllText(Plugin.GlobalWaypointsJson, JsonSerializer.Serialize(Database.globalWaypoint, Database.JSON_options));
+            File.WriteAllText(Plugin.TotalWaypointsJson, JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));
         }
     }
 }

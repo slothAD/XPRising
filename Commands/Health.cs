@@ -1,31 +1,26 @@
 ﻿using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Utils;
+using VampireCommandFramework;
+using Bloodstone.API;
 
 namespace OpenRPG.Commands
 {
-    [Command("health, hp", Usage = "health <percentage> [<player name>]", Description = "Sets your current Health")]
+
+    [CommandGroup("rpg")]
     public static class Health
     {
-        public static void Initialize(Context ctx)
+        [Command("health", usage:"<percentage> [<player name>]", description:"Sets your current Health")]
+        public static void HealthCommmand(ChatCommandContext ctx, int percentage, string playerName = null)
         {
             var PlayerName = ctx.Event.User.CharacterName;
             var UserIndex = ctx.Event.User.Index;
-            var component = ctx.EntityManager.GetComponentData<ProjectM.Health>(ctx.Event.SenderCharacterEntity);
+            var component = VWorld.Server.EntityManager.GetComponentData<ProjectM.Health>(ctx.Event.SenderCharacterEntity);
             int Value = 100;
-            if (ctx.Args.Length != 0)
-            {
-                if (!int.TryParse(ctx.Args[0], out Value))
-                {
-                    Utils.Output.InvalidArguments(ctx);
-                    return;
-                }
-                else Value = int.Parse(ctx.Args[0]);
-            }
 
-            if (ctx.Args.Length == 2)
+            if (playerName != null)
             {
-                var targetName = ctx.Args[1];
+                var targetName = playerName;
                 if (Helper.FindPlayer(targetName, false, out var targetEntity, out var targetUserEntity))
                 {
                     PlayerName = targetName;
@@ -34,8 +29,7 @@ namespace OpenRPG.Commands
                 }
                 else
                 {
-                    Utils.Output.CustomErrorMessage(ctx, $"Player \"{targetName}\" not found.");
-                    return;
+                    throw ctx.Error($"Player \"{targetName}\" not found.");
                 }
             }
 
@@ -47,7 +41,7 @@ namespace OpenRPG.Commands
             };
             Plugin.Server.GetExistingSystem<DebugEventsSystem>().ChangeHealthEvent(UserIndex, ref HealthEvent);
 
-            Output.SendSystemMessage(ctx, $"Player \"{PlayerName}\" Health set to <color=#ffff00>{Value}%</color>");
+            ctx.Reply($"Player \"{PlayerName}\" Health set to <color=#ffff00>{Value}%</color>");
         }
     }
 }

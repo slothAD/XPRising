@@ -2,94 +2,71 @@
 using OpenRPG.Systems;
 using OpenRPG.Utils;
 using System.Linq;
+using VampireCommandFramework;
+using System;
 
 namespace OpenRPG.Commands
 {
-    [Command("permission, perm", Usage = "permission <list>|<save>|<reload>|<set> <0-100> <playername>|<steamid>", Description = "Manage commands and user permissions level.")]
+    
+    [CommandGroup("rpg")]
     public static class Permission
     {
-        public static void Initialize(Context ctx)
+        [Command("permission", usage: "<list>|<save>|<reload>|<set> <0-100> <playername>", description: "Manage commands and user permissions level.")]
+        public static void Initialize(ChatCommandContext ctx, string option, int level = 0, string playerName = null )
         {
-            var args = ctx.Args;
 
-            if (args.Length == 1)
+            if (level == 0 && playerName == null)
             {
-                if (args[0].ToLower().Equals("list"))
+                if (option.ToLower().Equals("list"))
                 {
                     _ = PermissionSystem.PermissionList(ctx);
                 }
-                else if (args[0].ToLower().Equals("save"))
+                else if (option.ToLower().Equals("save"))
                 {
                     PermissionSystem.SaveUserPermission();
-                    Output.SendSystemMessage(ctx, "Saved user permission to JSON file.");
+                    ctx.Reply("Saved user permission to JSON file.");
                 }
-                else if (args[0].ToLower().Equals("reload"))
+                else if (option.ToLower().Equals("reload"))
                 {
                     PermissionSystem.LoadPermissions();
-                    Output.SendSystemMessage(ctx, "Reloaded permission from JSON file.");
+                    ctx.Reply( "Reloaded permission from JSON file.");
                 }
                 else
                 {
-                    Output.MissingArguments(ctx);
+                   throw ctx.Error($"Option {option} dont exist");
                 }
                 return;
             }
 
-            if (args.Length < 3)
+            if (level == 0 || playerName == null)
             {
-                Output.MissingArguments(ctx);
-                return;
+                throw ctx.Error($"Missing Arguments");
             }
 
-            if (args[0].ToLower().Equals("set")) {
-                var tryParse = int.TryParse(args[1], out var level);
-                if (!tryParse)
+            if (option.ToLower().Equals("set")) {
+                
+                if (level < 0 || level > 100)
                 {
-                    Output.InvalidArguments(ctx);
-                    return;
+                    throw ctx.Error($"Level {level} invalid");
                 }
-                else
-                {
-                    if (level < 0 || level > 100)
-                    {
-                        Output.InvalidArguments(ctx);
-                        return;
-                    }
-                }
+                
 
-                var tryParse_2 = ulong.TryParse(args[2], out var SteamID);
-                string playerName = null;
-                if (!tryParse_2)
+
+                bool tryFind = Helper.FindPlayer(playerName, false, out _, out var target_userEntity);
+                if (!tryFind)
                 {
-                    bool tryFind = Helper.FindPlayer(args[2], false, out _, out var target_userEntity);
-                    if (!tryFind)
-                    {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified player \"{args[2]}\".");
-                        return;
-                    }
-                    playerName = args[2];
-                    SteamID = Plugin.Server.EntityManager.GetComponentData<User>(target_userEntity).PlatformId;
+                    throw ctx.Error($"Could not find specified player \"{playerName}\".");
                 }
-                else
-                {
-                    playerName = Helper.GetNameFromSteamID(SteamID);
-                    if (playerName == null)
-                    {
-                        Output.CustomErrorMessage(ctx, $"Could not find specified player steam id \"{args[2]}\".");
-                        return;
-                    }
-                }
+                ulong SteamID = Plugin.Server.EntityManager.GetComponentData<User>(target_userEntity).PlatformId;
 
                 if (level == 0) Database.user_permission.Remove(SteamID);
                 else Database.user_permission[SteamID] = level;
 
-                Output.SendSystemMessage(ctx, $"Player \"{playerName}\" permission is now set to <color=#fffffffe>{level}</color>.");
-                return;
+                ctx.Reply( $"Player \"{playerName}\" permission is now set to <color=#fffffffe>{level}</color>.");
             }
             else
             {
-                Output.InvalidArguments(ctx);
-                return;
+                throw ctx.Error($"Invalid arguments for option {option}");
             }
         }
     }

@@ -5,40 +5,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
+using VampireCommandFramework;
+using Bloodstone.API;
+using static VCF.Core.Basics.RoleCommands;
 
 namespace OpenRPG.Commands
 {
-    [Command("autorespawn", Usage = "autorespawn [<PlayerName>]", Description = "Toggle auto respawn on the same position on death.")]
+
+    [CommandGroup("rpg")]
     public static class AutoRespawn
     {
-        public static void Initialize(Context ctx)
+        [Command("autorespawn", usage: "autorespawn [<PlayerName>]", description: "Toggle auto respawn on the same position on death.", adminOnly: true)]
+        public static void AutoRespawnCommand(ChatCommandContext ctx, string playerName)
         {
-            var entityManager = ctx.EntityManager;
+            var entityManager = VWorld.Server.EntityManager;
             ulong SteamID = ctx.Event.User.PlatformId;
             string PlayerName = ctx.Event.User.CharacterName.ToString();
             bool isServerWide = false;
 
             bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "autorespawn_args");
-            if (ctx.Args.Length > 0 && isAllowed)
+            if (playerName.Length > 0)
             {
-                string TargetName = string.Join(' ', ctx.Args);
-                if (TargetName.ToLower().Equals("all"))
+                if (playerName.ToLower().Equals("all"))
                 {
                     SteamID = 1;
                     isServerWide = true;
                 }
                 else
                 {
-                    if (Helper.FindPlayer(TargetName, false, out Entity targetEntity, out Entity targetUserEntity))
+                    if (Helper.FindPlayer(playerName, false, out Entity targetEntity, out Entity targetUserEntity))
                     {
-                        var user_component = entityManager.GetComponentData<User>(targetUserEntity);
+                        var user_component = entityManager.GetComponentData<ProjectM.Network.User>(targetUserEntity);
                         SteamID = user_component.PlatformId;
-                        PlayerName = TargetName;
+                        PlayerName = playerName;
                     }
                     else
                     {
-                        Output.CustomErrorMessage(ctx, $"Player \"{TargetName}\" not found!");
-                        return;
+                        throw ctx.Error($"Player \"{playerName}\" not found!");
                     }
                 }
             }
@@ -49,11 +52,11 @@ namespace OpenRPG.Commands
             string s = isAutoRespawn ? "Activated" : "Deactivated";
             if (isServerWide)
             {
-                Output.SendSystemMessage(ctx, $"Server wide Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Server wide Auto Respawn <color=#ffff00>{s}</color>");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
+                ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
             }
         }
 
@@ -82,12 +85,15 @@ namespace OpenRPG.Commands
 
         public static void LoadAutoRespawn()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/autorespawn.json"))
+            if (!Directory.Exists(Plugin.ConfigPath)) Directory.CreateDirectory(Plugin.ConfigPath);
+            if (!Directory.Exists(Plugin.SavesPath)) Directory.CreateDirectory(Plugin.SavesPath);
+
+            if (!File.Exists(Plugin.AutorespawnJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/autorespawn.json");
+                var stream = File.Create(Plugin.AutorespawnJson);
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/autorespawn.json");
+            string json = File.ReadAllText(Plugin.AutorespawnJson);
             try
             {
                 Database.autoRespawn = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

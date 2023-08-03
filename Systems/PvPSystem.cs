@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.Entities;
+using VampireCommandFramework;
 
 namespace OpenRPG.Systems
 {
@@ -336,7 +337,7 @@ namespace OpenRPG.Systems
                 if (siegeData.IsSiegeOn == false)
                 {
                     Cache.SteamPlayerCache.TryGetValue(SteamID, out var playerData);
-                    ServerChatUtils.SendSystemMessageToAllClients(em, $"{Utils.Color.Red(playerData.CharacterName.ToString())} has entered {Color.Red("Active Siege")}!");
+                    ServerChatUtils.SendSystemMessageToAllClients(em, $"{Utils.Color.Red(playerData.CharacterName.ToString())} has entered {Utils.Color.Red("Active Siege")}!");
 
                     siegeData.IsSiegeOn = true;
                     siegeData.SiegeEndTime = DateTime.Now.AddMinutes(PvPSystem.SiegeDuration);
@@ -355,7 +356,7 @@ namespace OpenRPG.Systems
                 if (siegeData.IsSiegeOn == false)
                 {
                     Cache.SteamPlayerCache.TryGetValue(SteamID, out var playerData);
-                    ServerChatUtils.SendSystemMessageToAllClients(em, $"{Utils.Color.Red(playerData.CharacterName.ToString())} has entered {Color.Red("Active Siege")}!");
+                    ServerChatUtils.SendSystemMessageToAllClients(em, $"{Utils.Color.Red(playerData.CharacterName.ToString())} has entered {Utils.Color.Red("Active Siege")}!");
                 }
                 siegeData.IsSiegeOn = true;
                 siegeData.SiegeEndTime = DateTime.MinValue;
@@ -383,7 +384,7 @@ namespace OpenRPG.Systems
             return true;
         }
 
-        public static async Task SiegeList(Context ctx)
+        public static async Task SiegeList(ChatCommandContext ctx)
         {
             await Task.Yield();
 
@@ -394,10 +395,10 @@ namespace OpenRPG.Systems
             SortedList = Database.SiegeState.Where(x => x.Value.IsSiegeOn == true).OrderByDescending(x => x.Value.SiegeEndTime - DateTime.Now);
 
             int page = 0;
-            if (ctx.Args.Length >= 1 && int.TryParse(ctx.Args[0], out page))
+            /*if (ctx.Args.Length >= 1 && int.TryParse(ctx.Args[0], out page))
             {
                 page -= 1;
-            }
+            }*/
 
             var recordsPerPage = 5;
 
@@ -427,7 +428,7 @@ namespace OpenRPG.Systems
             {
                 foreach (var m in messages)
                 {
-                    Output.SendSystemMessage(ctx, m);
+                    ctx.Reply( m);
                 }
                 return new object();
             }, false);
@@ -495,8 +496,8 @@ namespace OpenRPG.Systems
                 Cache.OffenseLog[KillerSteamID] = OffenseData;
 
                 if (isAnnounceGrief) ServerChatUtils.SendSystemMessageToAllClients(Plugin.Server.EntityManager, $"" +
-                    $"Vampire {Color.Red(killerUserData.CharacterName.ToString())} (Lv.{KillerLevel}) " +
-                    $"grief-killed \"{Color.White(victimUserData.CharacterName.ToString())}\" (Lv.{VictimLevel})");
+                    $"Vampire {Utils.Color.Red(killerUserData.CharacterName.ToString())} (Lv.{KillerLevel}) " +
+                    $"grief-killed \"{Utils.Color.White(victimUserData.CharacterName.ToString())}\" (Lv.{VictimLevel})");
 
                 if (OffenseData.Offense >= OffenseLimit)
                 {
@@ -670,7 +671,7 @@ namespace OpenRPG.Systems
             }
         }
 
-        public static async Task TopRanks(Context ctx)
+        public static async Task TopRanks(ChatCommandContext ctx)
         {
             await Task.Yield();
 
@@ -723,7 +724,7 @@ namespace OpenRPG.Systems
             {
                 foreach (var m in messages)
                 {
-                    Output.SendSystemMessage(ctx, m);
+                    ctx.Reply(m);
                 }
                 return new object();
             }, false);

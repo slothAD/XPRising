@@ -13,6 +13,7 @@ using System.Reflection;
 using Unity.Entities;
 using UnityEngine;
 using Bloodstone.API;
+using VRising.GameData;
 
 namespace OpenRPG
 {
@@ -22,6 +23,19 @@ namespace OpenRPG
     public class Plugin : BasePlugin
     {
         public static Harmony harmony;
+
+        public static readonly string ConfigPath = Path.Combine(Paths.ConfigPath, "OpenRPG");
+        public static readonly string SavesPath = Path.Combine(Plugin.ConfigPath, "Saves");
+        public static readonly string AutorespawnJson = Path.Combine(SavesPath, "autorespawn.json");
+        public static readonly string GodModeJson = Path.Combine(SavesPath, "godmode.json");
+        public static readonly string KitsJson = Path.Combine(SavesPath, "kits.json");
+        public static readonly string NoCooldownJson = Path.Combine(SavesPath, "nocooldown.json");
+        public static readonly string PowerUpJson = Path.Combine(SavesPath, "powerup.json");
+        public static readonly string SpeedingJson = Path.Combine(SavesPath, "speeding.json");
+        public static readonly string SunImmunityJson = Path.Combine(SavesPath, "sunimmunity.json");
+        public static readonly string WaypointsJson = Path.Combine(SavesPath, "waypoints.json");
+        public static readonly string GlobalWaypointsJson = Path.Combine(SavesPath, "global_waypoints.json");
+        public static readonly string TotalWaypointsJson = Path.Combine(SavesPath, "total_waypoints.json");
 
         private static ConfigEntry<string> Prefix;
         private static ConfigEntry<string> DisabledCommands;
@@ -235,13 +249,25 @@ namespace OpenRPG
         public override void Load()
         {
             InitConfig();
+            CommandRegistry.RegisterAll();
+            GameData.OnInitialize += GameDataOnInitialize;
+            GameData.OnDestroy += GameDataOnDestroy;
             Logger = Log;
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            TaskRunner.Initialize();
-
             Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        private static void GameDataOnInitialize(World world)
+        {
+            TaskRunner.Initialize();
+            Initialize();
+        }
+
+        private static void GameDataOnDestroy()
+        {
+            //Logger.LogInfo("GameDataOnDestroy");
         }
 
         public override bool Unload()
@@ -253,11 +279,6 @@ namespace OpenRPG
             TaskRunner.Destroy();
 
             return true;
-        }
-
-        public void OnGameInitialized()
-        {
-            Initialize();
         }
 
         public static void Initialize()
@@ -276,9 +297,6 @@ namespace OpenRPG
             AutoSaveSystem.LoadDatabase();
 
             //-- Apply configs
-            CommandHandler.Prefix = Prefix.Value;
-            CommandHandler.DisabledCommands = DisabledCommands.Value;
-            CommandHandler.delay_Cooldown = DelayedCommands.Value;
             Waypoint.WaypointLimit = WaypointLimit.Value;
 
             PermissionSystem.isVIPSystem = EnableVIPSystem.Value;

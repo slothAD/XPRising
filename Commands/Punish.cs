@@ -1,50 +1,38 @@
 ﻿using ProjectM.Network;
 using OpenRPG.Utils;
+using ProjectM;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("punish", Usage = "punish <playername> [<remove>]", Description = "Manually punish someone or lift their debuff.")]
+
+    [CommandGroup("rpg")]
     public static class Punish
     {
-        public static void Initialize(Context ctx)
+        [Command("punish", usage: "punish <playername> [<remove(True/False>]", description: "Manually punish someone or lift their debuff.")]
+        public static void PunishCommand(ChatCommandContext ctx, string playerName , bool value = false)
         {
-            if (ctx.Args.Length > 0)
-            {
-                string PlayerName = ctx.Args[0];
-                if (Helper.FindPlayer(PlayerName, true, out var CharEntity, out var UserEntity))
+
+                if (Helper.FindPlayer(playerName, true, out var CharEntity, out var UserEntity))
                 {
-                    if (ctx.Args.Length == 2)
-                    {
-                        if (ctx.Args[1].ToLower().Equals("remove"))
+ 
+                        if (!value)
                         {
                             Helper.RemoveBuff(CharEntity, Database.Buff.Severe_GarlicDebuff);
-                            Output.SendSystemMessage(ctx, $"Punishment debuff removed from player \"{PlayerName}\"");
-                            return;
+                            ctx.Reply($"Punishment debuff removed from player \"{playerName}\"");
                         }
                         else
                         {
-                            Output.InvalidArguments(ctx);
-                            return;
+                            Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Severe_GarlicDebuff);
+                            ctx.Reply($"Applied punishment debuff to player \"{playerName}\"");
                         }
-                    }
-                    else
-                    {
-                        Helper.ApplyBuff(UserEntity, CharEntity, Database.Buff.Severe_GarlicDebuff);
-                        Output.SendSystemMessage(ctx, $"Applied punishment debuff to player \"{PlayerName}\"");
-                        return;
-                    }
                 }
                 else
                 {
-                    Output.CustomErrorMessage(ctx, "Player not found.");
-                    return;
+                    throw ctx.Error("Player not found.");
+                  
                 }
-            }
-            else
-            {
-                Output.InvalidArguments(ctx);
-                return;
-            }
+            
         }
     }
 }

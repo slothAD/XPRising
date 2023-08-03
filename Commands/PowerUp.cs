@@ -3,56 +3,40 @@ using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("powerup, pu", Usage = "pu <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", Description = "Buff specified player with the specified value.")]
+    [CommandGroup("rpg")]
     public static class PowerUp
     {
-        public static void Initialize(Context ctx)
+        [Command("powerup add", usage: "pu <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", description: "Buff specified player with the specified value.")]
+        public static void PowerUpAdd(ChatCommandContext ctx, string playerName, string type, int MaxHP = 0, int PATK = 0, int SATK = 0, int PDEF = 0, int SDEF = 0)
         {
-            if (ctx.Args.Length < 3)
-            {
-                Output.MissingArguments(ctx);
-                return;
-            }
 
-            string PlayerName = ctx.Args[0].ToLower();
+            string PlayerName = playerName.ToLower();
             if (!Helper.FindPlayer(PlayerName, false, out var playerEntity, out var userEntity))
             {
-                Output.CustomErrorMessage(ctx, "Specified player not found.");
-                return;
+                throw ctx.Error("Specified player not found.");
             }
+
             ulong SteamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
 
-            if (ctx.Args[1].ToLower().Equals("remove"))
+            if (type.ToLower().Equals("remove"))
             {
                 Database.PowerUpList.Remove(SteamID);
                 Helper.ApplyBuff(userEntity, playerEntity, Database.Buff.Buff_VBlood_Perk_Moose);
-                Output.SendSystemMessage(ctx, "PowerUp removed from specified player.");
+                ctx.Reply("PowerUp removed from specified player.");
                 return;
             }
 
-            if (ctx.Args.Length < 7)
+            if (MaxHP == 0 && PATK == 0 && PDEF == 0 && SATK == 0 && SDEF == 0 )
             {
-                Output.MissingArguments(ctx);
-                return;
+                throw ctx.Error("Missing Arguments.");
             }
 
-            if (ctx.Args[1].ToLower().Equals("add"))
+            if (type.ToLower().Equals("add"))
             {
-                bool maxHPOK = float.TryParse(ctx.Args[2], out var MaxHP);
-                bool patkOK = float.TryParse(ctx.Args[3], out var PATK);
-                bool satkOK = float.TryParse(ctx.Args[4], out var SATK);
-                bool pdefOK = float.TryParse(ctx.Args[5], out var PDEF);
-                bool sdefOK = float.TryParse(ctx.Args[6], out var SDEF);
-
-                if (!maxHPOK || !patkOK || !pdefOK || !satkOK || !sdefOK)
-                {
-                    Output.InvalidArguments(ctx);
-                    return;
-                }
-
                 var PowerUpData = new PowerUpData()
                 {
                     Name = PlayerName,
@@ -65,27 +49,24 @@ namespace OpenRPG.Commands
 
                 Database.PowerUpList[SteamID] = PowerUpData;
                 Helper.ApplyBuff(userEntity, playerEntity, Database.Buff.Buff_VBlood_Perk_Moose);
-                Output.SendSystemMessage(ctx, "PowerUp added to specified player.");
+                ctx.Reply("PowerUp added to specified player.");
                 return;
             }
-
-            Output.InvalidArguments(ctx);
-            return;
         }
 
         public static void SavePowerUp()
         {
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/powerup.json", JsonSerializer.Serialize(Database.PowerUpList, Database.JSON_options));
+            File.WriteAllText(Plugin.PowerUpJson, JsonSerializer.Serialize(Database.PowerUpList, Database.JSON_options));
         }
 
         public static void LoadPowerUp()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/powerup.json"))
+            if (!File.Exists(Plugin.PowerUpJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/powerup.json");
+                var stream = File.Create(Plugin.PowerUpJson);
                 stream.Dispose();
             }
-            string content = File.ReadAllText("BepInEx/config/OpenRPG/Saves/powerup.json");
+            string content = File.ReadAllText(Plugin.PowerUpJson);
             try
             {
                 Database.PowerUpList = JsonSerializer.Deserialize<Dictionary<ulong, PowerUpData>>(content);

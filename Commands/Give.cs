@@ -2,36 +2,24 @@
 using OpenRPG.Utils;
 using System.Globalization;
 using System.Linq;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("give, g", Usage = "give <itemname> [<amount>]", Description = "Adds specified items to your inventory")]
+    [CommandGroup("rpg")]
     public static class Give
     {
-        public static void Initialize(Context ctx)
+        [Command("give", usage: "<itemname> [<amount>]", description: "Adds specified items to your inventory")]
+        public static void GiveCommand(ChatCommandContext ctx, string name, int amount = 1)
         {
-            if (ctx.Args.Length < 2)
-            {
-                Output.MissingArguments(ctx);
-                return;
-            }
-
-            string name = string.Join(' ', ctx.Args);
-            int amount = 1;
-            if (int.TryParse(ctx.Args.Last(), out int a))
-            {
-                name = string.Join(' ', ctx.Args.SkipLast(1));
-                amount = a;
-            }
             PrefabGUID guid = Helper.GetGUIDFromName(name);
             if (guid.GuidHash == 0)
             {
-                Output.CustomErrorMessage(ctx, "Could not find specified item name.");
-                return;
+                throw ctx.Error("Could not find specified item name.");
             }
 
             Helper.AddItemToInventory(ctx, guid, amount);
-            Output.SendSystemMessage(ctx, $"You got <color=#ffff00>{amount} {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
+            ctx.Reply($"You got <color=#ffff00>{amount} {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
         }
     }
 }

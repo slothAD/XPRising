@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("speed", Usage = "speed", Description = "Toggles increased movement speed.")]
 
+    [CommandGroup("rpg")]
     public static class Speed
     {
-        public static void Initialize(Context ctx)
+        [Command("speed", usage: "", description: "Toggles increased movement speed.")]
+        public static void SpeedCommand(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isSpeeding = Database.speeding.TryGetValue(SteamID, out bool isSpeeding_);
@@ -17,11 +19,11 @@ namespace OpenRPG.Commands
             else isSpeeding = true;
             UpdateSpeed(ctx, isSpeeding);
             string s = isSpeeding ? "Activated" : "Deactivated";
-            Output.SendSystemMessage(ctx, $"Speed buff <color=#ffff00>{s}</color>");
+            ctx.Reply( $"Speed buff <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
         }
 
-        public static bool UpdateSpeed(Context ctx, bool isGodMode)
+        public static bool UpdateSpeed(ChatCommandContext ctx, bool isGodMode)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isExist = Database.speeding.TryGetValue(SteamID, out bool isSpeeding_);
@@ -32,10 +34,10 @@ namespace OpenRPG.Commands
 
         public static void SaveSpeed()
         {
-            File.WriteAllText("BepInEx/config/OpenRPG/Saves/speeding.json", JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
+            File.WriteAllText(Plugin.SpeedingJson, JsonSerializer.Serialize(Database.speeding, Database.JSON_options));
         }
 
-        public static bool RemoveSpeed(Context ctx)
+        public static bool RemoveSpeed(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId; ;
             if (Database.speeding.TryGetValue(SteamID, out bool isGodMode_))
@@ -48,12 +50,16 @@ namespace OpenRPG.Commands
 
         public static void LoadSpeed()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/Saves/speeding.json"))
+
+            if (!Directory.Exists(Plugin.ConfigPath)) Directory.CreateDirectory(Plugin.ConfigPath);
+            if (!Directory.Exists(Plugin.SavesPath)) Directory.CreateDirectory(Plugin.SavesPath);
+
+            if (!File.Exists(Plugin.SpeedingJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/Saves/speeding.json");
+                var stream = File.Create(Plugin.SpeedingJson);
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/Saves/speeding.json");
+            string json = File.ReadAllText(Plugin.SpeedingJson);
             try
             {
                 Database.speeding = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);

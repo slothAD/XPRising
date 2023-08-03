@@ -17,6 +17,7 @@ using Bloodstone.API;
 using static ProjectM.Terrain.MapMaker.MapMakerDefinition;
 using VRising.GameData;
 using VRising.GameData.Methods;
+using VampireCommandFramework;
 
 namespace OpenRPG.Utils
 {
@@ -331,23 +332,13 @@ namespace OpenRPG.Utils
             em.SetComponentData(entity, KickEvent);
         }
 
-        public static Entity AddItemToInventory(Context ctx, PrefabGUID guid, int amount)
+        public static Entity AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
             unsafe
             {
-                var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
-                var bytes = stackalloc byte[Marshal.SizeOf<FakeNull>()];
-                var bytePtr = new IntPtr(bytes);
-                Marshal.StructureToPtr<FakeNull>(new()
-                {
-                    value = 7,
-                    has_value = true
-                }, bytePtr, false);
-                var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
-                var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
-                //var hasAdded = InventoryUtilitiesServer.TryAddItem(ctx.EntityManager, gameData.ItemHashLookupMap, ctx.Event.SenderCharacterEntity, guid, amount, out _, out Entity e, default, hack);
-                //return e;
-                return new Entity();
+                var user = GameData.Users.GetUserByCharacterName(ctx.User.CharacterName.ToString());
+                user.TryGiveItem(guid, 1, out Entity itemEntity);
+                return itemEntity;
             }
         }
 
@@ -559,20 +550,20 @@ namespace OpenRPG.Utils
             return name;
         }
 
-        public static void TeleportTo(Context ctx, float3 position)
+        public static void TeleportTo(ChatCommandContext ctx, float3 position)
         {
-            var entity = ctx.EntityManager.CreateEntity(
+            var entity = VWorld.Server.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
                     ComponentType.ReadWrite<PlayerTeleportDebugEvent>()
                 );
 
-            ctx.EntityManager.SetComponentData<FromCharacter>(entity, new()
+            VWorld.Server.EntityManager.SetComponentData<FromCharacter>(entity, new()
             {
                 User = ctx.Event.SenderUserEntity,
                 Character = ctx.Event.SenderCharacterEntity
             });
 
-            ctx.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
+            VWorld.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
             {
                 Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self

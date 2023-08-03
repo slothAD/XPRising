@@ -1,4 +1,4 @@
-﻿using OpenRPG.Utils;
+﻿/*using OpenRPG.Utils;
 using System.Text.RegularExpressions;
 using Unity.Collections;
 
@@ -7,7 +7,7 @@ namespace OpenRPG.Commands
     [Command("rename", Usage = "rename <Player Name/SteamID> <New Name>", Description = "Rename the specified player.")]
     public static class Rename
     {
-        public static void Initialize(Context ctx)
+        public static void Initialize(ChatCommandContext ctx)
         {
             if (ctx.Args.Length < 1)
             {
@@ -26,7 +26,7 @@ namespace OpenRPG.Commands
 
                 if (!isPlayerFound)
                 {
-                    Output.CustomErrorMessage(ctx, $"Unable to find the specified player.");
+                    throw ctx.Error( $"Unable to find the specified player.");
                     return;
                 }
 
@@ -35,7 +35,7 @@ namespace OpenRPG.Commands
 
             if (Regex.IsMatch(NewName.ToString(), @"[^a-zA-Z0-9]"))
             {
-                Output.CustomErrorMessage(ctx, "Name can only contain alphanumeric!");
+                throw ctx.Error( "Name can only contain alphanumeric!");
                 return;
             }
 
@@ -43,24 +43,24 @@ namespace OpenRPG.Commands
             //-- The max legth assignable is actually 61 bytes.
             if (NewName.utf8LengthInBytes > 20)
             {
-                Output.CustomErrorMessage(ctx, $"New name is too long!");
+                throw ctx.Error( $"New name is too long!");
                 return;
             }
 
             if (Cache.NamePlayerCache.TryGetValue(NewName.ToString().ToLower(), out _))
             {
-                Output.CustomErrorMessage(ctx, $"Name is already taken!");
+                throw ctx.Error( $"Name is already taken!");
                 return;
             }
 
             Helper.RenamePlayer(userEntity, playerEntity, NewName);
             if (userEntity.Equals(ctx.Event.SenderUserEntity))
             {
-                Output.SendSystemMessage(ctx, $"Your name has been updated to \"{NewName}\".");
+                ctx.Reply( $"Your name has been updated to \"{NewName}\".");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
+                ctx.Reply( $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
             }
         }
     }
@@ -68,7 +68,7 @@ namespace OpenRPG.Commands
     [Command("adminrename", Usage = "adminrename <Player Name/SteamID> <New Name>", Description = "Rename the specified player. Careful, the new name isn't parsed to be alphanumeric.")]
     public static class Adminrename
     {
-        public static void Initialize(Context ctx)
+        public static void Initialize(ChatCommandContext ctx)
         {
             if (ctx.Args.Length < 1)
             {
@@ -87,7 +87,7 @@ namespace OpenRPG.Commands
 
                 if (!isPlayerFound)
                 {
-                    Output.CustomErrorMessage(ctx, $"Unable to find the specified player.");
+                    throw ctx.Error( $"Unable to find the specified player.");
                     return;
                 }
 
@@ -98,25 +98,26 @@ namespace OpenRPG.Commands
             //-- The max legth assignable is actually 61 bytes.
             if (NewName.utf8LengthInBytes > 20)
             {
-                Output.CustomErrorMessage(ctx, $"New name is too long!");
+                throw ctx.Error( $"New name is too long!");
                 return;
             }
 
             if (Cache.NamePlayerCache.TryGetValue(NewName.ToString().ToLower(), out _))
             {
-                Output.CustomErrorMessage(ctx, $"Name is already taken!");
+                throw ctx.Error( $"Name is already taken!");
                 return;
             }
 
             Helper.RenamePlayer(userEntity, playerEntity, NewName);
             if (userEntity.Equals(ctx.Event.SenderUserEntity))
             {
-                Output.SendSystemMessage(ctx, $"Your name has been updated to \"{NewName}\".");
+                ctx.Reply( $"Your name has been updated to \"{NewName}\".");
             }
             else
             {
-                Output.SendSystemMessage(ctx, $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
+                ctx.Reply( $"Player \"{ctx.Args[0]}\" name has been updated to \"{NewName}\".");
             }
         }
     }
 }
+*/

@@ -6,24 +6,18 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("kit", "kit <Name>", "Gives you a previously specified set of items.")]
+    [CommandGroup("rpg")]
     public static class Kit
     {
         private static List<ItemKit> kits;
 
-        public static void Initialize(Context ctx)
+        [Command("kit", usage: "<Name>", description: "Gives you a previously specified set of items.")]
+        public static void Initialize(ChatCommandContext ctx, string name)
         {
-            if (ctx.Args.Length < 1)
-            {
-                Output.SendSystemMessage(ctx, $"Kit name missing.");
-                return;
-            }
-
-            string name = string.Join(' ', ctx.Args);
-
             try
             {
                 ItemKit kit = kits.First(x => x.Name.ToLower() == name.ToLower());
@@ -31,23 +25,26 @@ namespace OpenRPG.Commands
                 {
                     Helper.AddItemToInventory(ctx, new PrefabGUID(guid.Key), guid.Value);
                 }
-                Output.SendSystemMessage(ctx, $"You got the kit: <color=#ffff00>{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
+                ctx.Reply($"You got the kit: <color=#ffff00>{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)}</color>");
             }
             catch
             {
-                Output.SendSystemMessage(ctx, $"Kit doesn't exist.");
-                return;
+               throw  ctx.Error($"Kit doesn't exist.");
             }
         }
 
         public static void LoadKits()
         {
-            if (!File.Exists("BepInEx/config/OpenRPG/kits.json"))
+
+            if (!Directory.Exists(Plugin.ConfigPath)) Directory.CreateDirectory(Plugin.ConfigPath);
+            if (!Directory.Exists(Plugin.SavesPath)) Directory.CreateDirectory(Plugin.SavesPath);
+
+            if (!File.Exists(Plugin.KitsJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/kits.json");
+                var stream = File.Create(Plugin.KitsJson);
                 stream.Dispose();
             }
-            string json = File.ReadAllText("BepInEx/config/OpenRPG/kits.json");
+            string json = File.ReadAllText(Plugin.KitsJson);
             try
             {
                 kits = JsonSerializer.Deserialize<List<ItemKit>>(json);
@@ -67,7 +64,7 @@ namespace OpenRPG.Commands
                 WriteIndented = true,
                 IncludeFields = true
             };
-            File.WriteAllText("BepInEx/config/OpenRPG/kits.json", JsonSerializer.Serialize(kits, options));
+            File.WriteAllText(Plugin.KitsJson, JsonSerializer.Serialize(kits, options));
         }
     }
 }

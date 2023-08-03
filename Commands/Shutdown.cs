@@ -1,11 +1,14 @@
 ﻿using OpenRPG.Utils;
+using ProjectM;
+using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [Command("shutdown, quit, exit", Usage = "shutdown", Description = "Trigger the exit signal & shutdown the server.")]
+    [CommandGroup("rpg")]
     public static class Shutdown
     {
-        public static void Initialize(Context ctx)
+        [Command("shutdown", usage: "", description: "Trigger the exit signal & shutdown the server.")]
+        public static void ShutdownCommand(ChatCommandContext ctx)
         {
             UnityEngine.Application.Quit();
         }

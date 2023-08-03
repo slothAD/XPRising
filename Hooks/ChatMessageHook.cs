@@ -1,4 +1,10 @@
-﻿using HarmonyLib;
+﻿/*
+ *
+ *
+ * DELETE AFTERUPDATE VCF
+ *
+ *
+using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
 using Unity.Collections;
@@ -34,3 +40,4 @@ namespace OpenRPG.Hooks
         }
     }
 }
+*/

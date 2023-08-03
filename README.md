@@ -11,7 +11,8 @@ Read the changelog for extra details.
 
 ## Experience System
 Disable the VRising Gear Level system and replace it with a traditional RPG experience system,\
-complete with exp sharing between clan members or other players designated as allies.
+complete with exp sharing between clan members or other players designated as 
+es.
 
 ## Mastery System
 > ### Weapon Mastery
