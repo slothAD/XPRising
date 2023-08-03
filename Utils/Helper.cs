@@ -545,7 +545,7 @@ namespace OpenRPG.Utils
             }
             try
             {
-                name = s.PrefabNameLookupMap[hashCode].ToString();
+                name = s.PrefabLookupMap[hashCode]().ToString();
             }
             catch
             {
