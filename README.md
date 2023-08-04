@@ -1,6 +1,8 @@
 # OpenRPG Update for Gloomrot
 
-Since the release of Gloomrot by Stunlock Studios for V Rising, the original RPG mod could no longer be used as many lines of code needed to be updated. Now, it is possible again to use the OpenRPG mod with all its features!
+> Since the release of Gloomrot by Stunlock Studios for V Rising, the original RPG mod could no longer
+> be used as many lines of code needed to be updated. Now, it is possible again to use the OpenRPG mod
+> with all its features!
 
 # OpenRPG Requires
 
@@ -22,6 +24,12 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 - @SynovA [Iron Fist RPG](https://discord.gg/iron-fist-rpg) as a tester and great supporter, who provided his server as a test platform!
 - @iska as a tester and great supporter!
 - @JosiUwU as a supporter for manuals.
+
+# By the community for the community
+
+> It was particularly important to us that the code is open source to guarantee great support and to offer
+> other mod developers the opportunity to develop plugins for the OpenRPG at any time. This project is free
+> and for everyone, it's from the community for the community and everyone is part of the development!
 
 # The Future of OpenRPG
 
