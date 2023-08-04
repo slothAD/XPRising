@@ -27,3 +27,6 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 
 > We will soon share our future plans for OpenRPG with you. Initially, a stable public version is our focus!
 > There is a good chance that in the future the OpenRPG mod will get a UI to have a clean and easy to use mod!
+
+# Patch notes / Changelog
+
