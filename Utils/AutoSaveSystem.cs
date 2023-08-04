@@ -11,7 +11,6 @@ namespace OpenRPG.Utils
             PermissionSystem.SaveUserPermission(); //-- Nothing new to save.
             SunImmunity.SaveImmunity();
             Waypoint.SaveWaypoints();
-            NoCooldown.SaveCooldown();
             GodMode.SaveGodMode();
             Speed.SaveSpeed();
             AutoRespawn.SaveAutoRespawn();
@@ -35,7 +34,6 @@ namespace OpenRPG.Utils
             PermissionSystem.LoadPermissions();
             SunImmunity.LoadSunImmunity();
             Waypoint.LoadWaypoints();
-            NoCooldown.LoadNoCooldown();
             GodMode.LoadGodMode();
             Speed.LoadSpeed();
             AutoRespawn.LoadAutoRespawn();

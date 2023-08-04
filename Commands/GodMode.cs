@@ -7,8 +7,6 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-
-    
     public static class GodMode
     {
         [Command("godmode", shortHand: "gm", adminOnly: false, usage: "", description: "Toggles god mode.")]

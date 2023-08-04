@@ -21,10 +21,10 @@ namespace OpenRPG.Hooks
             if (PvPSystem.isHonorSystemEnabled && PvPSystem.isEnableHostileGlow && PvPSystem.isUseProximityGlow) ProximityLoop.HostileProximityGlow();
 
             //-- Day Cycle Tracking
-            //var dnc = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
+            var dnc = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
             //var DNCycle = __instance._DayNightCycle.GetSingleton();
 
-            /*if (CurrentDay != dnc.GameDateTimeNow.Day)
+            if (CurrentDay != dnc.GameDateTimeNow.Day)
             {
                 if (!isDNInitialized)
                 {
@@ -36,7 +36,7 @@ namespace OpenRPG.Hooks
                     CurrentDay = dnc.GameDateTimeNow.Day;
                     if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
                 }
-            }*/
+            }
             //-- ------------------
 
             //-- Spawn Custom NPC Task

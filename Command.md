@@ -1,4 +1,4 @@
-﻿
+
 |Command         |Short                      | Params | Optional Params     | Usage | Description                                                                               | Admin
 |----------------|-------------------------------|---------------|----------------------|----------------------|-------------------------------------|------------------------------------------------------|
 |`.autorespawn` |  `.aresp`   | NO APPLY | `<PlayerName>`  |  `.autorespawn [<PlayerName>] ` | Toggle auto respawn on the same position on death |  No, Only if PlayerName is specified                   |

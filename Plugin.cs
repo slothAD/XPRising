@@ -36,6 +36,7 @@ namespace OpenRPG
         public static readonly string WaypointsJson = Path.Combine(SavesPath, "waypoints.json");
         public static readonly string GlobalWaypointsJson = Path.Combine(SavesPath, "global_waypoints.json");
         public static readonly string TotalWaypointsJson = Path.Combine(SavesPath, "total_waypoints.json");
+        public static readonly string KitsRootJson = Path.Combine(ConfigPath, "kits.json");
 
         private static ConfigEntry<string> Prefix;
         private static ConfigEntry<string> DisabledCommands;
@@ -236,12 +237,12 @@ namespace OpenRPG
 
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", true, "All other faction dynamics data & config is withing /OpenRPG/Saves/factionstats.json file.");
 
-            if (!Directory.Exists("BepInEx/config/OpenRPG")) Directory.CreateDirectory("BepInEx/config/OpenRPG");
-            if (!Directory.Exists("BepInEx/config/OpenRPG/Saves")) Directory.CreateDirectory("BepInEx/config/OpenRPG/Saves");
+            if (!Directory.Exists(ConfigPath)) Directory.CreateDirectory(ConfigPath);
+            if (!Directory.Exists(SavesPath)) Directory.CreateDirectory(SavesPath);
 
-            if (!File.Exists("BepInEx/config/OpenRPG/kits.json"))
+            if (!File.Exists(KitsRootJson))
             {
-                var stream = File.Create("BepInEx/config/OpenRPG/kits.json");
+                var stream = File.Create(KitsRootJson);
                 stream.Dispose();
             }
         }
