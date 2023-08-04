@@ -7,10 +7,10 @@ using VampireCommandFramework;
 namespace OpenRPG.Commands
 {
 
-    [CommandGroup("rpg")]
+    
     public static class Speed
     {
-        [Command("speed", usage: "", description: "Toggles increased movement speed.")]
+        [Command("speed", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "", description: "Toggles increased movement speed.")]
         public static void SpeedCommand(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;

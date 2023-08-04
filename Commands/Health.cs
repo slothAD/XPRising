@@ -7,10 +7,10 @@ using Bloodstone.API;
 namespace OpenRPG.Commands
 {
 
-    [CommandGroup("rpg")]
+    
     public static class Health
     {
-        [Command("health", usage:"<percentage> [<player name>]", description:"Sets your current Health")]
+        [Command("health", shortHand: "h", adminOnly: false, usage: "<percentage> [<PlayerName>]", description: "Sets your current Health or a specific player.")]
         public static void HealthCommmand(ChatCommandContext ctx, int percentage, string playerName = null)
         {
             var PlayerName = ctx.Event.User.CharacterName;

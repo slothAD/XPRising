@@ -7,10 +7,10 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class SunImmunity
     {
-        [Command("sunimmunity", usage: "", description: "Toggles sun immunity.")]
+        [Command("sunimmunity", shortHand: "si", adminOnly: false, usage: "", description: "Toggles sun immunity.")]
         public static void SunImmunityCommand(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;

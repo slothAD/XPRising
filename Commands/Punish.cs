@@ -6,10 +6,10 @@ using VampireCommandFramework;
 namespace OpenRPG.Commands
 {
 
-    [CommandGroup("rpg")]
+    
     public static class Punish
     {
-        [Command("punish", usage: "punish <playername> [<remove(True/False>]", description: "Manually punish someone or lift their debuff.")]
+        [Command("punish", shortHand: "punish", adminOnly: false, usage: "punish <PlayerName> [<remove(True/False>]", description: "Manually punish someone or lift their debuff.")]
         public static void PunishCommand(ChatCommandContext ctx, string playerName , bool value = false)
         {
 

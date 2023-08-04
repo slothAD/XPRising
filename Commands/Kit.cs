@@ -10,12 +10,12 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class Kit
     {
         private static List<ItemKit> kits;
 
-        [Command("kit", usage: "<Name>", description: "Gives you a previously specified set of items.")]
+        [Command("kit", shortHand: "kit", adminOnly: false, usage: "<Name>", description: "Gives you a previously specified set of items.")]
         public static void Initialize(ChatCommandContext ctx, string name)
         {
             try

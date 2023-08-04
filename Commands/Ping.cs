@@ -5,10 +5,10 @@ using Bloodstone.API;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class Ping
     {
-        [Command("ping", usage: "ping", description: "Shows your latency.")]
+        [Command("ping", shortHand: "ping", adminOnly: false, usage: "ping", description: "Shows your latency.")]
         public static void PingCommand(ChatCommandContext ctx)
         {
             var ping = VWorld.Server.EntityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;

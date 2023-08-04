@@ -7,10 +7,10 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class PowerUp
     {
-        [Command("powerup add", usage: "pu <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", description: "Buff specified player with the specified value.")]
+        [Command("powerup", shortHand: "pu", adminOnly: false, usage: "pu <player_name> <add>|<remove> <max hp> <p.atk> <s.atk> <p.def> <s.def>", description: "Buff specified player with the specified value.")]
         public static void PowerUpAdd(ChatCommandContext ctx, string playerName, string type, int MaxHP = 0, int PATK = 0, int SATK = 0, int PDEF = 0, int SDEF = 0)
         {
 

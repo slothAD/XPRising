@@ -12,10 +12,9 @@ using static VCF.Core.Basics.RoleCommands;
 namespace OpenRPG.Commands
 {
 
-    [CommandGroup("rpg")]
     public static class AutoRespawn
     {
-        [Command("autorespawn", usage: "autorespawn [<PlayerName>]", description: "Toggle auto respawn on the same position on death.", adminOnly: true)]
+        [Command("autorespawn", shortHand: "aresp", adminOnly: false, usage: ".autorespawn [<PlayerName>]", description: "Toggle auto respawn on the same position on death.")]
         public static void AutoRespawnCommand(ChatCommandContext ctx, string playerName)
         {
             var entityManager = VWorld.Server.EntityManager;

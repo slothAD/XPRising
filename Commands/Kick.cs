@@ -4,10 +4,10 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class Kick
     {
-        [Command("kick", usage: "<playername>", description: "Kick the specified player out of the server.")]
+        [Command("kick", shortHand: "kick", adminOnly: false, usage: "<playername>", description: "Kick the specified player out of the server.")]
         public static void KickCommand(ChatCommandContext ctx, string name)
         {
 

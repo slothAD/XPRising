@@ -10,15 +10,38 @@ using Unity.Entities;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class PlayerInfo
     {
 
         private static EntityManager entityManager = VWorld.Server.EntityManager;
 
-        [Command("playerinfo", usage: "<Name>", description: "Display the player information details.")]
-        public static void PlayerInfoCommand(ChatCommandContext ctx, string playerName)
+        [Command("playerinfo", shortHand: "pi", adminOnly: false, usage: "[<PlayerName>]", description: "Display the player information details.")]
+        public static void PlayerInfoCommand(ChatCommandContext ctx, string playerName = null)
         {
+
+            ulong SteamID = ctx.Event.User.PlatformId;
+            string Name = ctx.Event.User.CharacterName.ToString();
+            string CharacterEntity = ctx.Event.SenderCharacterEntity.Index.ToString() + ":" + ctx.Event.SenderCharacterEntity.Version.ToString();
+            string UserEntity = ctx.Event.SenderUserEntity.Index.ToString() + ":" + ctx.Event.SenderUserEntity.Version.ToString();
+            var ping = entityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;
+            var position = entityManager.GetComponentData<Translation>(ctx.Event.SenderCharacterEntity).Value;
+
+            if (playerName == null)
+            {
+                ctx.Reply($"Name: {Utils.Color.White(Name)}");
+                ctx.Reply($"SteamID: {Utils.Color.White(SteamID.ToString())}");
+                ctx.Reply($"Latency: {Utils.Color.White(ping.ToString())}s");
+                ctx.Reply($"-- Position --");
+                ctx.Reply($"X: {Utils.Color.White(Math.Round(position.x, 2).ToString())} " +
+                    $"Y: {Utils.Color.White(Math.Round(position.y, 2).ToString())} " +
+                    $"Z: {Utils.Color.White(Math.Round(position.z, 2).ToString())}");
+                ctx.Reply($"-- Entities --");
+                ctx.Reply($"Char Entity: {Utils.Color.White(CharacterEntity)}");
+                ctx.Reply($"User Entity: {Utils.Color.White(UserEntity)}");
+
+                return;
+            }
 
             if (!Helper.FindPlayer(playerName, false, out var playerEntity, out var userEntity))
             {
@@ -27,12 +50,12 @@ namespace OpenRPG.Commands
 
             var userData = entityManager.GetComponentData<User>(userEntity);
 
-            ulong SteamID = userData.PlatformId;
-            string Name = userData.CharacterName.ToString();
-            string CharacterEntity = playerEntity.Index.ToString() + ":" + playerEntity.Version.ToString();
-            string UserEntity = userEntity.Index.ToString() + ":" + userEntity.Version.ToString();
-            var ping = (int)entityManager.GetComponentData<Latency>(playerEntity).Value;
-            var position = entityManager.GetComponentData<Translation>(playerEntity).Value;
+            SteamID = userData.PlatformId;
+            Name = userData.CharacterName.ToString();
+            CharacterEntity = playerEntity.Index.ToString() + ":" + playerEntity.Version.ToString();
+            UserEntity = userEntity.Index.ToString() + ":" + userEntity.Version.ToString();
+            ping = (int)entityManager.GetComponentData<Latency>(playerEntity).Value;
+            position = entityManager.GetComponentData<Translation>(playerEntity).Value;
 
             Database.PvPStats.TryGetValue(SteamID, out var pvpStats);
             Database.player_experience.TryGetValue(SteamID, out var exp);
@@ -77,26 +100,27 @@ namespace OpenRPG.Commands
                 $"Death: {Utils.Color.White(pvpStats.Deaths.ToString())}");
         }
 
-        [Command("myinfo", usage: "", description: "Display your information details.")]
-        public static void MyInfoCommand(ChatCommandContext ctx)
-        {
-            ulong SteamID = ctx.Event.User.PlatformId;
-            string Name = ctx.Event.User.CharacterName.ToString();
-            string CharacterEntity = ctx.Event.SenderCharacterEntity.Index.ToString() + ":" + ctx.Event.SenderCharacterEntity.Version.ToString();
-            string UserEntity = ctx.Event.SenderUserEntity.Index.ToString() + ":" + ctx.Event.SenderUserEntity.Version.ToString();
-            var ping = entityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;
-            var position = entityManager.GetComponentData<Translation>(ctx.Event.SenderCharacterEntity).Value;
+        /*       [Command("myinfo", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "", description: "Display your information details.")]
+               public static void MyInfoCommand(ChatCommandContext ctx)
+               {
+                   ulong SteamID = ctx.Event.User.PlatformId;
+                   string Name = ctx.Event.User.CharacterName.ToString();
+                   string CharacterEntity = ctx.Event.SenderCharacterEntity.Index.ToString() + ":" + ctx.Event.SenderCharacterEntity.Version.ToString();
+                   string UserEntity = ctx.Event.SenderUserEntity.Index.ToString() + ":" + ctx.Event.SenderUserEntity.Version.ToString();
+                   var ping = entityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;
+                   var position = entityManager.GetComponentData<Translation>(ctx.Event.SenderCharacterEntity).Value;
 
-            ctx.Reply($"Name: {Utils.Color.White(Name)}");
-            ctx.Reply($"SteamID: {Utils.Color.White(SteamID.ToString())}");
-            ctx.Reply($"Latency: {Utils.Color.White(ping.ToString())}s");
-            ctx.Reply($"-- Position --");
-            ctx.Reply($"X: {Utils.Color.White(Math.Round(position.x, 2).ToString())} " +
-                $"Y: {Utils.Color.White(Math.Round(position.y, 2).ToString())} " +
-                $"Z: {Utils.Color.White(Math.Round(position.z, 2).ToString())}");
-            ctx.Reply($"-- Entities --");
-            ctx.Reply($"Char Entity: {Utils.Color.White(CharacterEntity)}");
-            ctx.Reply($"User Entity: {Utils.Color.White(UserEntity)}");
-        }
+                   ctx.Reply($"Name: {Utils.Color.White(Name)}");
+                   ctx.Reply($"SteamID: {Utils.Color.White(SteamID.ToString())}");
+                   ctx.Reply($"Latency: {Utils.Color.White(ping.ToString())}s");
+                   ctx.Reply($"-- Position --");
+                   ctx.Reply($"X: {Utils.Color.White(Math.Round(position.x, 2).ToString())} " +
+                       $"Y: {Utils.Color.White(Math.Round(position.y, 2).ToString())} " +
+                       $"Z: {Utils.Color.White(Math.Round(position.z, 2).ToString())}");
+                   ctx.Reply($"-- Entities --");
+                   ctx.Reply($"Char Entity: {Utils.Color.White(CharacterEntity)}");
+                   ctx.Reply($"User Entity: {Utils.Color.White(UserEntity)}");
+               }
+        */
     }
 }

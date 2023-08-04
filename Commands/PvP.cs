@@ -8,10 +8,10 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class PvP
     {
-        [Command("pvp", usage: "[<on>|<off>|<top> <PlayerName]", description: "Display your PvP statistics or toggle PvP/Castle Siege state")]
+        [Command("pvp", shortHand: "pvp", adminOnly: false, usage: "[<on>|<off>|<top> <PlayerName>]", description: "Display your PvP statistics or toggle PvP/Castle Siege state")]
         public static void PvPCommand(ChatCommandContext ctx, string type = null, string playerName = null)
         {
             var user = ctx.Event.User;
@@ -193,7 +193,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("pvp req", usage: "<ammount> <PlayerName", description: "Display your PvP statistics or toggle PvP/Castle Siege state", adminOnly: true)]
+        [Command("pvp req", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "<ammount> <PlayerName", description: "Display your PvP statistics or toggle PvP/Castle Siege state", adminOnly: true)]
         public static void PvPReqCommand(ChatCommandContext ctx, int amount, string name)
         {
             var user = ctx.Event.User;

@@ -8,10 +8,10 @@ using VampireCommandFramework;
 namespace OpenRPG.Commands
 {
 
-    [CommandGroup("rpg")]
+    
     public static class GodMode
     {
-        [Command("godmode", usage: "", description: "Toggles god mode.")]
+        [Command("godmode", shortHand: "gm", adminOnly: false, usage: "", description: "Toggles god mode.")]
         public static void Initialize(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;

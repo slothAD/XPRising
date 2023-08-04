@@ -8,12 +8,12 @@ using VampireCommandFramework;
 namespace OpenRPG.Commands
 {
 
-    [CommandGroup("rpg")]
+    
     public static class Mastery
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
-        [Command("mastery", usage:"mastery [<log> <on>|<off>]", description: "Display your current mastery progression, or toggle the gain notification.")]
+        [Command("mastery", shortHand: "m", adminOnly: false, usage:"", description: "Display your current mastery progression.")]
         public static void MasteryCommand(ChatCommandContext ctx)
         {
             if (!WeaponMasterSystem.isMasteryEnabled)
@@ -42,7 +42,7 @@ namespace OpenRPG.Commands
             
         }
 
-        [Command("mastery log", usage: "<True|False>", description: "Display your current mastery progression, or toggle the gain notification.")]
+        [Command("mastery log", shortHand: "m l", adminOnly: false, usage: "<True|False>", description: "Toggle the mastery gain notification.")]
         public static void MasteryLogCommand(ChatCommandContext ctx, bool log)
         {
             if (!WeaponMasterSystem.isMasteryEnabled)
@@ -64,7 +64,7 @@ namespace OpenRPG.Commands
                 
         }
 
-        [Command("mastery set", usage: " <type> <value> [<PlayerName>]", description: "Display your current mastery progression, or toggle the gain notification.")]
+        [Command("mastery set", shortHand: "m s", adminOnly: false, usage: " <type> <value> [<PlayerName>]", description: "Display your current mastery progression, or toggle the gain notification.")]
         public static void MasterySetCommand(ChatCommandContext ctx, string type, int value, string playerName = null)
         {
             if (!WeaponMasterSystem.isMasteryEnabled)

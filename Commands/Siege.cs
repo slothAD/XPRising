@@ -7,13 +7,13 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup("rpg")]
+    
     public static class Siege
     {
         
         private static Dictionary<ulong, DateTime> SiegeConfirm = new();
 
-        [Command("siege", usage: "[<on>|<off>]", description: "Display all players currently in siege mode, or engage siege mode.")]
+        [Command("siege", shortHand: "siege", adminOnly: false, usage: "[<on>|<off>]", description: "Display all players currently in siege mode, or engage siege mode.")]
         public static void Initialize(ChatCommandContext ctx, string value = null)
         {
             if (PvPSystem.isHonorSystemEnabled == false || PvPSystem.isHonorBenefitEnabled == false)
