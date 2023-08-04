@@ -4,9 +4,9 @@ Since the release of Gloomrot by Stunlock Studios for V Rising, the original RPG
 
 # OpenRPG Requires
 
-- [BepInExPack V Rising](https://v-rising.thunderstore.io/package/BepInEx/BepInExPack_V_Rising/) (Client and Server)
-- [BloodStone](https://v-rising.thunderstore.io/package/deca/Bloodstone/) (Client and Server)
-- [VampireCommandFramework](https://v-rising.thunderstore.io/package/deca/VampireCommandFramework/) (Only on the server)
+- [BepInExPack V Rising](https://v-rising.thunderstore.io/package/BepInEx/BepInExPack_V_Rising/) (Server)
+- [BloodStone](https://v-rising.thunderstore.io/package/deca/Bloodstone/) (Server)
+- [VampireCommandFramework](https://v-rising.thunderstore.io/package/deca/VampireCommandFramework/) (Server)
 
 # Credits
 
