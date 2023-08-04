@@ -14,6 +14,7 @@ using Unity.Entities;
 using UnityEngine;
 using Bloodstone.API;
 using VRising.GameData;
+using Lidgren.Network;
 
 namespace OpenRPG
 {
@@ -37,6 +38,8 @@ namespace OpenRPG
         public static readonly string GlobalWaypointsJson = Path.Combine(SavesPath, "global_waypoints.json");
         public static readonly string TotalWaypointsJson = Path.Combine(SavesPath, "total_waypoints.json");
         public static readonly string KitsRootJson = Path.Combine(ConfigPath, "kits.json");
+
+        public static bool initServer = false;
 
         private static ConfigEntry<string> Prefix;
         private static ConfigEntry<string> DisabledCommands;
@@ -262,6 +265,7 @@ namespace OpenRPG
 
         private static void GameDataOnInitialize(World world)
         {
+            initServer = true;
             TaskRunner.Initialize();
             Initialize();
         }
