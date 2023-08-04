@@ -174,18 +174,19 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         foreach(var entity in entities)
         {
             PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-            if (GUID.Equals(Database.Buff.Buff_VBlood_Perk_Moose))
+            if (GUID.GuidHash.Equals(Database.Buff.Buff_VBlood_Perk_Moose.GuidHash))
             {
                 Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                 if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;
-
                 PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
                 Entity User = playerCharacter.UserEntity;
                 User Data = entityManager.GetComponentData<User>(User);
 
                 var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
 
+
                 Buffer.Clear();
+
 
                 if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData))
                 {
@@ -231,11 +232,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                 }
 
                 if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-
-                if (Database.nocooldownlist.ContainsKey(Data.PlatformId))
-                {
-                    Buffer.Add(Cooldown);
-                }
 
                 if (Database.sunimmunity.ContainsKey(Data.PlatformId))
                 {

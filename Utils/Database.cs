@@ -396,7 +396,7 @@ namespace OpenRPG.Utils
             public static PrefabGUID Severe_GarlicDebuff = new PrefabGUID(1582196539);          //-- Using this for PvP Punishment debuff
             public static PrefabGUID General_GarlicDebuff = new PrefabGUID(-1701323826);
 
-            public static PrefabGUID Buff_VBlood_Perk_Moose = new PrefabGUID(-1464851863);      //-- Using this for commands & mastery buff
+            public static PrefabGUID Buff_VBlood_Perk_Moose = new PrefabGUID(1444835872);      //-- Using this for commands & mastery buff
             public static PrefabGUID PerkMoose = new PrefabGUID(-1464851863);
 
             public static PrefabGUID SiegeGolem_T01 = new PrefabGUID(-148535031);

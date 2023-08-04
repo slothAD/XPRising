@@ -20,6 +20,7 @@ namespace OpenRPG.Commands
             string s = isGodMode ? "Activated" : "Deactivated";
             ctx.Reply($"God mode <color=#ffff00>{s}</color>");
             Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Database.Buff.Buff_VBlood_Perk_Moose);
+            
         }
 
         public static bool UpdateGodMode(ChatCommandContext ctx, bool isGodMode)
