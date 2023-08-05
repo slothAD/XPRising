@@ -15,7 +15,7 @@ namespace OpenRPG.Commands
     {
         private static List<ItemKit> kits;
 
-        [Command("kit", shortHand: "kit", adminOnly: false, usage: "<Name>", description: "Gives you a previously specified set of items.")]
+        [Command(name: "kit", adminOnly: false, usage: "<Name>", description: "Gives you a previously specified set of items.")]
         public static void Initialize(ChatCommandContext ctx, string name)
         {
             try

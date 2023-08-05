@@ -16,7 +16,7 @@ namespace OpenRPG.Commands
 
         private static EntityManager entityManager = VWorld.Server.EntityManager;
 
-        [Command("playerinfo", shortHand: "pi", adminOnly: false, usage: "[<PlayerName>]", description: "Display the player information details.")]
+        [Command(name: "playerinfo", shortHand: "pi", adminOnly: false, usage: "[<PlayerName>]", description: "Display the player information details.")]
         public static void PlayerInfoCommand(ChatCommandContext ctx, string playerName = null)
         {
 
@@ -100,7 +100,7 @@ namespace OpenRPG.Commands
                 $"Death: {Utils.Color.White(pvpStats.Deaths.ToString())}");
         }
 
-        /*       [Command("myinfo", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "", description: "Display your information details.")]
+        /*       [Command(name: "myinfo", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "", description: "Display your information details.")]
                public static void MyInfoCommand(ChatCommandContext ctx)
                {
                    ulong SteamID = ctx.Event.User.PlatformId;

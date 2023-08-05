@@ -9,12 +9,12 @@ using Bloodstone.API;
 namespace OpenRPG.Commands
 {
 
-    
+    [CommandGroup(name: "experience", shortHand: "xp")]
     public static class Experience
     {
         private static EntityManager entityManager = VWorld.Server.EntityManager;
 
-        [Command("experience log", shortHand: "xp l", adminOnly: false, usage: "<True|False>", description:"Toggle the exp gain notification.")]
+        [Command(name: "log", shortHand: "l", adminOnly: false, usage: "<True|False>", description:"Toggle the exp gain notification.")]
         public static void ExperienceLogCommand(ChatCommandContext ctx, bool log)
         {
             var user = ctx.Event.User;
@@ -37,7 +37,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("experience set", shortHand: "xp s", adminOnly: false, usage: "<PlayerName> <Value>", description: "Sets the specified players current xp to a specific value")]
+        [Command(name: "set", shortHand: "s", adminOnly: false, usage: "<PlayerName> <Value>", description: "Sets the specified players current xp to a specific value")]
         public static void ExperienceSetCommand(ChatCommandContext ctx, string playerName, int value)
         {
             var user = ctx.Event.User;
@@ -69,7 +69,7 @@ namespace OpenRPG.Commands
             
         }
 
-        [Command("experience", shortHand: "xp", adminOnly: false, usage: "", description: "Shows your currect experience and progression to next level")]
+        [Command(name: "info", shortHand: "i", adminOnly: false, usage: "", description: "Shows your currect experience and progression to next level")]
         public static void ExperienceCommand(ChatCommandContext ctx)
         {
             var user = ctx.Event.User;

@@ -9,7 +9,7 @@ namespace OpenRPG.Commands
     public static class WorldDynamics
     {
 
-        [Command("worlddynamics", shortHand: "wd", adminOnly: false, usage: "<faction>", description: "List all faction stats")]
+        [Command(name: "worlddynamics", shortHand: "wd", adminOnly: false, usage: "<faction>", description: "List all faction stats")]
         public static void WorldDynamicsCommand(ChatCommandContext ctx, string faction = "all")
         {
             if (WorldDynamicsSystem.isFactionDynamic == false)
@@ -37,7 +37,7 @@ namespace OpenRPG.Commands
 
         }
 
-        [Command("worlddynamics ignore", shortHand: "wd ignore", adminOnly: false, usage: "<npc prefab name>", description: "Ignores a specified mob for buffing.")]
+        [Command(name: "worlddynamics ignore", shortHand: "wd ignore", adminOnly: false, usage: "<npc prefab name>", description: "Ignores a specified mob for buffing.")]
         public static void WorldDynamicsIgnoreCommand(ChatCommandContext ctx, string mobName)
         {
             if (Database.database_units.TryGetValue(mobName, out var mobGUID))
@@ -52,7 +52,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("worlddynamics unignore", shortHand: "wd unignore", adminOnly: false, usage: "<npc prefab name>", description: "Removes a mob from the world dynamics ignore list.")]
+        [Command(name: "worlddynamics unignore", shortHand: "wd unignore", adminOnly: false, usage: "<npc prefab name>", description: "Removes a mob from the world dynamics ignore list.")]
         public static void WorldDynamicsUnIgnoreCommand(ChatCommandContext ctx, string mobName)
         {
             if (Database.database_units.TryGetValue(mobName, out var mobGUID))
@@ -67,7 +67,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("worlddynamics save", shortHand: "wd save", adminOnly: false, usage: "", description: "Save to the json file.")]
+        [Command(name: "worlddynamics save", shortHand: "wd save", adminOnly: false, usage: "", description: "Save to the json file.")]
         public static void WorldDynamicsSaveCommand(ChatCommandContext ctx)
         {
             WorldDynamicsSystem.SaveFactionStats();
@@ -75,7 +75,7 @@ namespace OpenRPG.Commands
             ctx.Reply($"Factions data & ignored mobs saved.");
         }
 
-        [Command("worlddynamics load", shortHand: "wd load", adminOnly: false, usage: "", description: "Load from the json file.")]
+        [Command(name: "worlddynamics load", shortHand: "wd load", adminOnly: false, usage: "", description: "Load from the json file.")]
         public static void WorldDynamicsLoadCommand(ChatCommandContext ctx)
         {
             WorldDynamicsSystem.LoadFactionStats();

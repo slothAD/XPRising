@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Unity.Entities;
+using static VCF.Core.Basics.RoleCommands;
+using Bloodstone.API;
 
 namespace OpenRPG.Utils
 {
@@ -49,34 +51,8 @@ namespace OpenRPG.Utils
 
         public static void SendLore(Entity userEntity, string message)
         {
-            EntityManager em = Plugin.Server.EntityManager;
-            int index = em.GetComponentData<User>(userEntity).Index;
-            NetworkId id = em.GetComponentData<NetworkId>(userEntity);
-
-            var entity = em.CreateEntity(
-                ComponentType.ReadOnly<NetworkEventType>(),
-                ComponentType.ReadOnly<SendEventToUser>(),
-                ComponentType.ReadOnly<ChatMessageServerEvent>()
-            );
-
-            var ev = new ChatMessageServerEvent();
-            ev.MessageText = message;
-            ev.MessageType = ServerChatMessageType.Lore;
-            ev.FromUser = id;
-            ev.TimeUTC = DateTime.Now.ToFileTimeUtc();
-
-            em.SetComponentData<SendEventToUser>(entity, new()
-            {
-                UserIndex = index
-            });
-            em.SetComponentData<NetworkEventType>(entity, new()
-            {
-                EventId = NetworkEvents.EventId_ChatMessageServerEvent,
-                IsAdminEvent = false,
-                IsDebugEvent = false
-            });
-
-            em.SetComponentData(entity, ev);
+            ProjectM.Network.User user = VWorld.Server.EntityManager.GetComponentData<ProjectM.Network.User>(userEntity);
+            ServerChatUtils.SendSystemMessageToClient(VWorld.Server.EntityManager, user, message);
         }
     }
 }

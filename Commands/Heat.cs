@@ -8,12 +8,12 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    
+    [CommandGroup("heat")]
     public static class Heat
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
-        [Command("heat", shortHand: "heat", adminOnly: false, usage: "", description: "Shows your current wanted level.")]
+        [Command(name: "info", shortHand: "i", adminOnly: false, usage: "", description: "Shows your current wanted level.")]
         public static void HeatCommand(ChatCommandContext ctx)
         {
             var user = ctx.Event.User;
@@ -47,7 +47,7 @@ namespace OpenRPG.Commands
 
         }
 
-        [Command("heat set", shortHand: "heat set", adminOnly: false, usage: "<ValueHeatHumans> <ValueHeatBandits> <PlayerName>", description: "Sets a player's wanted level")]
+        [Command(name: "set", shortHand: "s", adminOnly: false, usage: "<ValueHeatHumans> <ValueHeatBandits> <PlayerName>", description: "Sets a player's wanted level")]
         public static void HeatSetCommand(ChatCommandContext ctx,int valueHuman, int valueBandit, string playerName)
         {
             var user = ctx.Event.User;

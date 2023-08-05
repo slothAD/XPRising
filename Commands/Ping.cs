@@ -8,7 +8,7 @@ namespace OpenRPG.Commands
     
     public static class Ping
     {
-        [Command("ping", shortHand: "ping", adminOnly: false, usage: "ping", description: "Shows your latency.")]
+        [Command(name: "ping", adminOnly: false, usage: "ping", description: "Shows your latency.")]
         public static void PingCommand(ChatCommandContext ctx)
         {
             var ping = VWorld.Server.EntityManager.GetComponentData<Latency>(ctx.Event.SenderCharacterEntity).Value;

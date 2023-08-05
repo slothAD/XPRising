@@ -11,7 +11,7 @@ namespace OpenRPG.Commands
     
     public static class PvP
     {
-        [Command("pvp", shortHand: "pvp", adminOnly: false, usage: "[<on>|<off>|<top> <PlayerName>]", description: "Display your PvP statistics or toggle PvP/Castle Siege state")]
+        [Command(name: "pvp", adminOnly: false, usage: "[<on>|<off>|<top> <PlayerName>]", description: "Display your PvP statistics or toggle PvP/Castle Siege state")]
         public static void PvPCommand(ChatCommandContext ctx, string type = null, string playerName = null)
         {
             var user = ctx.Event.User;
@@ -193,7 +193,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("pvp req", shortHand: "pvp req", adminOnly: false, usage: "<ammount> <PlayerName", description: "Change stats for a player")]
+        [Command(name: "pvp req", adminOnly: false, usage: "<ammount> <PlayerName", description: "Change stats for a player")]
         public static void PvPReqCommand(ChatCommandContext ctx, int amount, string name)
         {
             var user = ctx.Event.User;

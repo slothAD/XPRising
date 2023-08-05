@@ -9,7 +9,7 @@ namespace OpenRPG.Commands
     
     public static class Save
     {
-        [Command("save", shortHand: "sv", adminOnly: false, usage: "[\"<name>\"]", description: "Force the server to save the game as well as write OpenRPG DB to a json file.")]
+        [Command(name: "save", shortHand: "sv", adminOnly: false, usage: "[\"<name>\"]", description: "Force the server to save the game as well as write OpenRPG DB to a json file.")]
         public static void SaveCommand(ChatCommandContext ctx, string name = "Manual Save")
         {
 

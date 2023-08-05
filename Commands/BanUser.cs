@@ -9,11 +9,11 @@ using ProjectM;
 namespace OpenRPG.Commands
 {
 
-    
+    [CommandGroup(name: "ban")]
     public static class BanUser
     {
 
-        [Command("ban info", shortHand: "ban info", adminOnly: false, usage: "<playername>", description: "Check the status of specified player")]
+        [Command(name: "info", shortHand: "i", adminOnly: false, usage: "<playername>", description: "Check the status of specified player")]
         public static void InfoBan(ChatCommandContext ctx, string playername)
         {
             if (Helper.FindPlayer(playername, false, out _, out var targetUserEntity_))
@@ -38,7 +38,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("ban", shortHand: "ban", adminOnly: false, usage: "<playername> <days> \"<reason>\"", description: "Ban a player, 0 days is permanent.")]
+        [Command(name: "player", shortHand: "p", adminOnly: false, usage: "<playername> <days> \"<reason>\"", description: "Ban a player, 0 days is permanent.")]
         public static void Ban(ChatCommandContext ctx, string playername, int days, string reason)
         {
 
@@ -71,7 +71,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("unban", shortHand: "uban", adminOnly: false, usage: "<playername>", description: "Unban the specified player.")]
+        [Command(name: "unban", shortHand: "u", adminOnly: false, usage: "<playername>", description: "Unban the specified player.")]
         public static void Unban(ChatCommandContext ctx, string playername)
         {
 

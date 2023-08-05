@@ -18,7 +18,7 @@ namespace OpenRPG.Commands
         public static int WaypointLimit = 3;
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
-        [Command("waypoint", shortHand: "wp", adminOnly: false, usage: "<Name>", description: "Teleports you to the specific waypoint.")]
+        [Command(name: "waypoint", shortHand: "wp", adminOnly: false, usage: "<Name>", description: "Teleports you to the specific waypoint.")]
         public static void WaypoinCommand(ChatCommandContext ctx, string name)
         {
             var PlayerEntity = ctx.Event.SenderCharacterEntity;
@@ -42,7 +42,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command("waypoint set", shortHand: "wp s", adminOnly: false, usage: "<Name>", description: "Creates the specified personal waypoint")]
+        [Command(name: "waypoint set", shortHand: "wp s", adminOnly: false, usage: "<Name>", description: "Creates the specified personal waypoint")]
         public static void WaypointSetCommand(ChatCommandContext ctx, string name)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -66,7 +66,7 @@ namespace OpenRPG.Commands
             ctx.Reply("Successfully added Waypoint.");
         }
 
-        [Command("waypoint set global", shortHand: "wp sg", adminOnly: false, usage: "<Name>", description: "Creates the specified global waypoint")]
+        [Command(name: "waypoint set global", shortHand: "wp sg", adminOnly: false, usage: "<Name>", description: "Creates the specified global waypoint")]
         public static void WaypointSetGlobalCommand(ChatCommandContext ctx, string name)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -88,7 +88,7 @@ namespace OpenRPG.Commands
             ctx.Reply("Successfully added Waypoint.");
         }
 
-        [Command("waypoint remove global", shortHand: "wp rg", adminOnly: false, usage: "<Name>", description: "Removes the specified global waypoint")]
+        [Command(name: "waypoint remove global", shortHand: "wp rg", adminOnly: false, usage: "<Name>", description: "Removes the specified global waypoint")]
         public static void WaypointremoveGlobalCommand(ChatCommandContext ctx, string name)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -99,7 +99,7 @@ namespace OpenRPG.Commands
             ctx.Reply("Successfully removed Waypoint.");
         }
 
-        [Command("waypoint remove", shortHand: "wp r", adminOnly: false, usage: "<Name>", description: "Removes the specified personal waypoint")]
+        [Command(name: "waypoint remove", shortHand: "wp r", adminOnly: false, usage: "<Name>", description: "Removes the specified personal waypoint")]
         public static void WaypointRemoveCommand(ChatCommandContext ctx, string name)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -111,7 +111,7 @@ namespace OpenRPG.Commands
             ctx.Reply("Successfully removed Waypoint.");
         }
 
-        [Command("waypoint list", shortHand: "wp l", adminOnly: false, usage: "",  description: "Lists waypoints available to you")]
+        [Command(name: "waypoint list", shortHand: "wp l", adminOnly: false, usage: "",  description: "Lists waypoints available to you")]
         public static void WaypointCommand(ChatCommandContext ctx)
         {
             int total_wp = 0;

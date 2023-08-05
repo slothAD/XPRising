@@ -10,7 +10,7 @@ namespace OpenRPG.Commands
     
     public static class Speed
     {
-        [Command("speed", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "", description: "Toggles increased movement speed.")]
+        [Command(name: "speed", shortHand: "aaaaaaaaaa", adminOnly: false, usage: "", description: "Toggles increased movement speed.")]
         public static void SpeedCommand(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;

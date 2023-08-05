@@ -14,7 +14,7 @@ namespace OpenRPG.Commands
 
     public static class AutoRespawn
     {
-        [Command("autorespawn", shortHand: "aresp", adminOnly: false, usage: ".autorespawn [<PlayerName>]", description: "Toggle auto respawn on the same position on death.")]
+        [Command(name: "autorespawn", shortHand: "aresp", adminOnly: false, usage: ".autorespawn [<PlayerName>]", description: "Toggle auto respawn on the same position on death.")]
         public static void AutoRespawnCommand(ChatCommandContext ctx, string playerName)
         {
             var entityManager = VWorld.Server.EntityManager;

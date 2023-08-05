@@ -9,7 +9,7 @@ namespace OpenRPG.Commands
     
     public static class Punish
     {
-        [Command("punish", shortHand: "punish", adminOnly: false, usage: "punish <PlayerName> [<remove(True/False>]", description: "Manually punish someone or lift their debuff.")]
+        [Command(name: "punish", adminOnly: false, usage: "punish <PlayerName> [<remove(True/False>]", description: "Manually punish someone or lift their debuff.")]
         public static void PunishCommand(ChatCommandContext ctx, string playerName , bool value = false)
         {
 

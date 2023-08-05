@@ -10,7 +10,7 @@ namespace OpenRPG.Commands
     
     public static class Health
     {
-        [Command("health", shortHand: "h", adminOnly: false, usage: "<percentage> [<PlayerName>]", description: "Sets your current Health or a specific player.")]
+        [Command(name: "health", shortHand: "h", adminOnly: false, usage: "<percentage> [<PlayerName>]", description: "Sets your current Health or a specific player.")]
         public static void HealthCommmand(ChatCommandContext ctx, int percentage, string playerName = null)
         {
             var PlayerName = ctx.Event.User.CharacterName;

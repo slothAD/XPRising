@@ -9,7 +9,7 @@ namespace OpenRPG.Commands
 {
     public static class GodMode
     {
-        [Command("godmode", shortHand: "gm", adminOnly: false, usage: "", description: "Toggles god mode.")]
+        [Command(name: "godmode", shortHand: "gm", adminOnly: false, usage: "", description: "Toggles god mode.")]
         public static void Initialize(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;

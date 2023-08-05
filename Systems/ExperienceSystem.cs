@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using UnityEngine;
 using Cache = OpenRPG.Utils.Cache;
+using Bloodstone.API;
 
 namespace OpenRPG.Systems
 {
@@ -121,7 +122,7 @@ namespace OpenRPG.Systems
             {
                 if (isLogging)
                 {
-                    Output.SendLore(userEntity, $"<color=#ffdd00>You gain {EXPGained} experience points by slaying a Lv.{UnitLevel.Level} enemy.</color>");
+                    ServerChatUtils.SendSystemMessageToClient(entityManager, user, $"<color=#ffdd00>You gain {EXPGained} experience points by slaying a Lv.{UnitLevel.Level} enemy.</color>");
                 }
             }
         }
