@@ -4,7 +4,7 @@
 	<TargetFramework>net6.0</TargetFramework>
     <AssemblyName>OpenRPG</AssemblyName>
     <Description>OpenRPG Mod</Description>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -26,6 +26,19 @@
 			<HintPath>VRising.GameData.dll</HintPath>
 			<Private>true</Private>
 		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
 	</ItemGroup>
 	<Target Name="CopyDLLsServer" AfterTargets="Build">
 		<Message Text="DLL to V Rising Server" Importance="High" />

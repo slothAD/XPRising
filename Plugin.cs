@@ -15,6 +15,9 @@ using UnityEngine;
 using Bloodstone.API;
 using VRising.GameData;
 using Lidgren.Network;
+using Unity.Collections;
+using OpenRPG.Configuration;
+using OpenRPG.Components.RandomEncounters;
 
 namespace OpenRPG
 {
@@ -24,6 +27,8 @@ namespace OpenRPG
     public class Plugin : BasePlugin
     {
         public static Harmony harmony;
+
+        internal static Plugin Instance { get; private set; }
 
         public static readonly string ConfigPath = Path.Combine(Paths.ConfigPath, "OpenRPG");
         public static readonly string SavesPath = Path.Combine(Plugin.ConfigPath, "Saves");
@@ -256,6 +261,8 @@ namespace OpenRPG
             CommandRegistry.RegisterAll();
             GameData.OnInitialize += GameDataOnInitialize;
             GameData.OnDestroy += GameDataOnDestroy;
+            Instance = this;
+            RandomEncounters.Load();
             Logger = Log;
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -266,6 +273,12 @@ namespace OpenRPG
         private static void GameDataOnInitialize(World world)
         {
             initServer = true;
+            RandomEncounters.GameData_OnInitialize();
+            RandomEncounters._encounterTimer = new Timer();
+            if (RandomEncountersConfig.Enabled.Value)
+            {
+                RandomEncounters.StartEncounterTimer();
+            }
             TaskRunner.Initialize();
             Initialize();
         }
@@ -282,7 +295,7 @@ namespace OpenRPG
             harmony.UnpatchSelf();
 
             TaskRunner.Destroy();
-
+            RandomEncounters.Unload();
             return true;
         }
 
@@ -379,6 +392,8 @@ namespace OpenRPG
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
 
             isInitialized = true;
+
+            
         }
     }
 }

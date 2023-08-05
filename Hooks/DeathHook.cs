@@ -6,6 +6,7 @@ using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Unity.Collections;
 using Unity.Entities;
+using OpenRPG.Configuration;
 
 namespace OpenRPG.Hooks;
 [HarmonyPatch]
@@ -65,6 +66,11 @@ public class DeathEventListenerSystem_Patch
                 }
                 //-- ---------------------
             }
+            //-- ----------------------------------------
+
+            //-- Random Encounters
+            if (deathEvents.Length > 0 && RandomEncountersConfig.Enabled.Value && Plugin.initServer)
+                RandomEncountersSystem.ServerEvents_OnDeath(__instance, deathEvents);
             //-- ----------------------------------------
         }
     }
