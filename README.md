@@ -9,6 +9,7 @@
 - [BepInExPack V Rising](https://v-rising.thunderstore.io/package/BepInEx/BepInExPack_V_Rising/) (Server)
 - [BloodStone](https://v-rising.thunderstore.io/package/deca/Bloodstone/) (Server)
 - [VampireCommandFramework](https://v-rising.thunderstore.io/package/deca/VampireCommandFramework/) (Server)
+- [OpenRPGAPI](?????) (Server)
 
 # Credits
 
@@ -40,7 +41,7 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 
 # Patch notes / Changelog
 
-- 2.0.5  New commands for spells, achievements, research, etc.
+- 2.0.5  New commands for unlock spells, achievements, research, etc.
 
 - 2.0.4  Random Encounters implementation
 
