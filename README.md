@@ -38,3 +38,12 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 
 # Patch notes / Changelog
 
+- 2.0.4  Random Encounters implementation
+
+- 2.0.3  Several fixes
+
+- 2.0.2  Several fixes
+
+- 2.0.1  Several fixes
+
+- 2.0.0  Updated for Gloomrot
