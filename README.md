@@ -12,7 +12,9 @@
 
 # Credits
 
-This mod was originally developed by [Kaltharos](https://github.com/Kaltharos).
+The RPG mod was originally developed by [Kaltharos](https://github.com/Kaltharos).
+
+The Random Encounters mod was originally developed by [adainrivers](https://github.com/adainrivers/randomencounters).
 
 Updated by [Trodi](https://github.com/oscarpedrero).
 
@@ -37,6 +39,8 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 > There is a good chance that in the future the OpenRPG mod will get a UI to have a clean and easy to use mod!
 
 # Patch notes / Changelog
+
+- 2.0.5  Added group of commands for VBlood Skills, Passives and Shapeshifters
 
 - 2.0.4  Random Encounters implementation
 
