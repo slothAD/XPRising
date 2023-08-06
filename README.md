@@ -40,7 +40,7 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 
 # Patch notes / Changelog
 
-- 2.0.5  Added group of commands for VBlood Skills, Passives and Shapeshifters
+- 2.0.5  New commands for spells, achievements, research, etc.
 
 - 2.0.4  Random Encounters implementation
 
