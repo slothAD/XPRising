@@ -24,7 +24,7 @@ Updated by [Trodi](https://github.com/oscarpedrero).
 **A special thanks to the testers and supporters of the project:**
 
 - @Vex [Vexor Gaming](https://discord.gg/rxaTBzjuMc) as a tester and great supporter, who provided his server as a test platform!
-- @SynovA [Iron Fist RPG](https://discord.gg/iron-fist-rpg) as a tester and great supporter, who provided his server as a test platform!
+- @SynovA [SynovA Dynamics](https://discord.gg/UcQmfmQkW6) as a tester and great supporter, who provided his server as a test platform!
 - @iska as a tester and great supporter!
 - @JosiUwU as a supporter for manuals.
 
