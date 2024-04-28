@@ -5,7 +5,7 @@ using VampireCommandFramework;
 namespace RPGMods.Commands{
     public static class Kick{
         [Command("kick", "kick <playername>", "Kick the specified player out of the server.", adminOnly: true)]
-        public static void Initialize(ICommandContext ctx, string name){
+        public static void KickPlayer(ICommandContext ctx, string name){
 
 
             if (Helper.FindPlayer(name, true, out _, out var targetUserEntity)){

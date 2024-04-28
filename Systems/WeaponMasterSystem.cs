@@ -62,7 +62,7 @@ namespace RPGMods.Systems
         public static int[] SpellStats = { 7 };
         public static double[] SpellRates = { 100 };
 
-        public static int[] RapierStats = { 29, 0x20 };
+        public static int[] RapierStats = { 29, 30 };
         public static double[] RapierRates = { 0.00125, 0.00125 };
 
         public static int[] PistolStats = { 29, 30 };

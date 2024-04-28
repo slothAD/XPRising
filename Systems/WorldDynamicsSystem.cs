@@ -4,7 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Text.Json;
 using Unity.Entities;
 
@@ -94,8 +94,7 @@ namespace RPGMods.Systems
         {
             if (!em.HasComponent<UnitLevel>(entity) && !em.HasComponent<UnitStats>(entity)) return;
 
-            var mobGUID = em.GetComponentData<PrefabGUID>(entity);
-            if (Database.IgnoredMonstersGUID.Contains(mobGUID)) return;
+            if (Database.IgnoredMonstersGUID.Contains(em.GetComponentData<PrefabGUID>(entity))) return;
 
             var factionID = em.GetComponentData<FactionReference>(entity).FactionGuid._Value.GetHashCode();
             if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
@@ -103,10 +102,8 @@ namespace RPGMods.Systems
 
             if (factionStats.Active == false) return;
 
-            if (factionStats.Level == 0) return;
-
-            if (factionStats.Level > factionStats.MaxLevel) factionStats.Level = factionStats.MaxLevel;
-            else if (factionStats.Level < factionStats.MinLevel) factionStats.Level = factionStats.MinLevel;
+            factionStats.Level = Math.Clamp(factionStats.Level, factionStats.MinLevel, factionStats.MaxLevel);
+            if (factionStats.Level <= 0) return;
 
             //-- Unit Buffers for stats modification
             var floatBuffer = em.GetBuffer<FloatModificationBuffer>(entity);
@@ -120,44 +117,44 @@ namespace RPGMods.Systems
 
             //-- Calculate Modifications
             int Level = (int) Math.Ceiling((float)factionStats.FactionBonus.Level_Int * factionStats.Level);
-            float HP = (float) Math.Ceiling((float)factionStats.FactionBonus.HP_Float * factionStats.Level);
-            float PhysicalPower = (float)Math.Ceiling((float)factionStats.FactionBonus.PhysicalPower_Float * factionStats.Level);
-            float PhysicalResistance = (float)Math.Ceiling((float)factionStats.FactionBonus.PhysicalResistance_Float * factionStats.Level);
-            float PhysicalCriticalStrikeChance = (float)Math.Ceiling((float)factionStats.FactionBonus.PhysicalCriticalStrikeChance_Float * factionStats.Level);
-            float PhysicalCriticalStrikeDamage = (float)Math.Ceiling((float)factionStats.FactionBonus.PhysicalCriticalStrikeDamage_Float * factionStats.Level);
-            float SpellPower = (float)Math.Ceiling((float)factionStats.FactionBonus.SpellPower_Float * factionStats.Level);
-            float SpellResistance = (float)Math.Ceiling((float)factionStats.FactionBonus.SpellResistance_Float * factionStats.Level);
-            float SpellCriticalStrikeChance = (float)Math.Ceiling((float)factionStats.FactionBonus.SpellCriticalStrikeChance_Float * factionStats.Level);
-            float SpellCriticalStrikeDamage = (float)Math.Ceiling((float)factionStats.FactionBonus.SpellCriticalStrikeDamage_Float * factionStats.Level);
-            float DamageVsPlayerVampires = (float)Math.Ceiling((float)factionStats.FactionBonus.DamageVsPlayerVampires_Float * factionStats.Level);
-            float ResistVsPlayerVampires = (float)Math.Ceiling((float)factionStats.FactionBonus.ResistVsPlayerVampires_Float * factionStats.Level);
+            float HP = (float) Math.Ceiling(factionStats.FactionBonus.HP_Float * factionStats.Level);
+            float PhysicalPower = (float)Math.Ceiling(factionStats.FactionBonus.PhysicalPower_Float * factionStats.Level);
+            float PhysicalResistance = (float)Math.Ceiling(factionStats.FactionBonus.PhysicalResistance_Float * factionStats.Level);
+            float PhysicalCriticalStrikeChance = (float)Math.Ceiling(factionStats.FactionBonus.PhysicalCriticalStrikeChance_Float * factionStats.Level);
+            float PhysicalCriticalStrikeDamage = (float)Math.Ceiling(factionStats.FactionBonus.PhysicalCriticalStrikeDamage_Float * factionStats.Level);
+            float SpellPower = (float)Math.Ceiling(factionStats.FactionBonus.SpellPower_Float * factionStats.Level);
+            float SpellResistance = (float)Math.Ceiling(factionStats.FactionBonus.SpellResistance_Float * factionStats.Level);
+            float SpellCriticalStrikeChance = (float)Math.Ceiling(factionStats.FactionBonus.SpellCriticalStrikeChance_Float * factionStats.Level);
+            float SpellCriticalStrikeDamage = (float)Math.Ceiling(factionStats.FactionBonus.SpellCriticalStrikeDamage_Float * factionStats.Level);
+            float DamageVsPlayerVampires = (float)Math.Ceiling(factionStats.FactionBonus.DamageVsPlayerVampires_Float * factionStats.Level);
+            float ResistVsPlayerVampires = (float)Math.Ceiling(factionStats.FactionBonus.ResistVsPlayerVampires_Float * factionStats.Level);
             int FireResistance = (int)Math.Ceiling((float)factionStats.FactionBonus.FireResistance_Int * factionStats.Level);
 
             //-- Do Modifications
-            if (Level != 0)
+            if (Level > 0)
             {
                 unitLevel.Level += Level;
                 em.SetComponentData(entity, unitLevel);
             }
 
-            if (HP != 0)
+            if (HP > 0)
             {
                 unitHealth.MaxHealth.SetBaseValue(unitHealth.MaxHealth._Value + HP, floatBuffer);
                 unitHealth.Value = unitHealth.MaxHealth._Value + HP;
                 em.SetComponentData(entity, unitHealth);
             }
 
-            if (PhysicalPower != 0) unitStats.PhysicalPower.SetBaseValue(unitStats.PhysicalPower._Value + PhysicalPower, floatBuffer);
-            if (PhysicalResistance != 0) unitStats.PhysicalResistance.SetBaseValue(PhysicalResistance, floatBuffer);
-            if (PhysicalCriticalStrikeChance != 0) unitStats.PhysicalCriticalStrikeChance.SetBaseValue(unitStats.PhysicalCriticalStrikeChance._Value + PhysicalCriticalStrikeChance, floatBuffer);
-            if (PhysicalCriticalStrikeDamage != 0) unitStats.PhysicalCriticalStrikeDamage.SetBaseValue(unitStats.PhysicalCriticalStrikeDamage._Value + PhysicalCriticalStrikeDamage, floatBuffer);
-            if (SpellPower != 0) unitStats.SpellPower.SetBaseValue(unitStats.SpellPower._Value + SpellPower, floatBuffer);
-            if (SpellResistance != 0) unitStats.SpellResistance.SetBaseValue(SpellResistance, floatBuffer);
-            if (SpellCriticalStrikeChance != 0) unitStats.SpellCriticalStrikeChance.SetBaseValue(unitStats.SpellCriticalStrikeChance._Value + SpellCriticalStrikeChance, floatBuffer);
-            if (SpellCriticalStrikeDamage != 0) unitStats.SpellCriticalStrikeDamage.SetBaseValue(unitStats.SpellCriticalStrikeDamage._Value + SpellCriticalStrikeDamage, floatBuffer);
-            //if (DamageVsPlayerVampires != 0) unitStats.DamageVsPlayerVampires.Set(DamageVsPlayerVampires, floatBuffer);
-            //if (ResistVsPlayerVampires != 0) unitStats.ResistVsPlayerVampires.Set(ResistVsPlayerVampires, floatBuffer);
-            if (FireResistance != 0) unitStats.FireResistance.SetBaseValue(unitStats.FireResistance._Value + FireResistance, intBuffer);
+            if (PhysicalPower > 0) unitStats.PhysicalPower.SetBaseValue(unitStats.PhysicalPower._Value + PhysicalPower, floatBuffer);
+            if (PhysicalResistance > 0) unitStats.PhysicalResistance.SetBaseValue(PhysicalResistance, floatBuffer);
+            if (PhysicalCriticalStrikeChance > 0) unitStats.PhysicalCriticalStrikeChance.SetBaseValue(unitStats.PhysicalCriticalStrikeChance._Value + PhysicalCriticalStrikeChance, floatBuffer);
+            if (PhysicalCriticalStrikeDamage > 0) unitStats.PhysicalCriticalStrikeDamage.SetBaseValue(unitStats.PhysicalCriticalStrikeDamage._Value + PhysicalCriticalStrikeDamage, floatBuffer);
+            if (SpellPower > 0) unitStats.SpellPower.SetBaseValue(unitStats.SpellPower._Value + SpellPower, floatBuffer);
+            if (SpellResistance > 0) unitStats.SpellResistance.SetBaseValue(SpellResistance, floatBuffer);
+            if (SpellCriticalStrikeChance > 0) unitStats.SpellCriticalStrikeChance.SetBaseValue(unitStats.SpellCriticalStrikeChance._Value + SpellCriticalStrikeChance, floatBuffer);
+            if (SpellCriticalStrikeDamage > 0) unitStats.SpellCriticalStrikeDamage.SetBaseValue(unitStats.SpellCriticalStrikeDamage._Value + SpellCriticalStrikeDamage, floatBuffer);
+            //if (DamageVsPlayerVampires > 0) unitStats.DamageVsPlayerVampires.Set(DamageVsPlayerVampires, floatBuffer);
+            //if (ResistVsPlayerVampires > 0) unitStats.ResistVsPlayerVampires.Set(ResistVsPlayerVampires, floatBuffer);
+            if (FireResistance > 0) unitStats.FireResistance.SetBaseValue(unitStats.FireResistance._Value + FireResistance, intBuffer);
             unitStats.PvPProtected.SetBaseValue(false, boolBuffer);
             em.SetComponentData(entity, unitStats);
         }
@@ -207,6 +204,22 @@ namespace RPGMods.Systems
             }
         }
 
+        private static Prefabs.Faction[] IgnoredFactions = new Prefabs.Faction[]
+        {
+            Prefabs.Faction.ChurchOfLum_Slaves,
+            Prefabs.Faction.ChurchOfLum_Slaves_Rioters,
+            Prefabs.Faction.Ignored,
+            Prefabs.Faction.Players,
+            Prefabs.Faction.Players_Mutant,
+            Prefabs.Faction.Players_Castle_Prisoners,
+            Prefabs.Faction.Players_Shapeshift_Human,
+            Prefabs.Faction.Traders_T01,
+            Prefabs.Faction.Traders_T02,
+            Prefabs.Faction.WerewolfHuman,
+            Prefabs.Faction.World_Prisoners,
+            Prefabs.Faction.Unknown
+        };
+
         public static void LoadFactionStats()
         {
             if (!File.Exists(AutoSaveSystem.mainSaveFolder+"factionstats.json"))
@@ -223,527 +236,14 @@ namespace RPGMods.Systems
             catch
             {
                 Database.FactionStats = new ConcurrentDictionary<int, FactionData>();
-                Database.FactionStats.TryAdd(-1632475814, new FactionData()
-                {
-                    Name = "Faction_Ashfolk",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
 
-                Database.FactionStats.TryAdd(-413163549, new FactionData()
+                foreach (var faction in Enum.GetValues<Prefabs.Faction>())
                 {
-                    Name = "Faction_Bandits",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
+                    if (!IgnoredFactions.Contains(faction))
                     {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
+                        Database.FactionStats.TryAdd((int)faction, new FactionData(faction));
                     }
-                });
-
-                Database.FactionStats.TryAdd(1344481611, new FactionData()
-                {
-                    Name = "Faction_Bear",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(1094603131, new FactionData()
-                {
-                    Name = "Faction_ChurchOfLum",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(2395673, new FactionData()
-                {
-                    Name = "Faction_ChurchOfLum_SpotShapeshiftVampire",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(10678632, new FactionData()
-                {
-                    Name = "Faction_Critters",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(1522496317, new FactionData()
-                {
-                    Name = "Faction_Cursed",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(1513046884, new FactionData()
-                {
-                    Name = "Faction_Elementals",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(1731533561, new FactionData()
-                {
-                    Name = "Faction_Harpy",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(1057375699, new FactionData()
-                {
-                    Name = "Faction_Militia",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(1597367490, new FactionData()
-                {
-                    Name = "Faction_NatureSpirit",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(-1414061934, new FactionData()
-                {
-                    Name = "Faction_Plants",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(-1632009503, new FactionData()
-                {
-                    Name = "Faction_Spiders",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(887347866, new FactionData()
-                {
-                    Name = "Faction_Traders",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(929074293, new FactionData()
-                {
-                    Name = "Faction_Undead",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(2120169232, new FactionData()
-                {
-                    Name = "Faction_VampireHunters",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(-2024618997, new FactionData()
-                {
-                    Name = "Faction_Werewolf",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
-
-                Database.FactionStats.TryAdd(-1671358863, new FactionData()
-                {
-                    Name = "Faction_Wolves",
-                    Active = false,
-                    Level = 0,
-                    MaxLevel = 0,
-                    MinLevel = 0,
-                    ActivePower = 0,
-                    StoredPower = 0,
-                    DailyPower = 0,
-                    RequiredPower = 0,
-                    FactionBonus = new StatsBonus()
-                    {
-                        Level_Int = 0,
-                        HP_Float = 0,
-                        PhysicalPower_Float = 0,
-                        PhysicalResistance_Float = 0,
-                        PhysicalCriticalStrikeChance_Float = 0,
-                        PhysicalCriticalStrikeDamage_Float = 0,
-                        SpellPower_Float = 0,
-                        SpellResistance_Float = 0,
-                        SpellCriticalStrikeChance_Float = 0,
-                        SpellCriticalStrikeDamage_Float = 0,
-                        DamageVsPlayerVampires_Float = 0,
-                        ResistVsPlayerVampires_Float = 0,
-                        FireResistance_Int = 0,
-                    }
-                });
+                }
                 SaveFactionStats();
                 Plugin.Logger.LogWarning("FactionStats DB Created.");
             }

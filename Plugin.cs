@@ -1,27 +1,21 @@
 ﻿using System;
 using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Unity.IL2CPP;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using ProjectM;
 using RPGMods.Commands;
-using RPGMods.Hooks;
 using RPGMods.Systems;
 using RPGMods.Utils;
-using System.IO;
-using System.Reflection;
-using Unity.Entities;
-using UnityEngine;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using Unity.Entities;
+using UnityEngine;
 using VampireCommandFramework;
-using ProjectM;
-
-#if WETSTONE
-using Wetstone.API;
-#endif
-
 
 namespace RPGMods
 {
@@ -52,8 +46,7 @@ namespace RPGMods
         private static ConfigEntry<double> VIP_OutCombat_MoveSpeed;
         private static ConfigEntry<double> VIP_OutCombat_GarlicResistance;
         private static ConfigEntry<double> VIP_OutCombat_SilverResistance;
-
-
+        
         private static ConfigEntry<bool> HunterHuntedEnabled;
         private static ConfigEntry<int> HeatCooldown;
         private static ConfigEntry<int> Ambush_Interval;
@@ -127,16 +120,14 @@ namespace RPGMods
         private static ConfigEntry<string> PistolRates;
         private static ConfigEntry<string> GreatswordStats;
         private static ConfigEntry<string> GreatswordRates;
-
-
+        
         private static ConfigEntry<bool> effectivenessSubSystemEnabled;
         private static ConfigEntry<bool> growthSubSystemEnabled;
         private static ConfigEntry<float> maxEffectiveness;
         private static ConfigEntry<float> minGrowth;
         private static ConfigEntry<float> maxGrowth;
         private static ConfigEntry<float> growthPerEfficency;
-
-
+        
         private static ConfigEntry<string> draculaBloodlineStats;
         private static ConfigEntry<string> draculaBloodlineMinStrengths;
         private static ConfigEntry<string> draculaBloodlineRates;
@@ -161,7 +152,6 @@ namespace RPGMods
         private static ConfigEntry<string> semikaBloodlineStats;
         private static ConfigEntry<string> semikaBloodlineMinStrengths;
         private static ConfigEntry<string> semikaBloodlineRates;
-
 
         private static ConfigEntry<bool> bloodlinesEnabled;
         private static ConfigEntry<bool> mercilessBloodlines;
@@ -194,6 +184,8 @@ namespace RPGMods
         private static ConfigEntry<bool> inverseMultiplersDisplayReduction;
 
         public static bool isInitialized = false;
+        
+        private static bool parseLogging = false;
 
         public static ManualLogSource Logger;
         private static World _serverWorld;
@@ -683,7 +675,7 @@ namespace RPGMods
             isInitialized = true;
         }
 
-        private static bool parseLogging = false;
+        // TODO move to a util file
         public static int[] parseIntArrayConifg(string data) {
             if (parseLogging) Plugin.Logger.LogInfo(">>>parsing int array: " + data);
             var match = Regex.Match(data, "([0-9]+)");
@@ -701,8 +693,7 @@ namespace RPGMods
                 match = match.NextMatch();
             }
             if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing int array");
-            int[] result = list.ToArray();
-            return result;
+            return list.ToArray();
         }
         public static float[] parseFloatArrayConifg(string data) {
             if (parseLogging) Plugin.Logger.LogInfo(">>>parsing float array: " + data);
@@ -723,8 +714,7 @@ namespace RPGMods
             }
 
             if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing float array");
-            float[] result = list.ToArray();
-            return result;
+            return list.ToArray();
         }
         public static double[] parseDoubleArrayConifg(string data) {
             if(parseLogging) Plugin.Logger.LogInfo(">>>parsing double array: " + data);
@@ -745,8 +735,7 @@ namespace RPGMods
             }
 
             if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing double array");
-            double[] result = list.ToArray();
-            return result;
+            return list.ToArray();
         }
         public static string[] parseStringArrayConifg(string data) {
             if (parseLogging) Plugin.Logger.LogInfo(">>>parsing comma seperated String array: " + data);
@@ -760,8 +749,7 @@ namespace RPGMods
             data.Trim();
             list.Add(data);
             if (parseLogging) Plugin.Logger.LogInfo(">>>done parsing string array");
-            string[] result = list.ToArray();
-            return result;
+            return list.ToArray();
         }
     }
 }

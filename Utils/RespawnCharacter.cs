@@ -10,8 +10,7 @@ namespace RPGMods.Utils
 {
     public class RespawnCharacter
     {
-        private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static void Respawn(Entity VictimEntity, PlayerCharacter player, Entity userEntity) {
+        public static void Respawn(Entity victimEntity, PlayerCharacter player, Entity userEntity) {
             if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": attempting auto respawn");
             var bufferSystem = Plugin.Server.GetOrCreateSystem<EntityCommandBufferSystem>();
 
@@ -39,7 +38,7 @@ namespace RPGMods.Utils
 
                 if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": respawning character");
 
-                server.RespawnCharacter(bufferSystem.CreateCommandBuffer(), userEntity, customSpawnLocation: spawnLocation, previousCharacter: VictimEntity, fadeOutEntity: userEntity);
+                server.RespawnCharacter(bufferSystem.CreateCommandBuffer(), userEntity, customSpawnLocation: spawnLocation, previousCharacter: victimEntity, fadeOutEntity: userEntity);
             }
         }
     }

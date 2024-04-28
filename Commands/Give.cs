@@ -8,7 +8,7 @@ namespace RPGMods.Commands{
     public static class Give{
 
         [Command("Give", "g", "\"<itemName>\" <amount>", "Adds specified items to your inventory", adminOnly: true)]
-        public static void Initialize(ChatCommandContext ctx, string itemName, int amount = 1)
+        public static void GiveItem(ChatCommandContext ctx, string itemName, int amount = 1)
         {
 
             string name = itemName;
@@ -25,7 +25,7 @@ namespace RPGMods.Commands{
         }
 
         [Command("List All Items", "LAI", adminOnly: true)]
-        public static void listAllItems(ChatCommandContext ctx)
+        public static void ListAllItems(ChatCommandContext ctx)
         {
             var gameDataSystem = Plugin.Server.GetExistingSystem<GameDataSystem>();
             var managed = gameDataSystem.ManagedDataRegistry;
