@@ -138,15 +138,12 @@ public static class FactionHeat {
         Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");
     }
 
-    public static void Ambush(List<Alliance.CloseAlly> closeAllies, Faction faction, int wantedLevel) {
+    public static void Ambush(float3 position, List<Alliance.ClosePlayer> closeAllies, Faction faction, int wantedLevel) {
         if (wantedLevel < 1 || closeAllies.Count == 0) return;
 
-        // Currently sorting DESC -> ambushing highest level
-        // The lower level will generally have more difficulty than the higher level so chose the highest to make it
-        // better for them.
-        closeAllies.Sort((ally1, ally2) => ally2.playerLevel.CompareTo(ally1.playerLevel));
-        var chosenAlly = closeAllies[0];
-        var squadMessage = SquadList.SpawnSquad(chosenAlly.playerLevel, chosenAlly.position, faction, wantedLevel);
+        // Grab the player based on the highest player level
+        var chosenAlly = closeAllies.MaxBy(ally => ally.playerLevel);
+        var squadMessage = SquadList.SpawnSquad(chosenAlly.playerLevel, position, faction, wantedLevel);
         
         foreach (var ally in closeAllies) {
             Output.SendLore(ally.userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");

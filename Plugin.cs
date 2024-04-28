@@ -58,7 +58,6 @@ namespace RPGMods
         private static ConfigEntry<int> MaxLevel;
         private static ConfigEntry<float> EXPMultiplier;
         private static ConfigEntry<float> VBloodEXPMultiplier;
-        //private static ConfigEntry<double> EXPLostOnDeath;
         private static ConfigEntry<float> EXPFormula_1;
         private static ConfigEntry<double> EXPGroupModifier;
         private static ConfigEntry<float> EXPGroupMaxDistance;
@@ -258,7 +257,6 @@ namespace RPGMods
                 "Ex.: 0.7f -> Will reduce the EXP gained by 30%\nFormula: UnitKilledLevel * EXPMultiplier");
             VBloodEXPMultiplier = Config.Bind("Experience", "VBlood Multiplier", 15f, "Multiply EXP gained from VBlood kills.\n" +
                 "Formula: EXPGained * VBloodMultiplier * EXPMultiplier");
-            //EXPLostOnDeath = Config.Bind("Experience", "EXP Lost / Death", 0.10, "Percentage of experience the player lost for every death by NPC, no EXP is lost for PvP.\nFormula: TotalPlayerEXP - (EXPNeeded * EXPLost)");
             EXPFormula_1 = Config.Bind("Experience", "Constant", 0.2f, "Increase or decrease the required EXP to level up.\n" +
                 "Formula: (level/constant)^2\n" +
                 "EXP Table & Formula: https://bit.ly/3npqdJw");
@@ -519,7 +517,6 @@ namespace RPGMods
             ExperienceSystem.MaxLevel = MaxLevel.Value;
             ExperienceSystem.EXPMultiplier = EXPMultiplier.Value;
             ExperienceSystem.VBloodMultiplier = VBloodEXPMultiplier.Value;
-            //ExperienceSystem.EXPLostOnDeath = EXPLostOnDeath.Value;
             ExperienceSystem.EXPConstant = EXPFormula_1.Value;
             ExperienceSystem.GroupModifier = EXPGroupModifier.Value;
             ExperienceSystem.GroupMaxDistance = EXPGroupMaxDistance.Value;

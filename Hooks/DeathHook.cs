@@ -7,6 +7,7 @@ using RPGMods.Systems;
 using RPGMods.Utils;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Transforms;
 
 namespace RPGMods.Hooks {
     [HarmonyPatch]
@@ -41,8 +42,10 @@ namespace RPGMods.Hooks {
                         var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) && bS.UnitBloodType.Equals(Helper.vBloodType);
 
                         var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier > 0;
-                        var closeAllies = Alliance.GetCloseAllies(
-                            ev.Died, killer, ExperienceSystem.GroupMaxDistance, useGroup, Helper.deathLogging);
+
+                        var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ev.Died);                        
+                        var closeAllies = Alliance.GetClosePlayers(
+                            triggerLocation.Position, killer, ExperienceSystem.GroupMaxDistance, true, useGroup, Helper.deathLogging);
 
                         // If you get experience for the kill, you get heat for the kill
                         if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(closeAllies, ev.Died, isVBlood);

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Entities;
+using Unity.Transforms;
 using Faction = RPGMods.Utils.Prefabs.Faction;
 
 namespace RPGMods.Systems
@@ -25,7 +26,7 @@ namespace RPGMods.Systems
 
         private static Random rand = new();
 
-        public static void PlayerKillEntity(List<Alliance.CloseAlly> closeAllies, Entity victimEntity, bool isVBlood) {
+        public static void PlayerKillEntity(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood) {
             var victim = entityManager.GetComponentData<FactionReference>(victimEntity);
             var victimFaction = victim.FactionGuid._Value;
 
@@ -106,11 +107,11 @@ namespace RPGMods.Systems
         }
 
         private struct AllyHeat {
-            public Alliance.CloseAlly ally;
+            public Alliance.ClosePlayer player;
             public PlayerHeatData heat;
 
-            public AllyHeat(Alliance.CloseAlly ally, PlayerHeatData heat) {
-                this.ally = ally;
+            public AllyHeat(Alliance.ClosePlayer player, PlayerHeatData heat) {
+                this.player = player;
                 this.heat = heat;
             }
         }
@@ -118,8 +119,9 @@ namespace RPGMods.Systems
         // This is expected to only be called at the start of combat
         public static void CheckForAmbush(Entity triggeringPlayerEntity) {
             var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier > 0;
-            var closeAllies = Alliance.GetCloseAllies(
-                triggeringPlayerEntity, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, useGroup, factionLogging);
+            var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(triggeringPlayerEntity);
+            var closeAllies = Alliance.GetClosePlayers(
+                triggerLocation.Position, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, true, useGroup, factionLogging);
             var alliesInCombat = false;
             // Check if there are close allies in combat (we don't want ALL close allies to trigger an ambush at the same time!)
             foreach (var ally in closeAllies) {
@@ -166,7 +168,7 @@ namespace RPGMods.Systems
             var ambushingTime = DateTime.Now;
             foreach (var faction in sortedFactionList) {
                 if (rand.Next(0, 100) <= ambush_chance) {
-                    FactionHeat.Ambush(closeAllies, faction.Key, faction.Value);
+                    FactionHeat.Ambush(triggerLocation.Position, closeAllies, faction.Key, faction.Value);
                     isAmbushing = true;
                     ambushingFaction = faction.Key;
                     // Only need 1 ambush at a time!
@@ -183,9 +185,9 @@ namespace RPGMods.Systems
                     factionHeat.lastAmbushed = ambushingTime;
                     heatData.heat[ambushingFaction] = factionHeat;
 
-                    Cache.heatCache[allyHeat.ally.steamID] = heatData;
+                    Cache.heatCache[allyHeat.player.steamID] = heatData;
             
-                    LogHeatData(heatData, allyHeat.ally.userEntity, "check");
+                    LogHeatData(heatData, allyHeat.player.userEntity, "check");
                 }
             }
         }

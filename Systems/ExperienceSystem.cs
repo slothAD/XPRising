@@ -44,8 +44,6 @@ namespace RPGMods.Systems
 
         public static bool xpLostOnDown = false;
         public static bool xpLostOnRelease = false;
-
-        public static double EXPLostOnDeath = 0.10;
         
         public enum GroupLevelScheme {
             None = 0,
@@ -75,13 +73,13 @@ namespace RPGMods.Systems
             return true;
         }
 
-        public static void EXPMonitor(List<Alliance.CloseAlly> closeAllies, Entity victimEntity, bool isVBlood)
+        public static void EXPMonitor(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood)
         {
             var unitLevel = entityManager.GetComponentData<UnitLevel>(victimEntity);
             UpdateEXP(unitLevel.Level, isVBlood, closeAllies);
         }
 
-        private static void UpdateEXP(int mobLevel, bool isVBlood, List<Alliance.CloseAlly> closeAllies) {
+        private static void UpdateEXP(int mobLevel, bool isVBlood, List<Alliance.ClosePlayer> closeAllies) {
             // Calculate the modified player level
             var modifiedPlayerLevel = 0;
             switch (groupLevelScheme) {
@@ -126,8 +124,8 @@ namespace RPGMods.Systems
             }
         }
 
-        private static void AssignExp(Alliance.CloseAlly ally, int mobLevel, int modifiedPlayerLevel, bool isVBlood, bool isGroup) {
-            if (ally.currentXp >= convertLevelToXp(MaxLevel)) return;
+        private static void AssignExp(Alliance.ClosePlayer player, int mobLevel, int modifiedPlayerLevel, bool isVBlood, bool isGroup) {
+            if (player.currentXp >= convertLevelToXp(MaxLevel)) return;
 
             var xpGained = CalculateXp(modifiedPlayerLevel, mobLevel, isVBlood);
 
@@ -135,18 +133,18 @@ namespace RPGMods.Systems
                 xpGained = (int)(xpGained * GroupModifier);
             }
 
-            var newXp = Math.Max(ally.currentXp, 0) + xpGained;
-            Database.player_experience[ally.steamID] = newXp;
+            var newXp = Math.Max(player.currentXp, 0) + xpGained;
+            Database.player_experience[player.steamID] = newXp;
 
-            if (Database.player_log_exp.TryGetValue(ally.steamID, out bool isLogging))
+            if (Database.player_log_exp.TryGetValue(player.steamID, out bool isLogging))
             {
                 if (isLogging) {
                     GetLevelAndProgress(newXp, out int progress, out int earned, out int needed);
-                    Output.SendLore(ally.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
+                    Output.SendLore(player.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
                 }
             }
             
-            SetLevel(ally.userComponent.LocalCharacter._Entity, ally.userEntity, ally.steamID);
+            SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
         }
 
         private static int CalculateXp(int playerLevel, int mobLevel, bool isVBlood) {
@@ -246,7 +244,7 @@ namespace RPGMods.Systems
             }
 
             int currentXp = exp - (int)xpLost;
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": subtracing that from our " + exp + " we get " + currentXp);
+            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": subtracting that from our " + exp + " we get " + currentXp);
             Database.player_experience[SteamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, SteamID);
