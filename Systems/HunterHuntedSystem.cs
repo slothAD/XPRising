@@ -226,7 +226,7 @@ namespace RPGMods.Systems
                 heatData = new PlayerHeatData();
             }
             
-            // If there has been last than 5 seconds the last heat manager update, just skip calculations
+            // If there has been less than 5 seconds since the last heat manager update, just skip calculations
             if ((DateTime.Now - heatData.lastCooldown).TotalSeconds < 5) return;
 
             var lastCombatStart = Cache.GetCombatStart(steamID);
@@ -255,24 +255,18 @@ namespace RPGMods.Systems
         }
 
         private static double CooldownPeriod(DateTime lastCooldown, DateTime lastCombatStart, DateTime lastCombatEnd) {
-            // By default, the cooldown period is from the lastCooldown to Now. 
-            var cdPeriodStart = lastCooldown;
-            var cdPeriodEnd = DateTime.Now;
-            
+            // If we have started combat more recently than we have finished, then we are in combat.
             var inCombat = lastCombatStart > lastCombatEnd;
             if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: combat: {inCombat}");
-            if (inCombat) {
-                // If we are in combat, cdPeriodEnd is the start of combat;
-                cdPeriodEnd = lastCombatStart;
-            }
             
             // cdPeriodStart is the max of (lastCooldown, lastCombatEnd + offset)
             var cdPeriodStartAfterCombat = lastCombatEnd + TimeSpan.FromSeconds(20);
-            cdPeriodStart = lastCooldown > cdPeriodStartAfterCombat ? lastCooldown : cdPeriodStartAfterCombat;
+            var cdPeriodStart = lastCooldown > cdPeriodStartAfterCombat ? lastCooldown : cdPeriodStartAfterCombat;
+
+            // If we are in combat, cdPeriodEnd is the start of combat;
+            var cdPeriodEnd = inCombat ? lastCombatStart : DateTime.Now;
             
-            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: end before start: {cdPeriodEnd < cdPeriodStart}");
-            // If cdPeriodEnd is earlier than cdPeriodStart, 0 seconds have elapsed in the cooldown period
-            return cdPeriodEnd < cdPeriodStart ? 0 : (cdPeriodEnd - cdPeriodStart).TotalSeconds;
+            return (cdPeriodEnd - cdPeriodStart).TotalSeconds;
         }
 
         private static string HeatDataString(PlayerHeatData heatData, bool useColor) {
