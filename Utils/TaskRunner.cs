@@ -2,11 +2,10 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using RPGMods.Hooks;
+using OpenRPG.Hooks;
 using Unity.Entities;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public class TaskRunner
     {

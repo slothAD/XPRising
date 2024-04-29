@@ -1,9 +1,10 @@
 ﻿using HarmonyLib;
+using ProjectM.Gameplay.Systems;
 using Unity.Entities;
 using System;
-using ProjectM.Gameplay.Systems;
 
-namespace RPGMods.Hooks {
+namespace OpenRPG.Hooks
+{
     public delegate void OnUpdateEventHandler(World world);
     [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.OnUpdate))]
     public class SCSHook {

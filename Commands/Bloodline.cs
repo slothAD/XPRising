@@ -1,29 +1,24 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [CommandGroup("bloodline", "bl")]
     public static class Bloodline
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
         public static bool detailedStatements = false;
-        //[Command("bloodline [<log> <on>|<off>] [<reset> all|(bloodline)]", "Display your current bloodline progression, toggle the gain notification, or reset your bloodline to gain effectiveness.")]
-
+        
         [Command("get", "g", "", "Display your current bloodline progression")]
         public static void getBloodline(ChatCommandContext ctx) {
             if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
-            /*else {
-                ctx.Reply("The Bloodline system command is not yet coded.");
-                return;
-            }*/
             var SteamID = ctx.Event.User.PlatformId;
 
             bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var MasteryData);
@@ -84,16 +79,13 @@ namespace RPGMods.Commands
                 ctx.Reply(print);
             }
         }
+        
         [Command("get all", "ga", "", "Display all your bloodline progressions")]
         public static void getAllBloodlines(ChatCommandContext ctx) {
             if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
-            /*else {
-                ctx.Reply("The Bloodline system command is not yet coded.");
-                return;
-            }*/
             var SteamID = ctx.Event.User.PlatformId;
 
             bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var MasteryData);
@@ -141,15 +133,6 @@ namespace RPGMods.Commands
             var UserEntity = ctx.Event.SenderUserEntity;
             var CharEntity = ctx.Event.SenderCharacterEntity;
             SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
-            /*if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity)){
-                SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
-                UserEntity = targetUserEntity;
-                CharEntity = targetEntity;
-            }
-            else{
-                ctx.Reply($"Could not find specified player \"{name}\".");
-                return;
-            }*/
             int type;
             if (!Bloodlines.nameMap.TryGetValue(MasteryType, out type))
             {

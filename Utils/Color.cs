@@ -1,4 +1,4 @@
-﻿namespace RPGMods.Utils
+﻿namespace OpenRPG.Utils
 {
     public static class Color
     {

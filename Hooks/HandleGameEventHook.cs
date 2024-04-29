@@ -1,10 +1,12 @@
 ﻿using HarmonyLib;
 using ProjectM.Gameplay.Systems;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using ProjectM;
-using RPGMods.Systems;
+using Unity.Entities;
+using System;
+using OpenRPG.Systems;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
     public class HandleGameplayEventsBase_Patch
@@ -13,6 +15,7 @@ namespace RPGMods.Hooks
         private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
+            // TODO check daynight cycle is not logging only errors
             //-- Day Cycle Tracking
             var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
             

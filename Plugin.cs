@@ -1,31 +1,42 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using BepInEx;
 using BepInEx.Configuration;
+using VampireCommandFramework;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-using ProjectM;
-using RPGMods.Commands;
-using RPGMods.Systems;
-using RPGMods.Utils;
-using System.Collections.Generic;
-using System.Globalization;
+using OpenRPG.Commands;
+using OpenRPG.Hooks;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Unity.Entities;
 using UnityEngine;
-using VampireCommandFramework;
+using Bloodstone.API;
+using VRising.GameData;
+using Lidgren.Network;
+using Unity.Collections;
+using OpenRPG.Configuration;
+using OpenRPG.Components.RandomEncounters;
+using ProjectM;
 
-namespace RPGMods
+namespace OpenRPG
 {
-    [BepInPlugin("RPGMods", "RPGMods - Gloomrot", "1.7.2")]
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("gg.deca.Bloodstone")]
     [BepInDependency("gg.deca.VampireCommandFramework")]
-
     public class Plugin : BasePlugin
     {
         public static Harmony harmony;
 
+        internal static Plugin Instance { get; private set; }
+
+        public static bool initServer = false;
+        
         private static ConfigEntry<int> WaypointLimit;
 
         private static ConfigEntry<bool> EnableVIPSystem;
@@ -215,9 +226,9 @@ namespace RPGMods
             return null;
         }
 
-        public void InitConfig(){
-
-            WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for non-admin users.");
+        public void InitConfig()
+        {
+            WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for per non-admin user.");
 
             EnableVIPSystem = Config.Bind("VIP", "Enable VIP System", false, "Enable the VIP System.");
             EnableVIPWhitelist = Config.Bind("VIP", "Enable VIP Whitelist", false, "Enable the VIP user to ignore server capacity limit.");
@@ -236,7 +247,6 @@ namespace RPGMods
             VIP_OutCombat_SilverResistance = Config.Bind("VIP.OutCombat", "Silver Resistance Multiplier", 2.0, "Multiply silver resistance when user is out of combat. -1.0 to disable.");
             VIP_OutCombat_MoveSpeed = Config.Bind("VIP.OutCombat", "Move Speed Multiplier", 1.25, "Multiply move speed when user is out of combat. -1.0 to disable.");
             VIP_OutCombat_ResYield = Config.Bind("VIP.OutCombat", "Resource Yield Multiplier", 2.0, "Multiply resource yield (not item drop) when user is out of combat. -1.0 to disable.");
-
 
             HunterHuntedEnabled = Config.Bind("HunterHunted", "Enable", true, "Enable/disable the HunterHunted system.");
             HeatCooldown = Config.Bind("HunterHunted", "Heat Cooldown", 10, "Set the reduction value for player heat per minute.");
@@ -265,15 +275,12 @@ namespace RPGMods
             EXPGroupMaxDistance = Config.Bind("Experience", "Group Range", 50f, "Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player");
             EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 3, "Configure the group levelling scheme. See documentation.");
 
-
-
             pvpXPLoss = Config.Bind("Rates, Experience", "PvP XP Loss", 0f, "Sets the flat XP Lost on a PvP death");
             pvpXPLossPerLevel = Config.Bind("Rates, Experience", "PvP XP Loss per Level", 0f, "Sets the XP Lost per level of the dying player on a PvP death");
             pvpXPLossPercent = Config.Bind("Rates, Experience", "PvP XP Loss Percent", 0f, "Sets the percentage of XP to the next level lost on a PvP death");
             pvpXPLossPercentPerLevel = Config.Bind("Rates, Experience", "PvP XP Loss Percent per Level", 0f, "Sets the percentage of XP to the next level lost per level of the dying player on a PvP death");
             pvpXPLossMultPerLvlDiff = Config.Bind("Rates, Experience", "PvP XP Loss Per lvl Diff", 0f, "Adds this times the number of levels higher than your killer you are as an additional percent to your xp lost on a PvP death.");
             pvpXPLossMultPerLvlDiffSq = Config.Bind("Rates, Experience", "PvP XP Loss Per lvl Diff squared", 0f, "Adds this times the square of the number of levels higher than your killer you are as an additional percent to your xp lost on a PvP death.");
-
             
             pveXPLoss = Config.Bind("Rates, Experience", "PvE XP Loss", 0f, "Sets the flat XP Lost on a PvE death");
             pveXPLossPerLevel = Config.Bind("Rates, Experience", "PvE XP Loss per Level", 0f, "Sets the XP Lost per level of the dying player on a PvE death");
@@ -281,7 +288,6 @@ namespace RPGMods
             pveXPLossPercentPerLevel = Config.Bind("Rates, Experience", "PvE XP Loss Percent per Level", 0f, "Sets the percentage of XP to the next level lost per level of the dying player on a PvE death");
             pveXPLossMultPerLvlDiff = Config.Bind("Rates, Experience", "PvE XP Loss Mult Per lvl Diff", 0f, "Adds this times the number of levels higher than your killer you are as an additional percent to your xp lost on a PvE death.");
             pveXPLossMultPerLvlDiffSq = Config.Bind("Rates, Experience", "PvE XP Loss Per lvl Diff squared", 0f, "Adds this times the square of the number of levels higher than your killer you are as an additional percent to your xp lost on a PvE death.");
-
 
             xpLossOnDown = Config.Bind("Rates, Experience", "XP Lost on Down", false, "Vampires are treated as dead for the XP system when they are downed.");
             xpLossOnRelease = Config.Bind("Rates, Experience", "XP Lost on Release", true, "Vampires are treated as dead for the XP system when they release, incentivising saving allies.");
@@ -336,9 +342,6 @@ namespace RPGMods
             WeaponMasterySpellMasteryNeedsNoneToLearn = Config.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.");
             WeaponLinearSpellMastery = Config.Bind("Mastery", "Linear Mastery CDR", true, "Changes CDR from mastery to provide a linear increase to spells able to be cast in a given time by making the cdr diminishing.");
             WeaponSpellMasteryCDRStacks = Config.Bind("Mastery", "Mastery CDR stacks", true, "Allows mastery cdr to stack with that from other sources, the reduction is multiplicative. E.G. Mist signet (10% cdr) and 100% mastery (50% cdr) will result in 55% total cdr, or 120%ish faster cooldowns.");
-
-
-
 
             bloodlinesEnabled = Config.Bind("Bloodlines", "Enable Bloodlines", true, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.");
             mercilessBloodlines = Config.Bind("Bloodlines", "Merciless Bloodlines", true, "Causes bloodlines to only grow when you kill something with a matching bloodline of higher strength, finally, a reward when you accidentally kill that 100% blood you found");
@@ -400,7 +403,7 @@ namespace RPGMods
             inverseMultiplersDisplayReduction = Config.Bind("Buff System", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats dispay their reduction, or the final value.");
 
 
-            EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, "All other faction dynamics data & config is withing /RPGMods/Saves/factionstats.json file.");
+            EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, $"All other faction dynamics data & config is within {AutoSaveSystem.WorldDynamicsJson} file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
 
             
@@ -411,35 +414,45 @@ namespace RPGMods
             saveLogging = Config.Bind("Debug", "Save system logging", false, "Logs detailed information about the save system in your console, enable before sending me any errors with the buff system!");
             factionLogging = Config.Bind("Debug", "Wanted system logging", false, "Logs detailed information about the wanted system in your console, enable before sending me any errors with the wanted system!");
             squadSpawnLogging = Config.Bind("Debug", "Squad spawn logging", false, "Logs information about squads spawning into your console.");
-
-
-            if (!Directory.Exists("BepInEx/config/RPGMods")) Directory.CreateDirectory("BepInEx/config/RPGMods");
-            if (!Directory.Exists("BepInEx/config/RPGMods/Saves")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves");
-            if (!Directory.Exists("BepInEx/config/RPGMods/Saves/Backup")) Directory.CreateDirectory("BepInEx/config/RPGMods/Saves/Backup");
-
-            if (!File.Exists("BepInEx/config/RPGMods/kits.json"))
-            {
-                var stream = File.Create("BepInEx/config/RPGMods/kits.json");
-                stream.Dispose();
-            }
         }
 
         public override void Load()
         {
             if(!IsServer)
             {
-                Log.LogWarning("RPGMods is a server plugin. Not continuing to load on client.");
+                Log.LogWarning($"{MyPluginInfo.PLUGIN_NAME} is a server plugin. Not continuing to load on client.");
                 return;
             }
             
             InitConfig();
+            CommandRegistry.RegisterAll();
+            GameData.OnInitialize += GameDataOnInitialize;
+            GameData.OnDestroy += GameDataOnDestroy;
+            Instance = this;
+            RandomEncounters.Load();
             Logger = Log;
-            harmony = new Harmony("RPGMods");
+            harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            TaskRunner.Initialize();
+            Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
+        }
 
-            Log.LogInfo("Plugin RPGMods is loaded!");
+        private static void GameDataOnInitialize(World world)
+        {
+            initServer = true;
+            RandomEncounters.GameData_OnInitialize();
+            RandomEncounters._encounterTimer = new Timer();
+            if (RandomEncountersConfig.Enabled.Value)
+            {
+                RandomEncounters.StartEncounterTimer();
+            }
+            TaskRunner.Initialize();
+            Initialize();
+        }
+
+        private static void GameDataOnDestroy()
+        {
+            //Logger.LogInfo("GameDataOnDestroy");
         }
 
         public override bool Unload()
@@ -449,37 +462,27 @@ namespace RPGMods
             harmony.UnpatchSelf();
 
             TaskRunner.Destroy();
-
+            RandomEncounters.Unload();
             return true;
-        }
-
-        public void OnGameInitialized()
-        {
-            Initialize();
         }
 
         public static void Initialize()
         {
-            Logger.LogInfo("Trying to Initalize RPGMods, isInitalized already: " + isInitialized);
+            Logger.LogInfo($"Trying to Initalize {MyPluginInfo.PLUGIN_NAME}, isInitalized already: {isInitialized}");
             if (isInitialized) return;
-            Logger.LogInfo("Initalizing RPGMods");
+            Logger.LogInfo($"Initalizing {MyPluginInfo.PLUGIN_NAME}");
             //-- Initialize System
             Helper.CreatePlayerCache();
             Helper.GetServerGameSettings(out Helper.SGS);
             Helper.GetServerGameManager(out Helper.SGM);
             Helper.GetUserActivityGridSystem(out Helper.UAGS);
-
-
+            
             //-- Commands Related
             AutoSaveSystem.LoadDatabase();
 
             //-- Apply configs
             Logger.LogInfo("Registering commands");
-            //CommandHandler.Prefix = Prefix.Value;
-            //CommandHandler.DisabledCommands = DisabledCommands.Value;
-            //CommandHandler.delay_Cooldown = DelayedCommands.Value;
             CommandRegistry.RegisterAll();
-
             Waypoint.WaypointLimit = WaypointLimit.Value;
 
             Logger.LogInfo("Loading permission config");

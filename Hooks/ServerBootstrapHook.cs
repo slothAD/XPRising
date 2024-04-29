@@ -1,32 +1,13 @@
 ﻿using HarmonyLib;
 using ProjectM;
-using ProjectM.Auth;
-using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
-using ProjectM.Scripting;
-using ProjectM.Terrain;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Stunlock.Network;
-using System;
-using System.Reflection;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
-    /*
-    [HarmonyPatch(typeof(LoadPersistenceSystemV2), nameof(LoadPersistenceSystemV2.SetLoadState))]
-    public class PersistenceSystem_Patch
-    {
-        public static void Prefix(ServerStartupState.State loadState, LoadPersistenceSystemV2 __instance)
-        {
-            if (loadState == ServerStartupState.State.SuccessfulStartup)
-            {
-                Plugin.Initialize();
-            }
-        }
-    }*/
-
-    
+    // TODO does this need to run as well as the GameBootstrap below?
     [HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
     public class ServerGameSetting_Patch
     {
@@ -40,17 +21,6 @@ namespace RPGMods.Hooks
             }
         }
     }
-    /*
-    [HarmonyPatch(typeof(HandleGameplayEventsSystem), nameof(HandleGameplayEventsSystem.OnUpdate))]
-    public class InitializationPatch
-    {
-        [HarmonyPostfix]
-        public static void RPGMods_Initialize_Method()
-        {
-            Plugin.Initialize();
-            Plugin.harmony.Unpatch(typeof(HandleGameplayEventsSystem).GetMethod("OnUpdate"), typeof(InitializationPatch).GetMethod("RPGMods_Initialize_Method"));
-        }
-    }*/
 
     [HarmonyPatch(typeof(GameBootstrap), nameof(GameBootstrap.Start))]
     public static class GameBootstrap_Patch
@@ -86,7 +56,6 @@ namespace RPGMods.Hooks
 
                 if (!isNewVampire)
                 {
-                   
                     {
                         var playerName = userData.CharacterName.ToString();
                         Helper.UpdatePlayerCache(userEntity, playerName, playerName);
@@ -100,13 +69,4 @@ namespace RPGMods.Hooks
             catch { }
         }
     }
-    /*
-    [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.BeginSetupServer))]
-    public static class BeginSetupServer_Patch
-    {
-        private static void Prefix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId, ConnectionStatusChangeReason connectionStatusReason, string extraData)
-        {
-            Plugin.Initialize();
-        }
-    }*/
 }

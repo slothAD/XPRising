@@ -1,18 +1,15 @@
 ﻿using ProjectM;
-using ProjectM.Behaviours;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
-using System.Linq;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands{
+namespace OpenRPG.Commands{
     [CommandGroup("mastery", "m")]
     public static class Mastery{
         private static EntityManager entityManager = Plugin.Server.EntityManager;
         public static bool detailedStatements = true;
-
 
         [Command("get", "g", "", "Display your current mastery progression")]
         public static void getMastery(ChatCommandContext ctx) {
@@ -195,5 +192,4 @@ namespace RPGMods.Commands{
             WeaponMasterSystem.resetMastery(SteamID, type);
         }
     }
-
 }

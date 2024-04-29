@@ -1,15 +1,16 @@
-
 using HarmonyLib;
 using System;
 using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Commands;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Collections;
 using Unity.Entities;
+using OpenRPG.Configuration;
 using Unity.Transforms;
 
-namespace RPGMods.Hooks {
+namespace OpenRPG.Hooks {
     [HarmonyPatch]
     public class DeathEventListenerSystem_Patch {
         [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
@@ -61,37 +62,24 @@ namespace RPGMods.Hooks {
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
                     if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": the dead person is a player, running xp loss and heat dumping");
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
+                    if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
+                        ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
+                    }
 
                     PlayerCharacter player = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Died);
                     Entity userEntity = player.UserEntity;
                     User user = __instance.EntityManager.GetComponentData<User>(userEntity);
                     ulong SteamID = user.PlatformId;
-                    //-- ----------------------------------
-
-                    if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
-                        if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Ready to check Kill Map");
-                        if (Database.killMap.TryGetValue(ev.Died, out Entity trueKiller)) {
-                            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Kill Map has killer");
-                            ExperienceSystem.deathXPLoss(ev.Died, trueKiller);
-                        } else {
-                            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Player not found in the kill map");
-                            ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
-                        }
-                    }
 
                     //-- Check for AutoRespawn
                     if (user.IsConnected) {
                         bool isServerWide = Database.autoRespawn.ContainsKey(1);
-                        bool doRespawn;
-                        if (!isServerWide) {
-                            doRespawn = Database.autoRespawn.ContainsKey(SteamID);
-                        } else { doRespawn = true; }
+                        bool doRespawn = isServerWide || Database.autoRespawn.ContainsKey(SteamID);
 
                         if (doRespawn) {
                             Utils.RespawnCharacter.Respawn(ev.Died, player, userEntity);
                         }
                     }
-
                     //-- ----------------------------------------
                 }
             }

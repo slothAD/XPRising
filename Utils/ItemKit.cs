@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public class ItemKit
     {

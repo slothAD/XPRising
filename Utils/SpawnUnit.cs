@@ -3,7 +3,7 @@ using ProjectM;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace RPGMods.Utils; 
+namespace OpenRPG.Utils; 
 
 public class SpawnUnit {
     private static Entity emptyEntity = new();

@@ -5,22 +5,19 @@ using System.Globalization;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using RPGMods.Hooks;
-using RPGMods.Systems;
+using OpenRPG.Hooks;
+using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
 using VampireCommandFramework;
 using System.IO;
-using System.Reflection;
-using System.Collections;
 using System.Text.Json;
-using Epic.OnlineServices.Stats;
-using RPGMods.Commands;
-using Unity.Entities.UniversalDelegates;
+using Bloodstone.API;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
+    // TODO move to struct/class util
     public class LazyDictionary<TKey,TValue> : Dictionary<TKey,TValue> where TValue : new()
     {
         public new TValue this[TKey key]
@@ -37,6 +34,7 @@ namespace RPGMods.Utils
             }
         }
     }
+    
     public static class Helper
     {
         private static Entity empty_entity = new Entity();
@@ -47,6 +45,7 @@ namespace RPGMods.Utils
         public static UserActivityGridSystem UAGS = default;
         public static int groupRange = 50;
 
+        // TODO guids to use prefabs
         public static int buffGUID = 1444835872;
         public static int forbiddenBuffGUID = -161632603;
         public static bool buffLogging = false;
@@ -54,7 +53,7 @@ namespace RPGMods.Utils
         public static PrefabGUID appliedBuff = Database.Buff.Buff_4pT2;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
-        
+
         public static bool GetUserActivityGridSystem(out UserActivityGridSystem uags)
         {
             uags = Plugin.Server.GetExistingSystem<AiPrioritizationSystem>()?._UserActivityGridSystem;
@@ -145,24 +144,7 @@ namespace RPGMods.Utils
 
             Plugin.Logger.LogWarning("Player Cache Created.");
         }
-
-        public static Dictionary<TKey, TVal> LoadDB<TKey,TVal>(string specificFile) {
-            Dictionary<TKey, TVal> dict;
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificFile);
-            try {
-                dict = JsonSerializer.Deserialize<Dictionary<TKey, TVal>>(json);
-                if (dict == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificFile);
-                    dict = JsonSerializer.Deserialize<Dictionary<TKey, TVal>>(json);
-                }
-            } catch {
-                dict = new Dictionary<TKey, TVal>();
-                Plugin.Logger.LogWarning(DateTime.Now+ ": DB Created for " + specificFile);
-            }
-            return dict;
-        }
+        
         public static void TeleportTo(ChatCommandContext ctx, Tuple<float,float,float> position) {
 
             var entity = Plugin.Server.EntityManager.CreateEntity(
@@ -180,6 +162,7 @@ namespace RPGMods.Utils
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
         }
+        
         public static void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
         {
             var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
@@ -257,11 +240,9 @@ namespace RPGMods.Utils
             var buffEvent = new ApplyBuffDebugEvent()
             {
                 BuffPrefabGUID = GUID
-            }
-            ;
+            };
             Database.playerBuffs.Add(buffEvent);
             des.ApplyBuff(fromCharacter, buffEvent);
-            
         }
 
         public static void RemoveBuff(Entity Char, PrefabGUID GUID)
@@ -304,11 +285,12 @@ namespace RPGMods.Utils
                 {
                     var item = managed.GetOrDefault<ManagedItemData>(entry.Key);
                     if (item.PrefabName.StartsWith("Item_VBloodSource") || item.PrefabName.StartsWith("GM_Unit_Creature_Base") || item.PrefabName == "Item_Cloak_ShadowPriest") continue;
-                    if (item.Name.ToString().ToLower().Equals( name.ToLower())){
+                    var nameLower = name.ToLower();
+                    if (item.Name.ToString().ToLower().Equals(nameLower) ||
+                        item.PrefabName.ToLower().Equals(nameLower))
+                    {
                         return entry.Key;
                     }
-                    if (item.PrefabName.ToLower().Equals(name.ToLower())) { return entry.Key; }
-                    //if (item.PrefabName.Substring(item.PrefabName.IndexOf("_"+1)).ToLower().Equals(name.ToLower())) { return entry.Key; }
                 }
                 catch { }
             }
@@ -350,29 +332,17 @@ namespace RPGMods.Utils
 
         public static void AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
-            /*
-            unsafe
-            {
-                var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
-                var bytes = stackalloc byte[Marshal.SizeOf<FakeNull>()];
-                var bytePtr = new IntPtr(bytes);
-                Marshal.StructureToPtr<FakeNull>(new()
-                {
-                    value = 7,
-                    has_value = true
-                }, bytePtr, false);
-                var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
-                var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
-                var sets = new AddItemSettings();
-                sets.DropRemainder = true;
-                sets.EquipIfPossible = true;
-                var hasAdded = InventoryUtilitiesServer.TryAddItem(sets,ctx.Event.SenderCharacterEntity, guid ,amount);
-            }*/
-
+            // TODO this?
             var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
             var itemSettings = AddItemSettings.Create(Plugin.Server.EntityManager, gameData.ItemHashLookupMap);
             var inventoryResponse = InventoryUtilitiesServer.TryAddItem(itemSettings, ctx.Event.SenderCharacterEntity, guid, amount);
-            //return inventoryResponse.NewEntity;
+            // TODO or this?
+            // unsafe
+            // {
+            //     var user = GameData.Users.GetUserByCharacterName(ctx.User.CharacterName.ToString());
+            //     user.TryGiveItem(guid, 1, out Entity itemEntity);
+            //     return itemEntity;
+            // }
         }
 
         public static BloodType GetBloodTypeFromName(string name)
@@ -383,6 +353,7 @@ namespace RPGMods.Utils
             return type;
         }
 
+        // TODO make prefab enum for this
         public static PrefabGUID GetSourceTypeFromName(string name)
         {
             PrefabGUID type;
@@ -403,6 +374,7 @@ namespace RPGMods.Utils
             EntityManager entityManager = Plugin.Server.EntityManager;
 
             //-- Way of the Cache
+            // TODO check name player cache?
             if (Cache.NamePlayerCache.TryGetValue(name.ToLower(), out var data))
             {
                 playerEntity = data.CharEntity;
@@ -423,29 +395,8 @@ namespace RPGMods.Utils
                 userEntity = empty_entity;
                 return false;
             }
-
-            //-- Way of the Query
-            //foreach (var UsersEntity in entityManager.CreateEntityQuery(ComponentType.ReadOnly<User>()).ToEntityArray(Allocator.Temp))
-            //{
-            //    var target_component = entityManager.GetComponentData<User>(UsersEntity);
-            //    if (mustOnline)
-            //    {
-            //        if (!target_component.IsConnected) continue;
-            //    }
-
-
-            //    string CharName = target_component.CharacterName.ToString();
-            //    if (CharName.Equals(name))
-            //    {
-            //        userEntity = UsersEntity;
-            //        playerEntity = target_component.LocalCharacter._Entity;
-            //        return true;
-            //    }
-            //}
-            //playerEntity = empty_entity;
-            //userEntity = empty_entity;
-            //return false;
         }
+        
         public static bool FindPlayer(ulong steamid, bool mustOnline, out Entity playerEntity, out Entity userEntity)
         {
             EntityManager entityManager = Plugin.Server.EntityManager;
@@ -504,7 +455,7 @@ namespace RPGMods.Utils
             if (UniqueID == 0.0) UniqueID += 0.00001f;
             else if (UniqueID == 1.0f) UniqueID -= 0.00001f;
             duration_final = default_duration + UniqueID;
-            
+
             while (Cache.spawnNPC_Listen.ContainsKey(duration))
             {
                 UniqueID = (float)rand.NextDouble();
@@ -525,8 +476,6 @@ namespace RPGMods.Utils
         public static bool SpawnAtPosition(Entity user, Prefabs.Units unit, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1) {
             var guid = new PrefabGUID((int)unit);
 
-            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            //var f3pos = new float3(position.x, translation.Value.y, position.y);
             try
             {
                 Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, guid, position, count, minRange, maxRange, duration);
@@ -564,6 +513,8 @@ namespace RPGMods.Utils
             try
             {
                 name = s.PrefabGuidToNameDictionary[hashCode];
+                // TODO prefablookupmap?
+                //name = s.PrefabLookupMap[hashCode].ToString();
             }
             catch
             {
@@ -582,33 +533,34 @@ namespace RPGMods.Utils
             return Prefabs.Units.Unknown;
         }
 
-        /*
-        public static void TeleportTo(Context ctx, float3 position)
+        public static void TeleportTo(ChatCommandContext ctx, float3 position)
         {
-            var entity = ctx.EntityManager.CreateEntity(
+            var entity = VWorld.Server.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
                     ComponentType.ReadWrite<PlayerTeleportDebugEvent>()
                 );
 
-            ctx.EntityManager.SetComponentData<FromCharacter>(entity, new()
+            VWorld.Server.EntityManager.SetComponentData<FromCharacter>(entity, new()
             {
                 User = ctx.Event.SenderUserEntity,
                 Character = ctx.Event.SenderCharacterEntity
             });
 
-            ctx.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
+            VWorld.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
             {
                 Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
-        }*/
-        /*
+        }
+
+        // TODO remove this if not used?
         struct FakeNull
         {
             public int value;
             public bool has_value;
-        }*/
+        }
 
+        // TODO to Prefabs.cs?
         public enum BloodType {
             Frailed = -899826404,
             Creature = -77658840,
@@ -698,23 +650,8 @@ namespace RPGMods.Utils
             {(int)UnitStatType.ReducedResourceDurabilityLoss }
 
         };
-
-        public static void confirmFile (string address, string file) {
-            try {
-                Directory.CreateDirectory(address);
-            }
-            catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now +": Error creating directory at " + address + "\n Error is: " + e.Message);
-            }
-            try {
-                if (!File.Exists(address + file)) {
-                    FileStream stream = File.Create(address + file);
-                    stream.Dispose();
-                }
-            } catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now + ": Error creating file at " + address + "\n Error is: " + e.Message);
-            }
-        }
+        
+        // TODO still need this?
         public static string statTypeToString(UnitStatType type) {
             var name = Enum.GetName(type);
             // Split words by camel case

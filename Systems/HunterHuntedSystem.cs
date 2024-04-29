@@ -1,16 +1,15 @@
-﻿using MS.Internal.Xml.XPath;
-using ProjectM;
+﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Entities;
 using Unity.Transforms;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using Faction = OpenRPG.Utils.Prefabs.Faction;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class HunterHuntedSystem {
         private static EntityManager entityManager = Plugin.Server.EntityManager;

@@ -1,5 +1,5 @@
 ﻿using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text.Json;
 using Unity.Entities;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class WorldDynamicsSystem
     {
@@ -22,7 +22,6 @@ namespace RPGMods.Systems
             if (Plugin.isInitialized == false || loopInProgress == true) return;
 
             loopInProgress = true;
-            if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
             foreach (var faction in Database.FactionStats)
             {
                 if (faction.Value.Active == false) continue;
@@ -45,8 +44,6 @@ namespace RPGMods.Systems
 
                 //-- Calculate if faction level should change.
                 checkForLevelup(factionStats, faction.Key);
-
-                //Database.FactionStats[faction.Key] = factionStats;
             }
             loopInProgress = false;
         }
@@ -75,7 +72,6 @@ namespace RPGMods.Systems
             if (!em.HasComponent<FactionReference>(entity)) return;
 
             var factionID = em.GetComponentData<FactionReference>(entity).FactionGuid._Value.GetHashCode();
-            if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
             if (!Database.FactionStats.TryGetValue(factionID, out FactionData factionStats)) return;
 
             if (factionStats.Active == false) return;
@@ -97,7 +93,6 @@ namespace RPGMods.Systems
             if (Database.IgnoredMonstersGUID.Contains(em.GetComponentData<PrefabGUID>(entity))) return;
 
             var factionID = em.GetComponentData<FactionReference>(entity).FactionGuid._Value.GetHashCode();
-            if (Object.ReferenceEquals(Database.FactionStats, null)){ Plugin.Logger.LogWarning("Faction Stats loaded as Null, check the json file."); return;}
             if (!Database.FactionStats.TryGetValue(factionID, out var factionStats)) return;
 
             if (factionStats.Active == false) return;
@@ -159,49 +154,11 @@ namespace RPGMods.Systems
             em.SetComponentData(entity, unitStats);
         }
 
-        public static void SaveFactionStats()
+        public static HashSet<PrefabGUID> DefaultIgnoredMonsters()
         {
-            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"factionstats.json", JsonSerializer.Serialize(Database.FactionStats, Database.Pretty_JSON_options));
-        }
-
-        public static void SaveIgnoredMobs()
-        {
-            File.WriteAllText(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json", JsonSerializer.Serialize(Database.IgnoredMonsters, Database.Pretty_JSON_options));
-        }
-
-        public static void LoadIgnoredMobs()
-        {
-            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json"))
-            {
-                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json");
-                stream.Dispose();
-            }
-            string content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"ignoredmonsters.json");
-            try
-            {
-                Database.IgnoredMonsters = JsonSerializer.Deserialize<HashSet<string>>(content);
-                Database.IgnoredMonstersGUID = new HashSet<PrefabGUID>();
-                foreach (var item in Database.IgnoredMonsters)
-                {
-                    if (Enum.TryParse(item, true, out Prefabs.Units unit))
-                    {
-                        Database.IgnoredMonstersGUID.Add(new PrefabGUID((int)unit));
-                    }
-                }
-                Plugin.Logger.LogWarning("IgnoredMonsters DB Populated.");
-            }
-            catch
-            {
-                Database.IgnoredMonsters = new HashSet<string>();
-                Database.IgnoredMonstersGUID = new HashSet<PrefabGUID>();
-
-                Database.IgnoredMonsters.Add(Enum.GetName(Prefabs.Units.CHAR_Undead_GhostBanshee));
-                Database.IgnoredMonstersGUID.Add(new PrefabGUID((int)Prefabs.Units.CHAR_Undead_GhostBanshee));
-
-                SaveIgnoredMobs();
-
-                Plugin.Logger.LogWarning("IgnoredMonsters DB Created.");
-            }
+            var ignoredMobs = new HashSet<PrefabGUID>();
+            ignoredMobs.Add(new PrefabGUID((int)Prefabs.Units.CHAR_Undead_GhostBanshee));
+            return ignoredMobs;
         }
 
         private static Prefabs.Faction[] IgnoredFactions = new Prefabs.Faction[]
@@ -220,33 +177,19 @@ namespace RPGMods.Systems
             Prefabs.Faction.Unknown
         };
 
-        public static void LoadFactionStats()
+        public static ConcurrentDictionary<int, FactionData> DefaultFactionStats()
         {
-            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"factionstats.json"))
-            {
-                var stream = File.Create(AutoSaveSystem.mainSaveFolder+"factionstats.json");
-                stream.Dispose();
-            }
-            string content = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"factionstats.json");
-            try
-            {
-                Database.FactionStats = JsonSerializer.Deserialize<ConcurrentDictionary<int, FactionData>>(content);
-                Plugin.Logger.LogWarning("FactionStats DB Populated.");
-            }
-            catch
-            {
-                Database.FactionStats = new ConcurrentDictionary<int, FactionData>();
+            var factionStats = new ConcurrentDictionary<int, FactionData>();
 
-                foreach (var faction in Enum.GetValues<Prefabs.Faction>())
+            foreach (var faction in Enum.GetValues<Prefabs.Faction>())
+            {
+                if (!IgnoredFactions.Contains(faction))
                 {
-                    if (!IgnoredFactions.Contains(faction))
-                    {
-                        Database.FactionStats.TryAdd((int)faction, new FactionData(faction));
-                    }
+                    factionStats.TryAdd((int)faction, new FactionData(faction));
                 }
-                SaveFactionStats();
-                Plugin.Logger.LogWarning("FactionStats DB Created.");
             }
+
+            return factionStats;
         }
     }
 }

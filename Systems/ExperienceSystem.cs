@@ -5,13 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
-using Unity.Transforms;
-using Unity.Mathematics;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using System.Linq;
-using Cache = RPGMods.Utils.Cache;
+using Cache = OpenRPG.Utils.Cache;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class ExperienceSystem
     {
@@ -168,10 +166,11 @@ namespace RPGMods.Systems
             User user = entityManager.GetComponentData<User>(userEntity);
             ulong SteamID = user.PlatformId;
             Database.player_experience.TryGetValue(SteamID, out int xp);
-            Database.player_experience[SteamID] = xp - xpLost;
+            Database.player_experience[SteamID] = Math.Max(xp - xpLost, 0);
 
             SetLevel(playerEntity, userEntity, SteamID);
         }
+        
         public static void deathXPLoss(Entity playerEntity, Entity killerEntity) {
             PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
             Entity userEntity = player.UserEntity;
@@ -182,7 +181,7 @@ namespace RPGMods.Systems
             int pLvl = convertXpToLevel(exp);
             int killerLvl = pLvl;
             bool pvpKill = false;
-            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter killer);
+            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter _);
             if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
             else {
                 if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
@@ -191,7 +190,7 @@ namespace RPGMods.Systems
                         killerLvl = killerUnitLevel.Level;
                         if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityOwner has level: " + killerLvl);
                         if (!pvpKill) {
-                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eOwn, out killer);
+                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eOwn, out _);
                         }
                     }
                     else if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityOwner has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eOwn));
@@ -201,7 +200,7 @@ namespace RPGMods.Systems
                         killerLvl = killerUnitLevel.Level;
                         if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityCreator has level: " + killerLvl);
                         if (!pvpKill) {
-                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eCreator.Creator._Entity, out killer);
+                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eCreator.Creator._Entity, out _);
                         }
                     } else if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityCreator has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eCreator.Creator._Entity));
                 }
@@ -243,7 +242,7 @@ namespace RPGMods.Systems
 
             }
 
-            int currentXp = exp - (int)xpLost;
+            var currentXp = Math.Max(exp - (int)xpLost, 0);
             if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": subtracting that from our " + exp + " we get " + currentXp);
             Database.player_experience[SteamID] = currentXp;
 
@@ -405,120 +404,26 @@ namespace RPGMods.Systems
             progressPercent = (int)Math.Floor((double)earnedXp / neededXp * 100.0);
         }
 
-        public static void SaveEXPData(string saveFolder)
+        public static Dictionary<string, Dictionary<UnitStatType, float>> DefaultExperienceClassStats()
         {
-            File.WriteAllText(saveFolder + "player_experience.json", JsonSerializer.Serialize(Database.player_experience, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_log_exp.json", JsonSerializer.Serialize(Database.player_log_exp, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_abilitypoints.json", JsonSerializer.Serialize(Database.player_abilityIncrease, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_level_stats.json", JsonSerializer.Serialize(Database.player_level_stats, Database.JSON_options));
-            if (!Database.ErrorOnLoadingExperienceClasses) File.WriteAllText(saveFolder+"experience_class_stats.json", JsonSerializer.Serialize(Database.experience_class_stats, Database.JSON_options));
-        }
-
-        public static void LoadEXPData() {
-            string specificName = "player_experience.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                if (Database.player_experience == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                }
-                Plugin.Logger.LogWarning("PlayerEXP DB Populated.");
-            }
-            catch
+            var classes = new Dictionary<string, Dictionary<UnitStatType, float>>();
+            classes["health"] = new Dictionary<UnitStatType, float>() { { UnitStatType.MaxHealth, 0.5f } };
+            classes["ppower"] = new Dictionary<UnitStatType, float>() { { UnitStatType.PhysicalPower, 0.75f } };
+            classes["spower"] = new Dictionary<UnitStatType, float>() { { UnitStatType.SpellPower, 0.75f } };
+            classes["presist"] = new Dictionary<UnitStatType, float>() { { UnitStatType.PhysicalResistance, 0.05f } };
+            classes["sresist"] = new Dictionary<UnitStatType, float>() { { UnitStatType.SpellResistance, 0.05f } };
+            classes["beasthunter"] = new Dictionary<UnitStatType, float>()
+                { { UnitStatType.DamageVsBeasts, 0.04f }, { UnitStatType.ResistVsBeasts, 4f } };
+            classes["undeadhunter"] = new Dictionary<UnitStatType, float>()
+                { { UnitStatType.DamageVsUndeads, 0.02f }, { UnitStatType.ResistVsUndeads, 2 } };
+            classes["manhunter"] = new Dictionary<UnitStatType, float>() { { UnitStatType.DamageVsHumans, 0.02f}, { UnitStatType.ResistVsHumans, 2 } };
+            classes["demonhunter"] = new Dictionary<UnitStatType, float>() { { UnitStatType.DamageVsDemons, 0.02f}, { UnitStatType.ResistVsDemons, 2 } };
+            classes["farmer"] = new Dictionary<UnitStatType, float>()
             {
-                Database.player_experience = new Dictionary<ulong, int>();
-                Plugin.Logger.LogWarning("PlayerEXP DB Created.");
-            }
-
-            //we have to know the difference here between a deserialization failure or initialization since if the file is there we don't 
-            //want to overwrite it in case we typoed a unitstattype or some other typo in the experience class config file.
-            var wasExperienceClassesCreated = false;
-            specificName = "experience_class_stats.json";
-            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json")){
-                FileStream stream = File.Create(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
-                wasExperienceClassesCreated = true;
-                stream.Dispose();
-            }
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
-            try{
-                Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
-                if (Database.experience_class_stats == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
-                }
-                Plugin.Logger.LogWarning("Experience class stats DB Populated.");
-                Database.ErrorOnLoadingExperienceClasses = false;
-            }
-            catch (Exception ex){
-                initializeClassData();
-                if (wasExperienceClassesCreated) Plugin.Logger.LogWarning("Experience class stats DB Created.");
-                else{
-                    Plugin.Logger.LogError($"Problem loading experience classes from file. {ex.Message}");
-                    Database.ErrorOnLoadingExperienceClasses = true;
-                }
-            }
-
-            specificName = "player_abilitypoints.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                if (Database.player_abilityIncrease == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                }
-                Plugin.Logger.LogWarning("PlayerAbilities DB Populated.");
-            }
-            catch{
-                Database.player_abilityIncrease = new Dictionary<ulong, int>();                
-                Plugin.Logger.LogWarning("PlayerAbilities DB Created.");
-            }
-
-
-            specificName = "player_level_stats.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(json);
-                if (Database.player_level_stats == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>>(json);
-                }
-                Plugin.Logger.LogWarning("Player level Stats DB Populated.");
-            }
-            catch{
-                Database.player_level_stats = new LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>();
-                Plugin.Logger.LogWarning("Player level stats DB Created.");
-            }
-
-            specificName = "player_log_exp.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                if (Database.player_log_exp == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                }
-                Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Populated.");
-            }
-            catch{
-                Database.player_log_exp = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Created.");
-            }
-        }
-
-        private static void initializeClassData()
-        {
-            Database.experience_class_stats = new Dictionary<string, Dictionary<UnitStatType, float>>();
-            //maybe someday we'll have a default
+                { UnitStatType.ResourceYield, 0.1f }, { UnitStatType.PhysicalPower, -1f },
+                { UnitStatType.SpellPower, -0.5f }
+            };
+            return classes;
         }
     }
 }

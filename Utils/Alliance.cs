@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-namespace RPGMods.Utils; 
+namespace OpenRPG.Utils; 
 
 public class Alliance {
     public struct ClosePlayer {

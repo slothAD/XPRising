@@ -1,8 +1,8 @@
 ﻿using System;
-using Faction = RPGMods.Utils.Prefabs.Faction;
-using Units = RPGMods.Utils.Prefabs.Units;
+using Faction = OpenRPG.Utils.Prefabs.Faction;
+using Units = OpenRPG.Utils.Prefabs.Units;
 
-namespace RPGMods.Utils;
+namespace OpenRPG.Utils;
 
 public static class FactionUnits {
     public struct Unit {

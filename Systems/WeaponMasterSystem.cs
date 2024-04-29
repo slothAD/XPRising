@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class WeaponMasterSystem
     {
@@ -70,7 +70,6 @@ namespace RPGMods.Systems
 
         public static int[] GreatSwordStats = { 0, 30 };
         public static double[] GreatSwordRates = { 0.125, 0.0125 };
-
 
         public static int[][] masteryStats = { SpellStats, UnarmedStats, SpearStats, SwordStats, ScytheStats, CrossbowStats, MaceStats, SlasherStats, AxeStats, FishingPoleStats, RapierStats, PistolStats, GreatSwordStats };
         public static double[][] masteryRates = { SpellRates, UnarmedRates, SpearRates, SwordRates, ScytheRates, CrossbowRates, MaceRates, SlasherRates, AxeRates, FishingPoleRates, RapierRates, PistolRates, GreatSwordRates };
@@ -215,9 +214,7 @@ namespace RPGMods.Systems
 
             if (Cache.player_combat_ticks[SteamID] > MaxCombatTick) return;
             WeaponType WeaponType = GetWeaponType(Player);
-
-
-
+            
             double weaponGrowth = 1;
             double spellGrowth = 1;
 
@@ -310,24 +307,7 @@ namespace RPGMods.Systems
                 if (Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData wd) && effectivenessSubSystemEnabled)
                     effectiveness = wd.efficency[type];
                 effectiveness = Math.Max(1.0f, effectiveness);
-                Buffer.Add(Helper.makeBuff(masteryStats[type][i], Helper.calcBuffValue(mastery, effectiveness, masteryRates[type][i], masteryStats[type][i])));/*
-                var modType = ModificationType.Add;
-                if ((UnitStatType)masteryStats[type][i] == UnitStatType.CooldownModifier)
-                {
-                    //value = 1.0f - value;
-                    modType = ModificationType.Set;
-                    if (CDRStacks)
-                    {
-                        modType = ModificationType.Multiply;
-                    }
-                }
-                Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                {
-                    StatType = (UnitStatType)masteryStats[type][i],
-                    Value = (float)value,
-                    ModificationType = modType,
-                    Id = ModificationId.NewId(0)
-                });*/
+                Buffer.Add(Helper.makeBuff(masteryStats[type][i], Helper.calcBuffValue(mastery, effectiveness, masteryRates[type][i], masteryStats[type][i])));
             }
         }
 
@@ -357,15 +337,6 @@ namespace RPGMods.Systems
                 return 0.0f;
             }
             double value = mastery * masteryRates[type][stat] * effectiveness;
-            /*if ((UnitStatType)masteryStats[type][stat] == UnitStatType.CooldownModifier){
-                if (linearCDR){
-                    value = mastery * effectiveness;
-                    value = value / (value + masteryRates[type][stat]);
-                }
-                else{
-                    value = (mastery*effectiveness)/(masteryRates[type][stat]*2);
-                }
-            }*/
             value = Helper.calcBuffValue(mastery, effectiveness, masteryRates[type][stat], masteryStats[type][stat]);
             return value;
         }
@@ -545,68 +516,6 @@ namespace RPGMods.Systems
             bool isFound = Database.player_weaponmastery.TryGetValue(SteamID, out WeaponMasterData Mastery);
             if (!isFound) return (MaxMastery*-10);
             return Mastery.mastery[type];
-        }
-
-        public static void SaveWeaponMastery(string saveFolder)
-        {
-            File.WriteAllText(saveFolder+"weaponMastery.json", JsonSerializer.Serialize(Database.player_weaponmastery, Database.JSON_options));
-            File.WriteAllText(saveFolder+"mastery_decay.json", JsonSerializer.Serialize(Database.player_decaymastery_logout, Database.JSON_options));
-            File.WriteAllText(saveFolder +"player_log_mastery.json", JsonSerializer.Serialize(Database.player_log_mastery, Database.JSON_options));
-        }
-
-        public static void LoadWeaponMastery() {
-
-            string specificName = "weaponMastery.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"weaponMastery.json");
-            try {
-                Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
-                if (Database.player_weaponmastery == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_weaponmastery = JsonSerializer.Deserialize<Dictionary<ulong, WeaponMasterData>>(json);
-                }
-                Plugin.Logger.LogWarning("WeaponMastery DB Populated.");
-            } catch {
-                Database.player_weaponmastery = new Dictionary<ulong, WeaponMasterData>();
-                Plugin.Logger.LogWarning("WeaponMastery DB Created.");
-            }
-
-            specificName = "weaponMastery.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
-                if (Database.player_decaymastery_logout == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_decaymastery_logout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
-                }
-                Plugin.Logger.LogWarning("WeaponMasteryDecay DB Populated.");
-            }
-            catch{
-                Database.player_decaymastery_logout = new Dictionary<ulong, DateTime>();
-                Plugin.Logger.LogWarning("WeaponMasteryDecay DB Created.");
-            }
-
-            specificName = "player_log_mastery.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                if (Database.player_log_mastery == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_log_mastery = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                }
-                Plugin.Logger.LogWarning("Player_LogMastery_Switch DB Populated.");
-            }
-            catch{
-                Database.player_log_mastery = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning("Player_LogMastery_Switch DB Created.");
-            }
-
-
         }
     }
 }

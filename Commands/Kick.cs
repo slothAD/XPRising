@@ -1,19 +1,22 @@
-﻿using Il2CppSystem.Runtime.Remoting.Messaging;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands{
-    public static class Kick{
+namespace OpenRPG.Commands
+{
+    [CommandGroup(name: "kick")]
+    public static class Kick
+    {
         [Command("kick", "kick <playername>", "Kick the specified player out of the server.", adminOnly: true)]
-        public static void KickPlayer(ICommandContext ctx, string name){
-
-
-            if (Helper.FindPlayer(name, true, out _, out var targetUserEntity)){
+        public static void KickCommand(ChatCommandContext ctx, string name)
+        {
+            if (Helper.FindPlayer(name, true, out _, out var targetUserEntity))
+            {
                 Helper.KickPlayer(targetUserEntity);
                 ctx.Reply($"Player \"{name}\" has been kicked from server.");
             }
-            else{
-                ctx.Reply("Specified player not found.");
+            else
+            {
+                throw ctx.Error("Specified player not found.");
             }
         }
     }

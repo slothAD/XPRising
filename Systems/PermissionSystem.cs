@@ -1,17 +1,15 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods;
-using RPGMods.Utils;
-using System;
+using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Unity.Entities;
+using VampireCommandFramework;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public static class PermissionSystem
     {
@@ -53,7 +51,6 @@ namespace RPGMods.Systems
             else
             {
                 Database.command_permission[command] = 100;
-                SavePermissions();
             }
             return 100;
         }
@@ -63,8 +60,8 @@ namespace RPGMods.Systems
             bool isAllowed = GetUserPermission(steamID) >= GetCommandPermission(command);
             return isAllowed;
         }
-        /*
-        private static object SendPermissionList(Context ctx, List<string> messages)
+
+        private static object SendPermissionList(ChatCommandContext ctx, List<string> messages)
         {
             foreach(var m in messages)
             {
@@ -73,7 +70,7 @@ namespace RPGMods.Systems
             return new object();
         }
 
-        public static async Task PermissionList(Context ctx)
+        public static async Task PermissionList(ChatCommandContext ctx)
         {
             await Task.Yield();
 
@@ -96,7 +93,7 @@ namespace RPGMods.Systems
             messages.Add($"===================================");
 
             TaskRunner.Start(taskWorld => SendPermissionList(ctx, messages), false);
-        }*/
+        }
 
         public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
         {
@@ -221,92 +218,50 @@ namespace RPGMods.Systems
             }
         }
 
-        public static void SavePermissions()
+        public static Dictionary<string, int> DefaultCommandPermissions()
         {
-            File.WriteAllText("BepInEx/config/RPGMods/command_permission.json", JsonSerializer.Serialize(Database.command_permission/*, Database.Pretty_JSON_options*/));
-        }
-
-        public static void SaveUserPermission()
-        {
-            File.WriteAllText("BepInEx/config/RPGMods/user_permission.json", JsonSerializer.Serialize(Database.user_permission, Database.Pretty_JSON_options));
-        }
-
-        public static void LoadPermissions()
-        {
-            if (!File.Exists("BepInEx/config/RPGMods/user_permission.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/user_permission.json");
-                stream.Dispose();
-            }
-            string json = File.ReadAllText("BepInEx/config/RPGMods/user_permission.json");
-            try
-            {
-                Database.user_permission = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                Plugin.Logger.LogWarning("UserPermissions DB Populated");
-            }
-            catch
-            {
-                Database.user_permission = new Dictionary<ulong, int>();
-                Plugin.Logger.LogWarning("UserPermission DB Created.");
-            }
-
-            if (!File.Exists("BepInEx/config/RPGMods/command_permission.json"))
-            {
-                FileStream stream = File.Create("BepInEx/config/RPGMods/command_permission.json");
-                stream.Dispose();
-            }
-            json = File.ReadAllText("BepInEx/config/RPGMods/command_permission.json");
-            try
-            {
-                Database.command_permission = JsonSerializer.Deserialize<Dictionary<string, int>>(json);
-                Plugin.Logger.LogWarning("CommandPermissions DB Populated");
-            }
-            catch
-            {
-                Database.command_permission = new Dictionary<string, int>();
-                Database.command_permission["help"] = 0;
-                Database.command_permission["ping"] = 0;
-                Database.command_permission["myinfo"] = 0;
-                Database.command_permission["pvp"] = 0;
-                Database.command_permission["pvp_args"] = 100;
-                Database.command_permission["siege"] = 0;
-                Database.command_permission["siege_args"] = 100;
-                Database.command_permission["wanted"] = 0;
-                Database.command_permission["wanted_args"] = 100;
-                Database.command_permission["experience"] = 0;
-                Database.command_permission["experience_args"] = 100;
-                Database.command_permission["mastery"] = 0;
-                Database.command_permission["mastery_args"] = 100;
-                Database.command_permission["autorespawn"] = 100;
-                Database.command_permission["autorespawn_args"] = 100;
-                Database.command_permission["waypoint"] = 100;
-                Database.command_permission["waypoint_args"] = 100;
-                Database.command_permission["ban"] = 100;
-                Database.command_permission["bloodpotion"] = 100;
-                Database.command_permission["blood"] = 100;
-                Database.command_permission["customspawn"] = 100;
-                Database.command_permission["give"] = 100;
-                Database.command_permission["godmode"] = 100;
-                Database.command_permission["health"] = 100;
-                Database.command_permission["kick"] = 100;
-                Database.command_permission["kit"] = 100;
-                Database.command_permission["nocooldown"] = 100;
-                Database.command_permission["permission"] = 100;
-                Database.command_permission["playerinfo"] = 100;
-                Database.command_permission["punish"] = 100;
-                Database.command_permission["rename"] = 100;
-                Database.command_permission["adminrename"] = 100;
-                Database.command_permission["resetcooldown"] = 100;
-                Database.command_permission["save"] = 100;
-                Database.command_permission["shutdown"] = 100;
-                Database.command_permission["spawnnpc"] = 100;
-                Database.command_permission["speed"] = 100;
-                Database.command_permission["sunimmunity"] = 100;
-                Database.command_permission["teleport"] = 100;
-                Database.command_permission["worlddynamics"] = 100;
-                SavePermissions();
-                Plugin.Logger.LogWarning("CommandPermissions DB Created.");
-            }
+            var permissions = new Dictionary<string, int>();
+            permissions["help"] = 0;
+            permissions["ping"] = 0;
+            permissions["myinfo"] = 0;
+            permissions["pvp"] = 0;
+            permissions["pvp_args"] = 100;
+            permissions["siege"] = 0;
+            permissions["siege_args"] = 100;
+            permissions["wanted"] = 0;
+            permissions["wanted_args"] = 100;
+            permissions["experience"] = 0;
+            permissions["experience_args"] = 100;
+            permissions["mastery"] = 0;
+            permissions["mastery_args"] = 100;
+            permissions["autorespawn"] = 100;
+            permissions["autorespawn_args"] = 100;
+            permissions["waypoint"] = 100;
+            permissions["waypoint_args"] = 100;
+            permissions["ban"] = 100;
+            permissions["bloodpotion"] = 100;
+            permissions["blood"] = 100;
+            permissions["customspawn"] = 100;
+            permissions["give"] = 100;
+            permissions["godmode"] = 100;
+            permissions["health"] = 100;
+            permissions["kick"] = 100;
+            permissions["kit"] = 100;
+            permissions["nocooldown"] = 100;
+            permissions["permission"] = 100;
+            permissions["playerinfo"] = 100;
+            permissions["punish"] = 100;
+            permissions["rename"] = 100;
+            permissions["adminrename"] = 100;
+            permissions["resetcooldown"] = 100;
+            permissions["save"] = 100;
+            permissions["shutdown"] = 100;
+            permissions["spawnnpc"] = 100;
+            permissions["speed"] = 100;
+            permissions["sunimmunity"] = 100;
+            permissions["teleport"] = 100;
+            permissions["worlddynamics"] = 100;
+            return permissions;
         }
     }
 }

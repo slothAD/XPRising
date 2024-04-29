@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using ProjectM.Network;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 using Unity.Entities;
 using Unity.Mathematics;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using Faction = OpenRPG.Utils.Prefabs.Faction;
 
-namespace RPGMods.Utils;
+namespace OpenRPG.Utils;
 
 public static class FactionHeat {
     public static readonly Faction[] ActiveFactions = {

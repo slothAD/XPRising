@@ -1,11 +1,10 @@
-﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
 
     [CommandGroup("experience","xp")]
@@ -148,6 +147,5 @@ namespace RPGMods.Commands
                 ctx.Reply($"Could not spend point! {ex.Message}");
             }
         }
-
     }
 }

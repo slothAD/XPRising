@@ -1,12 +1,10 @@
 ﻿using ProjectM;
 using System;
-using System.Runtime.InteropServices;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public class RespawnCharacter
     {

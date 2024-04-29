@@ -1,13 +1,17 @@
-﻿using RPGMods.Utils;
+using Bloodstone.API;
+using OpenRPG.Systems;
+using OpenRPG.Utils;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands {
+namespace OpenRPG.Commands {
     [CommandGroup("waypoint", "wp")]
     public static class Waypoint {
         public static int WaypointLimit = 3;
@@ -21,15 +25,15 @@ namespace RPGMods.Commands {
                 return;
             }
 
-            if (Database.waypointDBNew.TryGetValue(waypoint, out var WPData)) {
+            if (Database.waypoints.TryGetValue(waypoint, out var WPData)) {
                 Helper.TeleportTo(ctx, WPData);
                 return;
             }
 
-            if (Database.waypointDBNew.TryGetValue(waypoint + "_" + SteamID, out var WPData_)) {
+            if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out var WPData_)) {
                 if (WaypointLimit <= 0 && !ctx.Event.User.IsAdmin) {
                     ctx.Reply("Personal Waypoints are forbidden to you.");
-                    if(Database.waypointDBNew.Remove(waypoint + "_" + SteamID)) {
+                    if(Database.waypoints.Remove(waypoint + "_" + SteamID)) {
                         ctx.Reply("The forbidden waypoint has been destroyed.");
                     }
                     return;
@@ -48,7 +52,7 @@ namespace RPGMods.Commands {
                 return;
             }
             var SteamID = ctx.Event.User.PlatformId;
-            if (Database.waypointDBNew.TryGetValue(name, out _)) {
+            if (Database.waypoints.TryGetValue(name, out _)) {
                 ctx.Reply($"A global waypoint with the \"{name}\" name existed. Please rename your waypoint.");
                 return;
             }
@@ -59,7 +63,7 @@ namespace RPGMods.Commands {
                 }
             }
             string wp_name = name + "_" + SteamID;
-            if (Database.waypointDBNew.TryGetValue(name, out _)) {
+            if (Database.waypoints.TryGetValue(name, out _)) {
                 ctx.Reply($"You already have a waypoint with the same name.");
                 return;
             }
@@ -89,7 +93,7 @@ namespace RPGMods.Commands {
         public static void removeWaypoint(ChatCommandContext ctx, string name) {
             var SteamID = ctx.Event.User.PlatformId;
             string wp_name = name + "_" + SteamID;
-            if (!Database.waypointDBNew.TryGetValue(wp_name, out _)) {
+            if (!Database.waypoints.TryGetValue(wp_name, out _)) {
                 ctx.Reply($"You do not have any waypoint with this name.");
                 return;
             }
@@ -104,7 +108,7 @@ namespace RPGMods.Commands {
             int count = 0;
             int wpPerMsg = 5;
             string reply = "";
-            foreach (var wp in Database.waypointDBNew) {
+            foreach (var wp in Database.waypoints) {
                 if(!wp.Key.Contains("_")) {
                     if (count < wpPerMsg) {
                         reply += $" - <color=#ffff00>{wp.Key}</color> [<color=#00dd00>Global</color>]";
@@ -138,9 +142,8 @@ namespace RPGMods.Commands {
         }
 
         public static void AddWaypoint(ulong owner, Tuple<float, float, float> location, string name, string true_name, bool isGlobal) {
-            //var WaypointData = new WaypointData(true_name, owner, location);
-            if (isGlobal) Database.waypointDBNew[true_name] = location;
-            else Database.waypointDBNew[name] = location;
+            if (isGlobal) Database.waypoints[true_name] = location;
+            else Database.waypoints[name] = location;
             if (!isGlobal && Database.waypoints_owned.TryGetValue(owner, out var total)) {
                 Database.waypoints_owned[owner] = total + 1;
             } else if(!isGlobal) Database.waypoints_owned[owner] = 1;
@@ -148,105 +151,12 @@ namespace RPGMods.Commands {
 
         public static void RemoveWaypoint(ulong owner, string name, bool global) {
             if (global) {
-                Database.waypointDBNew.Remove(name);
+                Database.waypoints.Remove(name);
             } else {
                 Database.waypoints_owned[owner] -= 1;
                 if (Database.waypoints_owned[owner] < 0) Database.waypoints_owned[owner] = 0;
-                Database.waypointDBNew.Remove(name);
+                Database.waypoints.Remove(name);
             }
-        }
-
-        public static void LoadWaypoints() {
-            //LoadWaypointsOld();
-            LoadWaypointsNewMethod();
-        }
-        public static void LoadWaypointsOld() {
-            string specificName = "waypoints.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificName);
-
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificName);
-            try {
-                Database.waypoints = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
-                if (Database.waypoints == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.waypoints = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
-                }
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline DB Populated.");
-            } catch {
-                Database.waypoints = new Dictionary<string, WaypointData>();
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline DB Created.");
-            }
-
-            specificName = "global_waypoints.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificName);
-
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificName);
-            try {
-                Database.globalWaypoint = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
-                if (Database.globalWaypoint == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.globalWaypoint = JsonSerializer.Deserialize<Dictionary<string, WaypointData>>(json);
-                }
-                Plugin.Logger.LogWarning(DateTime.Now + ": GlobalWaypoints DB Populated.");
-            } catch {
-                Database.globalWaypoint = new Dictionary<string, WaypointData>();
-                Plugin.Logger.LogWarning(DateTime.Now + ": GlobalWaypoints DB Created.");
-            }
-
-            specificName = "total_waypoints.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificName);
-
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificName);
-            try {
-                Database.waypoints_owned = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                if (Database.waypoints_owned == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.waypoints_owned = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                }
-                Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Populated.");
-            } catch {
-                Database.waypoints_owned = new Dictionary<ulong, int>();
-                Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Created.");
-            }
-
-        }
-        public static void LoadWaypointsNewMethod() {
-            /*
-            Database.waypoints = Helper.LoadDB<string, WaypointData>("waypoints.json");
-            Plugin.Logger.LogWarning(DateTime.Now + ": Waypoints DB Populated.");
-
-            Database.globalWaypoint = Helper.LoadDB<string, WaypointData>("global_waypoints.json");
-            Plugin.Logger.LogWarning(DateTime.Now + ": GlobalWaypoints DB Populated.");
-            */
-            Database.waypoints_owned = Helper.LoadDB<ulong, int>("total_waypoints.json");
-            Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Populated.");
-
-            Database.waypointDBNew = Helper.LoadDB<string, Tuple<float, float, float>>("waypointsNewDB.json");
-            Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint New DB Populated.");
-
-        }
-
-        public static void SaveWaypoints(string saveFolder) {
-            saveOwned(saveFolder);
-            //Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint Count DB Saved.");
-            saveWPNew(saveFolder);
-            //Plugin.Logger.LogWarning(DateTime.Now + ": Waypoint new DB saved.");
-        }
-        public static void saveOwned(string saveFolder) {
-            File.WriteAllText(saveFolder + "total_waypoints.json", JsonSerializer.Serialize(Database.waypoints_owned, Database.JSON_options));
-        }
-        public static void saveWaypoints(string saveFolder) {
-            File.WriteAllText(saveFolder + "waypoints.json", JsonSerializer.Serialize(Database.waypoints, Database.JSON_options));
-        }
-        public static void saveWPNew(string saveFolder) {
-            File.WriteAllText(saveFolder + "waypointsNewDB.json", JsonSerializer.Serialize(Database.waypointDBNew, Database.JSON_options));
-            
-        }
-        public static void saveGlobalWaypoints(string saveFolder) {
-            File.WriteAllText(saveFolder + "global_waypoints.json", JsonSerializer.Serialize(Database.globalWaypoint, Database.JSON_options));
         }
     }
 }

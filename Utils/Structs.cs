@@ -1,15 +1,15 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using Faction = OpenRPG.Utils.Prefabs.Faction;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public struct LevelData
     {
@@ -117,7 +117,7 @@ namespace RPGMods.Utils
         public ulong SteamID { get; set; }
         public bool IsHostile { get; set; }
 
-        public StateData (ulong steamID = 0, bool isHostile = false)
+        public StateData(ulong steamID = 0, bool isHostile = false)
         {
             SteamID = steamID;
             IsHostile = isHostile;
@@ -131,7 +131,7 @@ namespace RPGMods.Utils
         public bool IsOnline { get; set; }
         public Entity UserEntity { get; set; }
         public Entity CharEntity { get; set; }
-        public PlayerData( FixedString64 characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
+        public PlayerData(FixedString64 characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
         {
             CharacterName = characterName;
             SteamID = steamID;
@@ -164,19 +164,6 @@ namespace RPGMods.Utils
         }
     }
 
-    public struct HonorRankInfo
-    {
-        public string Title { get; set; }
-        public int HonorRank { get; set; }
-        public int Rewards { get; set; }
-        public HonorRankInfo( string title = "default", int honorRank = 0, int rewards = 0)
-        {
-            Title = title;
-            HonorRank = honorRank;
-            Rewards = rewards;
-        }
-    }
-
     public struct PvPData
     {
         public string PlayerName { get; set; }
@@ -195,17 +182,8 @@ namespace RPGMods.Utils
             Title = title;
         }
     }
-
-    public struct Float2
-    {
-        public float x { get; set; }
-        public float y { get; set; }
-        public Float2(float X, float Y)
-        {
-            x = X;
-            y = Y;
-        }
-    }
+    
+    // TODO check this
     public struct newWaypointData {
         public float x;
         public float y;
@@ -213,7 +191,7 @@ namespace RPGMods.Utils
         public newWaypointData(float X, float Y, float Z) {x = X; y = Y; z = Z; }
     }
 
-        public struct WaypointData
+    public struct WaypointData
     {
         public string Name { get; set; }
         public ulong Owner { get; set; }
@@ -225,35 +203,6 @@ namespace RPGMods.Utils
             Location = location;
         }
     }
-
-    public struct WeaponMasterDataOld
-    {
-        public int Spear { get; set; }
-        public int Sword { get; set; }
-        public int Scythe { get; set; }
-        public int Crossbow { get; set; }
-        public int Mace { get; set; }
-        public int Slashers { get; set; }
-        public int Axes { get; set; }
-        public int None { get; set; }
-        public int FishingPole { get; set; }
-        public int Spell { get; set; }
-
-        public WeaponMasterDataOld(int spear = 0, int sword = 0, int scythe = 0, int crossbow = 0, int mace = 0, int slashers = 0, int axes = 0, int none = 0, int fishingpole = 0, int spell = 0)
-        {
-            Spear = spear;
-            Sword = sword;
-            Scythe = scythe;
-            Crossbow = crossbow;
-            Mace = mace;
-            Slashers = slashers;
-            Axes = axes;
-            None = none;
-            FishingPole = fishingpole;
-            Spell = spell;
-        }
-    }
-
 
     public struct BloodlineData{
         public double[] strength { get; set; }

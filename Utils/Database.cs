@@ -9,7 +9,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-namespace RPGMods.Utils
+namespace OpenRPG.Utils
 {
     public static class Cache
     {
@@ -49,8 +49,7 @@ namespace RPGMods.Utils
 
         //-- -- CustomNPC Spawner
         public static SizedDictionaryAsync<float, SpawnNPCListen> spawnNPC_Listen = new(500);
-
-
+        
         public static DateTime GetCombatStart(ulong steamID) {
             if (!playerCombatStart.TryGetValue(steamID, out var start)) {
                 start = DateTime.MinValue;
@@ -69,20 +68,9 @@ namespace RPGMods.Utils
 
     public static class Database
     {
-        public static JsonSerializerOptions JSON_options = new()
-        {
-            WriteIndented = false,
-            IncludeFields = false
-        };
-        public static JsonSerializerOptions Pretty_JSON_options = new()
-        {
-            WriteIndented = true,
-            IncludeFields = true
-        };
         //-- Dynamic Database (Saved on a JSON file on plugin reload, server restart, and shutdown.)
         //-- Initialization for the data loading is on each command or related CS file.
 
-        //public static Dictionary<ulong, ApplyBuffDebugEvent> playerBuffs = new();
         public static HashSet<ApplyBuffDebugEvent> playerBuffs = new();
         //-- -- Commands
         public static Dictionary<ulong, bool> sunimmunity { get; set; }
@@ -90,14 +78,15 @@ namespace RPGMods.Utils
         public static Dictionary<ulong, bool> godmode { get; set; }
         public static Dictionary<ulong, bool> speeding { get; set; }
         public static Dictionary<ulong, bool> autoRespawn { get; set; }
-        public static Dictionary<string, Tuple<float,float,float>> waypointDBNew { get; set; }
-
-        public static Dictionary<string, WaypointData> globalWaypoint { get; set; }
-        public static Dictionary<string, WaypointData> waypoints { get; set; }
+        public static Dictionary<string, Tuple<float,float,float>> waypoints { get; set; }
         public static Dictionary<ulong, int> waypoints_owned { get; set; }
         public static Dictionary<ulong, int> user_permission { get; set; }
         public static Dictionary<string, int> command_permission { get; set; }
         public static Dictionary<ulong, PowerUpData> PowerUpList { get; set; }
+        public static List<ItemKit> kits { get; set; }
+
+        //-- -- Ban System
+        public static Dictionary<ulong, BanData> user_banlist { get; set; }
 
         //-- -- EXP System
         public static Dictionary<ulong, int> player_experience { get; set; }
@@ -113,19 +102,8 @@ namespace RPGMods.Utils
         /// A configuration database of class stats per ability point spent.
         /// </summary>
         public static Dictionary<string, Dictionary<UnitStatType, float>> experience_class_stats { get; set; }
-        public static bool ErrorOnLoadingExperienceClasses = false;
 
         public static Dictionary<ulong, bool> player_log_exp { get; set; }
-
-        //-- -- PvP System
-        //-- -- -- NEW Database
-        public static ConcurrentDictionary<ulong, PvPData> PvPStats { get; set; }
-        public static Dictionary<ulong, SiegeData> SiegeState = new();
-        public static Dictionary<Entity, Entity> killMap { get; set; }
-        //-- -- -- OLD Database (To be removed)
-        public static Dictionary<ulong, int> pvpkills { get; set; }
-        public static Dictionary<ulong, int> pvpdeath { get; set; }
-        public static Dictionary<ulong, double> pvpkd { get; set; }
 
         //-- -- Mastery System
         public static Dictionary<ulong, WeaponMasterData> player_weaponmastery { get; set; }
@@ -142,6 +120,8 @@ namespace RPGMods.Utils
         public static HashSet<string> IgnoredMonsters { get; set; }
         public static HashSet<PrefabGUID> IgnoredMonstersGUID { get; set; }
 
+        // TODO move to prefabs?
+        // TODO remove comments!!
         public static class Buff
         {
             public static PrefabGUID EquipBuff = new PrefabGUID(343359674);

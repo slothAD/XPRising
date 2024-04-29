@@ -5,12 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Unity.Entities;
-using RPGMods.Utils;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using ProjectM.UI;
+using OpenRPG.Utils;
 
-namespace RPGMods.Systems
+namespace OpenRPG.Systems
 {
     public class Bloodlines
     {
@@ -312,6 +309,7 @@ namespace RPGMods.Systems
                 for (int i = 0; i < stats[type].Length; i++) {
                     double value = isDracula ? calcDraculaBuffValue(type, SteamID, i) : calcBuffValue(type, SteamID, i);
                     Buffer.Add(Helper.makeBuff(stats[type][i], value));
+                    // TODO do we still need this?
                     /*
                     var modType = ModificationType.Add;
                     if (Helper.inverseMultiplierStats.Contains(stats[type][i])) {
@@ -372,67 +370,6 @@ namespace RPGMods.Systems
 
             Database.playerBloodline[SteamID] = bld;
             return;
-        }
-
-
-        public static void saveBloodlines(string saveFolder)
-        {
-            File.WriteAllText(saveFolder+"bloodlines.json", JsonSerializer.Serialize(Database.playerBloodline, Database.JSON_options));
-            File.WriteAllText(saveFolder+"bloodline_decay.json", JsonSerializer.Serialize(Database.playerDecayBloodlineLogout, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_log_bloodlines.json", JsonSerializer.Serialize(Database.playerLogBloodline, Database.JSON_options));
-        }
-
-        public static void loadBloodlines() {
-            string specificName = "bloodlines.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
-            try {
-                Database.playerBloodline = JsonSerializer.Deserialize<Dictionary<ulong, BloodlineData>>(json);
-                if (Database.playerBloodline == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.playerBloodline = JsonSerializer.Deserialize<Dictionary<ulong, BloodlineData>>(json);
-                }
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline DB Populated.");
-            } catch {
-                Database.playerBloodline = new Dictionary<ulong, BloodlineData>();
-                Plugin.Logger.LogWarning(DateTime.Now+": Bloodline DB Created.");
-            }
-
-
-            specificName = "bloodline_decay.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+specificName);
-            try {
-                Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
-                if (Database.playerDecayBloodlineLogout == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.playerDecayBloodlineLogout = JsonSerializer.Deserialize<Dictionary<ulong, DateTime>>(json);
-                }
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Decay DB Populated.");
-            } catch {
-                Database.playerDecayBloodlineLogout = new Dictionary<ulong, DateTime>();
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Decay DB Created.");
-            }
-
-
-            specificName = "player_log_bloodlines.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"player_log_bloodlines.json");
-            try {
-                Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                if (Database.playerLogBloodline == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.playerLogBloodline = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                }
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Logging DB Populated.");
-            } catch {
-                Database.playerLogBloodline = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning(DateTime.Now + ": Bloodline Logging DB Created.");
-            }
         }
     }
 }

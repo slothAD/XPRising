@@ -1,16 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using RPGMods.Systems;
-using Unity.Entities;
+using OpenRPG.Systems;
 using Unity.Mathematics;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using Faction = OpenRPG.Utils.Prefabs.Faction;
 using Random = System.Random;
-using Units = RPGMods.Utils.Prefabs.Units;
+using Units = OpenRPG.Utils.Prefabs.Units;
 
-namespace RPGMods.Utils {
+namespace OpenRPG.Utils
+{
     public static class SquadList {
 
-        private static EntityManager entityManager = Plugin.Server.EntityManager;
         private static Random generate = new();
         public static bool showDebugLogs = false;
 

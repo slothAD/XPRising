@@ -1,9 +1,9 @@
 ﻿using HarmonyLib;
 using ProjectM;
 using ProjectM.Gameplay;
-using RPGMods.Systems;
+using OpenRPG.Systems;
 
-namespace RPGMods.Hooks
+namespace OpenRPG.Hooks
 {
     [HarmonyPatch(typeof(EntityMetadataSystem), nameof(EntityMetadataSystem.OnUpdate))]
     public class EntityMetadataSystem_Patch

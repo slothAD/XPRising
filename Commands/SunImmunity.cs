@@ -2,14 +2,16 @@
 using System.IO;
 using System.Text.Json;
 using ProjectM;
-using RPGMods.Utils;
+using OpenRPG.Utils;
 using VampireCommandFramework;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
-    public static class SunImmunity {
-        [Command("sunimmunity", "sun", description: "Toggles sun immunity.", adminOnly:true)]
-        public static void Initialize(ChatCommandContext ctx)
+    
+    public static class SunImmunity
+    {
+        [Command(name: "sunimmunity", shortHand: "si", adminOnly: false, usage: "", description: "Toggles sun immunity.")]
+        public static void SunImmunityCommand(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
             bool isSunImmune = Database.sunimmunity.ContainsKey(SteamID);
@@ -29,12 +31,7 @@ namespace RPGMods.Commands
             else Database.sunimmunity.Add(SteamID, isSunImmune);
             return true;
         }
-
-        public static void SaveImmunity(string saveFolder)
-        {
-            File.WriteAllText(saveFolder + "sunimmunity.json", JsonSerializer.Serialize(Database.sunimmunity, Database.JSON_options));
-        }
-
+        
         public static bool RemoveImmunity(ChatCommandContext ctx)
         {
             ulong SteamID = ctx.Event.User.PlatformId;
@@ -44,25 +41,6 @@ namespace RPGMods.Commands
                 return true;
             }
             return false;
-        }
-
-        public static void LoadSunImmunity(){
-            string specificFile = "sunimmunity.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder +specificFile);
-            try {
-                Database.sunimmunity = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                if (Database.sunimmunity == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificFile);
-                    Database.sunimmunity = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                }
-                Plugin.Logger.LogWarning("SunImmunity DB Populated.");
-            } catch {
-                Database.sunimmunity = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning("SunImmunity DB Created.");
-            }
-
         }
     }
 }

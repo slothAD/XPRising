@@ -1,5 +1,5 @@
-﻿using RPGMods.Systems;
-using RPGMods.Utils;
+﻿using OpenRPG.Systems;
+using OpenRPG.Utils;
 using System;
 using System.Linq;
 using ProjectM;
@@ -7,10 +7,10 @@ using ProjectM.Shared;
 using Unity.Collections;
 using Unity.Entities;
 using VampireCommandFramework;
-using Color = RPGMods.Utils.Color;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using Color = OpenRPG.Utils.Color;
+using Faction = OpenRPG.Utils.Prefabs.Faction;
 
-namespace RPGMods.Commands
+namespace OpenRPG.Commands
 {
     [CommandGroup("wanted", "w")]
     public static class Wanted{
