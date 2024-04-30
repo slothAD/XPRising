@@ -103,7 +103,7 @@ public static class FactionHeat {
                 activeFaction = Faction.Unknown;
                 break;
             default:
-                Plugin.Logger.LogWarning($"Faction not handled for active faction: {Enum.GetName(faction)}");
+                Plugin.LogWarning($"Faction not handled for active faction: {Enum.GetName(faction)}");
                 heatValue = 0;
                 activeFaction = Faction.Unknown;
                 break;

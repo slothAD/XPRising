@@ -16,11 +16,11 @@ namespace OpenRPG.Hooks {
         [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
         [HarmonyPostfix]
         public static void Postfix(DeathEventListenerSystem __instance) {
-            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": beginning Death Tracking");
+            if (Helper.deathLogging) Plugin.LogInfo("beginning Death Tracking");
             NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
-            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Death events converted successfully, length is " + deathEvents.Length);
+            if (Helper.deathLogging) Plugin.LogInfo("Death events converted successfully, length is " + deathEvents.Length);
             foreach (DeathEvent ev in deathEvents) {
-                if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Death Event occured");
+                if (Helper.deathLogging) Plugin.LogInfo("Death Event occured");
                 //-- Just track whatever died...
                 if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
 
@@ -29,15 +29,15 @@ namespace OpenRPG.Hooks {
 
                 // If the entity killing is a minion, switch the killer to the owner of the minion.
                 if (__instance.EntityManager.HasComponent<Minion>(killer)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Minion killed entity. Getting owner...");
+                    if (Helper.deathLogging) Plugin.LogInfo($"Minion killed entity. Getting owner...");
                     if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner)) {
                         killer = entityOwner.Owner;
-                        if (Helper.deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Owner found, switching killer to owner.");
+                        if (Helper.deathLogging) Plugin.LogInfo($"Owner found, switching killer to owner.");
                     }
                 }
 
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer is a player, running xp and heat and the like");
+                    if (Helper.deathLogging) Plugin.LogInfo("Killer is a player, running xp and heat and the like");
                     
                     if ((ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive) && ExperienceSystem.EntityProvidesExperience(ev.Died)) {
                         var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) && bS.UnitBloodType.Equals(Helper.vBloodType);
@@ -60,7 +60,7 @@ namespace OpenRPG.Hooks {
 
                 //-- Auto Respawn & HunterHunted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": the dead person is a player, running xp loss and heat dumping");
+                    if (Helper.deathLogging) Plugin.LogInfo("the dead person is a player, running xp loss and heat dumping");
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
                     if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
                         ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);

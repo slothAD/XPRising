@@ -20,7 +20,7 @@ namespace OpenRPG.Commands {
         public static void goToWaypoint(ChatCommandContext ctx, string waypoint) {
             var PlayerEntity = ctx.Event.SenderCharacterEntity;
             var SteamID = ctx.Event.User.PlatformId;
-            if (Helper.IsPlayerInCombat(PlayerEntity)) {
+            if (Cache.PlayerInCombat(SteamID)) {
                 ctx.Reply("Unable to use waypoint! You're in combat!");
                 return;
             }
@@ -45,7 +45,7 @@ namespace OpenRPG.Commands {
         }
 
 
-        [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: false)]
+        [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: true)]
         public static void setWaypoint(ChatCommandContext ctx, string name) {
             if(WaypointLimit <= 0 && !ctx.Event.User.IsAdmin) {
                 ctx.Reply("You may not create waypoints.");

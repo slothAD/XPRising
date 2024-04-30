@@ -67,7 +67,7 @@ namespace OpenRPG.Utils
 
             var remainingSquadValue = wantedLevel * 5;
             if (showDebugLogs)
-                Plugin.Logger.LogWarning($"{DateTime.Now}: Generate squad (spawn value: {remainingSquadValue})");
+                Plugin.LogWarning($"Generate squad (spawn value: {remainingSquadValue})");
 
             while (remainingSquadValue > 0) {
                 var nextUnitIndex = generate.Next(0, units.Count);
@@ -90,7 +90,7 @@ namespace OpenRPG.Utils
         private static Squad GetSquad(Faction faction, int playerLevel, int wantedLevel) {
             var chance = generate.Next(100);
 
-            if (showDebugLogs) Plugin.Logger.LogWarning($"GetSquad for {faction} (RNG: {chance})");
+            if (showDebugLogs) Plugin.LogWarning($"GetSquad for {faction} (RNG: {chance})");
 
             // Very small change unique squads
             switch (chance) {
@@ -222,7 +222,7 @@ namespace OpenRPG.Utils
                             new(Units.CHAR_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
                         });
                 default:
-                    Plugin.Logger.LogWarning($"No specific squad generation handling has been added for {faction}");
+                    Plugin.LogWarning($"No specific squad generation handling has been added for {faction}");
                     break;
             }
 
@@ -237,10 +237,10 @@ namespace OpenRPG.Utils
             foreach (var unit in squad.units) {
                 var lifetime = SpawnUnit.EncodeLifetime((int)HunterHuntedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
                 SpawnUnit.Spawn(unit.type, position, unit.count, unit.range, unit.range + 4f, lifetime);
-                if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawning: {unit.count}*{unit.type}");
+                if (showDebugLogs) Plugin.LogWarning($"Spawning: {unit.count}*{unit.type}");
             }
 
-            if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawn finished");
+            if (showDebugLogs) Plugin.LogWarning($"Spawn finished");
 
             return squad.message;
         }

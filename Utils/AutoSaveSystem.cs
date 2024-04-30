@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Linq.Expressions;
 using BepInEx;
 using OpenRPG.Systems;
 using ProjectM;
@@ -53,7 +54,7 @@ namespace OpenRPG.Utils
         private static JsonSerializerOptions JSON_options = new()
         {
             WriteIndented = false,
-            IncludeFields = false,
+            IncludeFields = true,
             Converters =
             {
                 new PrefabGuidConverter()
@@ -92,7 +93,7 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, PlayerLogExperienceJson, Database.player_log_exp, JSON_options);
             SaveDB(saveFolder, PlayerAbilityPointsJson, Database.player_abilityIncrease, JSON_options);
             SaveDB(saveFolder, PlayerLevelStatsJson, Database.player_level_stats, JSON_options);
-            SaveDB(saveFolder, ExperienceClassStatsJson, Database.experience_class_stats, JSON_options);
+            SaveDB(saveFolder, ExperienceClassStatsJson, Database.experience_class_stats, Pretty_JSON_options);
             SaveDB(saveFolder, WeaponMasteryJson, Database.player_weaponmastery, JSON_options);
             SaveDB(saveFolder, WeaponMasteryDecayJson, Database.player_decaymastery_logout, JSON_options);
             SaveDB(saveFolder, PlayerLogMasteryJson, Database.player_log_mastery, JSON_options);
@@ -101,9 +102,9 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, PlayerLogBloodlinesJson, Database.playerLogBloodline, JSON_options);
             SaveDB(saveFolder, UserBanList, Database.user_banlist, Pretty_JSON_options);
             SaveDB(saveFolder, WorldDynamicsJson, Database.FactionStats, Pretty_JSON_options);
-            SaveDB(saveFolder, IgnoredMonstersJson, Database.IgnoredMonstersGUID, Pretty_JSON_options);
+            SaveDB(saveFolder, IgnoredMonstersJson, Database.IgnoredMonstersGUID, JSON_options);
 
-            Plugin.Logger.LogInfo(DateTime.Now+": All databases saved to JSON files.");
+            Plugin.LogInfo($"All databases saved to: {saveFolder}");
         }
 
         public static void LoadDatabase()
@@ -137,32 +138,33 @@ namespace OpenRPG.Utils
             Database.FactionStats = LoadDB(WorldDynamicsJson, WorldDynamicsSystem.DefaultFactionStats);
             Database.IgnoredMonstersGUID = LoadDB(IgnoredMonstersJson, WorldDynamicsSystem.DefaultIgnoredMonsters);
 
-            Plugin.Logger.LogInfo("All database data is now loaded.");
+            Plugin.LogInfo("All database data is now loaded.");
         }
         
         private static void SaveDB<TData>(string saveFolder, string specificFile, TData data, JsonSerializerOptions options)
         {
-            string outputFile = Path.Combine(saveFolder, specificFile);
+            var outputFile = Path.Combine(saveFolder, specificFile);
             File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
-            if (saveLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {specificFile} Saved.");
+            if (saveLogging) Plugin.LogInfo($"{specificFile} Saved.");
         }
 
         private static TData LoadDB<TData>(string specificFile, Func<TData> initialiser = null) where TData : new() {
             TData data;
             ConfirmFile(SavesPath, specificFile);
             ConfirmFile(BackupsPath, specificFile);
-            string json = File.ReadAllText(SavesPath + specificFile);
             try {
-                data = JsonSerializer.Deserialize<TData>(json);
+                var json = File.ReadAllText(Path.Combine(SavesPath, specificFile));
+                data = JsonSerializer.Deserialize<TData>(json, JSON_options);
                 if (data == null) {
-                    Plugin.Logger.LogWarning($"{DateTime.Now}: Failed loading main backup for {specificFile}, attempting loading backup");
-                    json = File.ReadAllText(BackupsPath + specificFile);
-                    data = JsonSerializer.Deserialize<TData>(json);
+                    Plugin.LogWarning($"Failed loading main backup for {specificFile}, attempting loading backup");
+                    json = File.ReadAllText(Path.Combine(BackupsPath, specificFile));
+                    data = JsonSerializer.Deserialize<TData>(json, JSON_options);
                 }
-                if (saveLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: DB Loaded for {specificFile}");
-            } catch {
+                if (saveLogging) Plugin.LogInfo($"DB Loaded for {specificFile}");
+            } catch (Exception e) {
+                Plugin.LogError($"Could not load {specificFile}: {e.Message}");
                 data = initialiser == null ? new TData() : initialiser();
-                Plugin.Logger.LogWarning($"{DateTime.Now}: DB Created for {specificFile}");
+                Plugin.LogWarning($"DB Created for {specificFile}");
             }
             return data;
         }
@@ -172,7 +174,7 @@ namespace OpenRPG.Utils
                 Directory.CreateDirectory(address);
             }
             catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now +": Error creating directory at " + address + "\n Error is: " + e.Message);
+                Plugin.LogError("Error creating directory at " + address + "\n Error is: " + e.Message);
             }
             try
             {
@@ -183,7 +185,7 @@ namespace OpenRPG.Utils
                     stream.Dispose();
                 }
             } catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now + ": Error creating file at " + address + "\n Error is: " + e.Message);
+                Plugin.LogError("Error creating file at " + address + "\n Error is: " + e.Message);
             }
         }
     }

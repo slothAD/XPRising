@@ -29,7 +29,7 @@ namespace OpenRPG.Utils.RandomEncounters
         {
             var lowestLevel = playerLevel - RandomEncountersConfig.EncounterMaxLevelDifferenceLower.Value;
             var highestLevel = playerLevel + RandomEncountersConfig.EncounterMaxLevelDifferenceUpper.Value;
-            Plugin.Logger.LogInfo($"Searching an NPC between levels {lowestLevel} and {highestLevel}");
+            Plugin.LogInfo($"Searching an NPC between levels {lowestLevel} and {highestLevel}");
             return _npcs
                 .Where(n => RandomEncountersConfig.Npcs.TryGetValue(n.Id, out var npcSetting) && npcSetting.Value && n.Level >= lowestLevel && n.Level <= highestLevel).ToList()
                 .GetRandomItem();

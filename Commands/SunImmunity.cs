@@ -20,7 +20,7 @@ namespace OpenRPG.Commands
             UpdateImmunity(ctx, isSunImmune);
             string s = isSunImmune ? "Activated" : "Deactivated";
             ctx.Reply($"Sun Immunity <color=#ffff00>{s}</color>");
-            Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Helper.appliedBuff);
+            Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Helper.AppliedBuff);
         }
 
         public static bool UpdateImmunity(ChatCommandContext ctx, bool isSunImmune)

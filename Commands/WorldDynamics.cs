@@ -4,6 +4,7 @@ using OpenRPG.Utils;
 using VampireCommandFramework;
 using System.Linq;
 using ProjectM;
+using Prefabs = OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Commands
 {
@@ -11,35 +12,34 @@ namespace OpenRPG.Commands
     public static class WorldDynamics
     {
 
-        [Command(name: "worlddynamics", shortHand: "wd", adminOnly: false, usage: "<faction>", description: "List all faction stats")]
+        [Command(name: "worlddynamics", shortHand: "wd", adminOnly: false, usage: "[faction]", description: "List faction stats of all active factions or given faction")]
         public static void WorldDynamicsCommand(ChatCommandContext ctx, string faction = "all")
         {
             if (WorldDynamicsSystem.isFactionDynamic == false)
             {
                 throw ctx.Error("World dynamics system is not enabled.");
-
             }
-
-            int i = 0;
             var factionList = Database.FactionStats;
-            if (faction.ToLower() != "all")
-            {
-                factionList = (System.Collections.Concurrent.ConcurrentDictionary<int, FactionData>) factionList.Where(factionItem => factionItem.Value.Name.Contains(faction));
-            }
-            foreach (var item in Database.FactionStats)
+            var useSpecificFaction = faction.ToLower() != "all";
+            var sentReply = false;
+            foreach (var item in factionList)
             {
                 if (!item.Value.Active) continue;
-                i++;
+                if (useSpecificFaction && !item.Value.Name.Contains(faction)) continue;
                 ctx.Reply($"Name: {Utils.Color.Green(item.Value.Name)} [Lv.{Utils.Color.Yellow(item.Value.Level.ToString())}]");
                 ctx.Reply($"Active Pwr: [{Utils.Color.White(item.Value.ActivePower.ToString())}] Stored Pwr: [{Utils.Color.Yellow(item.Value.StoredPower.ToString())}]");
                 ctx.Reply($"Daily Pwr: [{Utils.Color.Teal(item.Value.DailyPower.ToString())}] Req. Pwr: [{Utils.Color.SoftRed(item.Value.RequiredPower.ToString())}]");
+                sentReply = true;
             }
-            if (i == 0) ctx.Reply("No active facton.");
 
-
+            if (!sentReply)
+            {
+                if (useSpecificFaction) ctx.Reply($"{faction} is not active.");
+                else ctx.Reply("No active faction.");
+            }
         }
 
-        [Command(name: "worlddynamics ignore", shortHand: "wd ignore", adminOnly: false, usage: "<npc prefab name>", description: "Ignores a specified mob for buffing.")]
+        [Command(name: "worlddynamics ignore", shortHand: "wd ignore", adminOnly: true, usage: "<npc prefab name>", description: "Ignores a specified mob for buffing.")]
         public static void WorldDynamicsIgnoreCommand(ChatCommandContext ctx, string mobName)
         {
             if (Enum.TryParse(mobName, true, out Prefabs.Units unit))
@@ -53,7 +53,7 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command(name: "worlddynamics unignore", shortHand: "wd unignore", adminOnly: false, usage: "<npc prefab name>", description: "Removes a mob from the world dynamics ignore list.")]
+        [Command(name: "worlddynamics unignore", shortHand: "wd unignore", adminOnly: true, usage: "<npc prefab name>", description: "Removes a mob from the world dynamics ignore list.")]
         public static void WorldDynamicsUnIgnoreCommand(ChatCommandContext ctx, string mobName)
         {
             if (Enum.TryParse(mobName, true, out Prefabs.Units unit))
@@ -67,14 +67,14 @@ namespace OpenRPG.Commands
             }
         }
 
-        [Command(name: "worlddynamics save", shortHand: "wd save", adminOnly: false, usage: "", description: "Save to the json file.")]
+        [Command(name: "worlddynamics save", shortHand: "wd save", adminOnly: true, usage: "", description: "Save to the json file.")]
         public static void WorldDynamicsSaveCommand(ChatCommandContext ctx)
         {
             AutoSaveSystem.SaveDatabase();
             ctx.Reply($"Factions data & ignored mobs saved.");
         }
 
-        [Command(name: "worlddynamics load", shortHand: "wd load", adminOnly: false, usage: "", description: "Load from the json file.")]
+        [Command(name: "worlddynamics load", shortHand: "wd load", adminOnly: true, usage: "", description: "Load from the json file.")]
         public static void WorldDynamicsLoadCommand(ChatCommandContext ctx)
         {
             AutoSaveSystem.LoadDatabase();

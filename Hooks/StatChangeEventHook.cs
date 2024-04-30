@@ -13,7 +13,7 @@ namespace OpenRPG.Hooks
             try {
                 OnUpdate?.Invoke(__instance.World);
             } catch (Exception e) {
-                Plugin.Logger.LogError(e);
+                Plugin.LogError(e.ToString());
             }
         }
     }

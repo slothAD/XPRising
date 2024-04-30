@@ -408,7 +408,7 @@ public static class FactionUnits {
                 case Faction.Wolves:
                 case Faction.World_Prisoners:
                 default:
-                    Plugin.Logger.LogWarning($"{Enum.GetName(faction)} units not yet suppported");
+                    Plugin.LogWarning($"{Enum.GetName(faction)} units not yet suppported");
                     return GetUnitsForLevel(bandit_units, playerLevel);
             }
         }

@@ -53,12 +53,12 @@ namespace OpenRPG.Components.RandomEncounters
             _isRunning = true;
             try
             {
-                Plugin.Logger.LogDebug("Executing timer.");
+                Plugin.LogDebug("Executing timer.");
                 _action.Invoke(world);
             }
             catch (Exception ex)
             {
-                Plugin.Logger.LogError(ex);
+                Plugin.LogError(ex.ToString());
             }
             finally
             {

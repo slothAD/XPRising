@@ -7,18 +7,11 @@ using Stunlock.Network;
 
 namespace OpenRPG.Hooks
 {
-    // TODO does this need to run as well as the GameBootstrap below?
     [HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
     public class ServerGameSetting_Patch
     {
-        private static bool isInitialized = false;
         public static void Postfix()
         {
-            if (isInitialized == false)
-            {
-                Plugin.Initialize();
-                isInitialized = true;
-            }
         }
     }
 
@@ -27,7 +20,6 @@ namespace OpenRPG.Hooks
     {
         public static void Postfix()
         {
-            Plugin.Initialize();
         }
     }
 
@@ -36,7 +28,10 @@ namespace OpenRPG.Hooks
     {
         public static void Prefix()
         {
+            // Save before we quit the server
             AutoSaveSystem.SaveDatabase();
+            TaskRunner.Destroy();
+            RandomEncounters.Unload();
         }
     }
 
@@ -53,13 +48,13 @@ namespace OpenRPG.Hooks
                 var userEntity = serverClient.UserEntity;
                 var userData = __instance.EntityManager.GetComponentData<User>(userEntity);
                 bool isNewVampire = userData.CharacterName.IsEmpty;
+                // TODO test this
+                Plugin.LogInfo($"Vampire joined: {userData.PlatformId} {userData.CharacterName}");
 
                 if (!isNewVampire)
                 {
-                    {
-                        var playerName = userData.CharacterName.ToString();
-                        Helper.UpdatePlayerCache(userEntity, playerName, playerName);
-                    }
+                    var playerName = userData.CharacterName.ToString();
+                    Helper.UpdatePlayerCache(userEntity, playerName, playerName);
                     if (WeaponMasterSystem.isDecaySystemEnabled && WeaponMasterSystem.isMasteryEnabled)
                     {
                         WeaponMasterSystem.DecayMastery(userEntity);

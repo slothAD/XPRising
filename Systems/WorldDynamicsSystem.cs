@@ -3,9 +3,8 @@ using OpenRPG.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
+using Prefabs = OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 
 namespace OpenRPG.Systems
@@ -28,7 +27,7 @@ namespace OpenRPG.Systems
 
                 var factionStats = faction.Value;
                 if(factionStats.RequiredPower < 0) {
-                    Plugin.Logger.LogWarning(factionStats.Name + "'s required power to levelup is negative, fixing it now.");
+                    Plugin.LogWarning(factionStats.Name + "'s required power to levelup is negative, fixing it now.");
                     factionStats.RequiredPower *= -1;
                     Database.FactionStats[faction.Key] = factionStats;
                 }

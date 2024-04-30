@@ -2,10 +2,9 @@
 using ProjectM.Network;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 using Unity.Entities;
 using OpenRPG.Utils;
+using Prefabs = OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Systems
 {
@@ -272,7 +271,9 @@ namespace OpenRPG.Systems
 
         public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
         {
-            if (!GUID.Equals(Database.Buff.OutofCombat) && !GUID.Equals(Database.Buff.InCombat) && !GUID.Equals(Database.Buff.InCombat_PvP)) return;
+            if (!GUID.GuidHash.Equals(Prefabs.Buffs.Buff_OutOfCombat) &&
+                !GUID.GuidHash.Equals(Prefabs.Buffs.Buff_InCombat) &&
+                !GUID.GuidHash.Equals(Prefabs.Buffs.Buff_InCombat_PvPVampire)) return;
 
             var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
@@ -383,7 +384,7 @@ namespace OpenRPG.Systems
                 if (NoneExpertise < 0) NoneExpertise = 0;
                 if (Value < 0) Value = 0;
                 Mastery.mastery[Type] += Value;
-                Plugin.Logger.LogInfo(DateTime.Now + ": Null Ref trying to get mastery, reset it instead: " + nre.Message);
+                Plugin.LogInfo("Null Ref trying to get mastery, reset it instead: " + nre.Message);
             }
             if (Mastery.mastery[Type] < 0) Mastery.mastery[Type] = 0;
             Database.player_weaponmastery[SteamID] = Mastery;

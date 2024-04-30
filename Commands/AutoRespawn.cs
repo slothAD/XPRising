@@ -1,4 +1,5 @@
-﻿using OpenRPG.Systems;
+﻿using System.Collections.Generic;
+using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
@@ -6,70 +7,49 @@ using Bloodstone.API;
 
 namespace OpenRPG.Commands
 {
-
     public static class AutoRespawn
     {
-        [Command(name: "autorespawn", shortHand: "aresp", adminOnly: false, usage: ".autorespawn [<PlayerName>]", description: "Toggle auto respawn on the same position on death.")]
+        [Command(name: "autorespawn", shortHand: "aresp", adminOnly: true, usage: "[PlayerName]", description: "Toggle auto respawn on the same position on death for yourself or a player.")]
         public static void AutoRespawnCommand(ChatCommandContext ctx, string playerName)
         {
             var entityManager = VWorld.Server.EntityManager;
-            ulong SteamID = ctx.Event.User.PlatformId;
-            string PlayerName = ctx.Event.User.CharacterName.ToString();
-            bool isServerWide = false;
+            var steamID = ctx.Event.User.PlatformId;
+            var PlayerName = ctx.Event.User.CharacterName.ToString(); // Default to current player name
 
-            bool isAllowed = ctx.Event.User.IsAdmin || PermissionSystem.PermissionCheck(ctx.Event.User.PlatformId, "autorespawn_args");
             if (playerName.Length > 0)
             {
-                if (playerName.ToLower().Equals("all"))
+                if (Helper.FindPlayer(playerName, false, out Entity targetEntity, out Entity targetUserEntity))
                 {
-                    SteamID = 1;
-                    isServerWide = true;
+                    var user_component = entityManager.GetComponentData<ProjectM.Network.User>(targetUserEntity);
+                    steamID = user_component.PlatformId;
+                    PlayerName = playerName;
                 }
                 else
                 {
-                    if (Helper.FindPlayer(playerName, false, out Entity targetEntity, out Entity targetUserEntity))
-                    {
-                        var user_component = entityManager.GetComponentData<ProjectM.Network.User>(targetUserEntity);
-                        SteamID = user_component.PlatformId;
-                        PlayerName = playerName;
-                    }
-                    else
-                    {
-                        throw ctx.Error($"Player \"{playerName}\" not found!");
-                    }
+                    throw ctx.Error($"Player \"{playerName}\" not found!");
                 }
             }
-            bool isAutoRespawn = Database.autoRespawn.ContainsKey(SteamID);
-            if (isAutoRespawn) isAutoRespawn = false;
-            else isAutoRespawn = true;
-            UpdateAutoRespawn(SteamID, isAutoRespawn);
-            string s = isAutoRespawn ? "Activated" : "Deactivated";
-            if (isServerWide)
-            {
-                ctx.Reply($"Server wide Auto Respawn <color=#ffff00>{s}</color>");
-            }
-            else
-            {
-                ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
-            }
+            
+            var s = ToggleAutoRespawn(steamID) ? "Activated" : "Deactivated";
+            ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
+        }
+        
+        [Command(name: "autorespawn all", shortHand: "aresp all", adminOnly: true, usage: "", description: "Toggle auto respawn on the same position on death for all players.")]
+        public static void AutoRespawnAllCommand(ChatCommandContext ctx)
+        {
+            ulong SteamID = 1;
+
+            var s = ToggleAutoRespawn(SteamID) ? "Activated" : "Deactivated";
+            ctx.Reply($"Server wide Auto Respawn <color=#ffff00>{s}</color>");
         }
 
-        public static bool UpdateAutoRespawn(ulong SteamID, bool isAutoRespawn)
+        private static bool ToggleAutoRespawn(ulong SteamID)
         {
-            bool isExist = Database.autoRespawn.ContainsKey(SteamID);
-            if (isExist || !isAutoRespawn) RemoveAutoRespawn(SteamID);
-            else Database.autoRespawn.Add(SteamID, isAutoRespawn);
-            return true;
-        }
+            var currentValue = Database.autoRespawn.GetValueOrDefault(SteamID, false);
+            if (currentValue) Database.autoRespawn.Remove(SteamID);
+            else Database.autoRespawn.Add(SteamID, true);
 
-        public static bool RemoveAutoRespawn(ulong SteamID)
-        {
-            if (Database.autoRespawn.ContainsKey(SteamID))
-            {
-                Database.autoRespawn.Remove(SteamID);
-                return true;
-            }
-            return false;
+            return !currentValue;
         }
     }
 }

@@ -1,13 +1,17 @@
-﻿using ProjectM;
+﻿using System;
+using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Utils;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
-using System.Text.Json;
+using System.Reflection;
 using System.Threading.Tasks;
+using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using VampireCommandFramework;
+using VCF.Core.Basics;
+using VRising.GameData;
 
 namespace OpenRPG.Systems
 {
@@ -15,7 +19,7 @@ namespace OpenRPG.Systems
     {
         public static bool isVIPSystem = true;
         public static bool isVIPWhitelist = true;
-        public static int VIP_Permission = 10;
+        public static int VIP_Permission = 50;
 
         public static double VIP_OutCombat_ResYield = -1.0;
         public static double VIP_OutCombat_DurabilityLoss = -1.0;
@@ -31,6 +35,8 @@ namespace OpenRPG.Systems
 
         private static EntityManager em = Plugin.Server.EntityManager;
 
+        private static int HighestPrivilege = 100;
+        private static int LowestPrivilege = 0;
         public static bool IsUserVIP(ulong steamID)
         {
             bool isVIP = GetUserPermission(steamID) >= VIP_Permission;
@@ -39,26 +45,17 @@ namespace OpenRPG.Systems
 
         public static int GetUserPermission(ulong steamID)
         {
-            bool isExist = Database.user_permission.TryGetValue(steamID, out var permission);
-            if (isExist) return permission;
-            return 0;
+            return Database.user_permission.GetValueOrDefault(steamID, LowestPrivilege);
         }
 
         public static int GetCommandPermission(string command)
         {
-            var isExist = Database.command_permission.TryGetValue(command, out int requirement);
-            if (isExist) return requirement;
-            else
-            {
-                Database.command_permission[command] = 100;
-            }
-            return 100;
+            return Database.command_permission.GetValueOrDefault(command, HighestPrivilege);
         }
 
-        public static bool PermissionCheck(ulong steamID, string command)
+        public static string CommandAttributesToPermissionKey(string groupName, string commandName)
         {
-            bool isAllowed = GetUserPermission(steamID) >= GetCommandPermission(command);
-            return isAllowed;
+            return string.IsNullOrEmpty(groupName) ? commandName : $"{groupName} {commandName}";
         }
 
         private static object SendPermissionList(ChatCommandContext ctx, List<string> messages)
@@ -77,18 +74,13 @@ namespace OpenRPG.Systems
             List<string> messages = new List<string>();
 
             var SortedPermission = Database.user_permission.ToList();
+            // Sort by privilege descending
             SortedPermission.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
-            var ListPermission = SortedPermission;
             messages.Add($"===================================");
-            if (ListPermission.Count == 0) messages.Add($"<color=#fffffffe>No Result</color>");
+            if (SortedPermission.Count == 0) messages.Add($"<color=#fffffffe>No permissions</color>");
             else
             {
-                int i = 0;
-                foreach (var result in ListPermission)
-                {
-                    i++;
-                    messages.Add($"{i}. <color=#fffffffe>{Helper.GetNameFromSteamID(result.Key)} : {result.Value}</color>");
-                }
+                messages.AddRange(SortedPermission.Select((result, i) => $"{i}. <color=#fffffffe>{Helper.GetNameFromSteamID(result.Key)} : {result.Value}</color>"));
             }
             messages.Add($"===================================");
 
@@ -97,7 +89,7 @@ namespace OpenRPG.Systems
 
         public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
         {
-            if (!GUID.Equals(Database.Buff.OutofCombat) && !em.HasComponent<InCombatBuff>(buffEntity)) return;
+            if (!GUID.GuidHash.Equals(Buffs.Buff_OutOfCombat) && !em.HasComponent<InCombatBuff>(buffEntity)) return;
             var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
             if (!em.HasComponent<PlayerCharacter>(Owner)) return;
 
@@ -108,7 +100,7 @@ namespace OpenRPG.Systems
             {
                 var Buffer = em.AddBuffer<ModifyUnitStatBuff_DOTS>(buffEntity);
                 //-- Out of Combat Buff
-                if (GUID.Equals(Database.Buff.OutofCombat))
+                if (GUID.GuidHash.Equals(Buffs.Buff_OutOfCombat))
                 {
                     if (VIP_OutCombat_ResYield > 0)
                     {
@@ -218,50 +210,118 @@ namespace OpenRPG.Systems
             }
         }
 
+        public static void ValidatedCommandPermissions(List<string> permissionKeys)
+        {
+            var currentPermissions = Database.command_permission.Keys;
+            foreach (var permission in currentPermissions.Where(permission => !permissionKeys.Contains(permission)))
+            {
+                Plugin.LogMessage($"Removing old permission: {permission}");
+                Database.command_permission.Remove(permission);
+            }
+
+            foreach (var permission in permissionKeys)
+            {
+                // Add the permission if it doesn't already exist there
+                var added = Database.command_permission.TryAdd(permission, HighestPrivilege);
+                if (added) Plugin.LogMessage($"Added new permission: {permission}");
+            }
+            
+            Plugin.LogInfo("Permissions have been validated");
+        }
+
         public static Dictionary<string, int> DefaultCommandPermissions()
         {
-            var permissions = new Dictionary<string, int>();
-            permissions["help"] = 0;
-            permissions["ping"] = 0;
-            permissions["myinfo"] = 0;
-            permissions["pvp"] = 0;
-            permissions["pvp_args"] = 100;
-            permissions["siege"] = 0;
-            permissions["siege_args"] = 100;
-            permissions["wanted"] = 0;
-            permissions["wanted_args"] = 100;
-            permissions["experience"] = 0;
-            permissions["experience_args"] = 100;
-            permissions["mastery"] = 0;
-            permissions["mastery_args"] = 100;
-            permissions["autorespawn"] = 100;
-            permissions["autorespawn_args"] = 100;
-            permissions["waypoint"] = 100;
-            permissions["waypoint_args"] = 100;
-            permissions["ban"] = 100;
-            permissions["bloodpotion"] = 100;
-            permissions["blood"] = 100;
-            permissions["customspawn"] = 100;
-            permissions["give"] = 100;
-            permissions["godmode"] = 100;
-            permissions["health"] = 100;
-            permissions["kick"] = 100;
-            permissions["kit"] = 100;
-            permissions["nocooldown"] = 100;
-            permissions["permission"] = 100;
-            permissions["playerinfo"] = 100;
-            permissions["punish"] = 100;
-            permissions["rename"] = 100;
-            permissions["adminrename"] = 100;
-            permissions["resetcooldown"] = 100;
-            permissions["save"] = 100;
-            permissions["shutdown"] = 100;
-            permissions["spawnnpc"] = 100;
-            permissions["speed"] = 100;
-            permissions["sunimmunity"] = 100;
-            permissions["teleport"] = 100;
-            permissions["worlddynamics"] = 100;
+            var permissions = new Dictionary<string, int>()
+            {
+                {"autorespawn", 100},
+                {"autorespawn all", 100},
+                {"ban info", 0},
+                {"ban player", 100},
+                {"ban unban", 100},
+                {"bloodline add", 100},
+                {"bloodline get", 0},
+                {"bloodline get all", 0},
+                {"bloodline log", 0},
+                {"bloodline reset", 0},
+                {"bloodline set", 100},
+                {"experience ability", 0},
+                {"experience ability reset", 50},
+                {"experience ability show", 0},
+                {"experience get", 0},
+                {"experience log", 0},
+                {"experience set", 100},
+                {"godmode", 100},
+                {"kick", 100},
+                {"kit", 100},
+                {"mastery add", 100},
+                {"mastery get", 0},
+                {"mastery get all", 0},
+                {"mastery log", 0},
+                {"mastery reset", 0},
+                {"mastery set", 100},
+                {"nocooldown", 100},
+                {"playerinfo", 0},
+                {"powerdown", 100},
+                {"powerup", 100},
+                {"re disable", 100},
+                {"re enable", 100},
+                {"re me", 100},
+                {"re player", 100},
+                {"re start", 100},
+                {"save", 100},
+                {"speed", 100},
+                {"sunimmunity", 100},
+                {"unlock achievements", 100},
+                {"unlock research", 100},
+                {"unlock vbloodability", 100},
+                {"unlock vbloodpassive", 100},
+                {"unlock vbloodshapeshift", 100},
+                {"wanted fixminions", 100},
+                {"wanted get", 0},
+                {"wanted log", 0},
+                {"wanted set", 100},
+                {"wanted trigger", 100},
+                {"waypoint go", 100},
+                {"waypoint list", 0},
+                {"waypoint remove", 100},
+                {"waypoint remove global", 100},
+                {"waypoint set", 100},
+                {"waypoint set global", 100},
+                {"worlddynamics", 0},
+                {"worlddynamics ignore", 100},
+                {"worlddynamics load", 100},
+                {"worlddynamics save", 100},
+                {"worlddynamics unignore", 100}
+            };
             return permissions;
+        }
+        
+        public class PermissionMiddleware : CommandMiddleware
+        {
+            public override bool CanExecute(
+                ICommandContext ctx,
+                CommandAttribute command,
+                MethodInfo method)
+            {
+                var type = method.DeclaringType;
+                var groupName = type?.GetCustomAttribute<CommandGroupAttribute>()?.Name ?? "";
+                var permissionKey = CommandAttributesToPermissionKey(groupName, command.Name);
+
+                if (!Database.command_permission.TryGetValue(permissionKey, out var requiredPrivilege))
+                {
+                    // If it doesn't exist it may be a command belonging to a different mod.
+                    // As far as we know, it should have permission.
+                    return true;
+                }
+                
+                var steamId = GameData.Users.GetUserByCharacterName(ctx.Name).PlatformId;
+                var userPrivilege = GetUserPermission(steamId);
+                
+                ctx.Reply($"{Utils.Color.Red("[permission denied]")} {permissionKey}");
+
+                // If the user privilege is equal or greater to the required privilege, then they have permission
+                return userPrivilege >= requiredPrivilege;
+            }
         }
     }
 }

@@ -3,10 +3,9 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    [CommandGroup(name: "kick")]
     public static class Kick
     {
-        [Command("kick", "kick <playername>", "Kick the specified player out of the server.", adminOnly: true)]
+        [Command("kick", "kick", "<playername>", "Kick the specified player out of the server.", adminOnly: true)]
         public static void KickCommand(ChatCommandContext ctx, string name)
         {
             if (Helper.FindPlayer(name, true, out _, out var targetUserEntity))

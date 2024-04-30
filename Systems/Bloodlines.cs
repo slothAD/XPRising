@@ -2,10 +2,9 @@
 using ProjectM.Network;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 using Unity.Entities;
 using OpenRPG.Utils;
+using OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Systems
 {
@@ -63,7 +62,7 @@ namespace OpenRPG.Systems
         public static double[] reiRates = { 0.25, 0.01, 0.0025, 0.0025, 0.0025 };
 
         public static int[] semikaStats = { (int)UnitStatType.SpellCriticalStrikeChance, (int)UnitStatType.MovementSpeed, (int)UnitStatType.DamageVsHumans};
-        public static double[] semikaMinStrength = { 0, 50, 100, 100, 100 };
+        public static double[] semikaMinStrength = { 0, 50, 100 };
         public static double[] semikaRates = { 0.005, 0.005, 0.0025 };
 
 
@@ -72,14 +71,14 @@ namespace OpenRPG.Systems
         public static double[][] rates = { draculaRates, arwenRates, ilvrisRates, ayaRates, nytheriaRates, hadubertRates, reiRates, semikaRates };
 
         public static Dictionary<PrefabGUID, int> bloodlineMap = new Dictionary<PrefabGUID, int> {
-            {new PrefabGUID((int)Helper.BloodType.Frailed), 0 },
-            {new PrefabGUID((int)Helper.BloodType.Creature), 1 },
-            {new PrefabGUID((int)Helper.BloodType.Warrior), 2 },
-            {new PrefabGUID((int)Helper.BloodType.Rogue), 3 },
-            {new PrefabGUID((int)Helper.BloodType.Brute), 4 },
-            {new PrefabGUID((int)Helper.BloodType.Scholar), 5 },
-            {new PrefabGUID((int)Helper.BloodType.Worker), 6 },
-            {new PrefabGUID((int)Helper.BloodType.Mutant), 7 }
+            {new PrefabGUID((int)Remainders.BloodType_None), 0 },
+            {new PrefabGUID((int)Remainders.BloodType_Creature), 1 },
+            {new PrefabGUID((int)Remainders.BloodType_Warrior), 2 },
+            {new PrefabGUID((int)Remainders.BloodType_Rogue), 3 },
+            {new PrefabGUID((int)Remainders.BloodType_Brute), 4 },
+            {new PrefabGUID((int)Remainders.BloodType_Scholar), 5 },
+            {new PrefabGUID((int)Remainders.BloodType_Worker), 6 },
+            {new PrefabGUID((int)Remainders.BloodType_Mutant), 7 }
         };
 
         public static string[] names = { "Dracula, Vampire Progenitor", "Arwen the Godeater", "Ilvris Dragonblood", "Aya the Shadowlord", "Nytheria the Destroyer", "Hadubert the Inferno", "Rei the Binder", "Semika the Ever-shifting" };
@@ -141,7 +140,7 @@ namespace OpenRPG.Systems
                 if(!bloodlineMap.TryGetValue(bloodline.BloodType, out bloodlineIndex)) {
                     if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)){
 
-                        Plugin.Logger.LogWarning("Bloodline DB Populated.");
+                        Plugin.LogWarning("Bloodline DB Populated.");
                         Output.SendLore(targetUserEntity, "Bloodline not found for guid of " + bloodline.BloodType.GuidHash);
                     }
                     return;
@@ -167,15 +166,15 @@ namespace OpenRPG.Systems
                 if (em.HasComponent<BloodConsumeSource>(Victim)){
                     victimBlood = em.GetComponentData<BloodConsumeSource>(Victim);
                     if (!(victimBlood.UnitBloodType.GuidHash == bloodline.BloodType.GuidHash|| isVBlood)){
-                        if (pluginLogging) Plugin.Logger.LogInfo("Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
+                        if (pluginLogging) Plugin.LogInfo("Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
                         return;
                     }
                     if (!(isVBlood || victimBlood.BloodQuality > getBloodlineData(SteamID).strength[bloodlineIndex])) {
-                        if (pluginLogging) Plugin.Logger.LogInfo("Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
+                        if (pluginLogging) Plugin.LogInfo("Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
                     if (!(isVBlood || bloodline.Quality > getBloodlineData(SteamID).strength[bloodlineIndex])){
-                        if (pluginLogging) Plugin.Logger.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
+                        if (pluginLogging) Plugin.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
 
@@ -309,22 +308,6 @@ namespace OpenRPG.Systems
                 for (int i = 0; i < stats[type].Length; i++) {
                     double value = isDracula ? calcDraculaBuffValue(type, SteamID, i) : calcBuffValue(type, SteamID, i);
                     Buffer.Add(Helper.makeBuff(stats[type][i], value));
-                    // TODO do we still need this?
-                    /*
-                    var modType = ModificationType.Add;
-                    if (Helper.inverseMultiplierStats.Contains(stats[type][i])) {
-                        //value = 1.0f - value;
-                        modType = ModificationType.Set;
-                        if (Helper.multiplierStats.Contains(stats[type][i])) {
-                            modType = ModificationType.Multiply;
-                        }
-                    }
-                    Buffer.Add(new ModifyUnitStatBuff_DOTS() {
-                        StatType = (UnitStatType)stats[type][i],
-                        Value = (float)value,
-                        ModificationType = modType,
-                        Id = ModificationId.NewId(0)
-                    });*/
                 }
             }
         }

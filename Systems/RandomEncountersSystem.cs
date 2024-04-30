@@ -52,17 +52,17 @@ namespace OpenRPG.Systems
 
             if (user == null)
             {
-                Plugin.Logger.LogMessage("Could not find any eligible players for a random encounter...");
+                Plugin.LogMessage("Could not find any eligible players for a random encounter...");
                 return;
             }
 
             var npc = DataFactory.GetRandomNpc(user.Character.Equipment.Level);
             if (npc == null)
             {
-                Plugin.Logger.LogWarning($"Could not find any NPCs within the given level range. (User Level: {user.Character.Equipment.Level})");
+                Plugin.LogWarning($"Could not find any NPCs within the given level range. (User Level: {user.Character.Equipment.Level})");
                 return;
             }
-            Plugin.Logger.LogMessage($"Attempting to start a new encounter for {user.CharacterName} with {npc.Name}");
+            Plugin.LogMessage($"Attempting to start a new encounter for {user.CharacterName} with {npc.Name}");
             var minSpawnDistance = RandomEncountersConfig.MinSpawnDistance.Value;
             var maxSpawnDistance = RandomEncountersConfig.MaxSpawnDistance.Value;
             try
@@ -78,16 +78,13 @@ namespace OpenRPG.Systems
             }
             catch (Exception ex)
             {
-                Plugin.Logger.LogError(ex);
+                Plugin.LogError(ex.ToString());
                 // Suppress
             }
-            //TaskRunner.Start(taskWorld => AfterSpawn(user.PlatformId, taskWorld, npc), TimeSpan.FromMilliseconds(1000));
         }
 
         internal static void ServerEvents_OnUnitSpawned(World world, Entity entity)
         {
-
-
             var entityManager = world.EntityManager;
             if (!entityManager.HasComponent<PrefabGUID>(entity))
             {
@@ -127,7 +124,7 @@ namespace OpenRPG.Systems
                     npcData.Name, Lifetime);
 
             user.SendSystemMessage(message);
-            Plugin.Logger.LogInfo($"Encounters started: {user.CharacterName} vs. {npcData.Name}");
+            Plugin.LogInfo($"Encounters started: {user.CharacterName} vs. {npcData.Name}");
 
             if (RandomEncountersConfig.NotifyAdminsAboutEncountersAndRewards.Value)
             {
@@ -165,7 +162,7 @@ namespace OpenRPG.Systems
                     var message = string.Format(RandomEncountersConfig.RewardMessageTemplate.Value, itemModel.Color, itemModel.Name);
                     userModel.SendSystemMessage(message);
                     bounties.TryRemove(deathEvent.Died.Index, out _);
-                    Plugin.Logger.LogInfo($"{userModel.CharacterName} earned reward: {itemModel.Name}");
+                    Plugin.LogInfo($"{userModel.CharacterName} earned reward: {itemModel.Name}");
                     var globalMessage = string.Format(RandomEncountersConfig.RewardAnnouncementMessageTemplate.Value,
                         userModel.CharacterName, itemModel.Color, itemModel.Name);
                     if (RandomEncountersConfig.NotifyAllPlayersAboutRewards.Value)

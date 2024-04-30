@@ -1,7 +1,6 @@
 ﻿using ProjectM;
 using ProjectM.Network;
 using System;
-using System.Globalization;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -10,10 +9,10 @@ using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
+using System.Diagnostics;
 using VampireCommandFramework;
-using System.IO;
-using System.Text.Json;
 using Bloodstone.API;
+using OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Utils
 {
@@ -39,18 +38,34 @@ namespace OpenRPG.Utils
     {
         private static Entity empty_entity = new Entity();
         private static System.Random rand = new System.Random();
-
+        
         public static ServerGameSettings SGS = default;
         public static ServerGameManager SGM = default;
         public static UserActivityGridSystem UAGS = default;
-        public static int groupRange = 50;
 
-        // TODO guids to use prefabs
-        public static int buffGUID = 1444835872;
-        public static int forbiddenBuffGUID = -161632603;
+        public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
+        public static int forbiddenBuffGUID = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
         public static bool buffLogging = false;
         public static bool deathLogging = true;
-        public static PrefabGUID appliedBuff = Database.Buff.Buff_4pT2;
+        public static PrefabGUID AppliedBuff = new PrefabGUID(buffGUID);
+        public static PrefabGUID SeverePunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Fever);          //-- Using this for PvP Punishment debuff
+        public static PrefabGUID MinorPunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Area_Inside);
+
+        //-- LevelUp Buff
+        public static PrefabGUID LevelUp_Buff = new PrefabGUID((int)Effects.AB_ChurchOfLight_Priest_HealBomb_Buff);
+        public static PrefabGUID HostileMark_Buff = new PrefabGUID((int)Buffs.Buff_Cultist_BloodFrenzy_Buff);
+
+        //-- Nice Effect...
+        public static PrefabGUID AB_Undead_BishopOfShadows_ShadowSoldier_Minion_Buff = new PrefabGUID((int)Effects.AB_Undead_BishopOfShadows_ShadowSoldier_Minion_Buff);   //-- Impair cast & movement
+
+        //-- Fun
+        public static PrefabGUID HolyNuke = new PrefabGUID((int)Effects.AB_Paladin_HolyNuke_Buff);
+        public static PrefabGUID Pig_Transform_Debuff = new PrefabGUID((int)Remainders.Witch_PigTransformation_Buff);
+
+
+        //-- Possible Buff use
+        public static PrefabGUID EquipBuff_Chest_Base = new PrefabGUID((int)EquipBuffs.EquipBuff_Chest_Base);         //-- Hmm... not sure what to do with this right now...
+        public static PrefabGUID AB_BloodBuff_VBlood_0 = new PrefabGUID((int)Effects.AB_BloodBuff_VBlood_0);          //-- Does it do anything negative...? How can i check for this, seems like it's a total blank o.o
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
 
@@ -92,7 +107,7 @@ namespace OpenRPG.Utils
             if (Helper.percentageStats.Contains(statID) && humanReadablePercentageStats) {
                 rate /= 100;
             }
-                double value = strength * rate * effectiveness;
+            double value = strength * rate * effectiveness;
             if (Helper.inverseMultiplierStats.Contains(statID)) {
                 if (WeaponMasterSystem.linearCDR) {
                     value = strength * effectiveness;
@@ -142,7 +157,7 @@ namespace OpenRPG.Utils
 
             }
 
-            Plugin.Logger.LogWarning("Player Cache Created.");
+            Plugin.LogInfo("Player Cache Created.");
         }
         
         public static void TeleportTo(ChatCommandContext ctx, Tuple<float,float,float> position) {
@@ -165,6 +180,8 @@ namespace OpenRPG.Utils
         
         public static void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
         {
+            var method = new StackFrame(1).GetMethod();
+            Plugin.LogWarning($"UpdatePlayerCache called from: {method?.Name}");
             var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
             Cache.NamePlayerCache.Remove(GetTrueName(oldName.ToLower()));
 
@@ -173,60 +190,6 @@ namespace OpenRPG.Utils
 
             Cache.NamePlayerCache[GetTrueName(newName.ToLower())] = playerData;
             Cache.SteamPlayerCache[userData.PlatformId] = playerData;
-        }
-
-        public static bool RenamePlayer(Entity userEntity, Entity charEntity, FixedString64 newName)
-        {
-            //-- Max Char Length for FixedString64 is 61 bytes.
-            //if (newName.utf8LengthInBytes > 61)
-            //{
-            //    return false;
-            //}
-
-            var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
-            UpdatePlayerCache(userEntity, userData.CharacterName.ToString(), newName.ToString());
-
-            var des = Plugin.Server.GetExistingSystem<DebugEventsSystem>();
-            var networkId = Plugin.Server.EntityManager.GetComponentData<NetworkId>(userEntity);
-            var renameEvent = new RenameUserDebugEvent
-            {
-                NewName = newName,
-                Target = networkId
-            };
-            var fromCharacter = new FromCharacter
-            {
-                User = userEntity,
-                Character = charEntity
-            };
-            des.RenameUser(fromCharacter, renameEvent);
-            return true;
-        }
-
-        public static bool ValidateName(string name, out CreateCharacterFailureReason invalidReason)
-        {
-            if (Regex.IsMatch(name, @"[^a-zA-Z0-9]"))
-            {
-                invalidReason = CreateCharacterFailureReason.InvalidName;
-                return false;
-            }
-
-            //-- The game default max byte length is 20.
-            //-- The max legth assignable is actually 61 bytes.
-            FixedString64 charName = name;
-            if (charName.utf8LengthInBytes > 20)
-            {
-                invalidReason = CreateCharacterFailureReason.InvalidName;
-                return false;
-            }
-
-            if (Cache.NamePlayerCache.TryGetValue(name.ToLower(), out _))
-            {
-                invalidReason = CreateCharacterFailureReason.NameTaken;
-                return false;
-            }
-
-            invalidReason = CreateCharacterFailureReason.None;
-            return true;
         }
 
         public static void ApplyBuff(Entity User, Entity Char, PrefabGUID GUID)
@@ -257,13 +220,6 @@ namespace OpenRPG.Utils
 
         public static string GetNameFromSteamID(ulong SteamID)
         {
-            //var UserEntities = Plugin.Server.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<User>()).ToEntityArray(Allocator.Temp);
-            //foreach (var Entity in UserEntities)
-            //{
-            //    var EntityData = Plugin.Server.EntityManager.GetComponentData<User>(Entity);
-            //    if (EntityData.PlatformId == SteamID) return EntityData.CharacterName.ToString();
-            //}
-            //return null;
             if (Cache.SteamPlayerCache.TryGetValue(SteamID, out var data))
             {
                 return data.CharacterName.ToString();
@@ -345,36 +301,11 @@ namespace OpenRPG.Utils
             // }
         }
 
-        public static BloodType GetBloodTypeFromName(string name)
-        {
-            BloodType type = BloodType.Frailed;
-            if (Enum.IsDefined(typeof(BloodType), CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)))
-                Enum.TryParse(name, true, out type);
-            return type;
-        }
-
-        // TODO make prefab enum for this
-        public static PrefabGUID GetSourceTypeFromName(string name)
-        {
-            PrefabGUID type;
-            name = name.ToLower();
-            if (name.Equals("brute")) type = new PrefabGUID(-1464869978);
-            else if (name.Equals("warrior")) type = new PrefabGUID(-1128238456);
-            else if (name.Equals("rogue")) type = new PrefabGUID(-1030822544);
-            else if (name.Equals("scholar")) type = new PrefabGUID(-700632469);
-            else if (name.Equals("creature")) type = new PrefabGUID(1897056612);
-            else if (name.Equals("worker")) type = new PrefabGUID(-1342764880);
-            else if (name.Equals("mutant")) type = new PrefabGUID(-2017994753);
-            else type = new PrefabGUID();
-            return type;
-        }
-
         public static bool FindPlayer(string name, bool mustOnline, out Entity playerEntity, out Entity userEntity)
         {
             EntityManager entityManager = Plugin.Server.EntityManager;
 
             //-- Way of the Cache
-            // TODO check name player cache?
             if (Cache.NamePlayerCache.TryGetValue(name.ToLower(), out var data))
             {
                 playerEntity = data.CharEntity;
@@ -422,11 +353,6 @@ namespace OpenRPG.Utils
                 userEntity = empty_entity;
                 return false;
             }
-        }
-
-        public static bool IsPlayerInCombat(Entity player)
-        {
-            return BuffUtility.HasBuff(Plugin.Server.EntityManager, player, Database.Buff.InCombat) || BuffUtility.HasBuff(Plugin.Server.EntityManager, player, Database.Buff.InCombat_PvP);
         }
 
         public static bool HasBuff(Entity player, PrefabGUID BuffGUID)
@@ -513,8 +439,6 @@ namespace OpenRPG.Utils
             try
             {
                 name = s.PrefabGuidToNameDictionary[hashCode];
-                // TODO prefablookupmap?
-                //name = s.PrefabLookupMap[hashCode].ToString();
             }
             catch
             {
@@ -551,25 +475,6 @@ namespace OpenRPG.Utils
                 Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
-        }
-
-        // TODO remove this if not used?
-        struct FakeNull
-        {
-            public int value;
-            public bool has_value;
-        }
-
-        // TODO to Prefabs.cs?
-        public enum BloodType {
-            Frailed = -899826404,
-            Creature = -77658840,
-            Warrior = -1094467405,
-            Rogue = 793735874,
-            Brute = 581377887,
-            Scholar = -586506765,
-            Worker = -540707191,
-            Mutant = -2017994753,
         }
         
         public static PrefabGUID vBloodType = new(1557174542);
@@ -609,7 +514,7 @@ namespace OpenRPG.Utils
 
         };
 
-        //This should be a dictionary lookup for the stats to what mod type they should use, and i should put the name strings in here, i might do it later.
+        //This should be a dictionary lookup for the stats to what mod type they should use
         public static HashSet<int> multiplierStats = new HashSet<int> {
             {(int)UnitStatType.CooldownModifier },
             {(int)UnitStatType.PrimaryCooldownModifier },/*
@@ -651,7 +556,6 @@ namespace OpenRPG.Utils
 
         };
         
-        // TODO still need this?
         public static string statTypeToString(UnitStatType type) {
             var name = Enum.GetName(type);
             // Split words by camel case

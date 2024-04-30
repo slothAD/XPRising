@@ -2,6 +2,7 @@
 using ProjectM.Shared;
 using HarmonyLib;
 using OpenRPG.Utils;
+using Prefabs = OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Hooks
 {

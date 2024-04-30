@@ -15,21 +15,23 @@ namespace OpenRPG.Hooks
         private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
-            // TODO check daynight cycle is not logging only errors
             //-- Day Cycle Tracking
-            var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
-            
-            if (CurrentDay != DNCycle.GameDateTimeNow.Day)
+            if (Plugin.isInitialized)
             {
-                if (!isDNInitialized)
+                var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
+
+                if (CurrentDay != DNCycle.GameDateTimeNow.Day)
                 {
-                    CurrentDay = DNCycle.GameDateTimeNow.Day;
-                    isDNInitialized = true;
-                }
-                else
-                {
-                    CurrentDay = DNCycle.GameDateTimeNow.Day;
-                    if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
+                    if (!isDNInitialized)
+                    {
+                        CurrentDay = DNCycle.GameDateTimeNow.Day;
+                        isDNInitialized = true;
+                    }
+                    else
+                    {
+                        CurrentDay = DNCycle.GameDateTimeNow.Day;
+                        if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
+                    }
                 }
             }
             //-- ------------------

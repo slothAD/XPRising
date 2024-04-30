@@ -27,7 +27,7 @@ namespace OpenRPG.Hooks
                         // This line currently throws an AOT error. Is there another way to get the source?
                         em.TryGetComponentData(entity, out VampireDownedBuff deathBuff);
                         VampireDownedServerEventSystem.TryFindRootOwner(deathBuff.Source, 1, em, out var killer);
-                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": XP Lost on down");
+                        if (ExperienceSystem.xpLogging) Plugin.LogInfo("XP Lost on down");
                         ExperienceSystem.deathXPLoss(victim, killer);
                     }
                     catch
@@ -38,7 +38,7 @@ namespace OpenRPG.Hooks
                         // for which no ahead of time (AOT) code was generated.
 
                         // Just assume that the killer is the victim
-                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": XP Lost on down");
+                        if (ExperienceSystem.xpLogging) Plugin.LogInfo("XP Lost on down");
                         ExperienceSystem.deathXPLoss(victim, victim);
                     }
                 }

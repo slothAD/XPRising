@@ -14,7 +14,7 @@ namespace OpenRPG.Commands
             UpdateSpeed(steamID, newSpeedingValue);
             var s = newSpeedingValue ? "Activated" : "Deactivated";
             ctx.Reply($"Speed buff <color=#ffff00>{s}</color>");
-            Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Helper.appliedBuff);
+            Helper.ApplyBuff(ctx.Event.SenderUserEntity, ctx.Event.SenderCharacterEntity, Helper.AppliedBuff);
         }
 
         public static void UpdateSpeed(ulong steamID, bool isSpeeding)

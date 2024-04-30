@@ -1,4 +1,5 @@
-﻿using ProjectM;
+﻿using System.Collections.Generic;
+using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
@@ -11,7 +12,30 @@ namespace OpenRPG.Commands
     public static class Bloodline
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
-        public static bool detailedStatements = false;
+
+        private static string bloodlineToPrint(ulong steamID, int bl, BloodlineData bld)
+        {
+            var name = Bloodlines.names[bl];
+            var masteryPercent = bld.strength[bl];
+            var print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
+            for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
+                if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
+                    if (i > 0)
+                        print += ",";
+                    print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
+                    print += " <color=#75FF33>";
+                    var val = Bloodlines.calcBuffValue(bl, steamID, i);
+                    if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
+                        val = 1 - val;
+                    }
+                    print += $"{val:F3}";
+                    print += "</color>";
+                }
+            }
+            print += $") Effectiveness: {bld.efficency[bl] * 100}%";
+
+            return print;
+        }
         
         [Command("get", "g", "", "Display your current bloodline progression")]
         public static void getBloodline(ChatCommandContext ctx) {
@@ -21,63 +45,22 @@ namespace OpenRPG.Commands
             }
             var SteamID = ctx.Event.User.PlatformId;
 
-            bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var MasteryData);
+            var isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var bld);
             if (!isDataExist) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
 
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
-            int bl;
-            string name;
-            double masteryPercent;
-            string print;
-            BloodlineData bld = Bloodlines.getBloodlineData(SteamID);
-            if (detailedStatements) {
-                for (bl = 0; bl < Bloodlines.stats.Length; bl++) {
-                    if (bl >= Bloodlines.stats.Length)
-                        ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
-                    name = Bloodlines.names[bl];
-                    masteryPercent = bld.strength[bl];
-                    print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
-                    for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
-                        if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
-                            if (i > 0)
-                                print += ",";
-                            print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
-                            print += " <color=#75FF33>";
-                            double val = Bloodlines.calcBuffValue(bl, SteamID, i);
-                            if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
-                                val = 1 - val;
-                            }
-                            print += $"{val:F3}";
-                            print += "</color>";
-                        }
-                    }
-                    print += $") Effectiveness: {bld.efficency[bl] * 100}%";
-                    ctx.Reply(print);
-                }
-            } else {
-                Blood blood = entityManager.GetComponentData<Blood>(ctx.Event.SenderCharacterEntity);
-                Bloodlines.bloodlineMap.TryGetValue(blood.BloodType, out bl);
-                if (bl >= Bloodlines.stats.Length)
-                    ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
-                name = Bloodlines.names[bl];
-                masteryPercent = bld.strength[bl];
-                print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
-                for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
-                    if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
-                        if (i > 0)
-                            print += ",";
-                        print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
-                        print += " <color=#75FF33>";
-                        print += $"{Bloodlines.calcBuffValue(bl, SteamID, i):F3}";
-                        print += "</color>";
-                    }
-                }
-                print += $") Effectiveness: {bld.efficency[bl] * 100}%";
-                ctx.Reply(print);
+            Blood blood = entityManager.GetComponentData<Blood>(ctx.Event.SenderCharacterEntity);
+            Bloodlines.bloodlineMap.TryGetValue(blood.BloodType, out var bl);
+            if (bl >= Bloodlines.stats.Length)
+            {
+                ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
+                return;
             }
+            
+            ctx.Reply(bloodlineToPrint(SteamID, bl, bld));
         }
         
         [Command("get all", "ga", "", "Display all your bloodline progressions")]
@@ -88,44 +71,20 @@ namespace OpenRPG.Commands
             }
             var SteamID = ctx.Event.User.PlatformId;
 
-            bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var MasteryData);
+            bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var bld);
             if (!isDataExist) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
 
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
-            int bl;
-            string name;
-            double masteryPercent;
-            string print;
-            BloodlineData bld = Bloodlines.getBloodlineData(SteamID);
-            for (bl = 0; bl < Bloodlines.stats.Length; bl++) {
-                if (bl >= Bloodlines.stats.Length)
-                    ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
-                name = Bloodlines.names[bl];
-                masteryPercent = bld.strength[bl];
-                print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
-                for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
-                    if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
-                        if (i > 0)
-                            print += ",";
-                        print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
-                        print += " <color=#75FF33>";
-                        double val = Bloodlines.calcBuffValue(bl, SteamID, i);
-                        if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
-                            val = 1 - val;
-                        }
-                        print += $"{val:F3}";
-                        print += "</color>";
-                    }
-                }
-                print += $") Effectiveness: {bld.efficency[bl] * 100}%";
-                ctx.Reply(print);
+            for (var bl = 0; bl < Bloodlines.stats.Length; bl++)
+            {
+                ctx.Reply(bloodlineToPrint(SteamID, bl, bld));
             }
         }
 
-        [Command("add", "a", "[BloodlineName, amount]", "Adds amount to the specified bloodline. able to use default names, bloodtype names, or the configured names.", adminOnly: true)]
+        [Command("add", "a", "<BloodlineName> <amount>", "Adds amount to the specified bloodline. able to use default names, bloodtype names, or the configured names.", adminOnly: true)]
         public static void addBloodlineValue(ChatCommandContext ctx, string MasteryType, double amount)
         {
             ulong SteamID;
@@ -153,10 +112,10 @@ namespace OpenRPG.Commands
             }
             Bloodlines.modBloodline(SteamID, type, amount);
             ctx.Reply($"{Bloodlines.names[type]}'s bloodline for \"{name}\" adjusted by <color=#fffffffe>{amount}%</color>");
-            Helper.ApplyBuff(UserEntity, CharEntity, Helper.appliedBuff);
+            Helper.ApplyBuff(UserEntity, CharEntity, Helper.AppliedBuff);
         }
 
-        [Command("set", "s", "[playerName, bloodline, value]", "Sets the specified players bloodline to a specific value", adminOnly: true)]
+        [Command("set", "s", "<playerName> <bloodline> <value>", "Sets the specified players bloodline to a specific value", adminOnly: true)]
         public static void setBloodline(ChatCommandContext ctx, string name, string type, double value) {
             if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
@@ -180,29 +139,27 @@ namespace OpenRPG.Commands
             ctx.Reply(name + "'s " + type + " bloodline set to " + value);
         }
 
-        [Command("log", "l", "<On, Off>", "Turns on or off logging of bloodlineXP gain.", adminOnly: false)]
-        public static void logBloodline(ChatCommandContext ctx, string flag)
+        [Command("log", "l", "", "Toggles logging of bloodlineXP gain.", adminOnly: false)]
+        public static void logBloodline(ChatCommandContext ctx)
         {
             ulong SteamID;
             var UserEntity = ctx.Event.SenderUserEntity;
             SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
-            if (flag.ToLower().Equals("on"))
+            var currentValue = Database.playerLogBloodline.GetValueOrDefault(SteamID, false);
+            Database.playerLogBloodline.Remove(SteamID);
+            if (currentValue)
             {
-                Database.playerLogBloodline.Remove(SteamID);
-                Database.playerLogBloodline.Add(SteamID, true);
-                ctx.Reply("Bloodline gain is now being logged.");
-                return;
-            }
-            else if (flag.ToLower().Equals("off"))
-            {
-                Database.playerLogBloodline.Remove(SteamID);
                 Database.playerLogBloodline.Add(SteamID, false);
                 ctx.Reply($"Bloodline gain is no longer being logged.");
-                return;
+            }
+            else
+            {
+                Database.playerLogBloodline.Add(SteamID, true);
+                ctx.Reply("Bloodline gain is now being logged.");
             }
         }
 
-        [Command("reset", "r", "[BloodlineName]", "Resets a bloodline to gain more power with it.", adminOnly: false)]
+        [Command("reset", "r", "<bloodline>", "Resets a bloodline to gain more power with it.", adminOnly: false)]
         public static void resetBloodline(ChatCommandContext ctx, string BloodlineName)
         {
             ulong SteamID;

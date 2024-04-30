@@ -7,6 +7,7 @@ using ProjectM.Network;
 using ProjectM;
 using OpenRPG.Utils;
 using OpenRPG.Systems;
+using OpenRPG.Utils.Prefabs;
 using ProjectM.Scripting;
 
 namespace OpenRPG.Hooks;
@@ -168,17 +169,17 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
     #endregion
 
     private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance) {
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entered Buff System, attempting Old Style");
+        if (Helper.buffLogging) Plugin.LogInfo("Entered Buff System, attempting Old Style");
         oldStyleBuffHook(__instance);
-        //if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Old Style Done, attemping New Style, just cause");
+        //if (Helper.buffLogging) Plugin.LogInfo("Old Style Done, attemping New Style, just cause");
         //rebuiltBuffHook(__instance);
     }
 
     public static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Applying RPGMods Buffs");
+        if (Helper.buffLogging) Plugin.LogInfo("Applying RPGMods Buffs");
         Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Owner found, hash: " + Owner.GetHashCode());
+        if (Helper.buffLogging) Plugin.LogInfo("Owner found, hash: " + Owner.GetHashCode());
         if (!entityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
         PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
@@ -186,21 +187,21 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         User Data = entityManager.GetComponentData<User>(User);
 
         var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer acquired, length: " + Buffer.Length);
+        if (Helper.buffLogging) Plugin.LogInfo("Buffer acquired, length: " + Buffer.Length);
 
         //Buffer.Clear();
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Buffer cleared, to confirm length: " + Buffer.Length);
+        if (Helper.buffLogging) Plugin.LogInfo("Buffer cleared, to confirm length: " + Buffer.Length);
 
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Weapon Mastery System Buff Reciever");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing Weapon Mastery System Buff Reciever");
         if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Bloodline Buff Reciever");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing Bloodline Buff Reciever");
         if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Class System Buff Reciever");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing Class System Buff Reciever");
         if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
 
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing PowerUp Command");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing PowerUp Command");
         if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)) {
             if (powerUpData.Equals(null)) {
                 powerUpData = new PowerUpData();
@@ -258,24 +259,24 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
 
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing NoCD Command");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing NoCD Command");
         if (Database.nocooldownlist.ContainsKey(Data.PlatformId)) {
             Buffer.Add(Cooldown);
         }
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Sun Immunity Command");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing Sun Immunity Command");
         if (Database.sunimmunity.ContainsKey(Data.PlatformId)) {
             Buffer.Add(SunCharge);
             Buffer.Add(Hazard);
             Buffer.Add(SunResist);
         }
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing Speeding Command");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing Speeding Command");
         if (Database.speeding.ContainsKey(Data.PlatformId)) {
             Buffer.Add(Speed);
         }
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Now doing GodMode Command");
+        if (Helper.buffLogging) Plugin.LogInfo("Now doing GodMode Command");
         if (Database.godmode.ContainsKey(Data.PlatformId)) {
             Buffer.Add(PResist);
             Buffer.Add(FResist);
@@ -294,7 +295,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             Buffer.Add(DurabilityLoss);
         }
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Done Adding, Buffer length: " + Buffer.Length);
+        if (Helper.buffLogging) Plugin.LogInfo("Done Adding, Buffer length: " + Buffer.Length);
 
     }
 
@@ -303,19 +304,19 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         EntityManager entityManager = __instance.EntityManager;
         NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Entities Length of " + entities.Length);
+        if (Helper.buffLogging) Plugin.LogInfo("Entities Length of " + entities.Length);
 
         foreach (var entity in entities) {
             PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
             if (GUID.GuidHash == Helper.forbiddenBuffGUID) {
-                if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Forbidden buff found with GUID of " + GUID.GuidHash);
+                if (Helper.buffLogging) Plugin.LogInfo("Forbidden buff found with GUID of " + GUID.GuidHash);
                 return;
             }
         }
 
         foreach (var entity in entities) {
             PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-            if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": GUID of " + GUID.GuidHash);
+            if (Helper.buffLogging) Plugin.LogInfo("GUID of " + GUID.GuidHash);
             if (GUID.GuidHash == Helper.buffGUID) {
                 oldStyleBuffApplicaiton(entity, entityManager);
             }
@@ -325,7 +326,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         EntityManager em = __instance.EntityManager;
         bool hasSGM = Helper.GetServerGameManager(out ServerGameManager sgm);
         if (!hasSGM) {
-            Plugin.Logger.LogInfo("No Server Game Manager, Something is WRONG.");
+            Plugin.LogInfo("No Server Game Manager, Something is WRONG.");
             return;
 
         }
@@ -339,7 +340,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             Options = EntityQueryOptions.IncludeDisabled
         });
         NativeArray<Entity> pcArray = query.ToEntityArray(Allocator.Temp);
-        if (Helper.buffLogging) Plugin.Logger.LogInfo("got connected Players, array of length " + pcArray.Length);
+        if (Helper.buffLogging) Plugin.LogInfo("got connected Players, array of length " + pcArray.Length);
         foreach (var entity in pcArray) {
             em.TryGetComponentData<PlayerCharacter>(entity, out PlayerCharacter pc);
             em.TryGetComponentData<User>(entity, out User userEntity);
@@ -352,8 +353,8 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
             em.TryGetBuffer<ModifyUnitStats>(entity, out var stats);
 
-            if (Helper.buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuffDOTS buffer of length " + Buffer.Length);
-            if (Helper.buffLogging) Plugin.Logger.LogInfo("got entities modifyunitystatbuff buffer of length " + stats.Length);
+            if (Helper.buffLogging) Plugin.LogInfo("got entities modifyunitystatbuffDOTS buffer of length " + Buffer.Length);
+            if (Helper.buffLogging) Plugin.LogInfo("got entities modifyunitystatbuff buffer of length " + stats.Length);
 
             foreach (BuffData bd in bdl) {
                 if (bd.isApplied) { continue; }
@@ -438,7 +439,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             }
             applied = true;
         } catch {
-            if (Helper.buffLogging) Plugin.Logger.LogInfo("Failed to apply buff to statID: " + tar);
+            if (Helper.buffLogging) Plugin.LogInfo("Failed to apply buff to statID: " + tar);
         }
         return applied;
     }
@@ -485,8 +486,8 @@ public class DebugBuffSystem_Patch
             foreach (var entity in entities) {
                 var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
 
-                var combatStart = guid.GetHashCode() == (int)Prefabs.Buffs.Buff_InCombat;
-                var combatEnd = guid.GetHashCode() == (int)Prefabs.Buffs.Buff_OutOfCombat;
+                var combatStart = guid.GetHashCode() == (int)Buffs.Buff_InCombat;
+                var combatEnd = guid.GetHashCode() == (int)Buffs.Buff_OutOfCombat;
                 if (!combatStart && !combatEnd) continue;
 
                 // Get entity owner: This will be the entity that actually gets the buff
@@ -504,13 +505,13 @@ public class DebugBuffSystem_Patch
                 // - Buff_OutOfCombat only seems to be sent once.
                 var inCombat = Cache.GetCombatStart(steamID) > Cache.GetCombatEnd(steamID);
                 if (combatStart && !inCombat) {
-                    if (Helper.buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat start");
+                    if (Helper.buffLogging) Plugin.LogInfo($"{steamID}: Combat start");
                     Cache.playerCombatStart[steamID] = DateTime.Now;
 
                     // Actions to check on combat start
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
                 } else if (combatEnd) {
-                    if (Helper.buffLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {steamID}: Combat end");
+                    if (Helper.buffLogging) Plugin.LogInfo($"{steamID}: Combat end");
                     Cache.playerCombatEnd[steamID] = DateTime.Now;
                 }
             }
@@ -540,7 +541,7 @@ public class Destroy_TravelBuffSystem_Patch {
         foreach (var entity in entities) {
             PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
             //-- Most likely it's a new player!
-            if (GUID.Equals(Database.Buff.AB_Interact_TombCoffinSpawn_Travel)) {
+            if (GUID.GuidHash.Equals(Effects.AB_Interact_TombCoffinSpawn_Travel)) {
                 var Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                 if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
 

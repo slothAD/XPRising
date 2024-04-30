@@ -28,8 +28,8 @@ public class GameFrame : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Plugin.Logger.LogError("Error dispatching OnUpdate event:");
-            Plugin.Logger.LogError(ex);
+            Plugin.LogError("Error dispatching OnUpdate event:");
+            Plugin.LogError(ex.ToString());
         }
     }
 
@@ -41,8 +41,8 @@ public class GameFrame : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Plugin.Logger.LogError("Error dispatching OnLateUpdate event:");
-            Plugin.Logger.LogError(ex);
+            Plugin.LogError("Error dispatching OnLateUpdate event:");
+            Plugin.LogError(ex.ToString());
         }
     }
 

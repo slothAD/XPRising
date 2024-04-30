@@ -1,10 +1,5 @@
 ﻿using Bloodstone.API;
 using ProjectM;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Unity.Entities;
 using VRising.GameData.Models;
 using VRising.GameData;
@@ -15,7 +10,7 @@ namespace OpenRPG.Commands
     [CommandGroup(name: "unlock", shortHand:"u")]
     internal class Unlock
     {
-        [Command(name: "vbloodability", shortHand: "vba", adminOnly: true, usage: "[<PlayerName>]", description: "Unlock all abilities that drop from killing a VBood for yourself or a player.")]
+        [Command(name: "vbloodability", shortHand: "vba", adminOnly: true, usage: "[PlayerName]", description: "Unlock all abilities that drop from killing a VBood for yourself or a player.")]
         public static void VBloodUnlockAbility(ChatCommandContext ctx, string playerName = null)
         {
             if (playerName == null)
@@ -31,7 +26,7 @@ namespace OpenRPG.Commands
 
         }
 
-        [Command(name: "vbloodpassive", shortHand: "vbp", adminOnly: true, usage: "[<PlayerName>]", description: "Unlock all passives that drop from killing a VBood for yourself or a player.")]
+        [Command(name: "vbloodpassive", shortHand: "vbp", adminOnly: true, usage: "[PlayerName]", description: "Unlock all passives that drop from killing a VBood for yourself or a player.")]
         public static void VBloodUnlockPassive(ChatCommandContext ctx, string playerName = null)
         {
             if (playerName == null)
@@ -46,7 +41,7 @@ namespace OpenRPG.Commands
             ctx.Reply($"All passives from VBlood has been unlocked for {playerName}");
         }
 
-        [Command(name: "vbloodshapeshift", shortHand: "vbs", adminOnly: true, usage: "[<PlayerName>]", description: "Unlock all shapeshifters that drop from killing a VBood for yourself or a player.")]
+        [Command(name: "vbloodshapeshift", shortHand: "vbs", adminOnly: true, usage: "[PlayerName]", description: "Unlock all shapeshifters that drop from killing a VBood for yourself or a player.")]
         public static void VBloodUnlockShapeshift(ChatCommandContext ctx, string playerName = null)
         {
             if (playerName == null)
@@ -61,7 +56,7 @@ namespace OpenRPG.Commands
             ctx.Reply($"All shapeshifters from VBlood has been unlocked for {playerName}");
         }
 
-        [Command(name: "achievements", shortHand: "a", adminOnly: true, usage: "[<PlayerName>]", description: "Unlock all shapeshifters that drop from killing a VBood for yourself or a player.")]
+        [Command(name: "achievements", shortHand: "a", adminOnly: true, usage: "[PlayerName]", description: "Unlock all shapeshifters that drop from killing a VBood for yourself or a player.")]
         public static void Achievements(ChatCommandContext ctx, string playerName = null)
         {
             if (playerName == null)
@@ -77,7 +72,7 @@ namespace OpenRPG.Commands
             ctx.Reply($"All shapeshifters from VBlood has been unlocked for {playerName}");
         }
 
-        [Command(name: "research", shortHand: "r", adminOnly: true, usage: "[<PlayerName>]", description: "Unlock all shapeshifters that drop from killing a VBood for yourself or a player.")]
+        [Command(name: "research", shortHand: "r", adminOnly: true, usage: "[PlayerName]", description: "Unlock all shapeshifters that drop from killing a VBood for yourself or a player.")]
         public static void Research(ChatCommandContext ctx, string playerName = null)
         {
             if (playerName == null)

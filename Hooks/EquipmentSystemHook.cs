@@ -31,7 +31,7 @@ public class ArmorLevelSystem_Spawn_Patch
                     }
                 }
                 catch(Exception e){
-                    Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                    Plugin.LogInfo("AOT Error I think" + e.Message);
                 }
                 if (!ExperienceSystem.ShouldAllowGearLevel)
                 {
@@ -58,7 +58,7 @@ public class WeaponLevelSystem_Spawn_Patch
 {
     private static void Prefix(WeaponLevelSystem_Spawn __instance)
     {
-        if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + ": Weapon System Patch Entry");
+        if (Helper.buffLogging) Plugin.LogInfo("Weapon System Patch Entry");
         if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
         {
             EntityManager entityManager = __instance.EntityManager;
@@ -70,8 +70,8 @@ public class WeaponLevelSystem_Spawn_Patch
                 Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                 if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                 {
-                    if (Helper.buffLogging) Plugin.Logger.LogInfo(System.DateTime.Now + " Applying Moose buff");
-                    Helper.ApplyBuff(User, Owner, Helper.appliedBuff);
+                    if (Helper.buffLogging) Plugin.LogInfo(" Applying Moose buff");
+                    Helper.ApplyBuff(User, Owner, Helper.AppliedBuff);
                 }
                 if (ExperienceSystem.isEXPActive)
                 {
@@ -85,7 +85,7 @@ public class WeaponLevelSystem_Spawn_Patch
                         }
                     }
                     catch(Exception e){
-                        Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                        Plugin.LogInfo("AOT Error I think" + e.Message);
                     }
                     if (!ExperienceSystem.ShouldAllowGearLevel)
                     {
@@ -138,7 +138,7 @@ public class WeaponLevelSystem_Destroy_Patch
                     //might need a better data structure...but should be fine in the cache only.
                 }
                 //reset buffs for being unarmed
-                Helper.ApplyBuff(User, Owner, Helper.appliedBuff);
+                Helper.ApplyBuff(User, Owner, Helper.AppliedBuff);
             }
         }
     }
@@ -166,7 +166,7 @@ public class SpellLevelSystem_Spawn_Patch
                 }
                 catch (Exception e)
                 {
-                    Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                    Plugin.LogInfo("AOT Error I think" + e.Message);
                 }
                 level.Level = 0;
                 entityManager.SetComponentData(entity, level);
@@ -217,7 +217,7 @@ public class SpellLevelSystem_Destroy_Patch
                 }
                 catch (Exception e)
                 {
-                    Plugin.Logger.LogInfo("AOT Error I think" + e.Message);
+                    Plugin.LogInfo("AOT Error I think" + e.Message);
                 }
                 entityManager.SetComponentData(entity, level);
             }

@@ -33,8 +33,8 @@ namespace OpenRPG.Systems
 
             FactionHeat.GetActiveFactionHeatValue(faction, isVBlood, out var heatValue, out var activeFaction);
             if (factionLogging || faction == Faction.Unknown) {
-                var factionString = $"{DateTime.Now}: Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}";
-                Plugin.Logger.LogWarning(factionString);
+                var factionString = $"Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}";
+                Plugin.LogWarning(factionString);
             }
 
             if (activeFaction == Faction.Unknown || heatValue == 0) return;
@@ -65,8 +65,8 @@ namespace OpenRPG.Systems
             }
             else {
                 if (!heatData.heat.TryGetValue(victimFaction, out var heat)) {
-                    Plugin.Logger.LogWarning(
-                        $"{DateTime.Now}: Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
+                    Plugin.LogWarning(
+                        $"Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
                     return;
                 }
 
@@ -147,7 +147,7 @@ namespace OpenRPG.Systems
                     var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
 
                     if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
-                        if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: {faction} can ambush");
+                        if (factionLogging) Plugin.LogInfo($"{faction} can ambush");
 
                         // If there is no stored wanted level yet, or if this ally's wanted level is higher, then set it.
                         if (!ambushFactions.TryGetValue(faction, out var highestWantedLevel) || wantedLevel > highestWantedLevel) {
@@ -234,11 +234,11 @@ namespace OpenRPG.Systems
             var lastCombatEnd = Cache.GetCombatEnd(steamID);
 
             var elapsedTime = CooldownPeriod(heatData.lastCooldown, lastCombatStart, lastCombatEnd);
-            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
+            if (factionLogging) Plugin.LogInfo($"Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
 
             if (elapsedTime > 0) {
                 var cooldownValue = (int)Math.Floor(elapsedTime * cooldownPerSecond);
-                if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
+                if (factionLogging) Plugin.LogInfo($"Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
 
                 // Update all heat levels
                 foreach (var faction in FactionHeat.ActiveFactions) {
@@ -258,7 +258,7 @@ namespace OpenRPG.Systems
         private static double CooldownPeriod(DateTime lastCooldown, DateTime lastCombatStart, DateTime lastCombatEnd) {
             // If we have started combat more recently than we have finished, then we are in combat.
             var inCombat = lastCombatStart > lastCombatEnd;
-            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat CD period: combat: {inCombat}");
+            if (factionLogging) Plugin.LogInfo($"Heat CD period: combat: {inCombat}");
             
             // cdPeriodStart is the max of (lastCooldown, lastCombatEnd + offset)
             var cdPeriodStartAfterCombat = lastCombatEnd + TimeSpan.FromSeconds(20);
@@ -285,7 +285,7 @@ namespace OpenRPG.Systems
 
         private static void LogHeatData(PlayerHeatData heatData, Entity userEntity, string origin) {
             if (heatData.isLogging) Output.SendLore(userEntity, HeatDataString(heatData, true));
-            if (factionLogging) Plugin.Logger.LogInfo($"{DateTime.Now} Heat({origin}): {HeatDataString(heatData, false)}");
+            if (factionLogging) Plugin.LogInfo($"Heat({origin}): {HeatDataString(heatData, false)}");
         }
     }
 }

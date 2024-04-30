@@ -1,10 +1,8 @@
 ﻿using ProjectM.Network;
 using OpenRPG.Utils;
 using OpenRPG.Systems;
-using System.Linq;
 using System;
 using VampireCommandFramework;
-using ProjectM;
 
 namespace OpenRPG.Commands
 {
@@ -29,22 +27,21 @@ namespace OpenRPG.Commands
                 }
                 else
                 {
-                    throw ctx.Error("Specified user is not banned.");
+                    ctx.Reply("Specified user is not banned.");
                 }
             }
             else
             {
-                throw ctx.Error("Unable to find the specified player.");
+                ctx.Reply("Unable to find the specified player.");
             }
         }
 
         [Command(name: "player", shortHand: "p", adminOnly: false, usage: "<playername> <days> \"<reason>\"", description: "Ban a player, 0 days is permanent.")]
         public static void Ban(ChatCommandContext ctx, string playername, int days, string reason)
         {
-
             if (reason.Length > 150)
             {
-                throw ctx.Error("Keep the reason short will ya?!");
+                ctx.Reply("Keep the reason short will ya?!");
             }
 
             if (Helper.FindPlayer(playername, false, out _, out var targetUserEntity))
