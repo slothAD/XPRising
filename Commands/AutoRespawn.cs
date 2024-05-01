@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
@@ -9,7 +8,7 @@ namespace OpenRPG.Commands
 {
     public static class AutoRespawn
     {
-        [Command(name: "autorespawn", shortHand: "aresp", adminOnly: true, usage: "[PlayerName]", description: "Toggle auto respawn on the same position on death for yourself or a player.")]
+        [Command(name: "autorespawn", shortHand: "autor", adminOnly: true, usage: "[PlayerName]", description: "Toggle auto respawn on the same position on death for yourself or a player.")]
         public static void AutoRespawnCommand(ChatCommandContext ctx, string playerName)
         {
             var entityManager = VWorld.Server.EntityManager;
@@ -34,7 +33,7 @@ namespace OpenRPG.Commands
             ctx.Reply($"Player \"{PlayerName}\" Auto Respawn <color=#ffff00>{s}</color>");
         }
         
-        [Command(name: "autorespawn all", shortHand: "aresp all", adminOnly: true, usage: "", description: "Toggle auto respawn on the same position on death for all players.")]
+        [Command(name: "autorespawn-all", shortHand: "autor-all", adminOnly: true, usage: "", description: "Toggle auto respawn on the same position on death for all players.")]
         public static void AutoRespawnAllCommand(ChatCommandContext ctx)
         {
             ulong SteamID = 1;

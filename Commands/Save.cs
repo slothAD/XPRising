@@ -1,5 +1,4 @@
-﻿using OpenRPG.Systems;
-using OpenRPG.Utils;
+﻿using OpenRPG.Utils;
 using VampireCommandFramework;
 
 namespace OpenRPG.Commands

@@ -1,17 +1,12 @@
-﻿using System;
-using ProjectM;
+﻿using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Utils;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using VampireCommandFramework;
-using VCF.Core.Basics;
-using VRising.GameData;
 
 namespace OpenRPG.Systems
 {
@@ -35,8 +30,8 @@ namespace OpenRPG.Systems
 
         private static EntityManager em = Plugin.Server.EntityManager;
 
-        private static int HighestPrivilege = 100;
-        private static int LowestPrivilege = 0;
+        public static int HighestPrivilege = 100;
+        public static int LowestPrivilege = 0;
         public static bool IsUserVIP(ulong steamID)
         {
             bool isVIP = GetUserPermission(steamID) >= VIP_Permission;
@@ -51,11 +46,6 @@ namespace OpenRPG.Systems
         public static int GetCommandPermission(string command)
         {
             return Database.command_permission.GetValueOrDefault(command, HighestPrivilege);
-        }
-
-        public static string CommandAttributesToPermissionKey(string groupName, string commandName)
-        {
-            return string.IsNullOrEmpty(groupName) ? commandName : $"{groupName} {commandName}";
         }
 
         private static object SendPermissionList(ChatCommandContext ctx, List<string> messages)
@@ -210,37 +200,18 @@ namespace OpenRPG.Systems
             }
         }
 
-        public static void ValidatedCommandPermissions(List<string> permissionKeys)
-        {
-            var currentPermissions = Database.command_permission.Keys;
-            foreach (var permission in currentPermissions.Where(permission => !permissionKeys.Contains(permission)))
-            {
-                Plugin.LogMessage($"Removing old permission: {permission}");
-                Database.command_permission.Remove(permission);
-            }
-
-            foreach (var permission in permissionKeys)
-            {
-                // Add the permission if it doesn't already exist there
-                var added = Database.command_permission.TryAdd(permission, HighestPrivilege);
-                if (added) Plugin.LogMessage($"Added new permission: {permission}");
-            }
-            
-            Plugin.LogInfo("Permissions have been validated");
-        }
-
         public static Dictionary<string, int> DefaultCommandPermissions()
         {
             var permissions = new Dictionary<string, int>()
             {
                 {"autorespawn", 100},
-                {"autorespawn all", 100},
+                {"autorespawn-all", 100},
                 {"ban info", 0},
                 {"ban player", 100},
                 {"ban unban", 100},
                 {"bloodline add", 100},
                 {"bloodline get", 0},
-                {"bloodline get all", 0},
+                {"bloodline get-all", 0},
                 {"bloodline log", 0},
                 {"bloodline reset", 0},
                 {"bloodline set", 100},
@@ -255,7 +226,7 @@ namespace OpenRPG.Systems
                 {"kit", 100},
                 {"mastery add", 100},
                 {"mastery get", 0},
-                {"mastery get all", 0},
+                {"mastery get-all", 0},
                 {"mastery log", 0},
                 {"mastery reset", 0},
                 {"mastery set", 100},
@@ -287,41 +258,13 @@ namespace OpenRPG.Systems
                 {"waypoint remove global", 100},
                 {"waypoint set", 100},
                 {"waypoint set global", 100},
-                {"worlddynamics", 0},
                 {"worlddynamics ignore", 100},
+                {"worlddynamics info", 0},
                 {"worlddynamics load", 100},
                 {"worlddynamics save", 100},
                 {"worlddynamics unignore", 100}
             };
             return permissions;
-        }
-        
-        public class PermissionMiddleware : CommandMiddleware
-        {
-            public override bool CanExecute(
-                ICommandContext ctx,
-                CommandAttribute command,
-                MethodInfo method)
-            {
-                var type = method.DeclaringType;
-                var groupName = type?.GetCustomAttribute<CommandGroupAttribute>()?.Name ?? "";
-                var permissionKey = CommandAttributesToPermissionKey(groupName, command.Name);
-
-                if (!Database.command_permission.TryGetValue(permissionKey, out var requiredPrivilege))
-                {
-                    // If it doesn't exist it may be a command belonging to a different mod.
-                    // As far as we know, it should have permission.
-                    return true;
-                }
-                
-                var steamId = GameData.Users.GetUserByCharacterName(ctx.Name).PlatformId;
-                var userPrivilege = GetUserPermission(steamId);
-                
-                ctx.Reply($"{Utils.Color.Red("[permission denied]")} {permissionKey}");
-
-                // If the user privilege is equal or greater to the required privilege, then they have permission
-                return userPrivilege >= requiredPrivilege;
-            }
         }
     }
 }

@@ -1,13 +1,5 @@
-using Bloodstone.API;
-using OpenRPG.Systems;
 using OpenRPG.Utils;
-using Steamworks;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using Unity.Entities;
-using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
 
@@ -16,7 +8,7 @@ namespace OpenRPG.Commands {
     public static class Waypoint {
         public static int WaypointLimit = 3;
 
-        [Command("go", "g", "<waypoint Name>", "Teleports you to the specified waypoint", adminOnly: false)]
+        [Command("go", "g", "<waypoint name>", "Teleports you to the specified waypoint", adminOnly: false)]
         public static void goToWaypoint(ChatCommandContext ctx, string waypoint) {
             var PlayerEntity = ctx.Event.SenderCharacterEntity;
             var SteamID = ctx.Event.User.PlatformId;

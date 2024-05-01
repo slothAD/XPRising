@@ -2,17 +2,15 @@
 using OpenRPG.Systems;
 using OpenRPG.Utils;
 using VampireCommandFramework;
-using System.Linq;
 using ProjectM;
 using Prefabs = OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Commands
 {
-    
     public static class WorldDynamics
     {
 
-        [Command(name: "worlddynamics", shortHand: "wd", adminOnly: false, usage: "[faction]", description: "List faction stats of all active factions or given faction")]
+        [Command(name: "worlddynamics info", shortHand: "wd info", adminOnly: false, usage: "[faction]", description: "List faction stats of all active factions or given faction")]
         public static void WorldDynamicsCommand(ChatCommandContext ctx, string faction = "all")
         {
             if (WorldDynamicsSystem.isFactionDynamic == false)

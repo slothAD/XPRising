@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using OpenRPG.Utils;
 using Unity.Entities;
 using ProjectM.Network;
-using System.IO;
-using System.Text.Json;
 
 namespace OpenRPG.Systems
 {
@@ -35,7 +32,7 @@ namespace OpenRPG.Systems
             banData = new BanData();
             var targetUserData = em.GetComponentData<User>(targetUserEntity);
             if (targetUserData.IsAdmin) return false;
-            if (PermissionSystem.GetUserPermission(targetUserData.PlatformId) >= 100) return false;
+            if (PermissionSystem.GetUserPermission(targetUserData.PlatformId) >= PermissionSystem.GetCommandPermission("ban player")) return false;
 
             DateTime banUntil;
             if (duration == 0)

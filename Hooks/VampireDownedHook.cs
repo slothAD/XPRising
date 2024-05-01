@@ -3,8 +3,6 @@ using ProjectM;
 using OpenRPG.Systems;
 using Unity.Collections;
 using Unity.Entities;
-using System;
-using OpenRPG.Utils;
 
 namespace OpenRPG.Hooks
 {

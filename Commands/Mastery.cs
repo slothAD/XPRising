@@ -43,7 +43,7 @@ namespace OpenRPG.Commands{
             ctx.Reply(getMasteryDataStringForType(SteamID, type));
         }
 
-        [Command("get all", "g a", "", "Display your current mastery progression in everything")]
+        [Command("get-all", "ga", "", "Display your current mastery progression in everything")]
         public static void getAllMastery(ChatCommandContext ctx) {
             ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
             if (!WeaponMasterSystem.isMasteryEnabled) {
@@ -60,9 +60,7 @@ namespace OpenRPG.Commands{
 
             ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
 
-            int weapon;
-
-            for (weapon = 0; weapon < WeaponMasterSystem.masteryStats.Length; weapon++) {
+            for (var weapon = 0; weapon < WeaponMasterSystem.masteryStats.Length; weapon++) {
                 ctx.Reply(getMasteryDataStringForType(SteamID, weapon));
             }
         }

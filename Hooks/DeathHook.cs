@@ -1,13 +1,10 @@
 using HarmonyLib;
-using System;
 using ProjectM;
 using ProjectM.Network;
-using OpenRPG.Commands;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Unity.Collections;
 using Unity.Entities;
-using OpenRPG.Configuration;
 using Unity.Transforms;
 
 namespace OpenRPG.Hooks {

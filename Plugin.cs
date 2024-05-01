@@ -8,10 +8,8 @@ using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using OpenRPG.Commands;
-
 using OpenRPG.Systems;
 using OpenRPG.Utils;
-using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Unity.Entities;
@@ -420,62 +418,6 @@ namespace OpenRPG
             Plugin.LogInfo($"Plugin is loaded");
         }
 
-        private static void ValidateCommandPermissions()
-        {
-            var commands = Assembly.GetCallingAssembly().GetTypes().Select(t =>
-                {
-                    var groupAttribute = t.GetCustomAttribute<CommandGroupAttribute>();
-                    var groupName = groupAttribute?.Name ?? "";
-                    var groupShortHand = groupAttribute?.ShortHand ?? "";
-                    var methods = t.GetMethods()
-                        .Select(m => m.GetCustomAttribute<CommandAttribute>())
-                        .Where(m => m != null)
-                        .Select(m =>
-                        {
-                            var shortGroupName = string.IsNullOrEmpty(groupShortHand) ? groupName : groupShortHand;
-                            return new[]
-                            {
-                                PermissionSystem.CommandAttributesToPermissionKey(groupName, m.Name),
-                                PermissionSystem.CommandAttributesToPermissionKey(shortGroupName, m.ShortHand),
-                                m.Usage?.Replace("|", "\\|") ?? "",
-                                m.Description?.Replace("|", "&#124;") ?? "",
-                                m.AdminOnly? "\u2611" : "\u2610"
-                            };
-                        });
-                    return methods;
-                }).SelectMany(s => s)
-                .OrderBy(c => c[0]);
-            
-            PermissionSystem.ValidatedCommandPermissions(commands.Select(command => command[0]).ToList());
-            // Note for devs: To regenerate Command.md, uncomment the following:
-            GenerateCommandMd(commands);
-        }
-
-        private static void GenerateCommandMd(IEnumerable<string[]> commands)
-        {
-            // TODO fix clashing commands (eg, .wd [faction] and .wd load)
-            // We want to generate something like this:
-            // | Command | Short | Usage | Description | Admin | Level |
-            var commandsMdFormat = commands.Select(
-                command => $"| `.{command[0]}` | `.{command[1]}` | `{command[2]}` | {command[3]} | {command[4]} | `{PermissionSystem.GetCommandPermission(command[0])}` |");
-            var commandMdString =
-                "Command.md:\n" +
-                "To regenerate this table, uncomment the `GenerateCommandMd` function in `Plugin.ValidateCommandPermissions`. Then check the LogOutput.log in the server after starting.\n" +
-                "Usage arguments: <> are required, [] are optional\n\n" +
-                "| Command | Short | Usage | Description | Admin | Level |\n" +
-                "| --- | --- | --- | --- | --- | --- |\n" +
-                $"{string.Join("\n", commandsMdFormat)}"
-                    // Remove `` from otherwise empty cells
-                    .Replace("``", "")
-                    // Remove `.` from commands without short names
-                    .Replace("`.`", "");
-            Plugin.LogInfo(commandMdString);
-            
-            var defaultPermissionsFormat = commands.Select(
-                command => $"{{\"{command[0]}\", {PermissionSystem.GetCommandPermission(command[0])}}}");
-            Plugin.LogInfo($"default permissions:\n{{{string.Join(",\n", defaultPermissionsFormat)}}}");
-        }
-
         private static void GameDataOnInitialize(World world)
         {
             RandomEncounters.GameData_OnInitialize();
@@ -703,10 +645,14 @@ namespace OpenRPG
             AutoSaveSystem.LoadDatabase();
             
             // Validate any potential change in permissions
-            ValidateCommandPermissions();
+            var commands = Command.GetAllCommands();
+            Command.ValidatedCommandPermissions(commands);
+            // Note for devs: To regenerate Command.md and PermissionSystem.DefaultCommandPermissions, uncomment the following:
+            // Command.GenerateCommandMd(commands);
+            // Command.GenerateDefaultCommandPermissions(commands);
             
             Plugin.LogInfo($"Adding CommandRegistry middleware");
-            CommandRegistry.Middlewares.Add(new PermissionSystem.PermissionMiddleware());
+            CommandRegistry.Middlewares.Add(new Command.PermissionMiddleware());
 
             Plugin.LogInfo("Finished initialising");
 

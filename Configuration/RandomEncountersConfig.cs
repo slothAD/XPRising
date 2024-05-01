@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
 using OpenRPG.Utils;
 using OpenRPG.Utils.RandomEncounters;
-using RandomEncounters.Utils;
 
 namespace OpenRPG.Configuration
 {

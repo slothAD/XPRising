@@ -63,7 +63,7 @@ namespace OpenRPG.Commands
             ctx.Reply(bloodlineToPrint(SteamID, bl, bld));
         }
         
-        [Command("get all", "ga", "", "Display all your bloodline progressions")]
+        [Command("get-all", "ga", "", "Display all your bloodline progressions")]
         public static void getAllBloodlines(ChatCommandContext ctx) {
             if (!Bloodlines.areBloodlinesEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");

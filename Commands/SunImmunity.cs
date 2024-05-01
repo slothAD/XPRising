@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using ProjectM;
-using OpenRPG.Utils;
+﻿using OpenRPG.Utils;
 using VampireCommandFramework;
 
 namespace OpenRPG.Commands

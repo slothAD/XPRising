@@ -2,8 +2,6 @@
 using ProjectM.Gameplay.Systems;
 using OpenRPG.Utils;
 using ProjectM;
-using Unity.Entities;
-using System;
 using OpenRPG.Systems;
 
 namespace OpenRPG.Hooks

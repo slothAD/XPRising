@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using OpenRPG.Configuration;
+﻿using OpenRPG.Configuration;
 using OpenRPG.Systems;
 using VampireCommandFramework;
 using VRising.GameData;
