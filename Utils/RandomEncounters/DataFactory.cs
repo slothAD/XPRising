@@ -5,7 +5,6 @@ using System.Text;
 using OpenRPG.Configuration;
 using OpenRPG.Models.RandomEncounters;
 using OpenRPG.Properties;
-using Unity.Entities;
 using VRising.GameData;
 using VRising.GameData.Models;
 
@@ -57,7 +56,7 @@ namespace OpenRPG.Utils.RandomEncounters
             return _npcs;
         }
 
-        internal static List<UserModel> GetOnlineAdmins(World world)
+        internal static List<UserModel> GetOnlineAdmins()
         {
             return GameData.Users.Online.Where(u => u.IsAdmin).ToList();
         }

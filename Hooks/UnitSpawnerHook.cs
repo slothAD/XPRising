@@ -1,6 +1,8 @@
 ﻿using ProjectM;
 using ProjectM.Shared;
 using HarmonyLib;
+using OpenRPG.Configuration;
+using OpenRPG.Systems;
 using OpenRPG.Utils;
 using Prefabs = OpenRPG.Utils.Prefabs;
 
@@ -45,6 +47,11 @@ namespace OpenRPG.Hooks
                             listen = false;
                         }
                     }
+                    
+                    if(RandomEncountersConfig.Enabled.Value && Plugin.isInitialized)
+                    {
+                        RandomEncountersSystem.ServerEvents_OnUnitSpawned(__instance.EntityManager, entity);
+                    }
                 }
             }
         }
@@ -55,9 +62,9 @@ namespace OpenRPG.Hooks
         public static void Prefix(MinionSpawnSystem __instance) {
             var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
             foreach (var entity in entities) {
-                // Gloomrot spider tanks spawn a gloomrot techinician minion that does despawn when the spidertank gets
+                // Gloomrot spider-tanks spawn a gloomrot technician minion that does not despawn when the spider-tank gets destroyed
                 // by the "Lifetime" component. This will check for that case and destroy the minion on load so it doesn't get stuck.
-                // This does not impact the behaviour of the spiderbot (other than it does not drop the techician on death).
+                // This does not impact the behaviour of the spider-tank (other than it does not drop the technician on death).
                 if (Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(entity)) != Prefabs.Units.CHAR_Gloomrot_Technician) continue;
                 
                 if (__instance.EntityManager.TryGetComponentData(entity, out FactionReference faction)) {

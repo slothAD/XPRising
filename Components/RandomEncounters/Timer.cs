@@ -1,7 +1,6 @@
 ﻿using System;
 using OpenRPG.Utils.RandomEncounters;
 using Unity.Entities;
-using VRising.GameData;
 
 namespace OpenRPG.Components.RandomEncounters
 {
@@ -36,7 +35,7 @@ namespace OpenRPG.Components.RandomEncounters
 
         private void GameFrame_OnUpdate()
         {
-            Update(GameData.World);
+            Update(Plugin.Server);
         }
         private void Update(World world)
         {

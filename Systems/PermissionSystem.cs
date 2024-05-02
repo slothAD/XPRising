@@ -1,4 +1,5 @@
-﻿using ProjectM;
+﻿using System;
+using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Utils;
 using System.Collections.Generic;
@@ -57,24 +58,38 @@ namespace OpenRPG.Systems
             return new object();
         }
 
-        public static async Task PermissionList(ChatCommandContext ctx)
+        public static void UserPermissionList(ChatCommandContext ctx)
         {
-            await Task.Yield();
-
-            List<string> messages = new List<string>();
-
-            var SortedPermission = Database.user_permission.ToList();
+            var sortedPermission = Database.user_permission.ToList();
             // Sort by privilege descending
-            SortedPermission.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
-            messages.Add($"===================================");
-            if (SortedPermission.Count == 0) messages.Add($"<color=#fffffffe>No permissions</color>");
+            sortedPermission.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
+            ctx.Reply($"===================================");
+            if (sortedPermission.Count == 0) ctx.Reply($"<color=#fffffffe>No permissions</color>");
             else
             {
-                messages.AddRange(SortedPermission.Select((result, i) => $"{i}. <color=#fffffffe>{Helper.GetNameFromSteamID(result.Key)} : {result.Value}</color>"));
+                foreach (var (item, index) in sortedPermission.Select((item, index) => (item, index)))
+                {
+                    ctx.Reply($"{index}. <color=#fffffffe>{Helper.GetNameFromSteamID(item.Key)} : {item.Value}</color>");
+                }
             }
-            messages.Add($"===================================");
-
-            TaskRunner.Start(taskWorld => SendPermissionList(ctx, messages), false);
+            ctx.Reply($"===================================");
+        }
+        
+        public static void CommandPermissionList(ChatCommandContext ctx)
+        {
+            var sortedPermission = Database.command_permission.ToList();
+            // Sort by command name
+            sortedPermission.Sort((pair1, pair2) => String.Compare(pair1.Key, pair2.Key, StringComparison.CurrentCultureIgnoreCase));
+            ctx.Reply($"===================================");
+            if (sortedPermission.Count == 0) ctx.Reply($"<color=#fffffffe>No commands</color>");
+            else
+            {
+                foreach (var (item, index) in sortedPermission.Select((item, index) => (item, index)))
+                {
+                    ctx.Reply($"{index}. <color=#fffffffe>{item.Key} : {item.Value}</color>");
+                }
+            }
+            ctx.Reply($"===================================");
         }
 
         public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
@@ -231,6 +246,9 @@ namespace OpenRPG.Systems
                 {"mastery reset", 0},
                 {"mastery set", 100},
                 {"nocooldown", 100},
+                {"permission", 100},
+                {"permission set command", 100},
+                {"permission set user", 100},
                 {"playerinfo", 0},
                 {"powerdown", 100},
                 {"powerup", 100},

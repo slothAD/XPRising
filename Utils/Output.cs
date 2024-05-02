@@ -1,6 +1,5 @@
 ﻿using ProjectM;
 using Unity.Entities;
-using Bloodstone.API;
 
 namespace OpenRPG.Utils
 {
@@ -23,8 +22,8 @@ namespace OpenRPG.Utils
         
         public static void SendLore(Entity userEntity, string message)
         {
-            var user = VWorld.Server.EntityManager.GetComponentData<ProjectM.Network.User>(userEntity);
-            ServerChatUtils.SendSystemMessageToClient(VWorld.Server.EntityManager, user, message);
+            var user = Plugin.Server.EntityManager.GetComponentData<ProjectM.Network.User>(userEntity);
+            ServerChatUtils.SendSystemMessageToClient(Plugin.Server.EntityManager, user, message);
         }
     }
 }

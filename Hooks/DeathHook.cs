@@ -1,4 +1,5 @@
 using HarmonyLib;
+using OpenRPG.Configuration;
 using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Systems;
@@ -80,6 +81,12 @@ namespace OpenRPG.Hooks {
                     //-- ----------------------------------------
                 }
             }
+            
+            // TODO this should integrate iterating into the loop above
+            //-- Random Encounters
+            if (deathEvents.Length > 0 && RandomEncountersConfig.Enabled.Value && Plugin.isInitialized)
+                RandomEncountersSystem.ServerEvents_OnDeath(__instance, deathEvents);
+            //-- ----------------------------------------
         }
     }
 }

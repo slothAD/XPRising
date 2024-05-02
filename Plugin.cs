@@ -184,6 +184,7 @@ namespace OpenRPG
         private static ConfigEntry<int> appliedBuff;
         private static ConfigEntry<bool> humanReadablePercentageStats;
         private static ConfigEntry<bool> inverseMultiplersDisplayReduction;
+        private static ConfigEntry<bool> disableCommandAdminRequirement;
 
         public static bool isInitialized = false;
         
@@ -394,6 +395,8 @@ namespace OpenRPG
             saveLogging = Config.Bind("Debug", "Save system logging", false, "Logs detailed information about the save system in your console, enable before sending me any errors with the buff system!");
             factionLogging = Config.Bind("Debug", "Wanted system logging", false, "Logs detailed information about the wanted system in your console, enable before sending me any errors with the wanted system!");
             squadSpawnLogging = Config.Bind("Debug", "Squad spawn logging", false, "Logs information about squads spawning into your console.");
+            
+            disableCommandAdminRequirement = Config.Bind("Admin", "Disable command admin requirement", false, "Disables all \"isAdmin\" checks for running commands.");
         }
 
         public override void Load()
@@ -651,7 +654,12 @@ namespace OpenRPG
             // Command.GenerateCommandMd(commands);
             // Command.GenerateDefaultCommandPermissions(commands);
             
-            Plugin.LogInfo($"Adding CommandRegistry middleware");
+            Plugin.LogInfo($"Setting CommandRegistry middleware");
+            if (disableCommandAdminRequirement.Value)
+            {
+                Plugin.LogInfo("Removing admin privilege requirements");
+                CommandRegistry.Middlewares.Clear();                
+            }
             CommandRegistry.Middlewares.Add(new Command.PermissionMiddleware());
 
             Plugin.LogInfo("Finished initialising");

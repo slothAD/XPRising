@@ -224,6 +224,18 @@ namespace OpenRPG.Utils
             }
         }
 
+        public static ulong GetSteamIDFromName(string name)
+        {
+            if (Cache.NamePlayerCache.TryGetValue(name.ToLower(), out var data))
+            {
+                return data.SteamID;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         public static PrefabGUID GetGUIDFromName(string name)
         {
             var gameDataSystem = Plugin.Server.GetExistingSystem<GameDataSystem>();

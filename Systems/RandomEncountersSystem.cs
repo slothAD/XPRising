@@ -81,9 +81,8 @@ namespace OpenRPG.Systems
             }
         }
 
-        internal static void ServerEvents_OnUnitSpawned(World world, Entity entity)
+        internal static void ServerEvents_OnUnitSpawned(EntityManager entityManager, Entity entity)
         {
-            var entityManager = world.EntityManager;
             if (!entityManager.HasComponent<PrefabGUID>(entity))
             {
                 return;
@@ -126,7 +125,7 @@ namespace OpenRPG.Systems
 
             if (RandomEncountersConfig.NotifyAdminsAboutEncountersAndRewards.Value)
             {
-                var onlineAdmins = DataFactory.GetOnlineAdmins(world);
+                var onlineAdmins = DataFactory.GetOnlineAdmins();
                 foreach (var onlineAdmin in onlineAdmins)
                 {
                     onlineAdmin.SendSystemMessage($"Encounter started: {user.CharacterName} vs. {npcData.Name}");
@@ -174,7 +173,7 @@ namespace OpenRPG.Systems
                     }
                     else if (RandomEncountersConfig.NotifyAdminsAboutEncountersAndRewards.Value)
                     {
-                        var onlineAdmins = DataFactory.GetOnlineAdmins(sender.World);
+                        var onlineAdmins = DataFactory.GetOnlineAdmins();
                         foreach (var onlineAdmin in onlineAdmins)
                         {
                             onlineAdmin.SendSystemMessage($"{userModel.CharacterName} earned an encounter reward: <color={itemModel.Color}>{itemModel.Name}</color>");
