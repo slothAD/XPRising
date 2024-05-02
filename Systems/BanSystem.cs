@@ -31,8 +31,6 @@ namespace OpenRPG.Systems
         {
             banData = new BanData();
             var targetUserData = em.GetComponentData<User>(targetUserEntity);
-            if (targetUserData.IsAdmin) return false;
-            if (PermissionSystem.GetUserPermission(targetUserData.PlatformId) >= PermissionSystem.GetCommandPermission("ban player")) return false;
 
             DateTime banUntil;
             if (duration == 0)

@@ -42,19 +42,15 @@ namespace OpenRPG.Hooks
         {
             try
             {
-                var em = __instance.EntityManager;
                 var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
                 var serverClient = __instance._ApprovedUsersLookup[userIndex];
                 var userEntity = serverClient.UserEntity;
                 var userData = __instance.EntityManager.GetComponentData<User>(userEntity);
                 bool isNewVampire = userData.CharacterName.IsEmpty;
-                // TODO test this
-                Plugin.LogInfo($"Vampire joined: {userData.PlatformId} {userData.CharacterName}");
 
                 if (!isNewVampire)
                 {
-                    var playerName = userData.CharacterName.ToString();
-                    Helper.UpdatePlayerCache(userEntity, playerName, playerName);
+                    Helper.UpdatePlayerCache(userEntity, userData);
                     if (WeaponMasterSystem.isDecaySystemEnabled && WeaponMasterSystem.isMasteryEnabled)
                     {
                         WeaponMasterSystem.DecayMastery(userEntity);

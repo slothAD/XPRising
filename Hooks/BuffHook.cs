@@ -177,13 +177,13 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
     public static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
 
-        if (Helper.buffLogging) Plugin.LogInfo("Applying RPGMods Buffs");
+        if (Helper.buffLogging) Plugin.LogInfo("Applying OpenRPG Buffs");
         Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
         if (Helper.buffLogging) Plugin.LogInfo("Owner found, hash: " + Owner.GetHashCode());
         if (!entityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
         PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-        Entity User = playerCharacter.UserEntity/*._Entity*/;
+        Entity User = playerCharacter.UserEntity;
         User Data = entityManager.GetComponentData<User>(User);
 
         var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
@@ -203,24 +203,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
         if (Helper.buffLogging) Plugin.LogInfo("Now doing PowerUp Command");
         if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)) {
-            if (powerUpData.Equals(null)) {
-                powerUpData = new PowerUpData();
-            }
-            if (powerUpData.MaxHP.Equals(null)) {
-                powerUpData.MaxHP = 0;
-            }
-            if (powerUpData.PATK.Equals(null)) {
-                powerUpData.PATK = 0;
-            }
-            if (powerUpData.SATK.Equals(null)) {
-                powerUpData.SATK = 0;
-            }
-            if (powerUpData.PDEF.Equals(null)) {
-                powerUpData.PDEF = 0;
-            }
-            if (powerUpData.SDEF.Equals(null)) {
-                powerUpData.SDEF = 0;
-            }
             Buffer.Add(new ModifyUnitStatBuff_DOTS() {
                 StatType = UnitStatType.MaxHealth,
                 Value = powerUpData.MaxHP,
@@ -307,17 +289,13 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         if (Helper.buffLogging) Plugin.LogInfo("Entities Length of " + entities.Length);
 
         foreach (var entity in entities) {
-            PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+            var GUID = entityManager.GetComponentData<PrefabGUID>(entity);
+            if (Helper.buffLogging) Plugin.LogInfo("GUID of " + GUID.GuidHash);
             if (GUID.GuidHash == Helper.forbiddenBuffGUID) {
                 if (Helper.buffLogging) Plugin.LogInfo("Forbidden buff found with GUID of " + GUID.GuidHash);
-                return;
+                continue;
             }
-        }
-
-        foreach (var entity in entities) {
-            PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-            if (Helper.buffLogging) Plugin.LogInfo("GUID of " + GUID.GuidHash);
-            if (GUID.GuidHash == Helper.buffGUID) {
+            else if (GUID.GuidHash == Helper.buffGUID) {
                 oldStyleBuffApplicaiton(entity, entityManager);
             }
         }
@@ -328,7 +306,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         if (!hasSGM) {
             Plugin.LogInfo("No Server Game Manager, Something is WRONG.");
             return;
-
         }
 
         EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc() {
@@ -342,8 +319,8 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         NativeArray<Entity> pcArray = query.ToEntityArray(Allocator.Temp);
         if (Helper.buffLogging) Plugin.LogInfo("got connected Players, array of length " + pcArray.Length);
         foreach (var entity in pcArray) {
-            em.TryGetComponentData<PlayerCharacter>(entity, out PlayerCharacter pc);
-            em.TryGetComponentData<User>(entity, out User userEntity);
+            em.TryGetComponentData<PlayerCharacter>(entity, out var pc);
+            em.TryGetComponentData<User>(entity, out var userEntity);
             ulong SteamID = userEntity.PlatformId;
             bool hasBuffs = Cache.buffData.TryGetValue(SteamID, out List<BuffData> bdl);
             if (!hasBuffs) { continue; }
@@ -447,7 +424,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
 [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
 public class BuffSystem_Spawn_Server_Patch {
-    public static bool buffLogging = false;
     private static void Prefix(BuffSystem_Spawn_Server __instance) {
         if (PermissionSystem.isVIPSystem) {
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -479,42 +455,59 @@ public class DebugBuffSystem_Patch
 {
     private static void Prefix(BuffDebugSystem __instance)
     {
-        // Currently, the cached in-combat/out-of-combat status is only updated when HunterHuntedSystem is active.
-        // To enable this for other systems, add them here (or remove the if).
-        if (HunterHuntedSystem.isActive) {
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-            foreach (var entity in entities) {
-                var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
+        NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+        foreach (var entity in entities) {
+            var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
 
-                var combatStart = guid.GetHashCode() == (int)Buffs.Buff_InCombat;
-                var combatEnd = guid.GetHashCode() == (int)Buffs.Buff_OutOfCombat;
-                if (!combatStart && !combatEnd) continue;
-
-                // Get entity owner: This will be the entity that actually gets the buff
-                var ownerEntity = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                // If the owner is not a player character, ignore this entity
-                if (!__instance.EntityManager.TryGetComponentData(ownerEntity, out PlayerCharacter playerCharacter)) continue;
-
-                var userEntity = playerCharacter.UserEntity;
-                var steamID = __instance.EntityManager.GetComponentData<User>(userEntity).PlatformId;
-
-                // Update player combat status
-                // Notes:
-                // - only update combatStart if we are not already in combat. It gets sent multiple times as
-                //   mobs refresh their combat state with the PC
-                // - Buff_OutOfCombat only seems to be sent once.
-                var inCombat = Cache.GetCombatStart(steamID) > Cache.GetCombatEnd(steamID);
-                if (combatStart && !inCombat) {
-                    if (Helper.buffLogging) Plugin.LogInfo($"{steamID}: Combat start");
-                    Cache.playerCombatStart[steamID] = DateTime.Now;
-
-                    // Actions to check on combat start
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
-                } else if (combatEnd) {
-                    if (Helper.buffLogging) Plugin.LogInfo($"{steamID}: Combat end");
-                    Cache.playerCombatEnd[steamID] = DateTime.Now;
-                }
+            var combatStart = false;
+            var combatEnd = false;
+            var newPlayer = false;
+            switch (guid.GuidHash)
+            {
+                case (int)Buffs.Buff_InCombat:
+                    combatStart = true;
+                    break;
+                case (int)Buffs.Buff_OutOfCombat:
+                    combatEnd = true;
+                    break;
+                case (int)Effects.AB_Interact_TombCoffinSpawn_Travel:
+                    newPlayer = true;
+                    break;
+                default:
+                    continue;
             }
+
+            // Get entity owner: This will be the entity that actually gets the buff
+            var ownerEntity = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
+            // If the owner is not a player character, ignore this entity
+            if (!__instance.EntityManager.TryGetComponentData(ownerEntity, out PlayerCharacter playerCharacter)) continue;
+            
+            var userEntity = playerCharacter.UserEntity;
+            var userData = __instance.EntityManager.GetComponentData<User>(userEntity);
+            var steamID = userData.PlatformId;
+            
+            if (newPlayer) Helper.UpdatePlayerCache(userEntity, userData);
+            if (combatStart || combatEnd) TriggerCombatUpdate(ownerEntity, steamID, combatStart, combatEnd);
+        }
+    }
+
+    private static void TriggerCombatUpdate(Entity ownerEntity, ulong steamID, bool combatStart, bool combatEnd)
+    {
+        // Update player combat status
+        // Notes:
+        // - only update combatStart if we are not already in combat. It gets sent multiple times as
+        //   mobs refresh their combat state with the PC
+        // - Buff_OutOfCombat only seems to be sent once.
+        var inCombat = Cache.GetCombatStart(steamID) > Cache.GetCombatEnd(steamID);
+        if (combatStart && !inCombat) {
+            if (Helper.buffLogging) Plugin.LogInfo($"{steamID}: Combat start");
+            Cache.playerCombatStart[steamID] = DateTime.Now;
+
+            // Actions to check on combat start
+            if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
+        } else if (combatEnd) {
+            if (Helper.buffLogging) Plugin.LogInfo($"{steamID}: Combat end");
+            Cache.playerCombatEnd[steamID] = DateTime.Now;
         }
     }
 }
@@ -529,25 +522,6 @@ public class ModifyBloodDrainSystem_Spawn_Patch {
                 PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
                 //if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(entities[i], GUID);
                 if (PermissionSystem.isVIPSystem) PermissionSystem.BuffReceiver(entity, GUID);
-            }
-        }
-    }
-}
-
-[HarmonyPatch(typeof(Destroy_TravelBuffSystem), nameof(Destroy_TravelBuffSystem.OnUpdate))]
-public class Destroy_TravelBuffSystem_Patch {
-    private static void Postfix(Destroy_TravelBuffSystem __instance) {
-        var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-        foreach (var entity in entities) {
-            PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-            //-- Most likely it's a new player!
-            if (GUID.GuidHash.Equals(Effects.AB_Interact_TombCoffinSpawn_Travel)) {
-                var Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
-
-                var userEntity = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-                var playerName = __instance.EntityManager.GetComponentData<User>(userEntity).CharacterName.ToString();
-                Helper.UpdatePlayerCache(userEntity, playerName, playerName);
             }
         }
     }

@@ -9,7 +9,6 @@ using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
-using System.Diagnostics;
 using VampireCommandFramework;
 using Bloodstone.API;
 using OpenRPG.Utils.Prefabs;
@@ -178,17 +177,12 @@ namespace OpenRPG.Utils
             });
         }
         
-        public static void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
+        public static void UpdatePlayerCache(Entity userEntity, User userData, bool forceOffline = false)
         {
-            var method = new StackFrame(1).GetMethod();
-            Plugin.LogWarning($"UpdatePlayerCache called from: {method?.Name}");
-            var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
-            Cache.NamePlayerCache.Remove(GetTrueName(oldName.ToLower()));
-
             if (forceOffline) userData.IsConnected = false;
-            PlayerData playerData = new PlayerData(newName, userData.PlatformId, userData.IsConnected, userEntity, userData.LocalCharacter._Entity);
+            PlayerData playerData = new PlayerData(userData.CharacterName, userData.PlatformId, userData.IsConnected, userEntity, userData.LocalCharacter._Entity);
 
-            Cache.NamePlayerCache[GetTrueName(newName.ToLower())] = playerData;
+            Cache.NamePlayerCache[GetTrueName(userData.CharacterName.ToString().ToLower())] = playerData;
             Cache.SteamPlayerCache[userData.PlatformId] = playerData;
         }
 
@@ -288,17 +282,9 @@ namespace OpenRPG.Utils
 
         public static void AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
-            // TODO this?
             var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
             var itemSettings = AddItemSettings.Create(Plugin.Server.EntityManager, gameData.ItemHashLookupMap);
             var inventoryResponse = InventoryUtilitiesServer.TryAddItem(itemSettings, ctx.Event.SenderCharacterEntity, guid, amount);
-            // TODO or this?
-            // unsafe
-            // {
-            //     var user = GameData.Users.GetUserByCharacterName(ctx.User.CharacterName.ToString());
-            //     user.TryGiveItem(guid, 1, out Entity itemEntity);
-            //     return itemEntity;
-            // }
         }
 
         public static bool FindPlayer(string name, bool mustOnline, out Entity playerEntity, out Entity userEntity)

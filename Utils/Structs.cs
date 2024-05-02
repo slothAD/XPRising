@@ -11,18 +11,6 @@ using Faction = OpenRPG.Utils.Prefabs.Faction;
 
 namespace OpenRPG.Utils
 {
-    public struct LevelData
-    {
-        public float Level;
-        public DateTime TimeStamp;
-
-        public LevelData(float level = 0, DateTime timeStamp = default)
-        {
-            Level = level;
-            TimeStamp = timeStamp;
-        }
-    }
-
     public struct BuffData
     {
         public string source;
@@ -98,89 +86,18 @@ namespace OpenRPG.Utils
         public DateTime TimeStamp { get; } = DateTime.Now;
     }
 
-    public struct SiegeData
+    public struct PlayerData(
+        FixedString64 characterName,
+        ulong steamID,
+        bool isOnline,
+        Entity userEntity,
+        Entity charEntity)
     {
-        public bool IsSiegeOn { get; set; }
-        public DateTime SiegeEndTime { get; set; }
-        public DateTime SiegeStartTime { get; set; }
-
-        public SiegeData(bool isSiegeOn = false, DateTime siegeEndTime = default, DateTime siegeStartTime = default)
-        {
-            IsSiegeOn = isSiegeOn;
-            SiegeEndTime = siegeEndTime;
-            SiegeStartTime = siegeStartTime;
-        }
-    }
-
-    public struct StateData
-    {
-        public ulong SteamID { get; set; }
-        public bool IsHostile { get; set; }
-
-        public StateData(ulong steamID = 0, bool isHostile = false)
-        {
-            SteamID = steamID;
-            IsHostile = isHostile;
-        }
-    }
-
-    public struct PlayerData
-    {
-        public FixedString64 CharacterName { get; set; }
-        public ulong SteamID { get; set; }
-        public bool IsOnline { get; set; }
-        public Entity UserEntity { get; set; }
-        public Entity CharEntity { get; set; }
-        public PlayerData(FixedString64 characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
-        {
-            CharacterName = characterName;
-            SteamID = steamID;
-            IsOnline = isOnline;
-            UserEntity = userEntity;
-            CharEntity = charEntity;
-        }
-    }
-
-    public struct ReputationLog
-    {
-        public int TotalGained { get; set; }
-        public DateTime TimeStamp { get; set; }
-        public ReputationLog(int totalGained = 0, DateTime timeStamp = default)
-        {
-            TotalGained = totalGained;
-            TimeStamp = timeStamp;
-        }
-    }
-
-    public struct PvPOffenseLog
-    {
-        public int Offense { get; set; }
-        public DateTime LastOffense { get; set; }
-
-        public PvPOffenseLog(int offense = 0, DateTime lastOffense = default)
-        {
-            Offense = offense;
-            LastOffense = lastOffense;
-        }
-    }
-
-    public struct PvPData
-    {
-        public string PlayerName { get; set; }
-        public int Kills { get; set; }
-        public int Deaths { get; set; }
-        public double KD { get; set; }
-        public int Reputation { get; set; }
-        public string Title { get; set; }
-        public PvPData(string playerName = "default", int kills = 0, int deaths = 0, float kd = 0f, int reputation = 0, string title = "default")
-        {
-            PlayerName = playerName;
-            Kills = kills;
-            Deaths = deaths;
-            KD = kd;
-            Reputation = reputation;
-            Title = title;
-        }
+        public FixedString64 CharacterName { get; set; } = characterName;
+        public ulong SteamID { get; set; } = steamID;
+        public bool IsOnline { get; set; } = isOnline;
+        public Entity UserEntity { get; set; } = userEntity;
+        public Entity CharEntity { get; set; } = charEntity;
     }
     
     // TODO check this

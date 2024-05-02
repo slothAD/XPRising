@@ -263,8 +263,8 @@ namespace OpenRPG
                 "EXP Table & Formula: https://bit.ly/3npqdJw");
             EXPGroupModifier = Config.Bind("Experience", "Group Modifier", 0.75, "Set the modifier for EXP gained for each ally(player) in vicinity.\n" +
                 "Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)");
-            EXPGroupMaxDistance = Config.Bind("Experience", "Group Range", 50f, "Set the maximum distance an ally(player) has to be from the player for them to share EXP with the player");
-            EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 2, "Configure the group levelling scheme. See documentation.");
+            EXPGroupMaxDistance = Config.Bind("Experience", "Group Range", 50f, "Set the maximum distance an ally (player) has to be from the player for them to share EXP with the player");
+            EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 3, "Configure the group levelling scheme. See documentation.");
 
             pvpXPLoss = Config.Bind("Rates, Experience", "PvP XP Loss", 0f, "Sets the flat XP Lost on a PvP death");
             pvpXPLossPerLevel = Config.Bind("Rates, Experience", "PvP XP Loss per Level", 0f, "Sets the XP Lost per level of the dying player on a PvP death");

@@ -216,14 +216,7 @@ and 100 as the highest permission (admin).
 
 ## Custom Ban System
 You can now ban a player for the specified duration in days using the .ban/.unban command.\
-`WARNING` If you remove RPGMods, all the banned users via the command will no longer be banned!
-
-## Localization System
-Removed as it was causing issues in some other localities... Isn't programming for a global audience fun?
-<details>
-<summary>Old Description</summary>
-Now allows all text from RPGMods to be customized to your language, a Language.Json file will be generated in the Bepinex/Config/RPGMods subfolder, to provide a translation, where it has something like {"\" not found.", "\" not found."} change it to something like {\" not found.", "\" 見つけありません"} to change the displayed text.
-</details>
+`WARNING` If you remove OpenRPG, all the banned users via the command will no longer be banned!
 
 ## Config
 <details>
@@ -423,7 +416,7 @@ Gives you a previously specified set of items.\
 <details>
 <summary>-- How does kit work?</summary>
 
-&ensp;&ensp;You will get a new config file located in `BepInEx/config/RPGMods/kits.json`
+&ensp;&ensp;You will get a new config file located in `BepInEx/config/OpenRPG/Saves/kits.json`
 ```json
 [
   {

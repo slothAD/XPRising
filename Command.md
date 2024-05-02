@@ -3,7 +3,7 @@ Usage arguments: <> are required, [] are optional
 
 | Command                     | Short hand     | Usage                                                    | Description                                                                                                  | Admin | Level |
 |-----------------------------|----------------|----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|-------|-------|
-| `.autorespawn`              | `.autor`       | `[PlayerName]`                                           | Toggle auto respawn on the same position on death for yourself or a player.                                  |   ☑   | `100` |
+| `.autorespawn`              | `.autor`       | `[playerName]`                                           | Toggle auto respawn on the same position on death for yourself or a player.                                  |   ☑   | `100` |
 | `.autorespawn-all`          | `.autor-all`   |                                                          | Toggle auto respawn on the same position on death for all players.                                           |   ☑   | `100` |
 | `.ban info`                 | `.ban i`       | `<playername>`                                           | Check the status of specified player                                                                         |   ☐   | `0`   |
 | `.ban player`               | `.ban p`       | `<playername> <days> "<reason>"`                         | Ban a player, 0 days is permanent.                                                                           |   ☐   | `100` |

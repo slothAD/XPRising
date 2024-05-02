@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Transforms;
 
 namespace OpenRPG.Utils
 {
@@ -17,7 +16,6 @@ namespace OpenRPG.Utils
         public static Dictionary<FixedString64, PlayerData> NamePlayerCache = new();
         public static Dictionary<ulong, PlayerData> SteamPlayerCache = new();
         public static Dictionary<Entity, PlayerGroup> PlayerAllies = new();
-        public static Dictionary<Entity, LocalToWorld> PlayerLocations = new();
         public static Dictionary<ulong, List<BuffData>> buffData = new();
 
         //-- -- Commands

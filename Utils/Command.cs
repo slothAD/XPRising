@@ -31,11 +31,12 @@ public static class Command
                 
             var steamId = GameData.Users.GetUserByCharacterName(ctx.Name).PlatformId;
             var userPrivilege = Database.user_permission.GetValueOrDefault(steamId, PermissionSystem.LowestPrivilege);
-                
-            ctx.Reply($"{Utils.Color.Red("[permission denied]")} {permissionKey}");
 
             // If the user privilege is equal or greater to the required privilege, then they have permission
-            return userPrivilege >= requiredPrivilege;
+            if (userPrivilege >= requiredPrivilege) return true;
+            
+            ctx.Reply($"{Color.Red("[permission denied]")} {permissionKey}");
+            return false;
         }
     }
 

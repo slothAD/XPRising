@@ -63,7 +63,6 @@ public class Alliance {
         List<ClosePlayer> closePlayers = new();
         if (!useGroup) {
             // If we are not using the group, then the trigger entity is the only ally
-            //var position = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(triggerEntity).Position;
             if (ConvertToClosePlayer(triggerEntity, position, logging, out var closePlayer)) {
                 closePlayer.isTrigger = true;
                 closePlayers.Add(closePlayer);

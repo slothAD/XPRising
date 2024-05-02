@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BepInEx;
+using OpenRPG.Commands;
 using OpenRPG.Systems;
 using ProjectM;
 
@@ -118,7 +119,7 @@ namespace OpenRPG.Utils
             Database.speeding = LoadDB<Dictionary<ulong, bool>>(SpeedingJson);
             Database.nocooldownlist = LoadDB<Dictionary<ulong, bool>>(NoCooldownJson);
             Database.autoRespawn = LoadDB<Dictionary<ulong, bool>>(AutoRespawnJson);
-            Database.kits = LoadDB<List<ItemKit>>(KitsJson);
+            Database.kits = LoadDB(KitsJson, Kit.DefaultItemKit);
             Database.PowerUpList = LoadDB<Dictionary<ulong, PowerUpData>>(PowerUpJson);
 
             //-- System Related

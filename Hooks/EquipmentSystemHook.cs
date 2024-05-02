@@ -15,6 +15,7 @@ public class ArmorLevelSystem_Spawn_Patch
 {
     private static void Prefix(ArmorLevelSystem_Spawn __instance)
     {
+        if (Helper.buffLogging) Plugin.LogInfo("Armor System Patch Entry");
         if (ExperienceSystem.isEXPActive)
         {
             EntityManager entityManager = __instance.EntityManager;
@@ -61,16 +62,16 @@ public class WeaponLevelSystem_Spawn_Patch
         if (Helper.buffLogging) Plugin.LogInfo("Weapon System Patch Entry");
         if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
         {
-            EntityManager entityManager = __instance.EntityManager;
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            var entityManager = __instance.EntityManager;
+            var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 
             foreach (var entity in entities)
             {
                 Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-                Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
+                Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                 if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                 {
-                    if (Helper.buffLogging) Plugin.LogInfo(" Applying Moose buff");
+                    if (Helper.buffLogging) Plugin.LogInfo($"Applying Helper.AppliedBuff: {Helper.AppliedBuff.GuidHash}");
                     Helper.ApplyBuff(User, Owner, Helper.AppliedBuff);
                 }
                 if (ExperienceSystem.isEXPActive)
@@ -93,7 +94,7 @@ public class WeaponLevelSystem_Spawn_Patch
                     }
                     else
                     {                            
-                        ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
+                        ulong SteamID = entityManager.GetComponentData<User>(User).PlatformId;
 
                         float levelEfficiency = (level.Level * .3f - ExperienceSystem.getLevel(SteamID) / 3) / 2;
                         if (levelEfficiency > 0) level.Level = levelEfficiency / .3f;
@@ -105,10 +106,6 @@ public class WeaponLevelSystem_Spawn_Patch
                         }
                     }                      
                     entityManager.SetComponentData(entity, level);
-                }
-                if (WeaponMasterSystem.isMasteryEnabled)
-                {                        
-                    if (!entityManager.HasComponent<PlayerCharacter>(Owner)) continue;                       
                 }
             }
         }

@@ -12,8 +12,7 @@ namespace OpenRPG.Commands{
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
         [Command("get", "g", "[weaponType]", "Display your current mastery progression for your equipped or specified weapon type")]
-        public static void getMastery(ChatCommandContext ctx, string weaponType) {
-            ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
+        public static void getMastery(ChatCommandContext ctx, string weaponType = "") {
             if (!WeaponMasterSystem.isMasteryEnabled) {
                 ctx.Reply("Weapon Mastery system is not enabled.");
                 return;
@@ -45,7 +44,6 @@ namespace OpenRPG.Commands{
 
         [Command("get-all", "ga", "", "Display your current mastery progression in everything")]
         public static void getAllMastery(ChatCommandContext ctx) {
-            ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
             if (!WeaponMasterSystem.isMasteryEnabled) {
                 ctx.Reply("Weapon Mastery system is not enabled.");
                 return;
