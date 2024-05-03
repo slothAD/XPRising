@@ -67,10 +67,8 @@ namespace OpenRPG.Systems
             var maxSpawnDistance = RandomEncountersConfig.MaxSpawnDistance.Value;
             try
             {
-
                 NpcPlayerMap[npc.Id] = user;
-
-                var spawnPosition = new float3(user.Position.x, user.Position.y, user.Position.z); // TODO: investigate this copypasta
+                var spawnPosition = user.Position;
 
                 world.GetExistingSystem<UnitSpawnerUpdateSystem>()
                     .SpawnUnit(StationEntity, new PrefabGUID(npc.Id), spawnPosition, 1, minSpawnDistance, maxSpawnDistance, Lifetime);

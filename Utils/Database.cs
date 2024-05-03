@@ -72,7 +72,7 @@ namespace OpenRPG.Utils
         public static Dictionary<ulong, bool> godmode { get; set; }
         public static Dictionary<ulong, bool> speeding { get; set; }
         public static Dictionary<ulong, bool> autoRespawn { get; set; }
-        public static Dictionary<string, Tuple<float,float,float>> waypoints { get; set; }
+        public static Dictionary<string, WaypointData> waypoints { get; set; }
         public static Dictionary<ulong, int> waypoints_owned { get; set; }
         public static Dictionary<ulong, int> user_permission { get; set; }
         public static Dictionary<string, int> command_permission { get; set; }

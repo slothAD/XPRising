@@ -16,11 +16,9 @@ namespace OpenRPG.Hooks {
         [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
         [HarmonyPostfix]
         public static void Postfix(DeathEventListenerSystem __instance) {
-            Plugin.Log(LogSystem.Death, LogLevel.Info, "beginning Death Tracking");
             NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
-            Plugin.Log(LogSystem.Death, LogLevel.Info, "Death events converted successfully, length is " + deathEvents.Length);
             foreach (DeathEvent ev in deathEvents) {
-                Plugin.Log(LogSystem.Death, LogLevel.Info, "Death Event occured");
+                Plugin.Log(LogSystem.Death, LogLevel.Info, $"Death Event occured for: {ev.Died}");
                 //-- Just track whatever died...
                 if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
 
@@ -37,7 +35,7 @@ namespace OpenRPG.Hooks {
                 }
 
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
-                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Killer is a player, running xp and heat and the like");
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, $"Killer ({killer}) is a player, running xp and heat and the like");
                     
                     if ((ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive) && ExperienceSystem.EntityProvidesExperience(ev.Died)) {
                         var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) && bS.UnitBloodType.Equals(Helper.vBloodType);
@@ -60,7 +58,7 @@ namespace OpenRPG.Hooks {
 
                 //-- Auto Respawn & HunterHunted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
-                    Plugin.Log(LogSystem.Death, LogLevel.Info, "the dead person is a player, running xp loss and heat dumping");
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
                     if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
                         ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
@@ -74,9 +72,7 @@ namespace OpenRPG.Hooks {
                     //-- Check for AutoRespawn
                     if (user.IsConnected) {
                         bool isServerWide = Database.autoRespawn.ContainsKey(1);
-                        bool doRespawn = isServerWide || Database.autoRespawn.ContainsKey(SteamID);
-
-                        if (doRespawn) {
+                        if (isServerWide || Database.autoRespawn.ContainsKey(SteamID)) {
                             Utils.RespawnCharacter.Respawn(ev.Died, player, userEntity);
                         }
                     }

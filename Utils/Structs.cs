@@ -100,24 +100,17 @@ namespace OpenRPG.Utils
         public Entity CharEntity { get; set; } = charEntity;
     }
     
-    // TODO check this
-    public struct newWaypointData {
-        public float x;
-        public float y;
-        public float z;
-        public newWaypointData(float X, float Y, float Z) {x = X; y = Y; z = Z; }
-    }
-
-    public struct WaypointData
+    public struct WaypointData(float x, float y, float z)
     {
-        public string Name { get; set; }
-        public ulong Owner { get; set; }
-        public float3 Location { get; set; }
-        public WaypointData(string name, ulong owner, float3 location)
+        public float x = x;
+        public float y = y;
+        public float z = z;
+
+        public WaypointData(float3 location) : this(location.x, location.y, location.z) {}
+
+        public float3 ToFloat3()
         {
-            Name = name;
-            Owner = owner;
-            Location = location;
+            return new float3(x, y, z);
         }
     }
 

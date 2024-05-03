@@ -1,5 +1,6 @@
 using OpenRPG.Utils;
 using System;
+using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
 
@@ -10,36 +11,35 @@ namespace OpenRPG.Commands {
 
         [Command("go", "g", "<waypoint name>", "Teleports you to the specified waypoint", adminOnly: false)]
         public static void goToWaypoint(ChatCommandContext ctx, string waypoint) {
-            var PlayerEntity = ctx.Event.SenderCharacterEntity;
             var SteamID = ctx.Event.User.PlatformId;
-            if (Cache.PlayerInCombat(SteamID)) {
+            if (Cache.PlayerInCombat(SteamID) && !ctx.IsAdmin) {
                 ctx.Reply("Unable to use waypoint! You're in combat!");
                 return;
             }
 
-            if (Database.waypoints.TryGetValue(waypoint, out var WPData)) {
-                Helper.TeleportTo(ctx, WPData);
+            if (Database.waypoints.TryGetValue(waypoint, out var wpData)) {
+                Helper.TeleportTo(ctx, wpData);
                 return;
             }
 
-            if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out var WPData_)) {
-                if (WaypointLimit <= 0 && !ctx.Event.User.IsAdmin) {
+            if (Database.waypoints.TryGetValue(waypoint + "_" + SteamID, out wpData)) {
+                if (WaypointLimit <= 0 && !ctx.IsAdmin) {
                     ctx.Reply("Personal Waypoints are forbidden to you.");
                     if(Database.waypoints.Remove(waypoint + "_" + SteamID)) {
                         ctx.Reply("The forbidden waypoint has been destroyed.");
                     }
                     return;
                 }
-                Helper.TeleportTo(ctx, WPData_);
+                Helper.TeleportTo(ctx, wpData);
                 return;
             }
             ctx.Reply("Waypoint not found.");
         }
 
 
-        [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: true)]
+        [Command("set", "s", "<waypoint name>", "Creates the specified personal waypoint", adminOnly: false)]
         public static void setWaypoint(ChatCommandContext ctx, string name) {
-            if(WaypointLimit <= 0 && !ctx.Event.User.IsAdmin) {
+            if(WaypointLimit <= 0 && !ctx.IsAdmin) {
                 ctx.Reply("You may not create waypoints.");
                 return;
             }
@@ -48,7 +48,7 @@ namespace OpenRPG.Commands {
                 ctx.Reply($"A global waypoint with the \"{name}\" name existed. Please rename your waypoint.");
                 return;
             }
-            if (Database.waypoints_owned.TryGetValue(SteamID, out var total) && !ctx.Event.User.IsAdmin) {
+            if (Database.waypoints_owned.TryGetValue(SteamID, out var total) && !ctx.IsAdmin) {
                 if (total >= WaypointLimit) {
                     ctx.Reply("You already have reached your total waypoint limit.");
                     return;
@@ -60,8 +60,7 @@ namespace OpenRPG.Commands {
                 return;
             }
             var location = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-            var f3_location = new Tuple<float, float, float>(location.x, location.y, location.z);
-            AddWaypoint(SteamID, f3_location, wp_name, name, false);
+            AddWaypoint(SteamID, location, wp_name, name, false);
             ctx.Reply("Successfully added Waypoint.");
         }
 
@@ -69,8 +68,7 @@ namespace OpenRPG.Commands {
         public static void setGlobalWaypoint(ChatCommandContext ctx, string name) {
             var SteamID = ctx.Event.User.PlatformId;
             var location = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-            var f3_location = new Tuple<float, float, float>(location.x, location.y, location.z);
-            AddWaypoint(SteamID, f3_location, name, name, true);
+            AddWaypoint(SteamID, location, name, name, true);
             ctx.Reply("Successfully added Waypoint.");
         }
 
@@ -115,7 +113,7 @@ namespace OpenRPG.Commands {
 
                 if (wp.Key.Contains(SteamID.ToString())) {
                     if (count < wpPerMsg) {
-                        string easyName = wp.Key.Substring(0, wp.Key.IndexOf("_"+SteamID));
+                        string easyName = wp.Key.Substring(0, wp.Key.IndexOf("_", StringComparison.Ordinal));
                         reply += $" - <color=#ffff00>{easyName}</color>";
                         count++;
                     } else {
@@ -133,15 +131,15 @@ namespace OpenRPG.Commands {
 
         }
 
-        public static void AddWaypoint(ulong owner, Tuple<float, float, float> location, string name, string true_name, bool isGlobal) {
-            if (isGlobal) Database.waypoints[true_name] = location;
-            else Database.waypoints[name] = location;
+        private static void AddWaypoint(ulong owner, float3 location, string name, string trueName, bool isGlobal) {
+            if (isGlobal) Database.waypoints[trueName] = new WaypointData(location);
+            else Database.waypoints[name] = new WaypointData(location);
             if (!isGlobal && Database.waypoints_owned.TryGetValue(owner, out var total)) {
                 Database.waypoints_owned[owner] = total + 1;
             } else if(!isGlobal) Database.waypoints_owned[owner] = 1;
         }
 
-        public static void RemoveWaypoint(ulong owner, string name, bool global) {
+        private static void RemoveWaypoint(ulong owner, string name, bool global) {
             if (global) {
                 Database.waypoints.Remove(name);
             } else {

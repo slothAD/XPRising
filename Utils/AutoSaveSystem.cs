@@ -114,7 +114,7 @@ namespace OpenRPG.Utils
             Database.user_permission = LoadDB<Dictionary<ulong, int>>(UserPermissionJson);
             Database.sunimmunity = LoadDB<Dictionary<ulong, bool>>(SunImmunityJson);
             Database.waypoints_owned = LoadDB<Dictionary<ulong, int>>(WaypointCountJson);
-            Database.waypoints = LoadDB<Dictionary<string, Tuple<float, float, float>>>(GlobalWaypointsJson);
+            Database.waypoints = LoadDB<Dictionary<string, WaypointData>>(GlobalWaypointsJson);
             Database.godmode = LoadDB<Dictionary<ulong, bool>>(GodModeJson);
             Database.speeding = LoadDB<Dictionary<ulong, bool>>(SpeedingJson);
             Database.nocooldownlist = LoadDB<Dictionary<ulong, bool>>(NoCooldownJson);
