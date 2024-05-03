@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using BepInEx;
 using BepInEx.Logging;
 using OpenRPG.Commands;
+using OpenRPG.Models;
 using OpenRPG.Systems;
 using ProjectM;
 using LogSystem = OpenRPG.Plugin.LogSystem;

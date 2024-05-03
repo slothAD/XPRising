@@ -3,6 +3,7 @@ using ProjectM.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using OpenRPG.Models;
 using Unity.Collections;
 using Unity.Entities;
 

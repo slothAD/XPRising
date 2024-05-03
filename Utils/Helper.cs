@@ -17,24 +17,6 @@ using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils
 {
-    // TODO move to struct/class util
-    public class LazyDictionary<TKey,TValue> : Dictionary<TKey,TValue> where TValue : new()
-    {
-        public new TValue this[TKey key]
-        {
-            get 
-            {
-                if (!base.ContainsKey(key)) base.Add(key, new TValue());
-                return base[key];
-            }
-            set 
-            {
-                if (!base.ContainsKey(key)) base.Add(key, value);
-                else base[key] = value;
-            }
-        }
-    }
-    
     public static class Helper
     {
         private static Entity empty_entity = new Entity();

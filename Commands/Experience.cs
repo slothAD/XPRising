@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using BepInEx.Logging;
+using OpenRPG.Models;
 using ProjectM.Network;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
