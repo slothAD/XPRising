@@ -2,6 +2,8 @@
 using OpenRPG.Utils;
 using System;
 using System.Linq;
+using BepInEx.Logging;
+using OpenRPG.Configuration;
 using ProjectM;
 using ProjectM.Shared;
 using Unity.Collections;
@@ -9,22 +11,23 @@ using Unity.Entities;
 using VampireCommandFramework;
 using Color = OpenRPG.Utils.Color;
 using Faction = OpenRPG.Utils.Prefabs.Faction;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Commands
 {
     [CommandGroup("wanted", "w")]
     public static class Wanted{
-        private static void SendFactionWantedMessage(PlayerHeatData heatData, Entity userEntity, bool isDebug) {
+        private static void SendFactionWantedMessage(PlayerHeatData heatData, Entity userEntity, bool userIsAdmin) {
             bool isWanted = false;
             foreach (Faction faction in FactionHeat.ActiveFactions) {
                 var heat = heatData.heat[faction];
                 // Don't display this faction's heat level if the wanted level is 0.
-                if (heat.level < FactionHeat.HeatLevels[0] && !isDebug) continue;
+                if (heat.level < FactionHeat.HeatLevels[0] && !userIsAdmin) continue;
                 isWanted = true;
                 
                 Output.SendLore(userEntity, FactionHeat.GetFactionStatus(faction, heat.level));
                 
-                if (isDebug)
+                if (userIsAdmin && DebugLoggingConfig.IsLogging(LogSystem.Wanted))
                 {
                     var sinceAmbush = DateTime.Now - heat.lastAmbushed;
                     var nextAmbush = Math.Max((int)(HunterHuntedSystem.ambush_interval - sinceAmbush.TotalSeconds), 0);
@@ -47,7 +50,7 @@ namespace OpenRPG.Commands
             var userEntity = ctx.Event.SenderUserEntity;
             
             var heatData = HunterHuntedSystem.GetPlayerHeat(userEntity);
-            SendFactionWantedMessage(heatData, userEntity, user.IsAdmin && HunterHuntedSystem.factionLogging);
+            SendFactionWantedMessage(heatData, userEntity, ctx.IsAdmin);
         }
 
         [Command("set","s", "<name> <faction> <value>", "Sets the current wanted level", adminOnly: true)]
@@ -78,7 +81,7 @@ namespace OpenRPG.Commands
                 DateTime.Now - TimeSpan.FromSeconds(HunterHuntedSystem.ambush_interval + 1));
                 
             ctx.Reply($"Player \"{name}\" wanted value changed.");
-            SendFactionWantedMessage(updatedHeatData, contextUserEntity, HunterHuntedSystem.factionLogging);
+            SendFactionWantedMessage(updatedHeatData, contextUserEntity, ctx.IsAdmin);
             if (!targetUserEntity.Equals(contextUserEntity)) {
                 SendFactionWantedMessage(updatedHeatData, targetUserEntity, false);
             }
@@ -147,14 +150,14 @@ namespace OpenRPG.Commands
                     // component, but we can't test for this case by any means other than checking the string generated
                     // by Plugin.Server.EntityManager.Debug.GetEntityInfo(entity). We can't test for this case as the
                     // GetBuffer or HasBuffer commands fail with an AOT code exception.
-                    Plugin.LogInfo($"destroying minion {unitName}");
+                    Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"destroying minion {unitName}");
                     
                     DestroyUtility.CreateDestroyEvent(Plugin.Server.EntityManager, entity, DestroyReason.Default, DestroyDebugReason.None);
                     DestroyUtility.Destroy(Plugin.Server.EntityManager, entity);
                     removedCount++;
                 }
                 catch (Exception e) {
-                    Plugin.LogInfo("error doing test other: " + e.Message);
+                    Plugin.Log(LogSystem.Wanted, LogLevel.Info, "error doing test other: " + e.Message);
                     hasErrors = true;
                 }
             }

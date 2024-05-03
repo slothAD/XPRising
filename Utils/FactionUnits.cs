@@ -1,6 +1,8 @@
 ﻿using System;
+using BepInEx.Logging;
 using Faction = OpenRPG.Utils.Prefabs.Faction;
 using Units = OpenRPG.Utils.Prefabs.Units;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils;
 
@@ -408,7 +410,7 @@ public static class FactionUnits {
                 case Faction.Wolves:
                 case Faction.World_Prisoners:
                 default:
-                    Plugin.LogWarning($"{Enum.GetName(faction)} units not yet suppported");
+                    Plugin.Log(LogSystem.Wanted, LogLevel.Warning, $"{Enum.GetName(faction)} units not yet suppported");
                     return GetUnitsForLevel(bandit_units, playerLevel);
             }
         }

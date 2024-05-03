@@ -2,9 +2,11 @@
 using ProjectM.Network;
 using System;
 using System.Collections.Generic;
+using BepInEx.Logging;
 using Unity.Entities;
 using OpenRPG.Utils;
 using OpenRPG.Utils.Prefabs;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Systems
 {
@@ -114,7 +116,6 @@ namespace OpenRPG.Systems
         };
 
         private static readonly Random rand = new Random();
-        public static bool pluginLogging = false;
 
         public static void UpdateBloodline(Entity Killer, Entity Victim)
         {
@@ -140,7 +141,7 @@ namespace OpenRPG.Systems
                 if(!bloodlineMap.TryGetValue(bloodline.BloodType, out bloodlineIndex)) {
                     if (Helper.FindPlayer(SteamID, true, out var targetEntity, out var targetUserEntity)){
 
-                        Plugin.LogWarning("Bloodline DB Populated.");
+                        Plugin.Log(LogSystem.Bloodline, LogLevel.Warning, "Bloodline DB Populated.");
                         Output.SendLore(targetUserEntity, "Bloodline not found for guid of " + bloodline.BloodType.GuidHash);
                     }
                     return;
@@ -166,15 +167,15 @@ namespace OpenRPG.Systems
                 if (em.HasComponent<BloodConsumeSource>(Victim)){
                     victimBlood = em.GetComponentData<BloodConsumeSource>(Victim);
                     if (!(victimBlood.UnitBloodType.GuidHash == bloodline.BloodType.GuidHash|| isVBlood)){
-                        if (pluginLogging) Plugin.LogInfo("Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
+                        Plugin.Log(LogSystem.Bloodline, LogLevel.Info, "Player blood of " + bloodline.BloodType.ToString() + " - " + bloodline.BloodType.GuidHash + " Not equals victim blood of " + victimBlood.UnitBloodType.ToString() + " - " + victimBlood.UnitBloodType.GuidHash);
                         return;
                     }
                     if (!(isVBlood || victimBlood.BloodQuality > getBloodlineData(SteamID).strength[bloodlineIndex])) {
-                        if (pluginLogging) Plugin.LogInfo("Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
+                        Plugin.Log(LogSystem.Bloodline, LogLevel.Info, "Victim Blood Quality " + victimBlood.BloodQuality + " less than strength for bloodline " + names[bloodlineIndex] + " ("+bloodlineIndex+") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
                     if (!(isVBlood || bloodline.Quality > getBloodlineData(SteamID).strength[bloodlineIndex])){
-                        if (pluginLogging) Plugin.LogInfo("Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
+                        Plugin.Log(LogSystem.Bloodline, LogLevel.Info, "Current Blood Quality " + bloodline.Quality + " less than strength for bloodline " + names[bloodlineIndex] + " (" + bloodlineIndex + ") of " + getBloodlineData(SteamID).strength[bloodlineIndex]);
                         return;
                     }
 

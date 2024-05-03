@@ -41,7 +41,7 @@ namespace OpenRPG.Commands
         {
             if (reason.Length > 150)
             {
-                ctx.Reply("Keep the reason short will ya?!");
+                throw ctx.Error("Keep the reason short will ya?!");
             }
 
             if (Helper.FindPlayer(playername, false, out _, out var targetUserEntity))

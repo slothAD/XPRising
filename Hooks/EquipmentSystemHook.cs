@@ -7,6 +7,8 @@ using ProjectM;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
 using System;
+using BepInEx.Logging;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Hooks;
 
@@ -15,7 +17,7 @@ public class ArmorLevelSystem_Spawn_Patch
 {
     private static void Prefix(ArmorLevelSystem_Spawn __instance)
     {
-        if (Helper.buffLogging) Plugin.LogInfo("Armor System Patch Entry");
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Armor System Patch Entry");
         if (ExperienceSystem.isEXPActive)
         {
             EntityManager entityManager = __instance.EntityManager;
@@ -32,7 +34,7 @@ public class ArmorLevelSystem_Spawn_Patch
                     }
                 }
                 catch(Exception e){
-                    Plugin.LogInfo("AOT Error I think" + e.Message);
+                    Plugin.Log(LogSystem.Buff, LogLevel.Info, "AOT Error I think" + e.Message);
                 }
                 if (!ExperienceSystem.ShouldAllowGearLevel)
                 {
@@ -59,7 +61,7 @@ public class WeaponLevelSystem_Spawn_Patch
 {
     private static void Prefix(WeaponLevelSystem_Spawn __instance)
     {
-        if (Helper.buffLogging) Plugin.LogInfo("Weapon System Patch Entry");
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Weapon System Patch Entry");
         if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
         {
             var entityManager = __instance.EntityManager;
@@ -71,7 +73,7 @@ public class WeaponLevelSystem_Spawn_Patch
                 Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                 if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                 {
-                    if (Helper.buffLogging) Plugin.LogInfo($"Applying Helper.AppliedBuff: {Helper.AppliedBuff.GuidHash}");
+                    Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Applying Helper.AppliedBuff: {Helper.AppliedBuff.GuidHash}");
                     Helper.ApplyBuff(User, Owner, Helper.AppliedBuff);
                 }
                 if (ExperienceSystem.isEXPActive)
@@ -86,7 +88,7 @@ public class WeaponLevelSystem_Spawn_Patch
                         }
                     }
                     catch(Exception e){
-                        Plugin.LogInfo("AOT Error I think" + e.Message);
+                        Plugin.Log(LogSystem.Buff, LogLevel.Info, "AOT Error I think" + e.Message);
                     }
                     if (!ExperienceSystem.ShouldAllowGearLevel)
                     {
@@ -163,7 +165,7 @@ public class SpellLevelSystem_Spawn_Patch
                 }
                 catch (Exception e)
                 {
-                    Plugin.LogInfo("AOT Error I think" + e.Message);
+                    Plugin.Log(LogSystem.Buff, LogLevel.Info, "AOT Error I think" + e.Message);
                 }
                 level.Level = 0;
                 entityManager.SetComponentData(entity, level);
@@ -214,7 +216,7 @@ public class SpellLevelSystem_Destroy_Patch
                 }
                 catch (Exception e)
                 {
-                    Plugin.LogInfo("AOT Error I think" + e.Message);
+                    Plugin.Log(LogSystem.Buff, LogLevel.Info, "AOT Error I think" + e.Message);
                 }
                 entityManager.SetComponentData(entity, level);
             }

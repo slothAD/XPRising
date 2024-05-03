@@ -1,6 +1,8 @@
 ﻿using Il2CppInterop.Runtime.Injection;
 using System;
+using BepInEx.Logging;
 using UnityEngine;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Components.RandomEncounters;
 
@@ -28,8 +30,7 @@ public class GameFrame : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Plugin.LogError("Error dispatching OnUpdate event:");
-            Plugin.LogError(ex.ToString());
+            Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Error dispatching OnUpdate event:\n{ex}");
         }
     }
 
@@ -41,8 +42,7 @@ public class GameFrame : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Plugin.LogError("Error dispatching OnLateUpdate event:");
-            Plugin.LogError(ex.ToString());
+            Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Error dispatching OnLateUpdate event:\n{ex}");
         }
     }
 

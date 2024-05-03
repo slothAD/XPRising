@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using Unity.Entities;
 using OpenRPG.Utils;
 using System.Linq;
+using BepInEx.Logging;
 using Cache = OpenRPG.Utils.Cache;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Systems
 {
@@ -51,8 +53,6 @@ namespace OpenRPG.Systems
 
         public static GroupLevelScheme groupLevelScheme = GroupLevelScheme.Max;
 
-        public static bool xpLogging = false;
-
         public static bool IsPlayerLoggingExperience(ulong steamId)
         {
             return Database.player_log_exp.GetValueOrDefault(steamId, false);
@@ -61,13 +61,13 @@ namespace OpenRPG.Systems
         public static bool EntityProvidesExperience(Entity victim) {
             //-- Check victim is not a summon
             if (Plugin.Server.EntityManager.HasComponent<Minion>(victim)) {
-                if (Helper.deathLogging) Plugin.LogInfo("Minion killed, ignoring");
+                Plugin.Log(LogSystem.Death, LogLevel.Info, "Minion killed, ignoring");
                 return false;
             }
 
             //-- Check victim has a level
             if (!Plugin.Server.EntityManager.HasComponent<UnitLevel>(victim)) {
-                if (Helper.deathLogging) Plugin.LogInfo("Has no level, ignoring");
+                Plugin.Log(LogSystem.Death, LogLevel.Info, "Has no level, ignoring");
                 return false;
             }
 
@@ -99,14 +99,14 @@ namespace OpenRPG.Systems
                     // Do nothing to modify the player level
                     break;
                 default:
-                    Plugin.LogWarning($"Group level scheme unknown");
+                    Plugin.Log(LogSystem.Xp, LogLevel.Warning, $"Group level scheme unknown");
                     break;
             }
 
-            if (xpLogging) Plugin.LogInfo("Running Assign EXP for all close allied players");
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, "Running Assign EXP for all close allied players");
             var isGroup = closeAllies.Count > 1 && groupLevelScheme != GroupLevelScheme.None;
             foreach (var teammate in closeAllies) {
-                if (xpLogging) Plugin.LogInfo("Assigning EXP to " + teammate.steamID);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "Assigning EXP to " + teammate.steamID);
                 switch (groupLevelScheme) {
                     case GroupLevelScheme.Average:
                     case GroupLevelScheme.Max:
@@ -120,7 +120,7 @@ namespace OpenRPG.Systems
                         modifiedPlayerLevel = teammate.playerLevel;
                         break;
                 }
-                if (xpLogging) Plugin.LogInfo($"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel} {groupLevelScheme}");
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel} {groupLevelScheme}");
                 AssignExp(teammate, mobLevel, modifiedPlayerLevel, isVBlood, isGroup);
             }
         }
@@ -185,25 +185,25 @@ namespace OpenRPG.Systems
             pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter _);
             if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
             else {
-                if (xpLogging) Plugin.LogInfo("Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
                 if (entityManager.TryGetComponentData<EntityOwner>(killerEntity, out EntityOwner eOwn)) {
                     if (entityManager.TryGetComponentData<UnitLevel>(eOwn, out killerUnitLevel)) {
                         killerLvl = killerUnitLevel.Level;
-                        if (xpLogging) Plugin.LogInfo("EntityOwner has level: " + killerLvl);
+                        Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityOwner has level: " + killerLvl);
                         if (!pvpKill) {
                             pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eOwn, out _);
                         }
                     }
-                    else if (xpLogging) Plugin.LogInfo("EntityOwner has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eOwn));
+                    else Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityOwner has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eOwn));
                 }
                 if (entityManager.TryGetComponentData<EntityCreator>(killerEntity, out EntityCreator eCreator)) {
                     if (entityManager.TryGetComponentData<UnitLevel>(eCreator.Creator._Entity, out killerUnitLevel)) {
                         killerLvl = killerUnitLevel.Level;
-                        if (xpLogging) Plugin.LogInfo("EntityCreator has level: " + killerLvl);
+                        Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityCreator has level: " + killerLvl);
                         if (!pvpKill) {
                             pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eCreator.Creator._Entity, out _);
                         }
-                    } else if (xpLogging) Plugin.LogInfo("EntityCreator has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eCreator.Creator._Entity));
+                    } else Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityCreator has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eCreator.Creator._Entity));
                 }
             }
             float xpLossPerLevel = pveXPLossPerLevel;
@@ -213,10 +213,10 @@ namespace OpenRPG.Systems
             int lvlDiff = pLvl - killerLvl;
             float lossMultPerDiff = pveXPLossMultPerLvlDiff;
             float lossMultPerDiffsq = pveXPLossMultPerLvlDiffSq;
-            if (xpLogging) Plugin.LogInfo("Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, "Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
 
             if (pvpKill) {
-                if (xpLogging) Plugin.LogInfo("PvP Kill");
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "PvP Kill");
                 xpLossPerLevel = pvpXPLossPerLevel;
                 xpLossPercentPerLevel = pvpXPLossPercentPerLevel;
                 xpLoss = pvpXPLoss;
@@ -225,26 +225,26 @@ namespace OpenRPG.Systems
                 lossMultPerDiffsq = pvpXPLossMultPerLvlDiffSq;
             }
             float xpLossMult = 1 - (lvlDiff * lossMultPerDiff + lvlDiff * lvlDiff * lossMultPerDiffsq);
-            if (xpLogging) Plugin.LogInfo("xpLossMult per level " + lossMultPerDiff + " xpLossMultPerDiffSquared: " + lossMultPerDiffsq);
-            if (xpLogging) Plugin.LogInfo("results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
-            if (xpLogging) Plugin.LogInfo("Flat Loss: " + xpLoss + ", Loss per level: " + xpLossPerLevel + ", Percent Loss: " + xpLossPercent + ", Percent Loss Per Level: " + xpLossPercentPerLevel);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, "xpLossMult per level " + lossMultPerDiff + " xpLossMultPerDiffSquared: " + lossMultPerDiffsq);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, "results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, "Flat Loss: " + xpLoss + ", Loss per level: " + xpLossPerLevel + ", Percent Loss: " + xpLossPercent + ", Percent Loss Per Level: " + xpLossPercentPerLevel);
 
 
             if (exp <= 0 || xpLossMult <= 0) xpLost = 0;
             else {
                 int lvlXP = convertLevelToXp(pLvl + 1) - convertLevelToXp(pLvl);
-                if (xpLogging) Plugin.LogInfo("lvlXP is "+ lvlXP);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "lvlXP is "+ lvlXP);
                 xpLost = xpLoss + (xpLossPerLevel * pLvl);
-                if (xpLogging) Plugin.LogInfo("so our static XP Loss is " + xpLost);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "so our static XP Loss is " + xpLost);
                 xpLost += (lvlXP * xpLossPercent + lvlXP * xpLossPercentPerLevel * pLvl) / 100;
-                if (xpLogging) Plugin.LogInfo("adding on the percentile loss we have " + xpLost);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "adding on the percentile loss we have " + xpLost);
                 xpLost *= xpLossMult;
-                if (xpLogging) Plugin.LogInfo("then multiplying by the loss mult we get " + xpLost);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, "then multiplying by the loss mult we get " + xpLost);
 
             }
 
             var currentXp = Math.Max(exp - (int)xpLost, 0);
-            if (xpLogging) Plugin.LogInfo("subtracting that from our " + exp + " we get " + currentXp);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, "subtracting that from our " + exp + " we get " + currentXp);
             Database.player_experience[SteamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, SteamID);
@@ -354,7 +354,7 @@ namespace OpenRPG.Systems
             }
             catch (Exception ex)
             {
-                Plugin.LogError($"Could not apply buff, I'm sad for you! {ex.ToString()} ");
+                Plugin.Log(LogSystem.Xp, LogLevel.Error, $"Could not apply XP buff!\n{ex} ");
             }
         }
 

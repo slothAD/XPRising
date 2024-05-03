@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Logging;
 using OpenRPG.Systems;
 using VampireCommandFramework;
 using VRising.GameData;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils;
 
@@ -89,7 +91,7 @@ public static class Command
         var currentPermissions = Database.command_permission.Keys;
         foreach (var permission in currentPermissions.Where(permission => !commandsDictionary.ContainsKey(permission)))
         {
-            Plugin.LogMessage($"Removing old permission: {permission}");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Message, $"Removing old permission: {permission}");
             Database.command_permission.Remove(permission);
         }
 
@@ -98,16 +100,16 @@ public static class Command
         {
             // Add the permission if it doesn't already exist there
             var added = Database.command_permission.TryAdd(command.Key, DefaultPrivilege(command.Value));
-            if (added) Plugin.LogMessage($"Added new permission: {command.Key}");
+            if (added) Plugin.Log(LogSystem.Plugin, LogLevel.Message, $"Added new permission: {command.Key}");
 
             // Warn if the default permissions does not include this command
             if (!defaultCommandPermissions.ContainsKey(command.Key))
             {
-                Plugin.LogWarning($"Default permissions do not include: {command.Key}\nRegenerate the default command permissions (and maybe Command.md).");
+                Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"Default permissions do not include: {command.Key}\nRegenerate the default command permissions (and maybe Command.md).", true);
             }
         }
             
-        Plugin.LogInfo("Permissions have been validated");
+        Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Permissions have been validated");
     }
 
     private static string PadCommandString(int index, string command, int width)

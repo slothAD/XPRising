@@ -5,14 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using BepInEx.Logging;
 using Unity.Entities;
 using Unity.Transforms;
 using Faction = OpenRPG.Utils.Prefabs.Faction;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Systems
 {
     public static class HunterHuntedSystem {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
+
+        private const LogSystem LoggingSystem = LogSystem.Faction;
 
         public static bool isActive = true;
         public static int heat_cooldown = 10;
@@ -20,8 +24,6 @@ namespace OpenRPG.Systems
         public static int ambush_chance = 50;
         public static float ambush_despawn_timer = 300;
         public static int vBloodMultiplier = 20;
-
-        public static bool factionLogging = false;
 
         private static Random rand = new();
 
@@ -32,10 +34,7 @@ namespace OpenRPG.Systems
             var faction = Helper.ConvertGuidToFaction(victimFaction);
 
             FactionHeat.GetActiveFactionHeatValue(faction, isVBlood, out var heatValue, out var activeFaction);
-            if (factionLogging || faction == Faction.Unknown) {
-                var factionString = $"Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}";
-                Plugin.LogWarning(factionString);
-            }
+            Plugin.Log(LoggingSystem, LogLevel.Warning, $"Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}", faction == Faction.Unknown);
 
             if (activeFaction == Faction.Unknown || heatValue == 0) return;
 
@@ -65,8 +64,7 @@ namespace OpenRPG.Systems
             }
             else {
                 if (!heatData.heat.TryGetValue(victimFaction, out var heat)) {
-                    Plugin.LogWarning(
-                        $"Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
+                    Plugin.Log(LogSystem.Wanted, LogLevel.Warning, $"Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
                     return;
                 }
 
@@ -120,7 +118,7 @@ namespace OpenRPG.Systems
             var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier > 0;
             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(triggeringPlayerEntity);
             var closeAllies = Alliance.GetClosePlayers(
-                triggerLocation.Position, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, true, useGroup, factionLogging);
+                triggerLocation.Position, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, true, useGroup, LoggingSystem);
             var alliesInCombat = false;
             // Check if there are close allies in combat (we don't want ALL close allies to trigger an ambush at the same time!)
             foreach (var ally in closeAllies) {
@@ -147,7 +145,7 @@ namespace OpenRPG.Systems
                     var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
 
                     if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
-                        if (factionLogging) Plugin.LogInfo($"{faction} can ambush");
+                        Plugin.Log(LoggingSystem, LogLevel.Info, $"{faction} can ambush");
 
                         // If there is no stored wanted level yet, or if this ally's wanted level is higher, then set it.
                         if (!ambushFactions.TryGetValue(faction, out var highestWantedLevel) || wantedLevel > highestWantedLevel) {
@@ -234,11 +232,11 @@ namespace OpenRPG.Systems
             var lastCombatEnd = Cache.GetCombatEnd(steamID);
 
             var elapsedTime = CooldownPeriod(heatData.lastCooldown, lastCombatStart, lastCombatEnd);
-            if (factionLogging) Plugin.LogInfo($"Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
+            Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
 
             if (elapsedTime > 0) {
                 var cooldownValue = (int)Math.Floor(elapsedTime * cooldownPerSecond);
-                if (factionLogging) Plugin.LogInfo($"Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
+                Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
 
                 // Update all heat levels
                 foreach (var faction in FactionHeat.ActiveFactions) {
@@ -258,7 +256,7 @@ namespace OpenRPG.Systems
         private static double CooldownPeriod(DateTime lastCooldown, DateTime lastCombatStart, DateTime lastCombatEnd) {
             // If we have started combat more recently than we have finished, then we are in combat.
             var inCombat = lastCombatStart > lastCombatEnd;
-            if (factionLogging) Plugin.LogInfo($"Heat CD period: combat: {inCombat}");
+            Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat CD period: combat: {inCombat}");
             
             // cdPeriodStart is the max of (lastCooldown, lastCombatEnd + offset)
             var cdPeriodStartAfterCombat = lastCombatEnd + TimeSpan.FromSeconds(20);
@@ -285,7 +283,7 @@ namespace OpenRPG.Systems
 
         private static void LogHeatData(PlayerHeatData heatData, Entity userEntity, string origin) {
             if (heatData.isLogging) Output.SendLore(userEntity, HeatDataString(heatData, true));
-            if (factionLogging) Plugin.LogInfo($"Heat({origin}): {HeatDataString(heatData, false)}");
+            Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat({origin}): {HeatDataString(heatData, false)}");
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using BepInEx.Logging;
 using OpenRPG.Utils.RandomEncounters;
 using Unity.Entities;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Components.RandomEncounters
 {
@@ -52,12 +54,12 @@ namespace OpenRPG.Components.RandomEncounters
             _isRunning = true;
             try
             {
-                Plugin.LogDebug("Executing timer.");
+                Plugin.Log(LogSystem.RandomEncounter, LogLevel.Debug, "Executing timer.");
                 _action.Invoke(world);
             }
             catch (Exception ex)
             {
-                Plugin.LogError(ex.ToString());
+                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Timer failed {ex}");
             }
             finally
             {

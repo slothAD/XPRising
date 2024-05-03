@@ -172,13 +172,6 @@ namespace OpenRPG
         private static ConfigEntry<bool> EnableWorldDynamics;
         private static ConfigEntry<bool> WDGrowOnKill;
 
-        private static ConfigEntry<bool> buffLogging;
-        private static ConfigEntry<bool> xpLogging;
-        private static ConfigEntry<bool> deathLogging;
-        private static ConfigEntry<bool> saveLogging;
-        private static ConfigEntry<bool> factionLogging;
-        private static ConfigEntry<bool> squadSpawnLogging;
-
         private static ConfigEntry<int> buffID;
         private static ConfigEntry<int> forbiddenBuffID;
         private static ConfigEntry<int> appliedBuff;
@@ -187,8 +180,6 @@ namespace OpenRPG
         private static ConfigEntry<bool> disableCommandAdminRequirement;
 
         public static bool isInitialized = false;
-        
-        private static bool parseLogging = false;
 
         private static ManualLogSource Logger;
         private static World _serverWorld;
@@ -265,7 +256,7 @@ namespace OpenRPG
             EXPGroupModifier = Config.Bind("Experience", "Group Modifier", 0.75, "Set the modifier for EXP gained for each ally(player) in vicinity.\n" +
                 "Example if you have 2 ally nearby, EXPGained = ((EXPGained * Modifier)*Modifier)");
             EXPGroupMaxDistance = Config.Bind("Experience", "Group Range", 50f, "Set the maximum distance an ally (player) has to be from the player for them to share EXP with the player");
-            EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 3, "Configure the group levelling scheme. See documentation.");
+            EXPGroupLevelScheme = Config.Bind("Experience", "Group level Scheme", 2, "Configure the group levelling scheme. See documentation.");
 
             pvpXPLoss = Config.Bind("Rates, Experience", "PvP XP Loss", 0f, "Sets the flat XP Lost on a PvP death");
             pvpXPLossPerLevel = Config.Bind("Rates, Experience", "PvP XP Loss per Level", 0f, "Sets the XP Lost per level of the dying player on a PvP death");
@@ -389,23 +380,16 @@ namespace OpenRPG
             EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, $"All other faction dynamics data & config is within {AutoSaveSystem.WorldDynamicsJson} file.");
             WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
             
-            xpLogging = Config.Bind("Debug", "XP system logging", false, "Logs detailed information about the experience system in your console, enable before sending me any errors with the xp system!");
-            buffLogging = Config.Bind("Debug", "Buff system logging", false, "Logs detailed information about the buff system in your console, enable before sending me any errors with the buff system!");
-            deathLogging = Config.Bind("Debug", "Death logging", false, "Logs detailed information about death events in your console, enable before sending me any errors with the xp system!");
-            saveLogging = Config.Bind("Debug", "Save system logging", false, "Logs detailed information about the save system in your console, enable before sending me any errors with the buff system!");
-            factionLogging = Config.Bind("Debug", "Wanted system logging", false, "Logs detailed information about the wanted system in your console, enable before sending me any errors with the wanted system!");
-            squadSpawnLogging = Config.Bind("Debug", "Squad spawn logging", false, "Logs information about squads spawning into your console.");
-            
             disableCommandAdminRequirement = Config.Bind("Admin", "Disable command admin requirement", false, "Disables all \"isAdmin\" checks for running commands.");
         }
 
         public override void Load()
         {
             // Ensure the logger is accessible in static contexts.
-            Logger = Log;
+            Logger = base.Log;
             if(!IsServer)
             {
-                Plugin.LogWarning($"This is a server plugin. Not continuing to load on client.");
+                Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"This is a server plugin. Not continuing to load on client.", true);
                 return;
             }
             
@@ -418,7 +402,7 @@ namespace OpenRPG
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Plugin.LogInfo($"Plugin is loaded");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Plugin is loaded", true);
         }
 
         private static void GameDataOnInitialize(World world)
@@ -430,6 +414,9 @@ namespace OpenRPG
                 RandomEncounters.StartEncounterTimer();
             }
             TaskRunner.Initialize();
+            
+            // Load config
+            DebugLoggingConfig.Initialise();
             
             Initialize();
         }
@@ -447,9 +434,9 @@ namespace OpenRPG
 
         public static void Initialize()
         {
-            Plugin.LogInfo($"Trying to Initalize {MyPluginInfo.PLUGIN_NAME}, isInitalized already: {isInitialized}");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"Trying to Initialize {MyPluginInfo.PLUGIN_NAME}: isInitialized == {isInitialized}", isInitialized);
             if (isInitialized) return;
-            Plugin.LogInfo($"Initalizing {MyPluginInfo.PLUGIN_NAME}");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Initializing {MyPluginInfo.PLUGIN_NAME}...", true);
             
             //-- Initialize System
             Helper.GetServerGameSettings(out Helper.SGS);
@@ -459,7 +446,7 @@ namespace OpenRPG
             //-- Apply configs
             Waypoint.WaypointLimit = WaypointLimit.Value;
 
-            Plugin.LogInfo("Loading permission config");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading permission config");
             PermissionSystem.isVIPSystem = EnableVIPSystem.Value;
             PermissionSystem.isVIPWhitelist = EnableVIPWhitelist.Value;
             PermissionSystem.VIP_Permission = VIP_Permission.Value;
@@ -476,7 +463,7 @@ namespace OpenRPG
             PermissionSystem.VIP_OutCombat_GarlicResistance = VIP_OutCombat_GarlicResistance.Value;
             PermissionSystem.VIP_OutCombat_SilverResistance = VIP_OutCombat_SilverResistance.Value;
 
-            Plugin.LogInfo("Loading HunterHunted config");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading HunterHunted config");
             HunterHuntedSystem.isActive = HunterHuntedEnabled.Value;
             HunterHuntedSystem.heat_cooldown = HeatCooldown.Value;
             HunterHuntedSystem.ambush_interval = Ambush_Interval.Value;
@@ -487,7 +474,7 @@ namespace OpenRPG
             HunterHuntedSystem.ambush_despawn_timer = Ambush_Despawn_Unit_Timer.Value + 0.44444f;
 
 
-            Plugin.LogInfo("Loading XP config");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading XP config");
             ExperienceSystem.isEXPActive = EnableExperienceSystem.Value;
             ExperienceSystem.ShouldAllowGearLevel = ShouldAllowGearLevel.Value;
             ExperienceSystem.LevelRewardsOn = EnableLevelRewards.Value;
@@ -520,7 +507,7 @@ namespace OpenRPG
                 ExperienceSystem.groupLevelScheme = (ExperienceSystem.GroupLevelScheme)EXPGroupLevelScheme.Value;
             }
 
-            Plugin.LogInfo("Loading weapon mastery config");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading weapon mastery config");
             WeaponMasterSystem.isMasteryEnabled = EnableWeaponMaster.Value;
             WeaponMasterSystem.isDecaySystemEnabled = EnableWeaponMasterDecay.Value;
             WeaponMasterSystem.Offline_DecayValue = Offline_Weapon_MasteryDecayValue.Value;
@@ -574,7 +561,7 @@ namespace OpenRPG
             WeaponMasterSystem.growthPerEfficency = growthPerEfficency.Value;
 
 
-            Plugin.LogInfo("Loading bloodlines config");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading bloodlines config");
             Bloodlines.draculaStats = parseIntArrayConifg(draculaBloodlineStats.Value);
             Bloodlines.draculaMinStrength = parseDoubleArrayConifg(draculaBloodlineMinStrengths.Value);
             Bloodlines.draculaRates = parseDoubleArrayConifg(draculaBloodlineRates.Value);
@@ -623,27 +610,17 @@ namespace OpenRPG
             Bloodlines.VBloodMultiplier = bloodlineVBloodMultiplier.Value;
             Bloodlines.growthMultiplier = bloodlineGrowthMultiplier.Value;
 
-            Plugin.LogInfo("Loading world dynamics config");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading world dynamics config");
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
             WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
-
-            // Debug logging
-            ExperienceSystem.xpLogging = xpLogging.Value;
-            Helper.buffLogging = buffLogging.Value;
-            AutoSaveSystem.saveLogging = saveLogging.Value;
-            Helper.deathLogging = deathLogging.Value;
-            
 
             Helper.buffGUID = buffID.Value;
             Helper.AppliedBuff = new PrefabGUID(appliedBuff.Value);
             Helper.forbiddenBuffGUID = forbiddenBuffID.Value;
             Helper.humanReadablePercentageStats = humanReadablePercentageStats.Value;
             Helper.inverseMultipersDisplayReduction = inverseMultiplersDisplayReduction.Value;
-
-            HunterHuntedSystem.factionLogging = factionLogging.Value;
-            SquadList.showDebugLogs = squadSpawnLogging.Value;
             
-            Plugin.LogInfo("Initialising player cache and internal database...");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Initialising player cache and internal database...");
             Helper.CreatePlayerCache();
             AutoSaveSystem.LoadDatabase();
             
@@ -654,83 +631,83 @@ namespace OpenRPG
             // Command.GenerateCommandMd(commands);
             // Command.GenerateDefaultCommandPermissions(commands);
             
-            Plugin.LogInfo($"Setting CommandRegistry middleware");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Setting CommandRegistry middleware");
             if (disableCommandAdminRequirement.Value)
             {
-                Plugin.LogInfo("Removing admin privilege requirements");
+                Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Removing admin privilege requirements");
                 CommandRegistry.Middlewares.Clear();                
             }
             CommandRegistry.Middlewares.Add(new Command.PermissionMiddleware());
 
-            Plugin.LogInfo("Finished initialising");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Finished initialising", true);
 
             isInitialized = true;
         }
 
         // TODO move to a util file
         public static int[] parseIntArrayConifg(string data) {
-            if (parseLogging) Plugin.LogInfo(">>>parsing int array: " + data);
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>parsing int array: " + data);
             var match = Regex.Match(data, "([0-9]+)");
             List<int> list = new List<int>();
             while (match.Success) {
                 try {
-                    if (parseLogging) Plugin.LogInfo(">>>got int: " + match.Value);
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>got int: " + match.Value);
                     int temp = int.Parse(match.Value, CultureInfo.InvariantCulture);
-                    if (parseLogging) Plugin.LogInfo(">>>int parsed into: " + temp);
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>int parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
-                    if (parseLogging) Plugin.LogWarning("Error interperting integer value: " + match.ToString());
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Warning, "Error interperting integer value: " + match.ToString());
                 }
                 match = match.NextMatch();
             }
-            if (parseLogging) Plugin.LogInfo(">>>done parsing int array");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>done parsing int array");
             return list.ToArray();
         }
         public static float[] parseFloatArrayConifg(string data) {
-            if (parseLogging) Plugin.LogInfo(">>>parsing float array: " + data);
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>parsing float array: " + data);
             var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<float> list = new List<float>();
             while (match.Success) {
                 try {
-                    if (parseLogging) Plugin.LogInfo(">>>got float: " + match.Value);
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>got float: " + match.Value);
                     float temp = float.Parse(match.Value, CultureInfo.InvariantCulture);
-                    if (parseLogging) Plugin.LogInfo(">>>float parsed into: " + temp);
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>float parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
-                    Plugin.LogWarning("Error interperting float value: " + match.ToString());
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Warning, "Error interperting float value: " + match.ToString());
                 }
 
                 match = match.NextMatch();
             }
 
-            if (parseLogging) Plugin.LogInfo(">>>done parsing float array");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>done parsing float array");
             return list.ToArray();
         }
         public static double[] parseDoubleArrayConifg(string data) {
-            if(parseLogging) Plugin.LogInfo(">>>parsing double array: " + data);
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>parsing double array: " + data);
             var match = Regex.Match(data, "[-+]?[0-9]*\\.?[0-9]+");
             List<double> list = new List<double>();
             while (match.Success) {
                 try {
-                    if (parseLogging) Plugin.LogInfo(">>>got double: " + match.Value);
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>got double: " + match.Value);
                     double temp = double.Parse(match.Value, CultureInfo.InvariantCulture);
-                    if (parseLogging) Plugin.LogInfo(">>>double parsed into: " + temp);
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>double parsed into: " + temp);
                     list.Add(temp);
                 }
                 catch {
-                    Plugin.LogWarning("Error interperting double value: " + match.ToString());
+                    Plugin.Log(LogSystem.Plugin, LogLevel.Warning, "Error interperting double value: " + match.ToString());
                 }
 
                 match = match.NextMatch();
             }
 
-            if (parseLogging) Plugin.LogInfo(">>>done parsing double array");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>done parsing double array");
             return list.ToArray();
         }
         public static string[] parseStringArrayConifg(string data) {
-            if (parseLogging) Plugin.LogInfo(">>>parsing comma seperated String array: " + data);
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>parsing comma seperated String array: " + data);
             List<string> list = new List<string>();
             while (data.IndexOf(",") > 0) {
                 string str = data.Substring(0, data.IndexOf(","));
@@ -740,33 +717,28 @@ namespace OpenRPG
             }
             data.Trim();
             list.Add(data);
-            if (parseLogging) Plugin.LogInfo(">>>done parsing string array");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, ">>>done parsing string array");
             return list.ToArray();
         }
 
-        public static void LogDebug(string message)
+        public enum LogSystem
         {
-            Logger.LogDebug($"{DateTime.Now.ToString("u")}: {message}");
+            Bloodline,
+            Buff,
+            Death,
+            Faction,
+            Plugin,
+            PowerUp,
+            RandomEncounter,
+            SquadSpawn,
+            Wanted,
+            Xp
         }
-
-        public static void LogInfo(string message)
+        
+        public new static void Log(LogSystem system, LogLevel logLevel, string message, bool forceLog = false)
         {
-            Logger.LogInfo($"{DateTime.Now.ToString("u")}: {message}");
-        }
-
-        public static void LogMessage(string message)
-        {
-            Logger.LogMessage($"{DateTime.Now.ToString("u")}: {message}");
-        }
-
-        public static void LogWarning(string message)
-        {
-            Logger.LogWarning($"{DateTime.Now.ToString("u")}: {message}");
-        }
-
-        public static void LogError(string message)
-        {
-            Logger.LogError($"{DateTime.Now.ToString("u")}: {message}");
+            var isLogging = forceLog || DebugLoggingConfig.IsLogging(system);
+            if (isLogging) Logger.Log(logLevel, $"{DateTime.Now.ToString("u")}: [{Enum.GetName(system)}] {message}");
         }
     }
 }

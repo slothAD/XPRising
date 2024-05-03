@@ -9,9 +9,11 @@ using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
+using BepInEx.Logging;
 using VampireCommandFramework;
 using Bloodstone.API;
 using OpenRPG.Utils.Prefabs;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils
 {
@@ -44,8 +46,6 @@ namespace OpenRPG.Utils
 
         public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
         public static int forbiddenBuffGUID = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
-        public static bool buffLogging = false;
-        public static bool deathLogging = true;
         public static PrefabGUID AppliedBuff = new PrefabGUID(buffGUID);
         public static PrefabGUID SeverePunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Fever);          //-- Using this for PvP Punishment debuff
         public static PrefabGUID MinorPunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Area_Inside);
@@ -156,7 +156,7 @@ namespace OpenRPG.Utils
 
             }
 
-            Plugin.LogInfo("Player Cache Created.");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Player Cache Created.");
         }
         
         public static void TeleportTo(ChatCommandContext ctx, Tuple<float,float,float> position) {

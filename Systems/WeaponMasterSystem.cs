@@ -360,32 +360,14 @@ namespace OpenRPG.Systems
 
         public static void modMastery(ulong SteamID, int Type, double Value)
         {
-            int NoneExpertise = 0;
             if (Type == (int)WeaponType.None+1){
-                if (Value > 0) Value = Value * 2;
+                if (Value > 0) Value *= 2;
             }
-            WeaponMasterData Mastery;
-            try {
-                bool isPlayerFound = Database.player_weaponmastery.TryGetValue(SteamID, out Mastery);
-                Mastery.mastery[Type] += Value;                
-                Mastery.mastery[Type] = Math.Min(Mastery.mastery[Type], MaxMastery);
-            }
-            catch (NullReferenceException nre) {
-                Mastery = new WeaponMasterData();
-                Mastery.mastery = new double[masteryStats.Length];
-                Mastery.efficency = new double[masteryStats.Length];
-                Mastery.growth = new double[masteryStats.Length];
-                for (int i = 0; i < masteryStats.Length; i++)
-                {
-                    Mastery.mastery[i] = 0.0;
-                    Mastery.efficency[i] = 1.0;
-                    Mastery.growth[i] = 1.0;
-                }
-                if (NoneExpertise < 0) NoneExpertise = 0;
-                if (Value < 0) Value = 0;
-                Mastery.mastery[Type] += Value;
-                Plugin.LogInfo("Null Ref trying to get mastery, reset it instead: " + nre.Message);
-            }
+            var Mastery = Database.player_weaponmastery.GetValueOrDefault(SteamID);
+            if (Value < 0) Value = 0;
+            Mastery.mastery[Type] += Value;                
+            Mastery.mastery[Type] = Math.Min(Mastery.mastery[Type], MaxMastery);
+            
             if (Mastery.mastery[Type] < 0) Mastery.mastery[Type] = 0;
             Database.player_weaponmastery[SteamID] = Mastery;
             return;

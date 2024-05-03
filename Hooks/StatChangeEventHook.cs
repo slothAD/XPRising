@@ -2,6 +2,8 @@
 using ProjectM.Gameplay.Systems;
 using Unity.Entities;
 using System;
+using BepInEx.Logging;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Hooks
 {
@@ -13,7 +15,7 @@ namespace OpenRPG.Hooks
             try {
                 OnUpdate?.Invoke(__instance.World);
             } catch (Exception e) {
-                Plugin.LogError(e.ToString());
+                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"SCSHook: {e}");
             }
         }
     }

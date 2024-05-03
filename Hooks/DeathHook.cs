@@ -1,3 +1,4 @@
+using BepInEx.Logging;
 using HarmonyLib;
 using OpenRPG.Configuration;
 using ProjectM;
@@ -7,6 +8,7 @@ using OpenRPG.Utils;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Hooks {
     [HarmonyPatch]
@@ -14,11 +16,11 @@ namespace OpenRPG.Hooks {
         [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
         [HarmonyPostfix]
         public static void Postfix(DeathEventListenerSystem __instance) {
-            if (Helper.deathLogging) Plugin.LogInfo("beginning Death Tracking");
+            Plugin.Log(LogSystem.Death, LogLevel.Info, "beginning Death Tracking");
             NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
-            if (Helper.deathLogging) Plugin.LogInfo("Death events converted successfully, length is " + deathEvents.Length);
+            Plugin.Log(LogSystem.Death, LogLevel.Info, "Death events converted successfully, length is " + deathEvents.Length);
             foreach (DeathEvent ev in deathEvents) {
-                if (Helper.deathLogging) Plugin.LogInfo("Death Event occured");
+                Plugin.Log(LogSystem.Death, LogLevel.Info, "Death Event occured");
                 //-- Just track whatever died...
                 if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
 
@@ -27,15 +29,15 @@ namespace OpenRPG.Hooks {
 
                 // If the entity killing is a minion, switch the killer to the owner of the minion.
                 if (__instance.EntityManager.HasComponent<Minion>(killer)) {
-                    if (Helper.deathLogging) Plugin.LogInfo($"Minion killed entity. Getting owner...");
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, $"Minion killed entity. Getting owner...");
                     if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner)) {
                         killer = entityOwner.Owner;
-                        if (Helper.deathLogging) Plugin.LogInfo($"Owner found, switching killer to owner.");
+                        Plugin.Log(LogSystem.Death, LogLevel.Info, $"Owner found, switching killer to owner.");
                     }
                 }
 
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
-                    if (Helper.deathLogging) Plugin.LogInfo("Killer is a player, running xp and heat and the like");
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Killer is a player, running xp and heat and the like");
                     
                     if ((ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive) && ExperienceSystem.EntityProvidesExperience(ev.Died)) {
                         var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) && bS.UnitBloodType.Equals(Helper.vBloodType);
@@ -44,7 +46,7 @@ namespace OpenRPG.Hooks {
 
                         var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ev.Died);                        
                         var closeAllies = Alliance.GetClosePlayers(
-                            triggerLocation.Position, killer, ExperienceSystem.GroupMaxDistance, true, useGroup, Helper.deathLogging);
+                            triggerLocation.Position, killer, ExperienceSystem.GroupMaxDistance, true, useGroup, LogSystem.Death);
 
                         // If you get experience for the kill, you get heat for the kill
                         if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(closeAllies, ev.Died, isVBlood);
@@ -58,7 +60,7 @@ namespace OpenRPG.Hooks {
 
                 //-- Auto Respawn & HunterHunted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
-                    if (Helper.deathLogging) Plugin.LogInfo("the dead person is a player, running xp loss and heat dumping");
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "the dead person is a player, running xp loss and heat dumping");
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
                     if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
                         ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);

@@ -3,11 +3,13 @@ using OpenRPG.Configuration;
 using OpenRPG.Systems;
 using OpenRPG.Utils.RandomEncounters;
 using System;
+using BepInEx.Logging;
 
 namespace OpenRPG
 {
     internal static class RandomEncounters
     {
+        private const Plugin.LogSystem LogSystem = Plugin.LogSystem.RandomEncounter;
 
         public static Timer _encounterTimer;
 
@@ -18,9 +20,9 @@ namespace OpenRPG
 
         internal static void GameData_OnInitialize()
         {
-            Plugin.LogInfo("Loading main data RandomEncounters");
+            Plugin.Log(LogSystem, LogLevel.Info, "Loading main data RandomEncounters");
             DataFactory.Initialize();
-            Plugin.LogInfo("Binding configuration RandomEncounters");
+            Plugin.Log(LogSystem, LogLevel.Info, "Binding configuration RandomEncounters");
             RandomEncountersConfig.Initialize();
         }
 
@@ -29,14 +31,14 @@ namespace OpenRPG
             _encounterTimer.Start(
                 _ =>
                 {
-                    Plugin.LogInfo($"Starting an encounter.");
+                    Plugin.Log(LogSystem, LogLevel.Info, $"Starting an encounter.");
                     RandomEncountersSystem.StartEncounter();
                 },
                 input =>
                 {
                     if (input is not int onlineUsersCount)
                     {
-                        Plugin.LogError("Encounter timer delay function parameter is not a valid integer");
+                        Plugin.Log(LogSystem, LogLevel.Error, "Encounter timer delay function parameter is not a valid integer");
                         return TimeSpan.MaxValue;
                     }
                     if (onlineUsersCount < 1)
@@ -44,7 +46,7 @@ namespace OpenRPG
                         onlineUsersCount = 1;
                     }
                     var seconds = new Random().Next(RandomEncountersConfig.EncounterTimerMin.Value, RandomEncountersConfig.EncounterTimerMax.Value);
-                    Plugin.LogInfo($"Next encounter will start in {seconds / onlineUsersCount} seconds.");
+                    Plugin.Log(LogSystem, LogLevel.Info, $"Next encounter will start in {seconds / onlineUsersCount} seconds.");
                     return TimeSpan.FromSeconds(seconds) / onlineUsersCount;
                 });
         }
@@ -53,7 +55,7 @@ namespace OpenRPG
         {
             _encounterTimer?.Stop();
             GameFrame.Uninitialize();
-            Plugin.LogInfo($"RandomEncounters unloaded!");
+            Plugin.Log(LogSystem, LogLevel.Info, $"RandomEncounters unloaded!");
         }
     }
 }

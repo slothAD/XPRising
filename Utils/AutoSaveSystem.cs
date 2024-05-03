@@ -4,9 +4,11 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BepInEx;
+using BepInEx.Logging;
 using OpenRPG.Commands;
 using OpenRPG.Systems;
 using ProjectM;
+using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils
 {
@@ -16,7 +18,7 @@ namespace OpenRPG.Utils
         // Config paths
         public static readonly string BasePath = Paths.ConfigPath ?? Path.Combine("BepInEx", "config");
         public static readonly string ConfigPath = Path.Combine(BasePath, "OpenRPG");
-        public static readonly string SavesPath = Path.Combine(ConfigPath, "Saves");
+        public static readonly string SavesPath = Path.Combine(ConfigPath, "Data");
         public static readonly string BackupsPath = Path.Combine(SavesPath, "Backup");
         
         // Config files
@@ -48,8 +50,6 @@ namespace OpenRPG.Utils
         
         private static int saveCount = 0;
         public static int backupFrequency = 5;
-        public static bool saveLogging = false;
-        
         
         private static JsonSerializerOptions JSON_options = new()
         {
@@ -104,7 +104,7 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, WorldDynamicsJson, Database.FactionStats, Pretty_JSON_options);
             SaveDB(saveFolder, IgnoredMonstersJson, Database.IgnoredMonstersGUID, JSON_options);
 
-            Plugin.LogInfo($"All databases saved to: {saveFolder}");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"All databases saved to: {saveFolder}");
         }
 
         public static void LoadDatabase()
@@ -138,55 +138,69 @@ namespace OpenRPG.Utils
             Database.FactionStats = LoadDB(WorldDynamicsJson, WorldDynamicsSystem.DefaultFactionStats);
             Database.IgnoredMonstersGUID = LoadDB(IgnoredMonstersJson, WorldDynamicsSystem.DefaultIgnoredMonsters);
 
-            Plugin.LogInfo("All database data is now loaded.");
+            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "All database data is now loaded.", true);
         }
         
         private static void SaveDB<TData>(string saveFolder, string specificFile, TData data, JsonSerializerOptions options)
         {
-            var outputFile = Path.Combine(saveFolder, specificFile);
-            File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
-            if (saveLogging) Plugin.LogInfo($"{specificFile} Saved.");
+            try
+            {
+                var outputFile = Path.Combine(saveFolder, specificFile);
+                File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
+                Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"{specificFile} Saved.");
+            }
+            catch (Exception e)
+            {
+                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
+            }
         }
 
-        private static TData LoadDB<TData>(string specificFile, Func<TData> initialiser = null) where TData : new() {
-            TData data;
-            ConfirmFile(SavesPath, specificFile);
-            ConfirmFile(BackupsPath, specificFile);
+        private static TData LoadDB<TData>(string specificFile, Func<TData> initialiser = null) where TData : class, new()
+        {
             try {
-                var json = File.ReadAllText(Path.Combine(SavesPath, specificFile));
-                data = JsonSerializer.Deserialize<TData>(json, JSON_options);
-                if (data == null) {
-                    Plugin.LogWarning($"Failed loading main backup for {specificFile}, attempting loading backup");
-                    json = File.ReadAllText(Path.Combine(BackupsPath, specificFile));
-                    data = JsonSerializer.Deserialize<TData>(json, JSON_options);
-                }
-                if (saveLogging) Plugin.LogInfo($"DB Loaded for {specificFile}");
+                var saveFile = ConfirmFile(SavesPath, specificFile);
+                var json = File.ReadAllText(saveFile);
+                var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
+                Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Main DB Loaded for {specificFile}");
+                return data;
             } catch (Exception e) {
-                Plugin.LogError($"Could not load {specificFile}: {e.Message}");
-                data = initialiser == null ? new TData() : initialiser();
-                Plugin.LogWarning($"DB Created for {specificFile}");
+                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
             }
-            return data;
+            
+            try {
+                var backupFile = ConfirmFile(BackupsPath, specificFile);
+                var json = File.ReadAllText(backupFile);
+                var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
+                Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Backup DB Loaded for {specificFile}");
+                return data;
+            } catch (Exception e) {
+                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Could not load backup {specificFile}: {e.Message}", true);
+            }
+            
+            Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"Initialising DB for {specificFile}");
+            return initialiser == null ? new TData() : initialiser();
         }
         
-        private static void ConfirmFile(string address, string file) {
+        public static string ConfirmFile(string address, string file) {
             try {
                 Directory.CreateDirectory(address);
             }
             catch (Exception e) {
-                Plugin.LogError("Error creating directory at " + address + "\n Error is: " + e.Message);
+                throw new Exception("Error creating directory at " + address + "\n Error is: " + e.Message);
             }
+            var fileAddress = Path.Combine(address, file);
             try
             {
-                var fileAddress = Path.Combine(address, file);
                 // If the file does not exist, create a new empty file there
                 if (!File.Exists(fileAddress)) {
                     var stream = File.Create(fileAddress);
                     stream.Dispose();
                 }
             } catch (Exception e) {
-                Plugin.LogError("Error creating file at " + address + "\n Error is: " + e.Message);
+                throw new Exception("Error creating file at " + fileAddress + "\n Error is: " + e.Message);
             }
+
+            return fileAddress;
         }
     }
     
