@@ -114,70 +114,46 @@ namespace OpenRPG.Utils
         }
     }
 
-    public struct BloodlineData{
-        public double[] strength { get; set; }
-        public double[] efficency { get; set; }
-        public double[] growth { get; set; }
-        public BloodlineData(double[] strengthIn, double[] efficencyIn, double[] growthIn){
-            strength = strengthIn;
-            efficency = efficencyIn;
-            growth = growthIn;
-        }
-        public BloodlineData() {
-            strength = new double[Bloodlines.rates.Length];
-            efficency = new double[Bloodlines.rates.Length];
-            growth = new double[Bloodlines.rates.Length];
-            for (int i = 0; i < strength.Length; i++) {
-                strength[i] = 0.0;
-                efficency[i] = 1.0;
-                growth[i] = 1.0;
-            }
-        }
+    public struct StatConfig(UnitStatType type, double strength, double rate)
+    {
+        public UnitStatType type = type;
+        public double strength = strength;
+        public double rate = rate;
     }
 
-    public struct WeaponMasterData
+    public struct MasteryData()
     {
-        public double[] mastery { get; set; }
-        public double[] efficency { get; set; }
-        public double[] growth { get; set; }
+        public double Mastery = 0;
+        public double Effectiveness = 1;
+        public double Growth = 1;
 
-        public WeaponMasterData(double[] strengthIn, double[] efficencyIn, double[] growthIn) {
-            mastery = strengthIn;
-            efficency = efficencyIn;
-            growth = growthIn;
-            for (int i = 0; i < mastery.Length; i++) {
-                mastery[i] = 0.0;
-                efficency[i] = 1.0;
-                growth[i] = 1.0;
-            }
-        }
-        public WeaponMasterData() {
-            mastery = new double[WeaponMasterSystem.masteryRates.Length];
-            efficency = new double[WeaponMasterSystem.masteryRates.Length];
-            growth = new double[WeaponMasterSystem.masteryRates.Length];
-            for (int i = 0; i < mastery.Length; i++) {
-                mastery[i] = 0.0;
-                efficency[i] = 1.0;
-                growth[i] = 1.0;
-            }
-        }
-    }
-
-
-    public struct BanData
-    {
-        public DateTime BanUntil { get; set; }
-        public string Reason { get; set; }
-        public string BannedBy { get; set; }
-        public ulong SteamID { get; set; }
-
-        public BanData(DateTime banUntil = default(DateTime), string reason = "Invalid", string bannedBy = "Default", ulong steamID = 0)
+        public MasteryData ResetMastery(double maxMastery, double maxEffectiveness, double growthPerEffectiveness, double maxGrowth, double minGrowth)
         {
-            BanUntil = banUntil;
-            Reason = reason;
-            BannedBy = bannedBy;
-            SteamID = steamID;
+            Effectiveness = Math.Min(maxEffectiveness, Effectiveness + Mastery / maxMastery);
+            Mastery = 0;
+
+            var percentageEffectiveness = Effectiveness / maxEffectiveness;
+            if (growthPerEffectiveness >= 0) {
+                Growth = Math.Min(maxGrowth, Growth + (percentageEffectiveness * growthPerEffectiveness));
+            }
+            else {
+                Growth = Math.Max(minGrowth, Growth * (1 - (percentageEffectiveness / (percentageEffectiveness - growthPerEffectiveness))));
+            }
+
+            return this;
         }
+    }
+
+    public struct BanData(
+        DateTime banUntil = default(DateTime),
+        string reason = "Invalid",
+        string bannedBy = "Default",
+        ulong steamID = 0)
+    {
+        public DateTime BanUntil { get; set; } = banUntil;
+        public string Reason { get; set; } = reason;
+        public string BannedBy { get; set; } = bannedBy;
+        public ulong SteamID { get; set; } = steamID;
     }
 
     public struct SpawnOptions
@@ -227,59 +203,6 @@ namespace OpenRPG.Utils
                 Version = this.EntityVersion,
             };
             return entity;
-        }
-    }
-
-    public struct VChatEvent
-    {
-        public Entity SenderUserEntity { get; set; }
-        public Entity SenderCharacterEntity { get; set; }
-        public string Message { get; set; }
-        public ChatMessageType Type { get; set; }
-        public User User { get; set; }
-
-        public VChatEvent(Entity senderUserEntity, Entity senderCharacterEntity, string message, ChatMessageType type, User user)
-        {
-            SenderUserEntity = senderUserEntity;
-            SenderCharacterEntity = senderCharacterEntity;
-            Message = message;
-            Type = type;
-            User = user;
-        }
-    }
-
-    public sealed class SizedDictionary<TKey, TValue> : Dictionary<TKey, TValue>
-    {
-
-        private int maxSize;
-        private Queue<TKey> keys;
-
-        public SizedDictionary(int size)
-        {
-            maxSize = size;
-            keys = new Queue<TKey>();
-        }
-
-        public new void Add(TKey key, TValue value)
-        {
-            if (key == null) throw new ArgumentNullException();
-            base.TryAdd(key, value);
-            keys.Enqueue(key);
-            if (keys.Count > maxSize) base.Remove(keys.Dequeue());
-        }
-
-        public new bool Remove(TKey key)
-        {
-            if (key == null) throw new ArgumentNullException();
-            if (!keys.Contains(key)) return false;
-            var newQueue = new Queue<TKey>();
-            while (keys.Count > 0)
-            {
-                var thisKey = keys.Dequeue();
-                if (!thisKey.Equals(key)) newQueue.Enqueue(thisKey);
-            }
-            keys = newQueue;
-            return base.Remove(key);
         }
     }
 

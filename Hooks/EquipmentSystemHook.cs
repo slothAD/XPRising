@@ -62,7 +62,7 @@ public class WeaponLevelSystem_Spawn_Patch
     private static void Prefix(WeaponLevelSystem_Spawn __instance)
     {
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Weapon System Patch Entry");
-        if (ExperienceSystem.isEXPActive || WeaponMasterSystem.isMasteryEnabled)
+        if (ExperienceSystem.isEXPActive || WeaponMasterySystem.IsMasteryEnabled)
         {
             var entityManager = __instance.EntityManager;
             var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -71,7 +71,7 @@ public class WeaponLevelSystem_Spawn_Patch
             {
                 Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                 Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-                if (WeaponMasterSystem.isMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
+                if (WeaponMasterySystem.IsMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                 {
                     Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Applying Helper.AppliedBuff: {Helper.AppliedBuff.GuidHash}");
                     Helper.ApplyBuff(User, Owner, Helper.AppliedBuff);

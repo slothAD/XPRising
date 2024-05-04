@@ -51,8 +51,8 @@ namespace OpenRPG.Hooks {
                         if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
                     }
                     
-                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
-                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
+                    if (WeaponMasterySystem.IsMasteryEnabled) WeaponMasterySystem.UpdateMastery(killer, ev.Died);
+                    if (BloodlineSystem.IsBloodlineSystemEnabled) BloodlineSystem.UpdateBloodline(killer, ev.Died);
 
                 }
 

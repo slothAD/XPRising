@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using System;
+using BepInEx.Logging;
+using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Systems;
@@ -26,11 +28,11 @@ namespace OpenRPG.Hooks
     [HarmonyPatch(typeof(GameBootstrap), nameof(GameBootstrap.OnApplicationQuit))]
     public static class GameBootstrapQuit_Patch
     {
-        public static void Prefix()
+        // This needs to be Postfix so that OnUserDisconnected has a chance to work before the database is saved.
+        public static void Postfix()
         {
             // Save before we quit the server
             AutoSaveSystem.SaveDatabase();
-            TaskRunner.Destroy();
             RandomEncounters.Unload();
         }
     }
@@ -51,13 +53,39 @@ namespace OpenRPG.Hooks
                 if (!isNewVampire)
                 {
                     Helper.UpdatePlayerCache(userEntity, userData);
-                    if (WeaponMasterSystem.isDecaySystemEnabled && WeaponMasterSystem.isMasteryEnabled)
+                    if ((WeaponMasterySystem.IsDecaySystemEnabled && WeaponMasterySystem.IsMasteryEnabled) ||
+                        BloodlineSystem.IsDecaySystemEnabled && BloodlineSystem.IsBloodlineSystemEnabled)
                     {
-                        WeaponMasterSystem.DecayMastery(userEntity);
+                        if (Database.player_logout.TryGetValue(userData.PlatformId, out var playerLogout))
+                        {
+                            WeaponMasterySystem.DecayMastery(userEntity, playerLogout);
+                            BloodlineSystem.DecayBloodline(userEntity, playerLogout);
+                        }
                     }
                 }
             }
             catch { }
+        }
+    }
+    
+    [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserDisconnected))]
+    public static class OnUserDisconnected_Patch
+    {
+        private static void Prefix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId, ConnectionStatusChangeReason connectionStatusReason, string extraData)
+        {
+            try
+            {
+                var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
+                var serverClient = __instance._ApprovedUsersLookup[userIndex];
+                var userData = __instance.EntityManager.GetComponentData<User>(serverClient.UserEntity);
+
+                Helper.UpdatePlayerCache(serverClient.UserEntity, userData, true);
+                Database.player_logout[userData.PlatformId] = DateTime.Now;
+            }
+            catch (Exception e)
+            {
+                Plugin.Log(Plugin.LogSystem.Plugin, LogLevel.Info, $"OnUserDisconnected failed: {e}", true);
+            }
         }
     }
 }

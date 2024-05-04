@@ -196,9 +196,9 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Reciever");
-        if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+        if (WeaponMasterySystem.IsMasteryEnabled) WeaponMasterySystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Reciever");
-        if (Bloodlines.areBloodlinesEnabled) Bloodlines.BuffReceiver(Buffer, Owner, Data.PlatformId);
+        if (BloodlineSystem.IsBloodlineSystemEnabled) BloodlineSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Reciever");
         if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
 
@@ -358,16 +358,14 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         bool applied = false;
         UnitStatType tar = buff.StatType;
 
-        if (Helper.baseStatsSet.Contains((int)tar)) {
+        if (Helper.baseStatsSet.Contains(tar)) {
             em.TryGetComponentData<UnitStats>(e, out var baseStats);
             if (tar == UnitStatType.PhysicalPower) {
                 stat = baseStats.PhysicalPower;
-                //baseStats.PhysicalPower.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
             } else if (tar == UnitStatType.ResourcePower) {
                 stat = baseStats.ResourcePower;
             } else if (tar == UnitStatType.SiegePower) {
                 stat = baseStats.SiegePower;
-                //baseStats.SiegePower.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
             } else if (tar == UnitStatType.AttackSpeed || tar == UnitStatType.PrimaryAttackSpeed) {
                 stat = baseStats.AttackSpeed;
             } else if (tar == UnitStatType.FireResistance) {
@@ -438,7 +436,7 @@ public class BuffSystem_Spawn_Server_Patch {
 
     private static void Postfix(BuffSystem_Spawn_Server __instance) {
 
-        if (WeaponMasterSystem.isMasteryEnabled) {
+        if (WeaponMasterySystem.IsMasteryEnabled) {
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
                 if (!__instance.EntityManager.HasComponent<InCombatBuff>(entity)) continue;
@@ -446,7 +444,7 @@ public class BuffSystem_Spawn_Server_Patch {
                 if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
                 Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
 
-                if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.LoopMastery(e_User, e_Owner);
+                if (WeaponMasterySystem.IsMasteryEnabled) WeaponMasterySystem.LoopMastery(e_User, e_Owner);
             }
         }
     }
@@ -522,7 +520,6 @@ public class ModifyBloodDrainSystem_Spawn_Patch {
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
                 PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-                //if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.BuffReceiver(entities[i], GUID);
                 if (PermissionSystem.isVIPSystem) PermissionSystem.BuffReceiver(entity, GUID);
             }
         }

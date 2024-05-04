@@ -13,6 +13,9 @@ using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils
 {
+    using WeaponMasteryData = LazyDictionary<WeaponMasterySystem.MasteryType, MasteryData>;
+    using BloodlineMasteryData = LazyDictionary<BloodlineSystem.BloodType, MasteryData>;
+    
     //-- AutoSave is now directly hooked into the Server game save activity.
     public static class AutoSaveSystem
     {
@@ -36,10 +39,12 @@ namespace OpenRPG.Utils
         public static readonly string IgnoredMonstersJson = "ignored_monsters.json";
         public static readonly string UserBanList = "user_banlist.json";
         public static readonly string WeaponMasteryJson = "weapon_mastery.json";
-        public static readonly string WeaponMasteryDecayJson = "mastery_decay.json";
+        public static readonly string PlayerLogoutJson = "player_logout.json";
+        public static readonly string WeaponMasteryConfigJson = "weapon_mastery_config.json";
         public static readonly string PlayerLogMasteryJson = "player_log_mastery.json";
         public static readonly string BloodlinesJson = "bloodlines.json";
         public static readonly string BloodlineDelayJson = "bloodline_decay.json";
+        public static readonly string BloodlineConfigJson = "bloodline_config.json";
         public static readonly string PlayerLogBloodlinesJson = "player_log_bloodlines.json";
         public static readonly string PlayerExperienceJson = "player_experience.json";
         public static readonly string PlayerLogExperienceJson = "player_log_exp.json";
@@ -90,16 +95,18 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, PowerUpJson, Database.PowerUpList, JSON_options);
 
             //-- System Related
+            SaveDB(saveFolder, PlayerLogoutJson, Database.player_logout, JSON_options);
             SaveDB(saveFolder, PlayerExperienceJson, Database.player_experience, JSON_options);
             SaveDB(saveFolder, PlayerLogExperienceJson, Database.player_log_exp, JSON_options);
             SaveDB(saveFolder, PlayerAbilityPointsJson, Database.player_abilityIncrease, JSON_options);
             SaveDB(saveFolder, PlayerLevelStatsJson, Database.player_level_stats, JSON_options);
             SaveDB(saveFolder, ExperienceClassStatsJson, Database.experience_class_stats, Pretty_JSON_options);
             SaveDB(saveFolder, WeaponMasteryJson, Database.player_weaponmastery, JSON_options);
-            SaveDB(saveFolder, WeaponMasteryDecayJson, Database.player_decaymastery_logout, JSON_options);
+            SaveDB(saveFolder, WeaponMasteryConfigJson, Database.masteryStatConfig, Pretty_JSON_options);
             SaveDB(saveFolder, PlayerLogMasteryJson, Database.player_log_mastery, JSON_options);
             SaveDB(saveFolder, BloodlinesJson, Database.playerBloodline, JSON_options);
             SaveDB(saveFolder, BloodlineDelayJson, Database.playerDecayBloodlineLogout, JSON_options);
+            SaveDB(saveFolder, BloodlineConfigJson, Database.bloodlineStatConfig, Pretty_JSON_options);
             SaveDB(saveFolder, PlayerLogBloodlinesJson, Database.playerLogBloodline, JSON_options);
             SaveDB(saveFolder, UserBanList, Database.user_banlist, Pretty_JSON_options);
             SaveDB(saveFolder, WorldDynamicsJson, Database.FactionStats, Pretty_JSON_options);
@@ -124,16 +131,18 @@ namespace OpenRPG.Utils
             Database.PowerUpList = LoadDB<Dictionary<ulong, PowerUpData>>(PowerUpJson);
 
             //-- System Related
+            Database.player_logout = LoadDB<Dictionary<ulong, DateTime>>(PlayerLogoutJson);
             Database.player_experience = LoadDB<Dictionary<ulong, int>>(PlayerExperienceJson);
             Database.player_log_exp = LoadDB<Dictionary<ulong, bool>>(PlayerLogExperienceJson);
             Database.player_abilityIncrease = LoadDB<Dictionary<ulong, int>>(PlayerAbilityPointsJson);
             Database.player_level_stats = LoadDB<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(PlayerLevelStatsJson);
             Database.experience_class_stats = LoadDB(ExperienceClassStatsJson, ExperienceSystem.DefaultExperienceClassStats);
-            Database.player_weaponmastery = LoadDB<Dictionary<ulong, WeaponMasterData>>(WeaponMasteryJson);
-            Database.player_decaymastery_logout = LoadDB<Dictionary<ulong, DateTime>>(WeaponMasteryDecayJson);
+            Database.player_weaponmastery = LoadDB<LazyDictionary<ulong, WeaponMasteryData>>(WeaponMasteryJson);
+            Database.masteryStatConfig = LoadDB(WeaponMasteryConfigJson, WeaponMasterySystem.DefaultMasteryConfig);
             Database.player_log_mastery = LoadDB<Dictionary<ulong, bool>>(PlayerLogMasteryJson);
-            Database.playerBloodline = LoadDB<Dictionary<ulong, BloodlineData>>(BloodlinesJson);
+            Database.playerBloodline = LoadDB<LazyDictionary<ulong, BloodlineMasteryData>>(BloodlinesJson);
             Database.playerDecayBloodlineLogout = LoadDB<Dictionary<ulong, DateTime>>(BloodlineDelayJson);
+            Database.bloodlineStatConfig = LoadDB(BloodlineConfigJson, BloodlineSystem.DefaultBloodlineConfig);
             Database.playerLogBloodline = LoadDB<Dictionary<ulong, bool>>(PlayerLogBloodlinesJson);
             Database.user_banlist = LoadDB<Dictionary<ulong, BanData>>(UserBanList);
             Database.FactionStats = LoadDB(WorldDynamicsJson, WorldDynamicsSystem.DefaultFactionStats);
@@ -193,9 +202,11 @@ namespace OpenRPG.Utils
             try
             {
                 // If the file does not exist, create a new empty file there
-                if (!File.Exists(fileAddress)) {
-                    var stream = File.Create(fileAddress);
-                    stream.Dispose();
+                if (!File.Exists(fileAddress))
+                {
+                    // Default JSON files to valid json so that they have a chance to be serialised when loading for the first time.
+                    var defaultContents = file.EndsWith(".json") ? "{}" : "";
+                    File.WriteAllText(fileAddress, defaultContents);
                 }
             } catch (Exception e) {
                 throw new Exception("Error creating file at " + fileAddress + "\n Error is: " + e.Message);

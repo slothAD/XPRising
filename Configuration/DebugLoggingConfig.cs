@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using BepInEx.Configuration;
-using BepInEx.Logging;
 using OpenRPG.Utils;
 
 namespace OpenRPG.Configuration;
 
-public class DebugLoggingConfig
+public static class DebugLoggingConfig
 {
     private static ConfigFile _configFile;
     private static readonly bool[] LoggingInfo = new bool[Enum.GetNames<Plugin.LogSystem>().Length]; 
     
-    public static void Initialise()
+    public static void Initialize()
     {
         var configPath = AutoSaveSystem.ConfirmFile(AutoSaveSystem.ConfigPath, "DebugLoggingConfig.cfg");
         _configFile = new ConfigFile(configPath, true);

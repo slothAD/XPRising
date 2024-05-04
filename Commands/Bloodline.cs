@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Systems;
@@ -13,177 +15,148 @@ namespace OpenRPG.Commands
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
-        private static string bloodlineToPrint(ulong steamID, int bl, BloodlineData bld)
+        private static string BloodlineToPrint(BloodlineSystem.BloodType type, MasteryData masteryData, List<StatConfig> bloodlineConfig)
         {
-            var name = Bloodlines.names[bl];
-            var masteryPercent = bld.strength[bl];
-            var print = $"{name}:<color=#fffffffe> {masteryPercent:F3}%</color> (";
-            for (int i = 0; i < Bloodlines.stats[bl].Length; i++) {
-                if (bld.strength[bl] >= Bloodlines.minStrengths[bl][i]) {
-                    if (i > 0)
-                        print += ",";
-                    print += Helper.statTypeToString((UnitStatType)Bloodlines.stats[bl][i]);
-                    print += " <color=#75FF33>";
-                    var val = Bloodlines.calcBuffValue(bl, steamID, i);
-                    if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(Bloodlines.stats[bl][i])) {
+            var name = BloodlineSystem.GetBloodTypeName(type);
+
+            var statStrings = bloodlineConfig.Select(statConfig => 
+            {
+                if (masteryData.Mastery >= statConfig.strength)
+                {
+                    var val = BloodlineSystem.CalcBuffValue(masteryData, statConfig);
+                    if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(statConfig.type)) {
                         val = 1 - val;
                     }
-                    print += $"{val:F3}";
-                    print += "</color>";
+                    return $"{Helper.CamelCaseToSpaces(statConfig.type)} <color=#75FF33>{val:F3}</color>";
                 }
-            }
-            print += $") Effectiveness: {bld.efficency[bl] * 100}%";
+                return $"{Helper.CamelCaseToSpaces(statConfig.type)} <color=#8D8D8D>Not enough strength</color>";
+            });
 
-            return print;
+            return $"{name}:<color=#fffffffe> {masteryData.Mastery:F3}%</color> ({string.Join("\n",statStrings)}) Effectiveness: {masteryData.Effectiveness * 100}%";
         }
         
         [Command("get", "g", "", "Display your current bloodline progression")]
-        public static void getBloodline(ChatCommandContext ctx) {
-            if (!Bloodlines.areBloodlinesEnabled) {
+        public static void GetBloodline(ChatCommandContext ctx) {
+            if (!BloodlineSystem.IsBloodlineSystemEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
-            var SteamID = ctx.Event.User.PlatformId;
+            var steamID = ctx.Event.User.PlatformId;
+            
+            var blood = entityManager.GetComponentData<Blood>(ctx.Event.SenderCharacterEntity);
+            var bloodType = (BloodlineSystem.BloodType)blood.BloodType.GuidHash;
+            if (!Enum.IsDefined(bloodType))
+            {
+                ctx.Reply($"Unknown user blood type: {blood.BloodType.GuidHash}.");
+                return;
+            }
 
-            var isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var bld);
-            if (!isDataExist) {
+            if (!Database.playerBloodline.TryGetValue(steamID, out var bld) ||
+                !bld.TryGetValue(bloodType, out var masteryData)) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
 
+            var bloodlineConfig = Database.bloodlineStatConfig.GetValueOrDefault(bloodType);
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
-            Blood blood = entityManager.GetComponentData<Blood>(ctx.Event.SenderCharacterEntity);
-            Bloodlines.bloodlineMap.TryGetValue(blood.BloodType, out var bl);
-            if (bl >= Bloodlines.stats.Length)
-            {
-                ctx.Reply($"Bloodline type {bl} beyond bloodline type limit of {Bloodlines.stats.Length - 1}");
-                return;
-            }
             
-            ctx.Reply(bloodlineToPrint(SteamID, bl, bld));
+            ctx.Reply(BloodlineToPrint(bloodType, masteryData, bloodlineConfig));
         }
         
         [Command("get-all", "ga", "", "Display all your bloodline progressions")]
-        public static void getAllBloodlines(ChatCommandContext ctx) {
-            if (!Bloodlines.areBloodlinesEnabled) {
+        public static void GetAllBloodlines(ChatCommandContext ctx) {
+            if (!BloodlineSystem.IsBloodlineSystemEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
-            var SteamID = ctx.Event.User.PlatformId;
+            var steamID = ctx.Event.User.PlatformId;
 
-            bool isDataExist = Database.playerBloodline.TryGetValue(SteamID, out var bld);
-            if (!isDataExist) {
+            var blood = entityManager.GetComponentData<Blood>(ctx.Event.SenderCharacterEntity);
+            var bloodType = (BloodlineSystem.BloodType)blood.BloodType.GuidHash;
+            if (!Enum.IsDefined(bloodType))
+            {
+                ctx.Reply($"Unknown user blood type: {blood.BloodType.GuidHash}.");
+                return;
+            }
+
+            if (!Database.playerBloodline.TryGetValue(steamID, out var bld)) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
 
+            var bloodlineConfig = Database.bloodlineStatConfig.GetValueOrDefault(bloodType);
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
-            for (var bl = 0; bl < Bloodlines.stats.Length; bl++)
+
+            foreach (var data in bld)
             {
-                ctx.Reply(bloodlineToPrint(SteamID, bl, bld));
+                ctx.Reply(BloodlineToPrint(data.Key, data.Value, bloodlineConfig));
             }
         }
 
         [Command("add", "a", "<BloodlineName> <amount>", "Adds amount to the specified bloodline. able to use default names, bloodtype names, or the configured names.", adminOnly: true)]
-        public static void addBloodlineValue(ChatCommandContext ctx, string MasteryType, double amount)
+        public static void AddBloodlineValue(ChatCommandContext ctx, string masteryType, double amount)
         {
-            ulong SteamID;
-            string name = ctx.Event.User.CharacterName.ToString();
-            var UserEntity = ctx.Event.SenderUserEntity;
-            var CharEntity = ctx.Event.SenderCharacterEntity;
-            SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
-            int type;
-            if (!Bloodlines.nameMap.TryGetValue(MasteryType, out type))
+            var steamID = ctx.User.PlatformId;
+            var name = ctx.User.CharacterName.ToString();
+            var userEntity = ctx.Event.SenderUserEntity;
+            var charEntity = ctx.Event.SenderCharacterEntity;
+            if (!BloodlineSystem.KeywordToBloodMap.TryGetValue(masteryType.ToLower(), out var type))
             {
-                MasteryType = MasteryType.ToLower();
-                if (MasteryType.Equals("dracula")) type = 0;
-                else if (MasteryType.Equals("arwen")) type = 1;
-                else if (MasteryType.Equals("ilvris")) type = 2;
-                else if (MasteryType.Equals("aya")) type = 3;
-                else if (MasteryType.Equals("nytheria")) type = 4;
-                else if (MasteryType.Equals("hadubert")) type = 5;
-                else if (MasteryType.Equals("rei")) type = 6;
-                else if (MasteryType.Equals("semika")) type = 7;
-                else
-                {
-                    ctx.Reply("Invalid Arguments");
-                    return;
-                }
+                throw ctx.Error($"{type} Bloodline not found! Did you typo?");
             }
-            Bloodlines.modBloodline(SteamID, type, amount);
-            ctx.Reply($"{Bloodlines.names[type]}'s bloodline for \"{name}\" adjusted by <color=#fffffffe>{amount}%</color>");
-            Helper.ApplyBuff(UserEntity, CharEntity, Helper.AppliedBuff);
+            BloodlineSystem.ModBloodline(steamID, type, amount);
+            ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{name}\" adjusted by <color=#fffffffe>{amount}%</color>");
+            Helper.ApplyBuff(userEntity, charEntity, Helper.AppliedBuff);
         }
 
         [Command("set", "s", "<playerName> <bloodline> <value>", "Sets the specified players bloodline to a specific value", adminOnly: true)]
-        public static void setBloodline(ChatCommandContext ctx, string name, string type, double value) {
-            if (!Bloodlines.areBloodlinesEnabled) {
+        public static void SetBloodline(ChatCommandContext ctx, string playerName, string bloodlineName, double value) {
+            if (!BloodlineSystem.IsBloodlineSystemEnabled) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
-            ulong SteamID;
-            if (Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity)) {
-                SteamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
+            ulong steamID;
+            if (Helper.FindPlayer(playerName, false, out _, out var targetUserEntity)) {
+                steamID = entityManager.GetComponentData<User>(targetUserEntity).PlatformId;
             } else {
-                ctx.Reply($"Could not find specified player \"{name}\".");
-                return;
+                throw ctx.Error($"Could not find specified player \"{playerName}\".");
             }
 
-            bool typeFound = Bloodlines.nameMap.TryGetValue(type, out int index);
-            if (!typeFound) {
-                ctx.Reply($"{type} Bloodline not found! did you typo?");
-                return;
+            if (!BloodlineSystem.KeywordToBloodMap.TryGetValue(bloodlineName, out var type)) {
+                throw ctx.Error($"{bloodlineName} Bloodline not found! Did you typo?");
             }
-            Bloodlines.modBloodline(SteamID, index, -100000);
-            Bloodlines.modBloodline(SteamID, index, value);
-            ctx.Reply(name + "'s " + type + " bloodline set to " + value);
+            BloodlineSystem.ModBloodline(steamID, type, -100000);
+            BloodlineSystem.ModBloodline(steamID, type, value);
+            ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{playerName}\" set to <color=#fffffffe>{value}%</color>");
         }
 
         [Command("log", "l", "", "Toggles logging of bloodlineXP gain.", adminOnly: false)]
-        public static void logBloodline(ChatCommandContext ctx)
+        public static void LogBloodline(ChatCommandContext ctx)
         {
-            ulong SteamID;
-            var UserEntity = ctx.Event.SenderUserEntity;
-            SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
-            var currentValue = Database.playerLogBloodline.GetValueOrDefault(SteamID, false);
-            Database.playerLogBloodline.Remove(SteamID);
+            var steamID = ctx.User.PlatformId;
+            var currentValue = Database.playerLogBloodline.GetValueOrDefault(steamID, false);
+            Database.playerLogBloodline.Remove(steamID);
             if (currentValue)
             {
-                Database.playerLogBloodline.Add(SteamID, false);
+                Database.playerLogBloodline.Add(steamID, false);
                 ctx.Reply($"Bloodline gain is no longer being logged.");
             }
             else
             {
-                Database.playerLogBloodline.Add(SteamID, true);
+                Database.playerLogBloodline.Add(steamID, true);
                 ctx.Reply("Bloodline gain is now being logged.");
             }
         }
 
         [Command("reset", "r", "<bloodline>", "Resets a bloodline to gain more power with it.", adminOnly: false)]
-        public static void resetBloodline(ChatCommandContext ctx, string BloodlineName)
+        public static void ResetBloodline(ChatCommandContext ctx, string bloodlineName)
         {
-            ulong SteamID;
-            var UserEntity = ctx.Event.SenderUserEntity;
-            SteamID = entityManager.GetComponentData<User>(UserEntity).PlatformId;
-            int type;
-            if (!Bloodlines.nameMap.TryGetValue(BloodlineName, out type))
-            {
-                BloodlineName = BloodlineName.ToLower();
-                if (BloodlineName.Equals("dracula")) type = 0;
-                else if (BloodlineName.Equals("arwen")) type = 1;
-                else if (BloodlineName.Equals("ilvris")) type = 2;
-                else if (BloodlineName.Equals("aya")) type = 3;
-                else if (BloodlineName.Equals("nytheria")) type = 4;
-                else if (BloodlineName.Equals("hadubert")) type = 5;
-                else if (BloodlineName.Equals("semika")) type = 7;
-                else
-                {
-                    ctx.Reply("Invalid Arguments");
-                    return;
-                }
+            var steamID = ctx.User.PlatformId;
+            if (!BloodlineSystem.KeywordToBloodMap.TryGetValue(bloodlineName, out var type)) {
+                throw ctx.Error($"{bloodlineName} Bloodline not found! Did you typo?");
             }
-            ctx.Reply("Resetting " + Bloodlines.names[type] + "'s Bloodline");
-            Bloodlines.resetBloodline(SteamID, type);
+            ctx.Reply($"Resetting {BloodlineSystem.GetBloodTypeName(type)} bloodline.");
+            BloodlineSystem.ResetBloodline(steamID, type);
         }
     }
 }

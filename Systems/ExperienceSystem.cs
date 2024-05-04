@@ -341,7 +341,7 @@ namespace OpenRPG.Systems
                     //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
                     //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
                     //Maybe im just dumb, but I checked the array and tried that approach thinking i was double buffing due to logical error                    
-                    if (WeaponMasterSystem.GetWeaponType(Owner) == WeaponType.None) multiplier = 2; 
+                    if (WeaponMasterySystem.GetWeaponType(Owner) == WeaponType.None) multiplier = 2; 
 
                     Buffer.Add(new ModifyUnitStatBuff_DOTS()
                     {

@@ -4,11 +4,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using OpenRPG.Models;
+using OpenRPG.Systems;
 using Unity.Collections;
 using Unity.Entities;
 
 namespace OpenRPG.Utils
 {
+    using WeaponMasteryData = LazyDictionary<WeaponMasterySystem.MasteryType, MasteryData>;
+    using BloodlineMasteryData = LazyDictionary<BloodlineSystem.BloodType, MasteryData>;
     public static class Cache
     {
         //-- Cache (Wiped on plugin reload, server restart, and shutdown.)
@@ -101,14 +104,16 @@ namespace OpenRPG.Utils
         public static Dictionary<ulong, bool> player_log_exp { get; set; }
 
         //-- -- Mastery System
-        public static Dictionary<ulong, WeaponMasterData> player_weaponmastery { get; set; }
-        public static Dictionary<ulong, DateTime> player_decaymastery_logout { get; set; }
+        public static LazyDictionary<ulong, WeaponMasteryData> player_weaponmastery { get; set; }
+        public static Dictionary<ulong, DateTime> player_logout { get; set; }
         public static Dictionary<ulong, bool> player_log_mastery { get; set; }
+        public static Dictionary<WeaponMasterySystem.MasteryType, List<StatConfig>> masteryStatConfig { get; set; }
 
         //-- -- Bloodline System
-        public static Dictionary<ulong, BloodlineData> playerBloodline { get; set; }
+        public static LazyDictionary<ulong, BloodlineMasteryData> playerBloodline { get; set; }
         public static Dictionary<ulong, DateTime> playerDecayBloodlineLogout { get; set; }
         public static Dictionary<ulong, bool> playerLogBloodline { get; set; }
+        public static Dictionary<BloodlineSystem.BloodType, List<StatConfig>> bloodlineStatConfig { get; set; }
 
         //-- -- World Event System
         public static ConcurrentDictionary<int, FactionData> FactionStats { get; set; }

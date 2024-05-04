@@ -62,35 +62,37 @@ namespace OpenRPG.Utils
             return true;
         }
 
-        public static ModifyUnitStatBuff_DOTS makeBuff(int statID, double strength) {
+        public static ModifyUnitStatBuff_DOTS MakeBuff(UnitStatType type, double strength) {
             ModifyUnitStatBuff_DOTS buff;
 
             var modType = ModificationType.Add;
-            if (Helper.inverseMultiplierStats.Contains(statID)) {
-                if (statID == (int)UnitStatType.CooldownModifier && !WeaponMasterSystem.CDRStacks) {
+            if (Helper.inverseMultiplierStats.Contains(type)) {
+                if (type == UnitStatType.CooldownModifier && !WeaponMasterySystem.CdrStacks) {
                     modType = ModificationType.Set;
-                } else if (Helper.multiplierStats.Contains(statID)) {
+                } else if (Helper.multiplierStats.Contains(type)) {
                     modType = ModificationType.Multiply;
                 }
             }
             buff = (new ModifyUnitStatBuff_DOTS() {
-                StatType = (UnitStatType)statID,
+                StatType = type,
                 Value = (float)strength,
                 ModificationType = modType,
                 Id = ModificationId.NewId(0)
             });
             return buff;
         }
+        
         public static bool humanReadablePercentageStats = false;
         public static bool inverseMultipersDisplayReduction = true;
-        public static double calcBuffValue(double strength, double effectiveness, double rate, int statID) {
-
-            if (Helper.percentageStats.Contains(statID) && humanReadablePercentageStats) {
+        public static double CalcBuffValue(double strength, double effectiveness, double rate, UnitStatType type)
+        {
+            effectiveness = Math.Max(effectiveness, 1);
+            if (Helper.percentageStats.Contains(type) && humanReadablePercentageStats) {
                 rate /= 100;
             }
             double value = strength * rate * effectiveness;
-            if (Helper.inverseMultiplierStats.Contains(statID)) {
-                if (WeaponMasterSystem.linearCDR) {
+            if (Helper.inverseMultiplierStats.Contains(type)) {
+                if (WeaponMasterySystem.LinearCdr) {
                     value = strength * effectiveness;
                     value = value / (value + rate);
                 } else {
@@ -462,81 +464,83 @@ namespace OpenRPG.Utils
 
         // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the stat, and 0.75 quarters it.
         // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
-        public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
-            {(int)UnitStatType.CooldownModifier },
-            {(int)UnitStatType.PrimaryCooldownModifier }/*,
-            {(int)UnitStatType.PhysicalResistance },
-            {(int)UnitStatType.SpellResistance },
-            {(int)UnitStatType.ResistVsBeasts },
-            {(int)UnitStatType.ResistVsCastleObjects },
-            {(int)UnitStatType.ResistVsDemons },
-            {(int)UnitStatType.ResistVsHumans },
-            {(int)UnitStatType.ResistVsMechanical },
-            {(int)UnitStatType.ResistVsPlayerVampires },
-            {(int)UnitStatType.ResistVsUndeads },
-            {(int)UnitStatType.BloodDrain },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss }*/
-        };
+        public static HashSet<UnitStatType> inverseMultiplierStats = new()
+            {
+                UnitStatType.CooldownModifier,
+                UnitStatType.PrimaryCooldownModifier
+                /*,
+                UnitStatType.PhysicalResistance,
+                UnitStatType.SpellResistance,
+                UnitStatType.ResistVsBeasts,
+                UnitStatType.ResistVsCastleObjects,
+                UnitStatType.ResistVsDemons,
+                UnitStatType.ResistVsHumans,
+                UnitStatType.ResistVsMechanical,
+                UnitStatType.ResistVsPlayerVampires,
+                UnitStatType.ResistVsUndeads,
+                UnitStatType.BloodDrain,
+                UnitStatType.ReducedResourceDurabilityLoss
+                */
+            };
 
-        //
-        public static HashSet<int> percentageStats = new HashSet<int> {
-            {(int)UnitStatType.PhysicalCriticalStrikeChance },
-            {(int)UnitStatType.SpellCriticalStrikeChance },
-            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
-            {(int)UnitStatType.SpellCriticalStrikeDamage },
-            {(int)UnitStatType.PhysicalLifeLeech },
-            {(int)UnitStatType.PrimaryLifeLeech },
-            {(int)UnitStatType.SpellLifeLeech },
-            {(int)UnitStatType.AttackSpeed },
-            {(int)UnitStatType.PrimaryAttackSpeed },
-            {(int)UnitStatType.PassiveHealthRegen},
-            {(int)UnitStatType.ResourceYield }
-
-        };
+        public static HashSet<UnitStatType> percentageStats = new()
+            {
+                UnitStatType.PhysicalCriticalStrikeChance,
+                UnitStatType.SpellCriticalStrikeChance,
+                UnitStatType.PhysicalCriticalStrikeDamage,
+                UnitStatType.SpellCriticalStrikeDamage,
+                UnitStatType.PhysicalLifeLeech,
+                UnitStatType.PrimaryLifeLeech,
+                UnitStatType.SpellLifeLeech,
+                UnitStatType.AttackSpeed,
+                UnitStatType.PrimaryAttackSpeed,
+                UnitStatType.PassiveHealthRegen,
+                UnitStatType.ResourceYield
+            };
 
         //This should be a dictionary lookup for the stats to what mod type they should use
-        public static HashSet<int> multiplierStats = new HashSet<int> {
-            {(int)UnitStatType.CooldownModifier },
-            {(int)UnitStatType.PrimaryCooldownModifier },/*
-            {(int)UnitStatType.PhysicalResistance },
-            {(int)UnitStatType.SpellResistance },
-            {(int)UnitStatType.ResistVsBeasts },
-            {(int)UnitStatType.ResistVsCastleObjects },
-            {(int)UnitStatType.ResistVsDemons },
-            {(int)UnitStatType.ResistVsHumans },
-            {(int)UnitStatType.ResistVsMechanical },
-            {(int)UnitStatType.ResistVsPlayerVampires },
-            {(int)UnitStatType.ResistVsUndeads },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss },
-            {(int)UnitStatType.BloodDrain },*/
-            {(int)UnitStatType.ResourceYield }
+        public static HashSet<UnitStatType> multiplierStats = new()
+            {
+                UnitStatType.CooldownModifier,
+                UnitStatType.PrimaryCooldownModifier, /*
+                {UnitStatType.PhysicalResistance },
+                {UnitStatType.SpellResistance },
+                {UnitStatType.ResistVsBeasts },
+                {UnitStatType.ResistVsCastleObjects },
+                {UnitStatType.ResistVsDemons },
+                {UnitStatType.ResistVsHumans },
+                {UnitStatType.ResistVsMechanical },
+                {UnitStatType.ResistVsPlayerVampires },
+                {UnitStatType.ResistVsUndeads },
+                {UnitStatType.ReducedResourceDurabilityLoss },
+                {UnitStatType.BloodDrain },*/
+                UnitStatType.ResourceYield
+            };
 
-        };
-
-        public static HashSet<int> baseStatsSet = new HashSet<int> {
-            {(int)UnitStatType.PhysicalPower },
-            {(int)UnitStatType.ResourcePower },
-            {(int)UnitStatType.SiegePower },
-            {(int)UnitStatType.AttackSpeed },
-            {(int)UnitStatType.FireResistance },
-            {(int)UnitStatType.GarlicResistance },
-            {(int)UnitStatType.SilverResistance },
-            {(int)UnitStatType.HolyResistance },
-            {(int)UnitStatType.SunResistance },
-            {(int)UnitStatType.SpellResistance },
-            {(int)UnitStatType.PhysicalResistance },
-            {(int)UnitStatType.SpellCriticalStrikeDamage },
-            {(int)UnitStatType.SpellCriticalStrikeChance },
-            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
-            {(int)UnitStatType.PhysicalCriticalStrikeChance },
-            {(int)UnitStatType.PassiveHealthRegen },
-            {(int)UnitStatType.ResourceYield },
-            {(int)UnitStatType.PvPResilience },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss }
-
-        };
+        public static HashSet<UnitStatType> baseStatsSet = new()
+            {
+                UnitStatType.PhysicalPower,
+                UnitStatType.ResourcePower,
+                UnitStatType.SiegePower,
+                UnitStatType.AttackSpeed,
+                UnitStatType.FireResistance,
+                UnitStatType.GarlicResistance,
+                UnitStatType.SilverResistance,
+                UnitStatType.HolyResistance,
+                UnitStatType.SunResistance,
+                UnitStatType.SpellResistance,
+                UnitStatType.PhysicalResistance,
+                UnitStatType.SpellCriticalStrikeDamage,
+                UnitStatType.SpellCriticalStrikeChance,
+                UnitStatType.PhysicalCriticalStrikeDamage,
+                UnitStatType.PhysicalCriticalStrikeChance,
+                UnitStatType.PassiveHealthRegen,
+                UnitStatType.ResourceYield,
+                UnitStatType.PvPResilience,
+                UnitStatType.ReducedResourceDurabilityLoss
+            };
         
-        public static string statTypeToString(UnitStatType type) {
+        public static string CamelCaseToSpaces(UnitStatType type) {
             var name = Enum.GetName(type);
             // Split words by camel case
             // ie, PhysicalPower => "Physical Power"

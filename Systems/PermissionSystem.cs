@@ -4,7 +4,6 @@ using ProjectM.Network;
 using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using VampireCommandFramework;
@@ -239,6 +238,7 @@ namespace OpenRPG.Systems
                 {"godmode", 100},
                 {"kick", 100},
                 {"kit", 100},
+                {"load", 100},
                 {"mastery add", 100},
                 {"mastery get", 0},
                 {"mastery get-all", 0},
