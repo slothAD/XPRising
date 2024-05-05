@@ -38,21 +38,7 @@ public static class ExperienceConfig
                 ExperienceSystem.groupLevelScheme = (ExperienceSystem.GroupLevelScheme)groupLevelScheme;
         }
 
-        ExperienceSystem.pvpXPLoss = _configFile.Bind("Rates, Experience", "PvP XP Loss", 0f, "Sets the flat XP Lost on a PvP death").Value;
-        ExperienceSystem.pvpXPLossPerLevel = _configFile.Bind("Rates, Experience", "PvP XP Loss per Level", 0f, "Sets the XP Lost per level of the dying player on a PvP death").Value;
         ExperienceSystem.pvpXPLossPercent = _configFile.Bind("Rates, Experience", "PvP XP Loss Percent", 0f, "Sets the percentage of XP to the next level lost on a PvP death").Value;
-        ExperienceSystem.pvpXPLossPercentPerLevel = _configFile.Bind("Rates, Experience", "PvP XP Loss Percent per Level", 0f, "Sets the percentage of XP to the next level lost per level of the dying player on a PvP death").Value;
-        ExperienceSystem.pvpXPLossMultPerLvlDiff = _configFile.Bind("Rates, Experience", "PvP XP Loss Per lvl Diff", 0f, "Adds this times the number of levels higher than your killer you are as an additional percent to your xp lost on a PvP death.").Value;
-        ExperienceSystem.pvpXPLossMultPerLvlDiffSq = _configFile.Bind("Rates, Experience", "PvP XP Loss Per lvl Diff squared", 0f, "Adds this times the square of the number of levels higher than your killer you are as an additional percent to your xp lost on a PvP death.").Value;
-            
-        ExperienceSystem.pveXPLoss = _configFile.Bind("Rates, Experience", "PvE XP Loss", 0f, "Sets the flat XP Lost on a PvE death").Value;
-        ExperienceSystem.pveXPLossPerLevel = _configFile.Bind("Rates, Experience", "PvE XP Loss per Level", 0f, "Sets the XP Lost per level of the dying player on a PvE death").Value;
         ExperienceSystem.pveXPLossPercent = _configFile.Bind("Rates, Experience", "PvE XP Loss Percent", 10f, "Sets the percentage of XP to the next level lost on a PvE death").Value;
-        ExperienceSystem.pveXPLossPercentPerLevel = _configFile.Bind("Rates, Experience", "PvE XP Loss Percent per Level", 0f, "Sets the percentage of XP to the next level lost per level of the dying player on a PvE death").Value;
-        ExperienceSystem.pveXPLossMultPerLvlDiff = _configFile.Bind("Rates, Experience", "PvE XP Loss Mult Per lvl Diff", 0f, "Adds this times the number of levels higher than your killer you are as an additional percent to your xp lost on a PvE death.").Value;
-        ExperienceSystem.pveXPLossMultPerLvlDiffSq = _configFile.Bind("Rates, Experience", "PvE XP Loss Per lvl Diff squared", 0f, "Adds this times the square of the number of levels higher than your killer you are as an additional percent to your xp lost on a PvE death.").Value;
-
-        ExperienceSystem.xpLostOnDown = _configFile.Bind("Rates, Experience", "XP Lost on Down", false, "Vampires are treated as dead for the XP system when they are downed.").Value;
-        ExperienceSystem.xpLostOnRelease = _configFile.Bind("Rates, Experience", "XP Lost on Release", true, "Vampires are treated as dead for the XP system when they release, incentivising saving allies.").Value;
     }
 }

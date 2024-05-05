@@ -72,9 +72,7 @@ namespace OpenRPG.Hooks {
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
                     Plugin.Log(LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
-                    if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
-                        ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
-                    }
+                    if (ExperienceSystem.isEXPActive) ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
                 }
             }
             

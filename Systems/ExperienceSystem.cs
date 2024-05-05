@@ -27,21 +27,8 @@ namespace OpenRPG.Systems
         public static bool LevelRewardsOn = true;
         public static bool easyLvl15 = true;
 
-        public static float pvpXPLoss = 0;
-        public static float pvpXPLossPerLevel = 0;
         public static float pvpXPLossPercent = 0;
-        public static float pvpXPLossPercentPerLevel = 0;
-        public static float pvpXPLossMultPerLvlDiff = 0;
-        public static float pvpXPLossMultPerLvlDiffSq = 0;
-        public static float pveXPLoss = 0;
-        public static float pveXPLossPerLevel = 0;
         public static float pveXPLossPercent = 10;
-        public static float pveXPLossPercentPerLevel = 0;
-        public static float pveXPLossMultPerLvlDiff = 0;
-        public static float pveXPLossMultPerLvlDiffSq = 0;
-
-        public static bool xpLostOnDown = false;
-        public static bool xpLostOnRelease = false;
         
         public enum GroupLevelScheme {
             None = 0,
@@ -160,28 +147,17 @@ namespace OpenRPG.Systems
 
             return xpGained;
         }
-
-        public static void loseEXP(Entity playerEntity, int xpLost) {
-            PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
-            Entity userEntity = player.UserEntity;
-            User user = entityManager.GetComponentData<User>(userEntity);
-            ulong SteamID = user.PlatformId;
-            Database.player_experience.TryGetValue(SteamID, out int xp);
-            Database.player_experience[SteamID] = Math.Max(xp - xpLost, 0);
-
-            SetLevel(playerEntity, userEntity, SteamID);
-        }
         
         public static void deathXPLoss(Entity playerEntity, Entity killerEntity) {
-            PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
-            Entity userEntity = player.UserEntity;
-            User user = entityManager.GetComponentData<User>(userEntity);
-            ulong SteamID = user.PlatformId;
-            float xpLost;
-            Database.player_experience.TryGetValue(SteamID, out int exp);
-            int pLvl = convertXpToLevel(exp);
-            int killerLvl = pLvl;
-            bool pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out var _);
+            var player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
+            var userEntity = player.UserEntity;
+            var user = entityManager.GetComponentData<User>(userEntity);
+            var steamID = user.PlatformId;
+
+            Database.player_experience.TryGetValue(steamID, out var exp);
+            var pLvl = convertXpToLevel(exp);
+            var killerLvl = pLvl;
+            var pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out _);
             if (pvpKill)
             {
                 var killerGear = entityManager.GetComponentData<Equipment>(killerEntity);
@@ -190,70 +166,22 @@ namespace OpenRPG.Systems
             }
             else if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out var killerUnitLevel)) killerLvl = killerUnitLevel.Level;
             else {
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
-                if (entityManager.TryGetComponentData<EntityOwner>(killerEntity, out EntityOwner eOwn)) {
-                    if (entityManager.TryGetComponentData<UnitLevel>(eOwn, out killerUnitLevel)) {
-                        killerLvl = killerUnitLevel.Level;
-                        Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityOwner has level: " + killerLvl);
-                        if (!pvpKill) {
-                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eOwn, out _);
-                        }
-                    }
-                    else Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityOwner has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eOwn));
-                }
-                if (entityManager.TryGetComponentData<EntityCreator>(killerEntity, out EntityCreator eCreator)) {
-                    if (entityManager.TryGetComponentData<UnitLevel>(eCreator.Creator._Entity, out killerUnitLevel)) {
-                        killerLvl = killerUnitLevel.Level;
-                        Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityCreator has level: " + killerLvl);
-                        if (!pvpKill) {
-                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eCreator.Creator._Entity, out _);
-                        }
-                    } else Plugin.Log(LogSystem.Xp, LogLevel.Info, "EntityCreator has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eCreator.Creator._Entity));
-                }
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Killer has no level to be found. Entity: {killerEntity}, Prefab: {Helper.GetPrefabGUID(killerEntity)}, Name {Helper.GetPrefabName(killerEntity)}");
             }
-            float xpLossPerLevel = pveXPLossPerLevel;
-            float xpLossPercentPerLevel = pveXPLossPercentPerLevel;
-            float xpLoss = pveXPLoss;
-            float xpLossPercent = pveXPLossPercent;
-            int lvlDiff = pLvl - killerLvl;
-            float lossMultPerDiff = pveXPLossMultPerLvlDiff;
-            float lossMultPerDiffsq = pveXPLossMultPerLvlDiffSq;
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, "Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
-
-            if (pvpKill) {
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "PvP Kill");
-                xpLossPerLevel = pvpXPLossPerLevel;
-                xpLossPercentPerLevel = pvpXPLossPercentPerLevel;
-                xpLoss = pvpXPLoss;
-                xpLossPercent = pvpXPLossPercent;
-                lossMultPerDiff = pvpXPLossMultPerLvlDiff;
-                lossMultPerDiffsq = pvpXPLossMultPerLvlDiffSq;
-            }
-            float xpLossMult = 1 - (lvlDiff * lossMultPerDiff + lvlDiff * lvlDiff * lossMultPerDiffsq);
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, "xpLossMult per level " + lossMultPerDiff + " xpLossMultPerDiffSquared: " + lossMultPerDiffsq);
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, "results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, "Flat Loss: " + xpLoss + ", Loss per level: " + xpLossPerLevel + ", Percent Loss: " + xpLossPercent + ", Percent Loss Per Level: " + xpLossPercentPerLevel);
-
-
-            if (exp <= 0 || xpLossMult <= 0) xpLost = 0;
-            else {
-                int lvlXP = convertLevelToXp(pLvl + 1) - convertLevelToXp(pLvl);
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "lvlXP is "+ lvlXP);
-                xpLost = xpLoss + (xpLossPerLevel * pLvl);
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "so our static XP Loss is " + xpLost);
-                xpLost += (lvlXP * xpLossPercent + lvlXP * xpLossPercentPerLevel * pLvl) / 100;
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "adding on the percentile loss we have " + xpLost);
-                xpLost *= xpLossMult;
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "then multiplying by the loss mult we get " + xpLost);
-
-            }
+            
+            var lvlDiff = pLvl - killerLvl;
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Level Difference: {lvlDiff} (Victim: {pLvl}, Killer:{killerLvl})");
+            
+            var newPvEXp = Math.Max(exp * (1 - pveXPLossPercent), convertLevelToXp(convertXpToLevel(exp)));
+            var newPvPXp = Math.Max(exp * (1 - pvpXPLossPercent * lvlDiff), convertLevelToXp(convertXpToLevel(exp)));
+            var xpLost = pvpKill ? newPvPXp : newPvEXp;
 
             var currentXp = Math.Max(exp - (int)xpLost, 0);
             Plugin.Log(LogSystem.Xp, LogLevel.Info, "subtracting that from our " + exp + " we get " + currentXp);
-            Database.player_experience[SteamID] = currentXp;
+            Database.player_experience[steamID] = currentXp;
 
-            SetLevel(playerEntity, userEntity, SteamID);
-            GetLevelAndProgress(currentXp, out int progress, out int earned, out int needed);
+            SetLevel(playerEntity, userEntity, steamID);
+            GetLevelAndProgress(currentXp, out _, out var earned, out var needed);
             Output.SendLore(userEntity, $"You've been defeated, <color=#ffffff>{xpLost}</color> XP is lost. [ XP: <color=#ffffff>{earned}</color>/<color=#ffffff>{needed}</color> ]");
         }
 
