@@ -1,4 +1,7 @@
-﻿using HarmonyLib;
+﻿using System;
+using System.Linq;
+using BepInEx.Logging;
+using HarmonyLib;
 using ProjectM.Gameplay.Systems;
 using OpenRPG.Utils;
 using ProjectM;
@@ -9,6 +12,8 @@ namespace OpenRPG.Hooks
     [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
     public class HandleGameplayEventsBase_Patch
     {
+        private static string InitialErrorMessage =
+            "System.InvalidOperationException: GetSingleton<ProjectM.DayNightCycle>() requires that exactly one ProjectM.DayNightCycle exist that match this query, but there are 0.";
         private static byte CurrentDay = 0;
         private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
@@ -16,19 +21,33 @@ namespace OpenRPG.Hooks
             //-- Day Cycle Tracking
             if (Plugin.isInitialized)
             {
-                var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
-
-                if (CurrentDay != DNCycle.GameDateTimeNow.Day)
+                try
                 {
-                    if (!isDNInitialized)
+                    var DNCycle = Plugin.Server.GetExistingSystem<DayNightCycleSystem>().GetSingleton<DayNightCycle>();
+
+                    if (CurrentDay != DNCycle.GameDateTimeNow.Day)
                     {
-                        CurrentDay = DNCycle.GameDateTimeNow.Day;
-                        isDNInitialized = true;
+                        if (!isDNInitialized)
+                        {
+                            CurrentDay = DNCycle.GameDateTimeNow.Day;
+                            isDNInitialized = true;
+                        }
+                        else
+                        {
+                            CurrentDay = DNCycle.GameDateTimeNow.Day;
+                            if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (e.Message.StartsWith(InitialErrorMessage))
+                    {
+                        Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"DNC singleton not yet ready. This error should only appear on the initial creation/start-up of the server.");
                     }
                     else
                     {
-                        CurrentDay = DNCycle.GameDateTimeNow.Day;
-                        if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.OnDayCycle();
+                        Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"DayNightCycle: {e.Message}");
                     }
                 }
             }
