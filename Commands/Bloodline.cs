@@ -32,7 +32,7 @@ namespace OpenRPG.Commands
                 return $"{Helper.CamelCaseToSpaces(statConfig.type)} <color=#8D8D8D>Not enough strength</color>";
             });
 
-            return $"{name}:<color=#fffffffe> {masteryData.Mastery:F3}%</color> ({string.Join("\n",statStrings)}) Effectiveness: {masteryData.Effectiveness * 100}%";
+            return $"{name}:<color=#ffffff> {masteryData.Mastery:F3}%</color> ({string.Join("\n",statStrings)}) Effectiveness: {masteryData.Effectiveness * 100}%";
         }
         
         [Command("get", "g", "", "Display your current bloodline progression")]
@@ -105,7 +105,7 @@ namespace OpenRPG.Commands
                 throw ctx.Error($"{type} Bloodline not found! Did you typo?");
             }
             BloodlineSystem.ModBloodline(steamID, type, amount);
-            ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{name}\" adjusted by <color=#fffffffe>{amount}%</color>");
+            ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{name}\" adjusted by <color=#ffffff>{amount}%</color>");
             Helper.ApplyBuff(userEntity, charEntity, Helper.AppliedBuff);
         }
 
@@ -127,7 +127,7 @@ namespace OpenRPG.Commands
             }
             BloodlineSystem.ModBloodline(steamID, type, -100000);
             BloodlineSystem.ModBloodline(steamID, type, value);
-            ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{playerName}\" set to <color=#fffffffe>{value}%</color>");
+            ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{playerName}\" set to <color=#ffffff>{value}%</color>");
         }
 
         [Command("log", "l", "", "Toggles logging of bloodlineXP gain.", adminOnly: false)]

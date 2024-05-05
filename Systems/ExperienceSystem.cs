@@ -140,7 +140,7 @@ namespace OpenRPG.Systems
             if (IsPlayerLoggingExperience(player.steamID))
             {
                 GetLevelAndProgress(newXp, out var progress, out var earned, out var needed);
-                Output.SendLore(player.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#fffffffe>{earned}</color>/<color=#fffffffe>{needed}</color> ]");
+                Output.SendLore(player.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#ffffff>{earned}</color>/<color=#ffffff>{needed}</color> ]");
             }
             
             SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
@@ -249,7 +249,7 @@ namespace OpenRPG.Systems
 
             SetLevel(playerEntity, userEntity, SteamID);
             GetLevelAndProgress(currentXp, out int progress, out int earned, out int needed);
-            Output.SendLore(userEntity, $"You've been defeated, <color=#fffffffe>{xpLost}</color> XP is lost. [ XP: <color=#fffffffe>{earned}</color>/<color=#fffffffe>{needed}</color> ]");
+            Output.SendLore(userEntity, $"You've been defeated, <color=#ffffff>{xpLost}</color> XP is lost. [ XP: <color=#ffffff>{earned}</color>/<color=#ffffff>{needed}</color> ]");
         }
 
         public static void BuffReceiver(Entity buffEntity)
@@ -308,7 +308,7 @@ namespace OpenRPG.Systems
 
                     if (IsPlayerLoggingExperience(SteamID))
                     {
-                        Output.SendLore(user, $"<color=#ffdd00>Level up! You're now level</color> <color=#fffffffe>{level}</color><color=#ffdd00ff>!</color>");
+                        Output.SendLore(user, $"<color=#ffdd00>Level up! You're now level</color> <color=#ffffff>{level}</color><color=#ffdd00ff>!</color>");
                     }
                     
                 }

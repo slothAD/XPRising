@@ -9,7 +9,7 @@
 
         public static string White(string text)
         {
-            return ColorText("#fffffffe", text);
+            return ColorText("#ffffff", text);
         }
         public static string Black(string text)
         {

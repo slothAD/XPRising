@@ -20,10 +20,10 @@ namespace OpenRPG.Commands
                 if (BanSystem.IsUserBanned(targetData_.PlatformId, out var banData_))
                 {
                     TimeSpan duration = banData_.BanUntil - DateTime.Now;
-                    ctx.Reply($"Player:<color=#fffffffe> {playername}</color>");
-                    ctx.Reply($"Status:<color=#fffffffe> Banned</color> | By:<color=#fffffffe> {banData_.BannedBy}</color>");
-                    ctx.Reply($"Duration:<color=#fffffffe> {Math.Round(duration.TotalDays)}</color> day(s) [<color=#fffffffe>{banData_.BanUntil}</color>]");
-                    ctx.Reply($"Reason:<color=#fffffffe> {banData_.Reason}</color>");
+                    ctx.Reply($"Player:<color=#ffffff> {playername}</color>");
+                    ctx.Reply($"Status:<color=#ffffff> Banned</color> | By:<color=#ffffff> {banData_.BannedBy}</color>");
+                    ctx.Reply($"Duration:<color=#ffffff> {Math.Round(duration.TotalDays)}</color> day(s) [<color=#ffffff>{banData_.BanUntil}</color>]");
+                    ctx.Reply($"Reason:<color=#ffffff> {banData_.Reason}</color>");
                 }
                 else
                 {
@@ -51,8 +51,8 @@ namespace OpenRPG.Commands
                     var user = ctx.Event.User;
                     Helper.KickPlayer(targetUserEntity);
                     ctx.Reply($"Player \"{playername}\" is now banned.");
-                    ctx.Reply($"Banned Until:<color=#fffffffe> {banData.BanUntil}</color>");
-                    ctx.Reply($"Reason:<color=#fffffffe> {reason}</color>");
+                    ctx.Reply($"Banned Until:<color=#ffffff> {banData.BanUntil}</color>");
+                    ctx.Reply($"Reason:<color=#ffffff> {reason}</color>");
                     return;
                 }
                 else

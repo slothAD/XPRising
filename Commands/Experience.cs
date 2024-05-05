@@ -29,9 +29,9 @@ namespace OpenRPG.Commands
             int userXP = ExperienceSystem.getXp(SteamID);
             ExperienceSystem.GetLevelAndProgress(userXP, out int progress, out int earnedXp, out int neededXp);
             int userLevel = ExperienceSystem.convertXpToLevel(userXP);
-            string response = "-- <color=#fffffffe>" + CharName + "</color> --\n";
-            response += $"Level:<color=#fffffffe> {userLevel}</color> (<color=#fffffffe>{progress}%</color>) ";
-            response += $" [ XP:<color=#fffffffe> {earnedXp}</color>/<color=#fffffffe>{neededXp}</color> ]";
+            string response = "-- <color=#ffffff>" + CharName + "</color> --\n";
+            response += $"Level:<color=#ffffff> {userLevel}</color> (<color=#ffffff>{progress}%</color>) ";
+            response += $" [ XP:<color=#ffffff> {earnedXp}</color>/<color=#ffffff>{neededXp}</color> ]";
             if (ExperienceSystem.LevelRewardsOn) response += $" You have {(Database.player_abilityIncrease.ContainsKey(SteamID) ? Database.player_abilityIncrease[SteamID] : 0)} ability points to spend.";
             ctx.Reply(response);
         }
@@ -55,7 +55,7 @@ namespace OpenRPG.Commands
             }
             Database.player_experience[SteamID] = xp;
             ExperienceSystem.SetLevel(targetEntity, targetUserEntity, SteamID);
-            ctx.Reply($"Player \"{name}\" Experience is now set to be<color=#fffffffe> {ExperienceSystem.getXp(SteamID)}</color>");
+            ctx.Reply($"Player \"{name}\" Experience is now set to be<color=#ffffff> {ExperienceSystem.getXp(SteamID)}</color>");
         }
 
         [Command("log", "l", "", "Toggles logging of xp gain.", adminOnly: false)]

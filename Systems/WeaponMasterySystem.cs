@@ -24,8 +24,8 @@ namespace OpenRPG.Systems
         // TODO online decay
         public static bool IsDecaySystemEnabled = true;
         public static int DecayInterval = 60;
-        public static int OnlineDecayValue = 0;
-        public static int OfflineDecayValue = 1;
+        public static double OnlineDecayValue = 0;
+        public static double OfflineDecayValue = 1;
 
         // Shou Change - make options for spell mastery with weapons active.
         public static bool SpellMasteryNeedsUnarmedToUse = true;
@@ -145,12 +145,12 @@ namespace OpenRPG.Systems
             if (Database.player_log_mastery.TryGetValue(steamID, out bool isLogging) && isLogging)
             {
                 var currentMastery = wd[masteryType].Mastery;
-                Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {masteryValue:#.###}% [ {Enum.GetName(masteryType)}: {currentMastery:F2}% ]</color>");
+                Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {changeInMastery:F3}% [ {Enum.GetName(masteryType)}: {currentMastery:F2}% ]</color>");
                 
                 if (updateSpellMastery)
                 {
                     var currentSpellMastery = wd.GetValueOrDefault(MasteryType.Spell).Mastery;
-                    Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {masteryValue:#.###}% [ Spell: {currentSpellMastery:F2}% ]</color>");
+                    Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {changeInSpellMastery:F3}% [ Spell: {currentSpellMastery:F2}% ]</color>");
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace OpenRPG.Systems
             {
                 var decayValue = OfflineDecayValue * decayTicks * -1;
 
-                Output.SendLore(userEntity, $"You've been offline for {elapsedTime.TotalMinutes} minute(s). Your mastery has decayed by {decayValue * 0.001:F3}%");
+                Output.SendLore(userEntity, $"You've been offline for {elapsedTime.TotalMinutes} minute(s). Your weapon mastery has decayed by {decayValue * 0.001:F3}%");
                 
                 var wd = Database.player_weaponmastery[steamID];
 
