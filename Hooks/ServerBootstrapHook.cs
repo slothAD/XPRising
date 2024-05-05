@@ -84,7 +84,7 @@ namespace OpenRPG.Hooks
             }
             catch (Exception e)
             {
-                Plugin.Log(Plugin.LogSystem.Plugin, LogLevel.Info, $"OnUserDisconnected failed: {e}", true);
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"OnUserDisconnected failed: {e}", true);
             }
         }
     }

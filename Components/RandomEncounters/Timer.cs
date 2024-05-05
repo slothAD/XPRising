@@ -59,7 +59,7 @@ namespace OpenRPG.Components.RandomEncounters
             }
             catch (Exception ex)
             {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Timer failed {ex}");
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Timer failed {ex}");
             }
             finally
             {

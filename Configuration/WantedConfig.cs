@@ -11,7 +11,7 @@ public static class WantedConfig
     
     public static void Initialize()
     {
-        Plugin.Log(Plugin.LogSystem.Plugin, LogLevel.Info, "Loading Wanted config");
+        Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "Loading Wanted config");
         var configPath = AutoSaveSystem.ConfirmFile(AutoSaveSystem.ConfigPath, "WantedConfig.cfg");
         _configFile = new ConfigFile(configPath, true);
         

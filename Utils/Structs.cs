@@ -142,6 +142,11 @@ namespace OpenRPG.Utils
 
             return this;
         }
+
+        public override string ToString()
+        {
+            return $"[{Mastery:F3},{Effectiveness:F3},{Growth:F3}]";
+        }
     }
 
     public struct BanData(

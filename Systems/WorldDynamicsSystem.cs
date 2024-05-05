@@ -29,7 +29,7 @@ namespace OpenRPG.Systems
 
                 var factionStats = faction.Value;
                 if(factionStats.RequiredPower < 0) {
-                    Plugin.Log(LogSystem.Plugin, LogLevel.Warning, factionStats.Name + "'s required power to levelup is negative, fixing it now.");
+                    Plugin.Log(LogSystem.Core, LogLevel.Warning, factionStats.Name + "'s required power to levelup is negative, fixing it now.");
                     factionStats.RequiredPower *= -1;
                     Database.FactionStats[faction.Key] = factionStats;
                 }

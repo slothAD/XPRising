@@ -118,7 +118,7 @@ public class Alliance {
     });
     public static void GetPlayerTeams(Entity playerCharacter, LogSystem system, out PlayerGroup playerGroup) {
         if (Cache.PlayerAllies.TryGetValue(playerCharacter, out playerGroup)) {
-            Plugin.Log(system, LogLevel.Info, $"Player found in cache, cache timestamp is {playerGroup.TimeStamp}");
+            Plugin.Log(system, LogLevel.Info, $"Player found in cache, cache timestamp is {playerGroup.TimeStamp:u}");
             var cacheAge = DateTime.Now - playerGroup.TimeStamp;
             if (cacheAge.TotalSeconds < CacheAgeLimit) return;
             Plugin.Log(system, LogLevel.Info, $"Cache is too old, refreshing cached data");

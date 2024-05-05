@@ -140,7 +140,7 @@ namespace OpenRPG.Utils
 
             }
 
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Player Cache Created.");
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "Player Cache Created.");
         }
         
         public static void TeleportTo(ChatCommandContext ctx, WaypointData position) {

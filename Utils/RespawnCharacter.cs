@@ -19,7 +19,7 @@ namespace OpenRPG.Utils
             var spawnLocation = new Il2CppSystem.Nullable_Unboxed<float3>(location);
             var server = Plugin.Server.GetOrCreateSystem<ServerBootstrapSystem>();
 
-            Plugin.Log(LogSystem.Death, LogLevel.Info, $"respawning {player.Name} at: {location}");
+            Plugin.Log(LogSystem.Death, LogLevel.Info, $"respawning {player.Name} at: {spawnLocation.Value} (current location: {location})");
 
             server.RespawnCharacter(bufferSystem.CreateCommandBuffer(), userEntity, customSpawnLocation: spawnLocation, previousCharacter: victimEntity, fadeOutEntity: userEntity);
         }

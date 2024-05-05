@@ -1,5 +1,6 @@
 ﻿using System;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using OpenRPG.Utils;
 
 namespace OpenRPG.Configuration;
@@ -22,6 +23,8 @@ public static class DebugLoggingConfig
                 $"{Enum.GetName(system)} system logging",
                 false,
                 "Logs detailed information about the system in your console. Enable before sending errors with this system.").Value;
+            // Let the log know which systems are actually logging.
+            Plugin.Log(system, LogLevel.Info, $"is logging.");            
         }
     }
 

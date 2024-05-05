@@ -102,16 +102,16 @@ namespace OpenRPG.Utils
         public static Dictionary<string, Dictionary<UnitStatType, float>> experience_class_stats { get; set; }
 
         public static Dictionary<ulong, bool> player_log_exp { get; set; }
+        
+        public static Dictionary<ulong, DateTime> player_logout { get; set; }
 
         //-- -- Mastery System
         public static LazyDictionary<ulong, WeaponMasteryData> player_weaponmastery { get; set; }
-        public static Dictionary<ulong, DateTime> player_logout { get; set; }
         public static Dictionary<ulong, bool> player_log_mastery { get; set; }
         public static Dictionary<WeaponMasterySystem.MasteryType, List<StatConfig>> masteryStatConfig { get; set; }
 
         //-- -- Bloodline System
         public static LazyDictionary<ulong, BloodlineMasteryData> playerBloodline { get; set; }
-        public static Dictionary<ulong, DateTime> playerDecayBloodlineLogout { get; set; }
         public static Dictionary<ulong, bool> playerLogBloodline { get; set; }
         public static Dictionary<BloodlineSystem.BloodType, List<StatConfig>> bloodlineStatConfig { get; set; }
 

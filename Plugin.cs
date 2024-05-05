@@ -96,7 +96,7 @@ namespace OpenRPG
             _logger = base.Log;
             if(!IsServer)
             {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"This is a server plugin. Not continuing to load on client.", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Warning, $"This is a server plugin. Not continuing to load on client.", true);
                 return;
             }
             
@@ -109,7 +109,7 @@ namespace OpenRPG
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Plugin is loaded", true);
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"Plugin is loaded", true);
         }
 
         private static void GameDataOnInitialize(World world)
@@ -137,9 +137,9 @@ namespace OpenRPG
 
         public static void Initialize()
         {
-            Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"Trying to Initialize {MyPluginInfo.PLUGIN_NAME}: isInitialized == {isInitialized}", isInitialized);
+            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Trying to Initialize {MyPluginInfo.PLUGIN_NAME}: isInitialized == {isInitialized}", isInitialized);
             if (isInitialized) return;
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Initializing {MyPluginInfo.PLUGIN_NAME}...", true);
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"Initializing {MyPluginInfo.PLUGIN_NAME}...", true);
             
             //-- Initialize System
             Helper.GetServerGameSettings(out Helper.SGS);
@@ -156,7 +156,7 @@ namespace OpenRPG
             //-- Apply configs
             Waypoint.WaypointLimit = WaypointLimit.Value;
             
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Loading world dynamics config");
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "Loading world dynamics config");
             WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
             WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
 
@@ -166,7 +166,7 @@ namespace OpenRPG
             Helper.humanReadablePercentageStats = humanReadablePercentageStats.Value;
             Helper.inverseMultipersDisplayReduction = inverseMultiplersDisplayReduction.Value;
             
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Initialising player cache and internal database...");
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "Initialising player cache and internal database...");
             Helper.CreatePlayerCache();
             AutoSaveSystem.LoadDatabase();
             
@@ -177,15 +177,15 @@ namespace OpenRPG
             // Command.GenerateCommandMd(commands);
             // Command.GenerateDefaultCommandPermissions(commands);
             
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Setting CommandRegistry middleware");
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"Setting CommandRegistry middleware");
             if (disableCommandAdminRequirement.Value)
             {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Removing admin privilege requirements");
+                Plugin.Log(LogSystem.Core, LogLevel.Info, "Removing admin privilege requirements");
                 CommandRegistry.Middlewares.Clear();                
             }
             CommandRegistry.Middlewares.Add(new Command.PermissionMiddleware());
 
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "Finished initialising", true);
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "Finished initialising", true);
 
             isInitialized = true;
         }
@@ -197,7 +197,7 @@ namespace OpenRPG
             Death,
             Faction,
             Mastery,
-            Plugin,
+            Core,
             PowerUp,
             RandomEncounter,
             SquadSpawn,

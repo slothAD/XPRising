@@ -12,7 +12,7 @@ public static class ExperienceConfig
     
     public static void Initialize()
     {
-        Plugin.Log(Plugin.LogSystem.Plugin, LogLevel.Info, "Loading XP config");
+        Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "Loading XP config");
         var configPath = AutoSaveSystem.ConfirmFile(AutoSaveSystem.ConfigPath, "ExperienceConfig.cfg");
         _configFile = new ConfigFile(configPath, true);
         

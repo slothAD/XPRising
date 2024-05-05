@@ -43,7 +43,6 @@ namespace OpenRPG.Utils
         public static readonly string WeaponMasteryConfigJson = "weapon_mastery_config.json";
         public static readonly string PlayerLogMasteryJson = "player_log_mastery.json";
         public static readonly string BloodlinesJson = "bloodlines.json";
-        public static readonly string BloodlineDelayJson = "bloodline_decay.json";
         public static readonly string BloodlineConfigJson = "bloodline_config.json";
         public static readonly string PlayerLogBloodlinesJson = "player_log_bloodlines.json";
         public static readonly string PlayerExperienceJson = "player_experience.json";
@@ -105,14 +104,13 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, WeaponMasteryConfigJson, Database.masteryStatConfig, Pretty_JSON_options);
             SaveDB(saveFolder, PlayerLogMasteryJson, Database.player_log_mastery, JSON_options);
             SaveDB(saveFolder, BloodlinesJson, Database.playerBloodline, JSON_options);
-            SaveDB(saveFolder, BloodlineDelayJson, Database.playerDecayBloodlineLogout, JSON_options);
             SaveDB(saveFolder, BloodlineConfigJson, Database.bloodlineStatConfig, Pretty_JSON_options);
             SaveDB(saveFolder, PlayerLogBloodlinesJson, Database.playerLogBloodline, JSON_options);
             SaveDB(saveFolder, UserBanList, Database.user_banlist, Pretty_JSON_options);
             SaveDB(saveFolder, WorldDynamicsJson, Database.FactionStats, Pretty_JSON_options);
             SaveDB(saveFolder, IgnoredMonstersJson, Database.IgnoredMonstersGUID, JSON_options);
 
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"All databases saved to: {saveFolder}");
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
         }
 
         public static void LoadDatabase()
@@ -141,14 +139,13 @@ namespace OpenRPG.Utils
             Database.masteryStatConfig = LoadDB(WeaponMasteryConfigJson, WeaponMasterySystem.DefaultMasteryConfig);
             Database.player_log_mastery = LoadDB<Dictionary<ulong, bool>>(PlayerLogMasteryJson);
             Database.playerBloodline = LoadDB<LazyDictionary<ulong, BloodlineMasteryData>>(BloodlinesJson);
-            Database.playerDecayBloodlineLogout = LoadDB<Dictionary<ulong, DateTime>>(BloodlineDelayJson);
             Database.bloodlineStatConfig = LoadDB(BloodlineConfigJson, BloodlineSystem.DefaultBloodlineConfig);
             Database.playerLogBloodline = LoadDB<Dictionary<ulong, bool>>(PlayerLogBloodlinesJson);
             Database.user_banlist = LoadDB<Dictionary<ulong, BanData>>(UserBanList);
             Database.FactionStats = LoadDB(WorldDynamicsJson, WorldDynamicsSystem.DefaultFactionStats);
             Database.IgnoredMonstersGUID = LoadDB(IgnoredMonstersJson, WorldDynamicsSystem.DefaultIgnoredMonsters);
 
-            Plugin.Log(LogSystem.Plugin, LogLevel.Info, "All database data is now loaded.", true);
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
         }
         
         private static void SaveDB<TData>(string saveFolder, string specificFile, TData data, JsonSerializerOptions options)
@@ -157,11 +154,11 @@ namespace OpenRPG.Utils
             {
                 var outputFile = Path.Combine(saveFolder, specificFile);
                 File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
-                Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"{specificFile} Saved.");
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"{specificFile} Saved.");
             }
             catch (Exception e)
             {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
             }
         }
 
@@ -177,23 +174,23 @@ namespace OpenRPG.Utils
                 var saveFile = ConfirmFile(SavesPath, specificFile, defaultContents);
                 var json = File.ReadAllText(saveFile);
                 var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
-                Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Main DB Loaded for {specificFile}");
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"Main DB Loaded for {specificFile}");
                 return data;
             } catch (Exception e) {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
             }
             
             try {
                 var backupFile = ConfirmFile(BackupsPath, specificFile, defaultContents);
                 var json = File.ReadAllText(backupFile);
                 var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
-                Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Backup DB Loaded for {specificFile}");
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"Backup DB Loaded for {specificFile}");
                 return data;
             } catch (Exception e) {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"Could not load backup {specificFile}: {e.Message}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not load backup {specificFile}: {e.Message}", true);
             }
             
-            Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"Initialising DB for {specificFile}");
+            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
             return initialiser == null ? new TData() : initialiser();
         }
         

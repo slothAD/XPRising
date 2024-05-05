@@ -222,7 +222,7 @@ namespace OpenRPG.Utils
                             new(Units.CHAR_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
                         });
                 default:
-                    Plugin.Log(LogSystem.Plugin, LogLevel.Warning, $"No specific squad generation handling has been added for {faction}");
+                    Plugin.Log(LogSystem.Core, LogLevel.Warning, $"No specific squad generation handling has been added for {faction}");
                     break;
             }
 

@@ -15,7 +15,7 @@ namespace OpenRPG.Hooks
             try {
                 OnUpdate?.Invoke(__instance.World);
             } catch (Exception e) {
-                Plugin.Log(LogSystem.Plugin, LogLevel.Error, $"SCSHook: {e}");
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"SCSHook: {e}");
             }
         }
     }

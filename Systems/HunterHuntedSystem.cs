@@ -232,7 +232,7 @@ namespace OpenRPG.Systems
             var lastCombatEnd = Cache.GetCombatEnd(steamID);
 
             var elapsedTime = CooldownPeriod(heatData.lastCooldown, lastCombatStart, lastCombatEnd);
-            Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown}|S:{lastCombatStart}|E:{lastCombatEnd})");
+            Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown:u}|S:{lastCombatStart:u}|E:{lastCombatEnd:u})");
 
             if (elapsedTime > 0) {
                 var cooldownValue = (int)Math.Floor(elapsedTime * cooldownPerSecond);
