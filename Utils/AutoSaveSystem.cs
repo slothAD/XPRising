@@ -167,8 +167,14 @@ namespace OpenRPG.Utils
 
         private static TData LoadDB<TData>(string specificFile, Func<TData> initialiser = null) where TData : class, new()
         {
+            // Default JSON content to valid json so that they have a chance to be serialised without errors when loading for the first time.
+            var genericType = typeof(TData);
+            var isJsonListData = genericType.IsGenericType &&
+                                 (genericType.GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)) ||
+                                  genericType.GetGenericTypeDefinition().IsAssignableFrom(typeof(HashSet<>)));
+            var defaultContents = isJsonListData ? "[]" : "{}";
             try {
-                var saveFile = ConfirmFile(SavesPath, specificFile);
+                var saveFile = ConfirmFile(SavesPath, specificFile, defaultContents);
                 var json = File.ReadAllText(saveFile);
                 var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
                 Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Main DB Loaded for {specificFile}");
@@ -178,7 +184,7 @@ namespace OpenRPG.Utils
             }
             
             try {
-                var backupFile = ConfirmFile(BackupsPath, specificFile);
+                var backupFile = ConfirmFile(BackupsPath, specificFile, defaultContents);
                 var json = File.ReadAllText(backupFile);
                 var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
                 Plugin.Log(LogSystem.Plugin, LogLevel.Info, $"Backup DB Loaded for {specificFile}");
@@ -191,7 +197,7 @@ namespace OpenRPG.Utils
             return initialiser == null ? new TData() : initialiser();
         }
         
-        public static string ConfirmFile(string address, string file) {
+        public static string ConfirmFile(string address, string file, string defaultContents = "") {
             try {
                 Directory.CreateDirectory(address);
             }
@@ -204,8 +210,6 @@ namespace OpenRPG.Utils
                 // If the file does not exist, create a new empty file there
                 if (!File.Exists(fileAddress))
                 {
-                    // Default JSON files to valid json so that they have a chance to be serialised when loading for the first time.
-                    var defaultContents = file.EndsWith(".json") ? "{}" : "";
                     File.WriteAllText(fileAddress, defaultContents);
                 }
             } catch (Exception e) {

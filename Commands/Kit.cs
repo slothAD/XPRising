@@ -13,7 +13,7 @@ namespace OpenRPG.Commands {
         public static void KitCommand(ChatCommandContext ctx, string name) {
 
             try {
-                ItemKit kit = Database.kits.First(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
+                var kit = Database.kits.First(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
                 foreach (var guid in kit.PrefabGUIDs) {
                     Helper.AddItemToInventory(ctx, new PrefabGUID(guid.Key), guid.Value);
                 }
