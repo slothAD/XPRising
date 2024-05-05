@@ -18,14 +18,14 @@ public static class BloodlineConfig
         
         // Currently, we are never updating and saving the config file in game, so just load the values.
         BloodlineSystem.IsBloodlineSystemEnabled = _configFile.Bind("Bloodlines", "Enable Bloodlines", true, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.").Value;
-        BloodlineSystem.MercilessBloodlines = _configFile.Bind("Bloodlines", "Merciless Bloodlines", true, "Causes bloodlines to only grow when you kill something with a matching bloodline of higher strength, finally, a reward when you accidentally kill that 100% blood you found").Value;
+        BloodlineSystem.MercilessBloodlines = _configFile.Bind("Bloodlines", "Merciless Bloodlines", true, "Causes bloodlines to only grow when you kill something with a matching bloodline of that has a quality higher than the bloodline strength. Finally, a reward when you accidentally kill that 100% blood you found").Value;
         BloodlineSystem.DraculaGetsAll = _configFile.Bind("Bloodlines", "Dracula inherits all bloodlines", true, "Determines if Dracula (Frail) blood should inherit a portion of the other bloodlines.").Value;
         BloodlineSystem.GrowthMultiplier = _configFile.Bind("Bloodlines", "Bloodline growth multiplier", 1.0, "The multiplier applied to all bloodline gains.").Value;
         BloodlineSystem.VBloodMultiplier = _configFile.Bind("Bloodlines", "Bloodline VBlood Multiplier", 25.0, "The multiplier applied to the effective level of VBlood enemies for bloodline gains.").Value;
         
         BloodlineSystem.IsDecaySystemEnabled = _configFile.Bind("Bloodlines", "Enable Bloodline Decay", false, "Enable/disable the decay of bloodline over time.").Value;
         BloodlineSystem.DecayInterval = _configFile.Bind("Bloodlines", "Decay Interval", 60, "Amount of seconds per decay tick.").Value;
-        BloodlineSystem.OfflineDecayValue = _configFile.Bind("Bloodlines", "Decay Value", 1, "Bloodlines will decay by this amount for every decay tick.(1 -> 0.001%)").Value;
+        BloodlineSystem.OfflineDecayValue = _configFile.Bind("Bloodlines", "Decay Value", 0.1, "Bloodlines will decay by this amount for every decay tick.(1 -> 0.001%)").Value;
         BloodlineSystem.OnlineDecayValue = BloodlineSystem.OfflineDecayValue;
         
         BloodlineSystem.EffectivenessSubSystemEnabled = _configFile.Bind("Bloodlines", "Enable Effectiveness Subsystem", true, "Enables the Effectiveness bloodline subsystem, which lets you reset your bloodline to gain a multiplier to the effects of the matching bloodline.").Value;

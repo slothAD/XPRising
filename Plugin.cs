@@ -194,10 +194,10 @@ namespace OpenRPG
         {
             Bloodline,
             Buff,
+            Core,
             Death,
             Faction,
             Mastery,
-            Core,
             PowerUp,
             RandomEncounter,
             SquadSpawn,
@@ -209,6 +209,12 @@ namespace OpenRPG
         {
             var isLogging = forceLog || DebugLoggingConfig.IsLogging(system);
             if (isLogging) _logger.Log(logLevel, $"{DateTime.Now.ToString("u")}: [{Enum.GetName(system)}] {message}");
+        }
+        
+        // Log overload to allow potentially more computationally expensive logs to be hidden when not being logged
+        public new static void Log(LogSystem system, LogLevel logLevel, Func<string> messageGenerator)
+        {
+            Log(system, logLevel, messageGenerator());
         }
     }
 }

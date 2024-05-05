@@ -25,8 +25,8 @@ namespace OpenRPG.Systems
         // TODO online decay
         public static bool IsDecaySystemEnabled = false;
         public static int DecayInterval = 60;
-        public static int OnlineDecayValue = 0;
-        public static int OfflineDecayValue = 1;
+        public static double OnlineDecayValue = 0;
+        public static double OfflineDecayValue = 1;
 
         public static bool EffectivenessSubSystemEnabled = true;
         public static bool GrowthSubsystemEnabled = true;
@@ -173,7 +173,7 @@ namespace OpenRPG.Systems
             {
                 var updatedValue = updatedMastery.Mastery;
                 var bloodTypeName = GetBloodTypeName(killerBloodType);
-                Output.SendLore(killerUserEntity, $"<color=#ffb700>{bloodTypeName} bloodline has increased by {growthVal:F3}% [{updatedValue:F3}%]</color>");
+                Output.SendLore(killerUserEntity, $"<color=#ffb700>Bloodline mastery has increased by {growthVal:F3}% [ {bloodTypeName}: {updatedValue:F3}%]</color>");
             }
         }
         
@@ -188,7 +188,7 @@ namespace OpenRPG.Systems
             {
                 var decayValue = OfflineDecayValue * decayTicks * -1;
 
-                Output.SendLore(userEntity, $"You've been offline for {elapsedTime.TotalMinutes} minute(s). Your bloodline has decayed by {decayValue * 0.001:F3}%");
+                Output.SendLore(userEntity, $"You've been offline for {elapsedTime.TotalMinutes} minute(s). Your bloodline mastery has decayed by {decayValue * 0.001:F3}%");
                 
                 var bld = Database.playerBloodline[steamID];
 

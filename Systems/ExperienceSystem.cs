@@ -181,9 +181,14 @@ namespace OpenRPG.Systems
             Database.player_experience.TryGetValue(SteamID, out int exp);
             int pLvl = convertXpToLevel(exp);
             int killerLvl = pLvl;
-            bool pvpKill = false;
-            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter _);
-            if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
+            bool pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out var _);
+            if (pvpKill)
+            {
+                var killerGear = entityManager.GetComponentData<Equipment>(killerEntity);
+                killerLvl = (int)(killerGear.ArmorLevel.Value + killerGear.WeaponLevel.Value + killerGear.SpellLevel.Value);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Killer: [{killerGear.ArmorLevel.Value:F1},{killerGear.WeaponLevel.Value:F1},{killerGear.SpellLevel.Value:F1}]");
+            }
+            else if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out var killerUnitLevel)) killerLvl = killerUnitLevel.Level;
             else {
                 Plugin.Log(LogSystem.Xp, LogLevel.Info, "Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
                 if (entityManager.TryGetComponentData<EntityOwner>(killerEntity, out EntityOwner eOwn)) {

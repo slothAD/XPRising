@@ -32,7 +32,7 @@ public static class MasteryConfig
         
         WeaponMasterySystem.IsDecaySystemEnabled = _configFile.Bind("Mastery", "Enable Mastery Decay", false, "Enable/disable the decay of weapon mastery over time.").Value;
         WeaponMasterySystem.DecayInterval = _configFile.Bind("Mastery", "Decay Interval", 60, "Amount of seconds per decay tick.").Value;
-        WeaponMasterySystem.OfflineDecayValue = _configFile.Bind("Mastery", "Decay Value", 1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)").Value;
+        WeaponMasterySystem.OfflineDecayValue = _configFile.Bind("Mastery", "Decay Value", 0.1, "Mastery will decay by this amount for every decay tick.(1 -> 0.001%)").Value;
         WeaponMasterySystem.OnlineDecayValue = WeaponMasterySystem.OfflineDecayValue;
         
         WeaponMasterySystem.EffectivenessSubSystemEnabled = _configFile.Bind("Mastery", "Enable Effectiveness Subsystem", true, "Enables the Effectiveness mastery subsystem, which lets you reset your mastery to gain a multiplier to the effects of the matching mastery.").Value;

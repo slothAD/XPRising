@@ -380,16 +380,12 @@ namespace OpenRPG.Utils
         public static PrefabGUID GetPrefabGUID(Entity entity)
         {
             var entityManager = Plugin.Server.EntityManager;
-            PrefabGUID guid;
-            try
+            if (entity == Entity.Null || !entityManager.TryGetComponentData<PrefabGUID>(entity, out var prefabGuid))
             {
-                guid = entityManager.GetComponentData<PrefabGUID>(entity);
+                prefabGuid = new PrefabGUID(0);
             }
-            catch
-            {
-                guid.GuidHash = 0;
-            }
-            return guid;
+
+            return prefabGuid;
         }
 
         public static string GetPrefabName(PrefabGUID hashCode)
@@ -409,6 +405,11 @@ namespace OpenRPG.Utils
                 name = "NoPrefabName";
             }
             return name;
+        }
+
+        public static string GetPrefabName(Entity entity)
+        {
+            return GetPrefabName(GetPrefabGUID(entity));
         }
         
         public static Prefabs.Faction ConvertGuidToFaction(PrefabGUID guid) {
