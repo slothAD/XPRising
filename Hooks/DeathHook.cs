@@ -56,27 +56,13 @@ namespace OpenRPG.Hooks {
 
                 }
 
-                //-- Auto Respawn & HunterHunted System Begin
+                //-- HunterHunted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
                     Plugin.Log(LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
                     if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
                     if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
                         ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
                     }
-
-                    PlayerCharacter player = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Died);
-                    Entity userEntity = player.UserEntity;
-                    User user = __instance.EntityManager.GetComponentData<User>(userEntity);
-                    ulong SteamID = user.PlatformId;
-
-                    //-- Check for AutoRespawn
-                    if (user.IsConnected) {
-                        bool isServerWide = Database.autoRespawn.ContainsKey(1);
-                        if (isServerWide || Database.autoRespawn.ContainsKey(SteamID)) {
-                            Utils.RespawnCharacter.Respawn(ev.Died, player, userEntity);
-                        }
-                    }
-                    //-- ----------------------------------------
                 }
             }
             

@@ -26,7 +26,6 @@ namespace OpenRPG.Utils
         public static readonly string BackupsPath = Path.Combine(SavesPath, "Backup");
         
         // Config files
-        public static readonly string AutoRespawnJson = "auto_respawn.json";
         public static readonly string GodModeJson = "god_mode.json";
         public static readonly string KitsJson = "kits.json";
         public static readonly string NoCooldownJson = "no_cooldown.json";
@@ -89,7 +88,6 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, NoCooldownJson, Database.nocooldownlist, JSON_options);
             SaveDB(saveFolder, GodModeJson, Database.godmode, JSON_options);
             SaveDB(saveFolder, SpeedingJson, Database.speeding, JSON_options);
-            SaveDB(saveFolder, AutoRespawnJson, Database.autoRespawn, JSON_options);
             SaveDB(saveFolder, KitsJson, Database.kits, JSON_options);
             SaveDB(saveFolder, PowerUpJson, Database.PowerUpList, JSON_options);
 
@@ -124,7 +122,6 @@ namespace OpenRPG.Utils
             Database.godmode = LoadDB<Dictionary<ulong, bool>>(GodModeJson);
             Database.speeding = LoadDB<Dictionary<ulong, bool>>(SpeedingJson);
             Database.nocooldownlist = LoadDB<Dictionary<ulong, bool>>(NoCooldownJson);
-            Database.autoRespawn = LoadDB<Dictionary<ulong, bool>>(AutoRespawnJson);
             Database.kits = LoadDB(KitsJson, Kit.DefaultItemKit);
             Database.PowerUpList = LoadDB<Dictionary<ulong, PowerUpData>>(PowerUpJson);
 

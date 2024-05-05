@@ -218,8 +218,6 @@ namespace OpenRPG.Systems
         {
             var permissions = new Dictionary<string, int>()
             {
-                {"autorespawn", 100},
-                {"autorespawn-all", 100},
                 {"ban info", 0},
                 {"ban player", 100},
                 {"ban unban", 100},
