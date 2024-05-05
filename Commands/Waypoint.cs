@@ -18,7 +18,7 @@ namespace OpenRPG.Commands {
             }
 
             if (Database.waypoints.TryGetValue(waypoint, out var wpData)) {
-                Helper.TeleportTo(ctx, wpData);
+                Helper.TeleportTo(ctx, wpData.ToFloat3());
                 return;
             }
 
@@ -30,7 +30,7 @@ namespace OpenRPG.Commands {
                     }
                     return;
                 }
-                Helper.TeleportTo(ctx, wpData);
+                Helper.TeleportTo(ctx, wpData.ToFloat3());
                 return;
             }
             ctx.Reply("Waypoint not found.");

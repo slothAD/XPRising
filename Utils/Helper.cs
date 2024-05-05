@@ -143,24 +143,6 @@ namespace OpenRPG.Utils
             Plugin.Log(LogSystem.Core, LogLevel.Info, "Player Cache Created.");
         }
         
-        public static void TeleportTo(ChatCommandContext ctx, WaypointData position) {
-
-            var entity = Plugin.Server.EntityManager.CreateEntity(
-                    ComponentType.ReadWrite<FromCharacter>(),
-                    ComponentType.ReadWrite<PlayerTeleportDebugEvent>()
-                );
-
-            Plugin.Server.EntityManager.SetComponentData<FromCharacter>(entity, new() {
-                User = ctx.Event.SenderUserEntity,
-                Character = ctx.Event.SenderCharacterEntity
-            });
-
-            Plugin.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new() {
-                Position = position.ToFloat3(),
-                Target = PlayerTeleportDebugEvent.TeleportTarget.Self
-            });
-        }
-        
         public static void UpdatePlayerCache(Entity userEntity, User userData, bool forceOffline = false)
         {
             if (forceOffline) userData.IsConnected = false;
