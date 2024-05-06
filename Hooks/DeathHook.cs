@@ -16,8 +16,6 @@ namespace OpenRPG.Hooks {
             NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
             foreach (DeathEvent ev in deathEvents) {
                 Plugin.Log(LogSystem.Death, LogLevel.Info, $"Death Event occured for: {ev.Died}");
-                //-- Just track whatever died...
-                if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
 
                 //-- Player Creature Kill Tracking
                 var killer = ev.Killer;

@@ -12,31 +12,10 @@ namespace OpenRPG.Systems
 {
     public static class PermissionSystem
     {
-        public static bool isVIPSystem = true;
-        public static bool isVIPWhitelist = true;
-        public static int VIP_Permission = 50;
-
-        public static double VIP_OutCombat_ResYield = -1.0;
-        public static double VIP_OutCombat_DurabilityLoss = -1.0;
-        public static double VIP_OutCombat_MoveSpeed = -1.0;
-        public static double VIP_OutCombat_GarlicResistance = -1.0;
-        public static double VIP_OutCombat_SilverResistance = -1.0;
-
-        public static double VIP_InCombat_ResYield = -1.0;
-        public static double VIP_InCombat_DurabilityLoss = -1.0;
-        public static double VIP_InCombat_MoveSpeed = -1.0;
-        public static double VIP_InCombat_GarlicResistance = -1.0;
-        public static double VIP_InCombat_SilverResistance = -1.0;
-
         private static EntityManager em = Plugin.Server.EntityManager;
 
         public static int HighestPrivilege = 100;
         public static int LowestPrivilege = 0;
-        public static bool IsUserVIP(ulong steamID)
-        {
-            bool isVIP = GetUserPermission(steamID) >= VIP_Permission;
-            return isVIP;
-        }
 
         public static int GetUserPermission(ulong steamID)
         {
@@ -89,129 +68,6 @@ namespace OpenRPG.Systems
                 }
             }
             ctx.Reply($"===================================");
-        }
-
-        public static void BuffReceiver(Entity buffEntity, PrefabGUID GUID)
-        {
-            if (!GUID.GuidHash.Equals(Buffs.Buff_OutOfCombat) && !em.HasComponent<InCombatBuff>(buffEntity)) return;
-            var Owner = em.GetComponentData<EntityOwner>(buffEntity).Owner;
-            if (!em.HasComponent<PlayerCharacter>(Owner)) return;
-
-            var userEntity = em.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-            var SteamID = em.GetComponentData<User>(userEntity).PlatformId;
-
-            if (IsUserVIP(SteamID))
-            {
-                var Buffer = em.AddBuffer<ModifyUnitStatBuff_DOTS>(buffEntity);
-                //-- Out of Combat Buff
-                if (GUID.GuidHash.Equals(Buffs.Buff_OutOfCombat))
-                {
-                    if (VIP_OutCombat_ResYield > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.ResourceYield,
-                            Value = (float)VIP_OutCombat_ResYield,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_OutCombat_DurabilityLoss > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.ReducedResourceDurabilityLoss,
-                            Value = (float)VIP_OutCombat_DurabilityLoss,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_OutCombat_MoveSpeed > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MovementSpeed,
-                            Value = (float)VIP_OutCombat_MoveSpeed,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_OutCombat_GarlicResistance > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.GarlicResistance,
-                            Value = (float)VIP_OutCombat_GarlicResistance,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_OutCombat_SilverResistance > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SilverResistance,
-                            Value = (float)VIP_OutCombat_SilverResistance,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                }
-                //-- In Combat Buff
-                else if (em.HasComponent<InCombatBuff>(buffEntity))
-                {
-                    if (VIP_InCombat_ResYield > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.ResourceYield,
-                            Value = (float)VIP_InCombat_ResYield,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_InCombat_DurabilityLoss > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.ReducedResourceDurabilityLoss,
-                            Value = (float)VIP_InCombat_DurabilityLoss,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_InCombat_MoveSpeed > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.MovementSpeed,
-                            Value = (float)VIP_InCombat_MoveSpeed,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_InCombat_GarlicResistance > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.GarlicResistance,
-                            Value = (float)VIP_InCombat_GarlicResistance,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                    if (VIP_InCombat_SilverResistance > 0)
-                    {
-                        Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                        {
-                            StatType = UnitStatType.SilverResistance,
-                            Value = (float)VIP_InCombat_SilverResistance,
-                            ModificationType = ModificationType.Multiply,
-                            Id = ModificationId.NewId(0)
-                        });
-                    }
-                }
-            }
         }
 
         public static Dictionary<string, int> DefaultCommandPermissions()

@@ -16,160 +16,6 @@ namespace OpenRPG.Hooks;
 [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Spawn), nameof(ModifyUnitStatBuffSystem_Spawn.OnUpdate))]
 public class ModifyUnitStatBuffSystem_Spawn_Patch
 {
-    #region GodMode & Other Buff
-    private static ModifyUnitStatBuff_DOTS Cooldown = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.CooldownModifier,
-        Value = 0,
-        ModificationType = ModificationType.Set,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS SunCharge = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.SunChargeTime,
-        Value = 50000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS Hazard = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.ImmuneToHazards,
-        Value = 1,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS SunResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.SunResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS Speed = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.MovementSpeed,
-        Value = 15,
-        ModificationType = ModificationType.Set,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS PResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.PhysicalResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS FResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.FireResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS HResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.HolyResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS SResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.SilverResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS GResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.GarlicResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS SPResist = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.SpellResistance,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS PPower = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.PhysicalPower,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS RPower = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.ResourcePower,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS SPPower = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.SpellPower,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS PHRegen = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.PassiveHealthRegen,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS HRecovery = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.HealthRecovery,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS MaxHP = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.MaxHealth,
-        Value = 10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS MaxYield = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.ResourceYield,
-        Value = 10,
-        ModificationType = ModificationType.Multiply,
-        Id = ModificationId.NewId(0)
-    };
-
-    private static ModifyUnitStatBuff_DOTS DurabilityLoss = new ModifyUnitStatBuff_DOTS()
-    {
-        StatType = UnitStatType.ReducedResourceDurabilityLoss,
-        Value = -10000,
-        ModificationType = ModificationType.Add,
-        Id = ModificationId.NewId(0)
-    };
-    #endregion
-    
     private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance) {
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Entered Buff System, attempting Old Style");
         oldStyleBuffHook(__instance);
@@ -239,44 +85,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                 ModificationType = ModificationType.Add,
                 Id = ModificationId.NewId(0)
             });
-        }
-
-
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing NoCD Command");
-        if (Database.nocooldownlist.ContainsKey(Data.PlatformId)) {
-            Buffer.Add(Cooldown);
-        }
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Sun Immunity Command");
-        if (Database.sunimmunity.ContainsKey(Data.PlatformId)) {
-            Buffer.Add(SunCharge);
-            Buffer.Add(Hazard);
-            Buffer.Add(SunResist);
-        }
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Speeding Command");
-        if (Database.speeding.ContainsKey(Data.PlatformId)) {
-            Buffer.Add(Speed);
-        }
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing GodMode Command");
-        if (Database.godmode.ContainsKey(Data.PlatformId)) {
-            Buffer.Add(PResist);
-            Buffer.Add(FResist);
-            Buffer.Add(HResist);
-            Buffer.Add(SResist);
-            Buffer.Add(SunResist);
-            Buffer.Add(GResist);
-            Buffer.Add(SPResist);
-            Buffer.Add(PPower);
-            Buffer.Add(RPower);
-            Buffer.Add(SPPower);
-            Buffer.Add(MaxYield);
-            Buffer.Add(MaxHP);
-            Buffer.Add(Hazard);
-            Buffer.Add(SunCharge);
-            Buffer.Add(DurabilityLoss);
         }
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + Buffer.Length);
@@ -424,16 +232,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
 [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
 public class BuffSystem_Spawn_Server_Patch {
-    private static void Prefix(BuffSystem_Spawn_Server __instance) {
-        if (PermissionSystem.isVIPSystem) {
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-            foreach (var entity in entities) {
-                PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-                if (PermissionSystem.isVIPSystem) PermissionSystem.BuffReceiver(entity, GUID);
-            }
-        }
-    }
-
     private static void Postfix(BuffSystem_Spawn_Server __instance) {
 
         if (WeaponMasterySystem.IsMasteryEnabled) {
@@ -508,20 +306,6 @@ public class DebugBuffSystem_Patch
         } else if (combatEnd) {
             Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat end");
             Cache.playerCombatEnd[steamID] = DateTime.Now;
-        }
-    }
-}
-
-[HarmonyPatch(typeof(ModifyBloodDrainSystem_Spawn), nameof(ModifyBloodDrainSystem_Spawn.OnUpdate))]
-public class ModifyBloodDrainSystem_Spawn_Patch {
-    private static void Prefix(ModifyBloodDrainSystem_Spawn __instance) {
-
-        if (PermissionSystem.isVIPSystem) {
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
-            foreach (var entity in entities) {
-                PrefabGUID GUID = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-                if (PermissionSystem.isVIPSystem) PermissionSystem.BuffReceiver(entity, GUID);
-            }
         }
     }
 }

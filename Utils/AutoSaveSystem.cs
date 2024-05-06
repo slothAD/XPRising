@@ -26,17 +26,9 @@ namespace OpenRPG.Utils
         public static readonly string BackupsPath = Path.Combine(SavesPath, "Backup");
         
         // Config files
-        public static readonly string GodModeJson = "god_mode.json";
-        public static readonly string KitsJson = "kits.json";
-        public static readonly string NoCooldownJson = "no_cooldown.json";
         public static readonly string PowerUpJson = "power_up.json";
-        public static readonly string SpeedingJson = "speeding.json";
-        public static readonly string SunImmunityJson = "sun_immunity.json";
         public static readonly string WaypointCountJson = "waypoint_count.json";
         public static readonly string GlobalWaypointsJson = "waypoints.json";
-        public static readonly string WorldDynamicsJson = "world_dynamics.json";
-        public static readonly string IgnoredMonstersJson = "ignored_monsters.json";
-        public static readonly string UserBanList = "user_banlist.json";
         public static readonly string WeaponMasteryJson = "weapon_mastery.json";
         public static readonly string PlayerLogoutJson = "player_logout.json";
         public static readonly string WeaponMasteryConfigJson = "weapon_mastery_config.json";
@@ -82,13 +74,8 @@ namespace OpenRPG.Utils
             
             SaveDB(saveFolder, CommandPermissionJson, Database.command_permission, Pretty_JSON_options);
             SaveDB(saveFolder, UserPermissionJson, Database.user_permission, Pretty_JSON_options);
-            SaveDB(saveFolder, SunImmunityJson, Database.sunimmunity, JSON_options);
             SaveDB(saveFolder, WaypointCountJson, Database.waypoints_owned, JSON_options);
             SaveDB(saveFolder, GlobalWaypointsJson, Database.waypoints, JSON_options);
-            SaveDB(saveFolder, NoCooldownJson, Database.nocooldownlist, JSON_options);
-            SaveDB(saveFolder, GodModeJson, Database.godmode, JSON_options);
-            SaveDB(saveFolder, SpeedingJson, Database.speeding, JSON_options);
-            SaveDB(saveFolder, KitsJson, Database.kits, JSON_options);
             SaveDB(saveFolder, PowerUpJson, Database.PowerUpList, JSON_options);
 
             //-- System Related
@@ -104,9 +91,6 @@ namespace OpenRPG.Utils
             SaveDB(saveFolder, BloodlinesJson, Database.playerBloodline, JSON_options);
             SaveDB(saveFolder, BloodlineConfigJson, Database.bloodlineStatConfig, Pretty_JSON_options);
             SaveDB(saveFolder, PlayerLogBloodlinesJson, Database.playerLogBloodline, JSON_options);
-            SaveDB(saveFolder, UserBanList, Database.user_banlist, Pretty_JSON_options);
-            SaveDB(saveFolder, WorldDynamicsJson, Database.FactionStats, Pretty_JSON_options);
-            SaveDB(saveFolder, IgnoredMonstersJson, Database.IgnoredMonstersGUID, JSON_options);
 
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
         }
@@ -116,13 +100,8 @@ namespace OpenRPG.Utils
             //-- Commands Related
             Database.command_permission = LoadDB(CommandPermissionJson, PermissionSystem.DefaultCommandPermissions);
             Database.user_permission = LoadDB<Dictionary<ulong, int>>(UserPermissionJson);
-            Database.sunimmunity = LoadDB<Dictionary<ulong, bool>>(SunImmunityJson);
             Database.waypoints_owned = LoadDB<Dictionary<ulong, int>>(WaypointCountJson);
             Database.waypoints = LoadDB<Dictionary<string, WaypointData>>(GlobalWaypointsJson);
-            Database.godmode = LoadDB<Dictionary<ulong, bool>>(GodModeJson);
-            Database.speeding = LoadDB<Dictionary<ulong, bool>>(SpeedingJson);
-            Database.nocooldownlist = LoadDB<Dictionary<ulong, bool>>(NoCooldownJson);
-            Database.kits = LoadDB(KitsJson, Kit.DefaultItemKit);
             Database.PowerUpList = LoadDB<Dictionary<ulong, PowerUpData>>(PowerUpJson);
 
             //-- System Related
@@ -138,9 +117,6 @@ namespace OpenRPG.Utils
             Database.playerBloodline = LoadDB<LazyDictionary<ulong, BloodlineMasteryData>>(BloodlinesJson);
             Database.bloodlineStatConfig = LoadDB(BloodlineConfigJson, BloodlineSystem.DefaultBloodlineConfig);
             Database.playerLogBloodline = LoadDB<Dictionary<ulong, bool>>(PlayerLogBloodlinesJson);
-            Database.user_banlist = LoadDB<Dictionary<ulong, BanData>>(UserBanList);
-            Database.FactionStats = LoadDB(WorldDynamicsJson, WorldDynamicsSystem.DefaultFactionStats);
-            Database.IgnoredMonstersGUID = LoadDB(IgnoredMonstersJson, WorldDynamicsSystem.DefaultIgnoredMonsters);
 
             Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
         }

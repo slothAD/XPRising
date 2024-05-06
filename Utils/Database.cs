@@ -1,7 +1,6 @@
 ﻿using ProjectM;
 using ProjectM.Network;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using OpenRPG.Models;
 using OpenRPG.Systems;
@@ -21,9 +20,6 @@ namespace OpenRPG.Utils
         public static Dictionary<ulong, PlayerData> SteamPlayerCache = new();
         public static Dictionary<Entity, PlayerGroup> PlayerAllies = new();
         public static Dictionary<ulong, List<BuffData>> buffData = new();
-
-        //-- -- Commands
-        public static Dictionary<ulong, float> command_Cooldown = new();
         
         //-- -- Combat
         public static Dictionary<ulong, DateTime> playerCombatStart = new();
@@ -71,19 +67,11 @@ namespace OpenRPG.Utils
 
         public static HashSet<ApplyBuffDebugEvent> playerBuffs = new();
         //-- -- Commands
-        public static Dictionary<ulong, bool> sunimmunity { get; set; }
-        public static Dictionary<ulong, bool> nocooldownlist { get; set; }
-        public static Dictionary<ulong, bool> godmode { get; set; }
-        public static Dictionary<ulong, bool> speeding { get; set; }
         public static Dictionary<string, WaypointData> waypoints { get; set; }
         public static Dictionary<ulong, int> waypoints_owned { get; set; }
         public static Dictionary<ulong, int> user_permission { get; set; }
         public static Dictionary<string, int> command_permission { get; set; }
         public static Dictionary<ulong, PowerUpData> PowerUpList { get; set; }
-        public static List<ItemKit> kits { get; set; }
-
-        //-- -- Ban System
-        public static Dictionary<ulong, BanData> user_banlist { get; set; }
 
         //-- -- EXP System
         public static Dictionary<ulong, int> player_experience { get; set; }
@@ -113,9 +101,5 @@ namespace OpenRPG.Utils
         public static LazyDictionary<ulong, BloodlineMasteryData> playerBloodline { get; set; }
         public static Dictionary<ulong, bool> playerLogBloodline { get; set; }
         public static Dictionary<BloodlineSystem.BloodType, List<StatConfig>> bloodlineStatConfig { get; set; }
-
-        //-- -- World Event System
-        public static ConcurrentDictionary<int, FactionData> FactionStats { get; set; }
-        public static HashSet<PrefabGUID> IgnoredMonstersGUID { get; set; }
     }
 }

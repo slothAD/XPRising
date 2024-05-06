@@ -31,36 +31,6 @@ namespace OpenRPG.Utils
         public float SATK { get; set; }
         public float SDEF { get; set; }
     }
-    public struct StatsBonus()
-    {
-        public int Level_Int { get; set; } = 0;
-        public float HP_Float { get; set; } = 0;
-        public float PhysicalPower_Float { get; set; } = 0;
-        public float PhysicalResistance_Float { get; set; } = 0;
-        public float PhysicalCriticalStrikeChance_Float { get; set; } = 0;
-        public float PhysicalCriticalStrikeDamage_Float { get; set; } = 0;
-        public float SpellPower_Float { get; set; } = 0;
-        public float SpellResistance_Float { get; set; } = 0;
-        public float SpellCriticalStrikeChance_Float { get; set; } = 0;
-        public float SpellCriticalStrikeDamage_Float { get; set; } = 0;
-        public float DamageVsPlayerVampires_Float { get; set; } = 0;
-        public float ResistVsPlayerVampires_Float { get; set; } = 0;
-        public int FireResistance_Int { get; set; } = 0;
-    }
-
-    public struct FactionData(Prefabs.Faction faction)
-    {
-        public string Name { get; set; } = $"Faction_{Enum.GetName(faction)}";
-        public bool Active { get; set; } = false;
-        public int Level { get; set; } = 0;
-        public int MaxLevel { get; set; } = 0;
-        public int MinLevel { get; set; } = 0;
-        public int ActivePower { get; set; } = 0;
-        public int StoredPower { get; set; } = 0;
-        public int DailyPower { get; set; } = 0;
-        public int RequiredPower { get; set; } = 0;
-        public StatsBonus FactionBonus { get; set; } = new();
-    }
 
     public struct PlayerHeatData {
         public struct Heat {

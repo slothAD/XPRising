@@ -32,9 +32,6 @@ namespace OpenRPG
 
         private static ConfigEntry<int> WaypointLimit;
 
-        private static ConfigEntry<bool> EnableWorldDynamics;
-        private static ConfigEntry<bool> WDGrowOnKill;
-
         private static ConfigEntry<int> buffID;
         private static ConfigEntry<int> forbiddenBuffID;
         private static ConfigEntry<int> appliedBuff;
@@ -83,9 +80,6 @@ namespace OpenRPG
             appliedBuff = Config.Bind("Buff System", "Applied Buff", Helper.buffGUID, "The GUID of the buff that gets applied when mastery, bloodline, etc changes. Doesnt need to be the same as the Buff GUID.");
             humanReadablePercentageStats = Config.Bind("Buff System", "Human Readable Percentage Stats", false, "Determines if rates for percentage stats should be read as out of 100 instead of 1, off by default for compatability.");
             inverseMultiplersDisplayReduction = Config.Bind("Buff System", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats display their reduction, or the final value.");
-
-            EnableWorldDynamics = Config.Bind("World Dynamics", "Enable Faction Dynamics", false, $"All other faction dynamics data & config is within {AutoSaveSystem.WorldDynamicsJson} file.");
-            WDGrowOnKill = Config.Bind("World Dynamics", "Factions grow on kill", false, "Inverts the faction dynamic system, so that they grow stronger when killed and weaker over time.");
             
             disableCommandAdminRequirement = Config.Bind("Admin", "Disable command admin requirement", false, "Disables all \"isAdmin\" checks for running commands.");
         }
@@ -147,7 +141,6 @@ namespace OpenRPG
             Helper.GetUserActivityGridSystem(out Helper.UAGS);
 
             DebugLoggingConfig.Initialize();
-            VipConfig.Initialize();
             WantedConfig.Initialize();
             ExperienceConfig.Initialize();
             MasteryConfig.Initialize();
@@ -155,10 +148,6 @@ namespace OpenRPG
 
             //-- Apply configs
             Waypoint.WaypointLimit = WaypointLimit.Value;
-            
-            Plugin.Log(LogSystem.Core, LogLevel.Info, "Loading world dynamics config");
-            WorldDynamicsSystem.isFactionDynamic = EnableWorldDynamics.Value;
-            WorldDynamicsSystem.growOnKill = WDGrowOnKill.Value;
 
             Helper.buffGUID = buffID.Value;
             Helper.AppliedBuff = new PrefabGUID(appliedBuff.Value);
