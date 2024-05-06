@@ -38,7 +38,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer acquired, length: " + Buffer.Length);
 
         //Buffer.Clear();
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer cleared, to confirm length: " + Buffer.Length);
+        //Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer cleared, to confirm length: " + Buffer.Length);
 
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Reciever");
@@ -112,7 +112,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
     }
     public static void rebuiltBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
         EntityManager em = __instance.EntityManager;
-        bool hasSGM = Helper.GetServerGameManager(out ServerGameManager sgm);
+        bool hasSGM = Helper.GetServerGameManager(out var sgm);
         if (!hasSGM) {
             Plugin.Log(LogSystem.Buff, LogLevel.Error, "No Server Game Manager, Something is WRONG.");
             return;

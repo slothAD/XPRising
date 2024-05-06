@@ -70,6 +70,7 @@ namespace OpenRPG.Utils
         public Entity CharEntity { get; set; } = charEntity;
     }
     
+    // This is basically a float3, but more serialisable
     public struct WaypointData(float x, float y, float z)
     {
         public float x = x;

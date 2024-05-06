@@ -22,9 +22,9 @@ namespace OpenRPG.Utils
         private static Entity empty_entity = new Entity();
         private static System.Random rand = new System.Random();
         
-        public static ServerGameSettings SGS = default;
-        public static ServerGameManager SGM = default;
-        public static UserActivityGridSystem UAGS = default;
+        private static IsSystemInitialised<ServerGameSettings> _serverGameSettings = default;
+        private static IsSystemInitialised<ServerGameManager> _serverGameManager = default;
+        private static IsSystemInitialised<UserActivityGridSystem> _userActivityGridSystem = default;
 
         public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
         public static int forbiddenBuffGUID = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
@@ -50,15 +50,42 @@ namespace OpenRPG.Utils
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
 
-        public static bool GetUserActivityGridSystem(out UserActivityGridSystem uags)
+        public static bool GetUserActivityGridSystem(out UserActivityGridSystem userActivityGridSystem)
         {
-            uags = Plugin.Server.GetExistingSystem<AiPrioritizationSystem>()?._UserActivityGridSystem;
+            userActivityGridSystem = _userActivityGridSystem.system;
+            if (!_userActivityGridSystem.isInitialised)
+            {
+                var aps = Plugin.Server.GetExistingSystem<AiPrioritizationSystem>();
+                if (aps == null) return false;
+                _userActivityGridSystem.system = aps._UserActivityGridSystem;
+                userActivityGridSystem = _userActivityGridSystem.system;
+            }
             return true;
         }
 
-        public static bool GetServerGameManager(out ServerGameManager sgm)
+        public static bool GetServerGameManager(out ServerGameManager serverGameManager)
         {
-            sgm = (ServerGameManager)Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
+            serverGameManager = _serverGameManager.system;
+            if (!_serverGameManager.isInitialised)
+            {
+                var ssm = Plugin.Server.GetExistingSystem<ServerScriptMapper>();
+                if (ssm == null) return false;
+                _serverGameManager.system = ssm._ServerGameManager;
+                serverGameManager = _serverGameManager.system;
+            }
+            return true;
+        }
+
+        public static bool GetServerGameSettings(out ServerGameSettings settings)
+        {
+            settings = _serverGameSettings.system;
+            if (!_serverGameSettings.isInitialised)
+            {
+                var sgs = Plugin.Server.GetExistingSystem<ServerGameSettingsSystem>();
+                if (sgs == null) return false;
+                _serverGameSettings.system = sgs._Settings;
+                settings = _serverGameSettings.system;
+            }
             return true;
         }
 
@@ -101,12 +128,6 @@ namespace OpenRPG.Utils
                 value = 1 - value;
             }
             return value;
-        }
-
-        public static bool GetServerGameSettings(out ServerGameSettings settings)
-        {
-            settings = Plugin.Server.GetExistingSystem<ServerGameSettingsSystem>()?._Settings;
-            return true;
         }
 
         public static FixedString64 GetTrueName(string name)
@@ -528,6 +549,12 @@ namespace OpenRPG.Utils
             // Split words by camel case
             // ie, PhysicalPower => "Physical Power"
             return Regex.Replace(name, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
+        }
+
+        private struct IsSystemInitialised<T>()
+        {
+            public bool isInitialised = false;
+            public T system = default;
         }
     }
 }

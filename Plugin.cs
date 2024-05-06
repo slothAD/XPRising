@@ -103,7 +103,7 @@ namespace OpenRPG
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Plugin.Log(LogSystem.Core, LogLevel.Info, $"Plugin is loaded", true);
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"Plugin is loaded [version: {MyPluginInfo.PLUGIN_VERSION}]", true);
         }
 
         private static void GameDataOnInitialize(World world)
@@ -136,9 +136,10 @@ namespace OpenRPG
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Initializing {MyPluginInfo.PLUGIN_NAME}...", true);
             
             //-- Initialize System
-            Helper.GetServerGameSettings(out Helper.SGS);
-            Helper.GetServerGameManager(out Helper.SGM);
-            Helper.GetUserActivityGridSystem(out Helper.UAGS);
+            // Pre-initialise some constants
+            Helper.GetServerGameSettings(out _);
+            Helper.GetServerGameManager(out _);
+            Helper.GetUserActivityGridSystem(out _);
 
             DebugLoggingConfig.Initialize();
             WantedConfig.Initialize();
