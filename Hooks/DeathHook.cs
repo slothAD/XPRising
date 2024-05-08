@@ -21,8 +21,21 @@ namespace OpenRPG.Hooks {
                 var killer = ev.Killer;
                 Plugin.Log(LogSystem.Death, LogLevel.Info, () => $"[{ev.Source},{ev.Killer},{ev.Died}] => [{Helper.GetPrefabName(ev.Source)},{Helper.GetPrefabName(ev.Killer)},{Helper.GetPrefabName(ev.Died)}]");
 
+                //-- Check if victim is a minion
+                var ignoreKill = false;
+                if (__instance.EntityManager.HasComponent<Minion>(ev.Died)) {
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Minion killed, ignoring");
+                    ignoreKill = true;
+                }
+                
+                //-- Check victim has a level
+                if (!__instance.EntityManager.HasComponent<UnitLevel>(ev.Died)) {
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Has no level, ignoring");
+                    ignoreKill = true;
+                }
+                
                 // If the killer is the victim, then we can skip trying to add xp, heat, mastery, bloodline.
-                if (!killer.Equals(ev.Died) && ExperienceSystem.EntityProvidesExperience(ev.Died))
+                if (!ignoreKill && !killer.Equals(ev.Died))
                 {
                     // If the entity killing is a minion, switch the killer to the owner of the minion.
                     if (__instance.EntityManager.HasComponent<Minion>(killer))
@@ -47,9 +60,7 @@ namespace OpenRPG.Hooks {
                                 Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) &&
                                 bS.UnitBloodType.Equals(Helper.vBloodType);
 
-                            var useGroup =
-                                ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None &&
-                                ExperienceSystem.GroupModifier > 0;
+                            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
 
                             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ev.Died);
                             var closeAllies = Alliance.GetClosePlayers(

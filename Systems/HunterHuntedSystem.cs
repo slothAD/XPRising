@@ -31,11 +31,14 @@ namespace OpenRPG.Systems
         public static void PlayerKillEntity(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood) {
             var victim = entityManager.GetComponentData<FactionReference>(victimEntity);
             var victimFaction = victim.FactionGuid._Value;
+            
+            var unit = Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity));
 
             var faction = Helper.ConvertGuidToFaction(victimFaction);
 
-            FactionHeat.GetActiveFactionHeatValue(faction, isVBlood, out var heatValue, out var activeFaction);
-            Plugin.Log(LoggingSystem, LogLevel.Warning, $"Player killed: Entity: {Helper.GetPrefabGUID(victimEntity).GetHashCode()} Faction: {Enum.GetName(faction)}", faction == Faction.Unknown);
+            FactionHeat.GetActiveFactionHeatValue(faction, unit, isVBlood, out var heatValue, out var activeFaction);
+            Plugin.Log(LoggingSystem, LogLevel.Warning, 
+                $"Player killed: Entity: {Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity))} Faction: {victimFaction.GuidHash} {Enum.GetName(faction)}", faction == Faction.Unknown);
 
             if (activeFaction == Faction.Unknown || heatValue == 0) return;
 
@@ -116,7 +119,7 @@ namespace OpenRPG.Systems
 
         // This is expected to only be called at the start of combat
         public static void CheckForAmbush(Entity triggeringPlayerEntity) {
-            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None && ExperienceSystem.GroupModifier > 0;
+            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(triggeringPlayerEntity);
             var closeAllies = Alliance.GetClosePlayers(
                 triggerLocation.Position, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, true, useGroup, LoggingSystem);

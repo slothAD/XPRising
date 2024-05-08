@@ -4,6 +4,7 @@ using System.Linq;
 using BepInEx.Logging;
 using ProjectM.Network;
 using OpenRPG.Systems;
+using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using Unity.Mathematics;
 using Faction = OpenRPG.Utils.Prefabs.Faction;
@@ -25,7 +26,11 @@ public static class FactionHeat {
 
     public static readonly int[] HeatLevels = { 150, 250, 500, 1000, 1500, 3000 };
     
-    public static void GetActiveFactionHeatValue(Faction faction, bool isVBlood, out int heatValue, out Faction activeFaction) {
+    // Units that generate extra heat.
+    private static HashSet<Units> ExtraHeatUnits = new HashSet<Units>(
+        FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
+    
+    public static void GetActiveFactionHeatValue(Faction faction, Utils.Prefabs.Units victim, bool isVBlood, out int heatValue, out Faction activeFaction) {
         switch (faction) {
             // Bandit
             case Faction.Traders_T01:
@@ -110,8 +115,9 @@ public static class FactionHeat {
                 activeFaction = Faction.Unknown;
                 break;
         }
-
+        
         if (isVBlood) heatValue *= HunterHuntedSystem.vBloodMultiplier;
+        else if (ExtraHeatUnits.Contains(victim)) heatValue = (int)(heatValue * 1.5);
     }
 
     public static string GetFactionStatus(Faction faction, int heat) {

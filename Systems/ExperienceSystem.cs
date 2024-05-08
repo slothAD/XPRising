@@ -6,6 +6,7 @@ using Unity.Entities;
 using OpenRPG.Utils;
 using System.Linq;
 using BepInEx.Logging;
+using OpenRPG.Utils.Prefabs;
 using Cache = OpenRPG.Utils.Cache;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
@@ -21,7 +22,6 @@ namespace OpenRPG.Systems
         public static float EXPConstant = 0.1f;
         public static int EXPPower = 2;
         public static int MaxLevel = 80;
-        public static double GroupModifier = 0.75;
         public static float GroupMaxDistance = 50;
         public static bool ShouldAllowGearLevel = true;
         public static bool LevelRewardsOn = true;
@@ -29,6 +29,12 @@ namespace OpenRPG.Systems
 
         public static float pvpXPLossPercent = 0;
         public static float pveXPLossPercent = 10;
+
+        private static HashSet<Units> noExpUnits = new HashSet<Units>(
+            FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
+        
+        // Encourage group play by buffing XP for groups
+        private const double GroupXpBuff = 1.4;
         
         public enum GroupLevelScheme {
             None = 0,
@@ -40,34 +46,29 @@ namespace OpenRPG.Systems
 
         public static GroupLevelScheme groupLevelScheme = GroupLevelScheme.Max;
 
+        // We can add various mobs/groups/factions here to reduce or increase XP gain
+        private static float ExpValueMultiplier(Entity entity, bool isVBlood)
+        {
+            if (isVBlood) return VBloodMultiplier;
+            var unit = Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(entity));
+            if (noExpUnits.Contains(unit)) return 0;
+            
+            return 1;
+        }
+        
         public static bool IsPlayerLoggingExperience(ulong steamId)
         {
             return Database.player_log_exp.GetValueOrDefault(steamId, false);
-        }
-        
-        public static bool EntityProvidesExperience(Entity victim) {
-            //-- Check victim is not a summon
-            if (Plugin.Server.EntityManager.HasComponent<Minion>(victim)) {
-                Plugin.Log(LogSystem.Death, LogLevel.Info, "Minion killed, ignoring");
-                return false;
-            }
-
-            //-- Check victim has a level
-            if (!Plugin.Server.EntityManager.HasComponent<UnitLevel>(victim)) {
-                Plugin.Log(LogSystem.Death, LogLevel.Info, "Has no level, ignoring");
-                return false;
-            }
-
-            return true;
         }
 
         public static void EXPMonitor(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood)
         {
             var unitLevel = entityManager.GetComponentData<UnitLevel>(victimEntity);
-            UpdateEXP(unitLevel.Level, isVBlood, closeAllies);
+            var multiplier = ExpValueMultiplier(victimEntity, isVBlood);
+            UpdateEXP(unitLevel.Level, multiplier, closeAllies);
         }
 
-        private static void UpdateEXP(int mobLevel, bool isVBlood, List<Alliance.ClosePlayer> closeAllies) {
+        private static void UpdateEXP(int mobLevel, float multiplier, List<Alliance.ClosePlayer> closeAllies) {
             // Calculate the modified player level
             var modifiedPlayerLevel = 0;
             switch (groupLevelScheme) {
@@ -91,7 +92,6 @@ namespace OpenRPG.Systems
             }
 
             Plugin.Log(LogSystem.Xp, LogLevel.Info, "Running Assign EXP for all close allied players");
-            var isGroup = closeAllies.Count > 1 && groupLevelScheme != GroupLevelScheme.None;
             foreach (var teammate in closeAllies) {
                 Plugin.Log(LogSystem.Xp, LogLevel.Info, "Assigning EXP to " + teammate.steamID);
                 switch (groupLevelScheme) {
@@ -107,18 +107,19 @@ namespace OpenRPG.Systems
                         modifiedPlayerLevel = teammate.playerLevel;
                         break;
                 }
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel} {groupLevelScheme}");
-                AssignExp(teammate, mobLevel, modifiedPlayerLevel, isVBlood, isGroup);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel}");
+                AssignExp(teammate, mobLevel, modifiedPlayerLevel, multiplier, closeAllies.Count);
             }
         }
 
-        private static void AssignExp(Alliance.ClosePlayer player, int mobLevel, int modifiedPlayerLevel, bool isVBlood, bool isGroup) {
+        private static void AssignExp(Alliance.ClosePlayer player, int mobLevel, int modifiedPlayerLevel, float multiplier, int groupSize) {
             if (player.currentXp >= convertLevelToXp(MaxLevel)) return;
 
-            var xpGained = CalculateXp(modifiedPlayerLevel, mobLevel, isVBlood);
+            var xpGained = CalculateXp(modifiedPlayerLevel, mobLevel, multiplier);
 
-            if (isGroup) {
-                xpGained = (int)(xpGained * GroupModifier);
+            if (groupSize > 1)
+            {
+                xpGained = (int)(xpGained * GroupXpBuff / groupSize);
             }
 
             var newXp = Math.Max(player.currentXp, 0) + xpGained;
@@ -133,8 +134,8 @@ namespace OpenRPG.Systems
             SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
         }
 
-        private static int CalculateXp(int playerLevel, int mobLevel, bool isVBlood) {
-            var xpGained = isVBlood ? (int)(mobLevel * VBloodMultiplier) : mobLevel;
+        private static int CalculateXp(int playerLevel, int mobLevel, float multiplier) {
+            var xpGained = (int)(mobLevel * multiplier);
 
             var levelDiff = mobLevel - playerLevel;
             
