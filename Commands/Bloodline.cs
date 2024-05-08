@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenRPG.Models;
 using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Systems;

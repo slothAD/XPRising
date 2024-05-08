@@ -12,10 +12,6 @@ namespace OpenRPG.Hooks
     [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
     public class HandleGameplayEventsBase_Patch
     {
-        private static string InitialErrorMessage =
-            "System.InvalidOperationException: GetSingleton<ProjectM.DayNightCycle>() requires that exactly one ProjectM.DayNightCycle exist that match this query, but there are 0.";
-        private static byte CurrentDay = 0;
-        private static bool isDNInitialized = false;
         private static void Postfix(HandleGameplayEventsBase __instance)
         {
             //-- Spawn Custom NPC Task

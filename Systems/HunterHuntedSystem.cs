@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
+using OpenRPG.Models;
 using Unity.Entities;
 using Unity.Transforms;
 using Faction = OpenRPG.Utils.Prefabs.Faction;

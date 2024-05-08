@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using BepInEx.Logging;
 using VampireCommandFramework;
 using Bloodstone.API;
+using OpenRPG.Models;
 using OpenRPG.Utils.Prefabs;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
@@ -377,7 +378,7 @@ namespace OpenRPG.Utils
 
             UnitSpawnerReactSystem_Patch.listen = true;
             identifier = duration_final;
-            var Data = new SpawnNPCListen(duration, default, default, default, false);
+            var Data = new SpawnNpcListen(duration, default, default, default, false);
             Cache.spawnNPC_Listen.Add(duration_final, Data);
 
             Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, new PrefabGUID((int)unit), position, 1, minRange, maxRange, duration_final);

@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using BepInEx.Logging;
 using OpenRPG.Configuration;
+using OpenRPG.Models;
 using ProjectM;
 using ProjectM.Shared;
 using Unity.Collections;

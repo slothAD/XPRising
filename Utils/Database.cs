@@ -18,7 +18,7 @@ namespace OpenRPG.Utils
         //-- -- Player Cache
         public static Dictionary<FixedString64, PlayerData> NamePlayerCache = new();
         public static Dictionary<ulong, PlayerData> SteamPlayerCache = new();
-        public static Dictionary<Entity, PlayerGroup> PlayerAllies = new();
+        public static Dictionary<Entity, Alliance.PlayerGroup> PlayerAllies = new();
         public static Dictionary<ulong, List<BuffData>> buffData = new();
         
         //-- -- Combat
@@ -37,7 +37,7 @@ namespace OpenRPG.Utils
         public static Dictionary <ulong,Dictionary<UnitStatType, float>> player_geartypedonned = new();
 
         //-- -- CustomNPC Spawner
-        public static SizedDictionaryAsync<float, SpawnNPCListen> spawnNPC_Listen = new(500);
+        public static SizedDictionaryAsync<float, SpawnNpcListen> spawnNPC_Listen = new(500);
         
         public static DateTime GetCombatStart(ulong steamID) {
             if (!playerCombatStart.TryGetValue(steamID, out var start)) {

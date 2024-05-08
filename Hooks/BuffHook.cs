@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BepInEx.Logging;
 using HarmonyLib;
+using OpenRPG.Models;
 using Unity.Entities;
 using Unity.Collections;
 using ProjectM.Network;

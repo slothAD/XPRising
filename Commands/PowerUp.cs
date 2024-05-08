@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using OpenRPG.Models;
 using ProjectM.Network;
 using OpenRPG.Utils;
 using VampireCommandFramework;

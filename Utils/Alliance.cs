@@ -23,6 +23,13 @@ public class Alliance {
         public bool isTrigger;
     }
     
+    public struct PlayerGroup()
+    {
+        public HashSet<Entity> Allies { get; } = new();
+        public HashSet<Entity> Enemies { get; } = new();
+        public DateTime TimeStamp { get; } = DateTime.Now;
+    }
+    
     private static bool ConvertToClosePlayer(Entity entity, float3 position, LogSystem system, out ClosePlayer player) {
         if (!Plugin.Server.EntityManager.TryGetComponentData(entity, out PlayerCharacter pc)) {
             Plugin.Log(system, LogLevel.Info, "Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
