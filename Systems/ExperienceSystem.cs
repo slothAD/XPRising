@@ -17,11 +17,9 @@ namespace OpenRPG.Systems
     {
         private static EntityManager _entityManager = Plugin.Server.EntityManager;
 
-        public static float ExpMultiplier = 1;
+        public static float ExpMultiplier = 1.5f;
         public static float VBloodMultiplier = 15;
-        public static float ExpConstant = 0.1f;
-        public static int ExpPower = 2;
-        public static int MaxLevel = 80;
+        public static int MaxLevel = 100;
         public static float GroupMaxDistance = 50;
         public static bool ShouldAllowGearLevel = true;
         public static bool LevelRewardsOn = true;
@@ -29,23 +27,43 @@ namespace OpenRPG.Systems
 
         public static float PvpXpLossPercent = 0;
         public static float PveXpLossPercent = 10;
+        
+        /*
+         * The following values have been tweaked to have the following stats:
+         * Total xp: 225,010
+         * Last level xp: 4,991
+         *
+         * Assuming:
+         * - ExpMultiplier = 1.5
+         * - Ignoring VBlood bonus
+         * - MaxLevel = 100 (and assuming that the max mob level matches)
+         * 
+         * player level=> | same   | +5   |  -5  | +5 => -5 | same (VBlood only) |
+         * _______________|________|______|______|__________|____________________|
+         * Total kills    | 2668   | 1602 | 6407 | 3310     | 178                |
+         * lvl 0 kills    | 5      | 1    | 5    | 1        | 1                  |
+         * Last lvl kills | 34     | 34   | 116  | 71       | 3                  |
+         *
+         * +5/-5 offset to levels in the above table as still clamped to the range [1, 100].
+         * 
+         * To increase the kill counts across the board, reduce ExpMultiplier.
+         * If you want to tweak the curve, lowering ExpConstant and raising ExpPower can be done in tandem to flatten the
+         * curve (attempting to ensure that the total kills or last lvl kills stay the same).
+         *
+         * VBlood entry in the table (naively) assumes that the player is killing a VBlood at the same level (when some
+         * of those do not exist).
+         * 
+         */
+        private const float ExpConstant = 0.4f;
+        private const float ExpPower = 2.232f;
 
         private static HashSet<Units> _noExpUnits = new HashSet<Units>(
             FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
         
         // Encourage group play by buffing XP for groups
-        private const double GroupXpBuff = 1.4;
+        private const double GroupXpBuffGrowth = 0.2;
+        private const double MaxGroupXpBuff = 1.5;
         
-        public enum GroupLevelScheme {
-            None = 0,
-            Average = 1,
-            Max = 2,
-            EachPlayer = 3,
-            Killer = 4,
-        }
-
-        public static GroupLevelScheme CurrentGroupLevelScheme = GroupLevelScheme.Max;
-
         // We can add various mobs/groups/factions here to reduce or increase XP gain
         private static float ExpValueMultiplier(Entity entity, bool isVBlood)
         {
@@ -65,62 +83,28 @@ namespace OpenRPG.Systems
         {
             var unitLevel = _entityManager.GetComponentData<UnitLevel>(victimEntity);
             var multiplier = ExpValueMultiplier(victimEntity, isVBlood);
-            UpdateExp(unitLevel.Level, multiplier, closeAllies);
-        }
+            
+            var sumGroupLevel = (double)closeAllies.Sum(x => x.playerLevel);
 
-        private static void UpdateExp(int mobLevel, float multiplier, List<Alliance.ClosePlayer> closeAllies) {
-            // Calculate the modified player level
-            var modifiedPlayerLevel = 0;
-            switch (CurrentGroupLevelScheme) {
-                case GroupLevelScheme.Average:
-                    modifiedPlayerLevel += (int)closeAllies.Average(x => x.playerLevel);
-                    break;
-                case GroupLevelScheme.Max:
-                    modifiedPlayerLevel = closeAllies.Max(x => x.playerLevel);
-                    break;
-                case GroupLevelScheme.Killer:
-                    // If the killer is not found, use MaxLevel
-                    modifiedPlayerLevel = closeAllies.Where(x => x.isTrigger).Select(x => x.playerLevel).FirstOrDefault(MaxLevel);
-                    break;
-                case GroupLevelScheme.EachPlayer:
-                case GroupLevelScheme.None:
-                    // Do nothing to modify the player level
-                    break;
-                default:
-                    Plugin.Log(LogSystem.Xp, LogLevel.Warning, $"Group level scheme unknown");
-                    break;
-            }
+            // Calculate an XP bonus that grows as groups get larger
+            var baseGroupXpBonus = Math.Min(Math.Pow(1 + GroupXpBuffGrowth, closeAllies.Count - 1.0), MaxGroupXpBuff);
 
             Plugin.Log(LogSystem.Xp, LogLevel.Info, "Running Assign EXP for all close allied players");
             foreach (var teammate in closeAllies) {
                 Plugin.Log(LogSystem.Xp, LogLevel.Info, "Assigning EXP to " + teammate.steamID);
-                switch (CurrentGroupLevelScheme) {
-                    case GroupLevelScheme.Average:
-                    case GroupLevelScheme.Max:
-                    case GroupLevelScheme.Killer:
-                        // modifiedPlayerLevel already up to date
-                        break;
-                    case GroupLevelScheme.EachPlayer:
-                        modifiedPlayerLevel = teammate.playerLevel;
-                        break;
-                    case GroupLevelScheme.None:
-                        modifiedPlayerLevel = teammate.playerLevel;
-                        break;
-                }
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel}");
-                AssignExp(teammate, mobLevel, modifiedPlayerLevel, multiplier, closeAllies.Count);
+                
+                // Calculate the portion of the total XP that this player should get.
+                var groupMultiplier = GroupMaxDistance > 0 ? baseGroupXpBonus * (teammate.playerLevel / sumGroupLevel) : 1.0;
+                
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel}");
+                AssignExp(teammate, unitLevel.Level, multiplier * groupMultiplier);
             }
         }
 
-        private static void AssignExp(Alliance.ClosePlayer player, int mobLevel, int modifiedPlayerLevel, float multiplier, int groupSize) {
+        private static void AssignExp(Alliance.ClosePlayer player, int mobLevel, double multiplier) {
             if (player.currentXp >= ConvertLevelToXp(MaxLevel)) return;
-
-            var xpGained = CalculateXp(modifiedPlayerLevel, mobLevel, multiplier);
-
-            if (groupSize > 1)
-            {
-                xpGained = (int)(xpGained * GroupXpBuff / groupSize);
-            }
+            
+            var xpGained = CalculateXp(player.playerLevel, mobLevel, multiplier);
 
             var newXp = Math.Max(player.currentXp, 0) + xpGained;
             Database.player_experience[player.steamID] = newXp;
@@ -134,18 +118,11 @@ namespace OpenRPG.Systems
             SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
         }
 
-        private static int CalculateXp(int playerLevel, int mobLevel, float multiplier) {
-            var xpGained = mobLevel * multiplier;
-
+        private static int CalculateXp(int playerLevel, int mobLevel, double multiplier) {
             var levelDiff = mobLevel - playerLevel;
-            
-            if (levelDiff >= 0) xpGained = xpGained * (1 + levelDiff * 0.1f);
-            else{
-                levelDiff = Math.Abs(levelDiff);
-                xpGained = xpGained * (1-levelDiff/(levelDiff + 10.0f));
-            }
 
-            return (int)(xpGained * ExpMultiplier);
+            return (int)(Math.Max(1,
+                mobLevel * multiplier * (1 + levelDiff * 0.1))*ExpMultiplier);
         }
         
         public static void DeathXpLoss(Entity playerEntity, Entity killerEntity) {

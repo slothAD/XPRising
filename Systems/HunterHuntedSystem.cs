@@ -118,7 +118,7 @@ namespace OpenRPG.Systems
 
         // This is expected to only be called at the start of combat
         public static void CheckForAmbush(Entity triggeringPlayerEntity) {
-            var useGroup = ExperienceSystem.CurrentGroupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
+            var useGroup = ExperienceSystem.GroupMaxDistance > 0;
             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(triggeringPlayerEntity);
             var closeAllies = Alliance.GetClosePlayers(
                 triggerLocation.Position, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, true, useGroup, LoggingSystem);

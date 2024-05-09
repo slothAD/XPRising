@@ -60,7 +60,7 @@ namespace OpenRPG.Hooks {
                                 Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) &&
                                 bS.UnitBloodType.Equals(Helper.vBloodType);
 
-                            var useGroup = ExperienceSystem.CurrentGroupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
+                            var useGroup = ExperienceSystem.GroupMaxDistance > 0;
 
                             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ev.Died);
                             var closeAllies = Alliance.GetClosePlayers(
