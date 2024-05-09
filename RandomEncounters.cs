@@ -11,7 +11,7 @@ namespace OpenRPG
     {
         private const Plugin.LogSystem LogSystem = Plugin.LogSystem.RandomEncounter;
 
-        public static Timer _encounterTimer;
+        public static Timer EncounterTimer;
 
         public static void Load()
         {
@@ -28,7 +28,7 @@ namespace OpenRPG
 
         public static void StartEncounterTimer()
         {
-            _encounterTimer.Start(
+            EncounterTimer.Start(
                 _ =>
                 {
                     Plugin.Log(LogSystem, LogLevel.Info, $"Starting an encounter.");
@@ -53,7 +53,7 @@ namespace OpenRPG
 
         public static void Unload()
         {
-            _encounterTimer?.Stop();
+            EncounterTimer?.Stop();
             GameFrame.Uninitialize();
             Plugin.Log(LogSystem, LogLevel.Info, $"RandomEncounters unloaded!");
         }

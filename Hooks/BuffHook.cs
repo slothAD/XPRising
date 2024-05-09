@@ -43,11 +43,11 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Reciever");
-        if (WeaponMasterySystem.IsMasteryEnabled) WeaponMasterySystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+        if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Reciever");
-        if (BloodlineSystem.IsBloodlineSystemEnabled) BloodlineSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+        if (Plugin.BloodlineSystemActive) BloodlineSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Reciever");
-        if (ExperienceSystem.LevelRewardsOn && ExperienceSystem.isEXPActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+        if (ExperienceSystem.LevelRewardsOn && Plugin.ExperienceSystemActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
 
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing PowerUp Command");
@@ -104,9 +104,8 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             Plugin.Log(LogSystem.Buff, LogLevel.Info, "GUID of " + GUID.GuidHash);
             if (GUID.GuidHash == Helper.forbiddenBuffGUID) {
                 Plugin.Log(LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + GUID.GuidHash);
-                continue;
             }
-            else if (GUID.GuidHash == Helper.buffGUID) {
+            else if (GUID == Helper.AppliedBuff) {
                 oldStyleBuffApplicaiton(entity, entityManager);
             }
         }
@@ -235,7 +234,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 public class BuffSystem_Spawn_Server_Patch {
     private static void Postfix(BuffSystem_Spawn_Server __instance) {
 
-        if (WeaponMasterySystem.IsMasteryEnabled) {
+        if (Plugin.WeaponMasterySystemActive) {
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
                 if (!__instance.EntityManager.HasComponent<InCombatBuff>(entity)) continue;
@@ -243,7 +242,7 @@ public class BuffSystem_Spawn_Server_Patch {
                 if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
                 Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
 
-                if (WeaponMasterySystem.IsMasteryEnabled) WeaponMasterySystem.LoopMastery(e_User, e_Owner);
+                WeaponMasterySystem.LoopMastery(e_User, e_Owner);
             }
         }
     }
@@ -303,7 +302,7 @@ public class DebugBuffSystem_Patch
             Cache.playerCombatStart[steamID] = DateTime.Now;
 
             // Actions to check on combat start
-            if (HunterHuntedSystem.isActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
+            if (Plugin.WantedSystemActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
         } else if (combatEnd) {
             Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat end");
             Cache.playerCombatEnd[steamID] = DateTime.Now;

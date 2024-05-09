@@ -54,13 +54,13 @@ namespace OpenRPG.Hooks {
                         Plugin.Log(LogSystem.Death, LogLevel.Info,
                             $"Killer ({killer}) is a player, running xp and heat and the like");
 
-                        if (ExperienceSystem.isEXPActive || HunterHuntedSystem.isActive)
+                        if (Plugin.ExperienceSystemActive || Plugin.WantedSystemActive)
                         {
                             var isVBlood =
                                 Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) &&
                                 bS.UnitBloodType.Equals(Helper.vBloodType);
 
-                            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
+                            var useGroup = ExperienceSystem.CurrentGroupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
 
                             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ev.Died);
                             var closeAllies = Alliance.GetClosePlayers(
@@ -68,26 +68,26 @@ namespace OpenRPG.Hooks {
                                 LogSystem.Death);
 
                             // If you get experience for the kill, you get heat for the kill
-                            if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(closeAllies, ev.Died, isVBlood);
-                            if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
+                            if (Plugin.ExperienceSystemActive) ExperienceSystem.ExpMonitor(closeAllies, ev.Died, isVBlood);
+                            if (Plugin.WantedSystemActive) HunterHuntedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
                         }
 
-                        if (WeaponMasterySystem.IsMasteryEnabled) WeaponMasterySystem.UpdateMastery(killer, ev.Died);
-                        if (BloodlineSystem.IsBloodlineSystemEnabled) BloodlineSystem.UpdateBloodline(killer, ev.Died);
+                        if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.UpdateMastery(killer, ev.Died);
+                        if (Plugin.BloodlineSystemActive) BloodlineSystem.UpdateBloodline(killer, ev.Died);
                     }
                 }
 
                 //-- HunterHunted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
                     Plugin.Log(LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
-                    if (ExperienceSystem.isEXPActive) ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
+                    if (Plugin.WantedSystemActive) HunterHuntedSystem.PlayerDied(ev.Died);
+                    if (Plugin.ExperienceSystemActive) ExperienceSystem.DeathXpLoss(ev.Died, ev.Killer);
                 }
             }
             
             // TODO this should integrate iterating into the loop above
             //-- Random Encounters
-            if (deathEvents.Length > 0 && RandomEncountersConfig.Enabled.Value && Plugin.isInitialized)
+            if (deathEvents.Length > 0 && Plugin.RandomEncountersSystemActive && Plugin.IsInitialized)
                 RandomEncountersSystem.ServerEvents_OnDeath(__instance, deathEvents);
             //-- ----------------------------------------
         }

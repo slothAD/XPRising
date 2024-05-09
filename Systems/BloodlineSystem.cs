@@ -16,10 +16,9 @@ namespace OpenRPG.Systems
     {
         private static EntityManager _em = Plugin.Server.EntityManager;
 
-        public static bool IsBloodlineSystemEnabled = true;
         public static bool MercilessBloodlines = false;
-        public static bool DraculaGetsAll = true;
-        public static double GrowthMultiplier = 1;
+        public static double MasteryGainMultiplier = 1.0;
+        public static double InactiveMultiplier = 0.1;
         public static double VBloodMultiplier = 15;
         
         // TODO online decay
@@ -29,12 +28,8 @@ namespace OpenRPG.Systems
         public static double OfflineDecayValue = 1;
 
         public static bool EffectivenessSubSystemEnabled = true;
-        public static bool GrowthSubsystemEnabled = true;
         public static double GrowthPerEffectiveness = 1.0;
-        public static double MaxBloodlineStrength = 100;
         public static double MaxBloodlineEffectiveness = 5;
-        public static double MaxBloodlineGrowth = 10;
-        public static double MinBloodlineGrowth = 0.1;
 
         public enum BloodType
         {
@@ -50,22 +45,14 @@ namespace OpenRPG.Systems
         }
         
         // None and VBlood types don't count for this number.
-        private static int bloodTypeCount = Enum.GetValues<BloodType>().Length - 2;
+        private static int _bloodTypeCount = Enum.GetValues<BloodType>().Length - 2;
 
         // This is a "potential" name to blood type map. Multiple keywords map to the same blood type
         public static Dictionary<string, BloodType> KeywordToBloodMap = new()
         {
-            { "dracula", BloodType.None },
-            { "arwen", BloodType.Creature },
-            { "ilvris", BloodType.Warrior },
-            { "aya", BloodType.Rogue },
-            { "nytheria", BloodType.Brute },
-            { "hadubert", BloodType.Scholar },
-            { "rei", BloodType.Worker },
-            { "semika", BloodType.Mutant },
-            { "semi", BloodType.Mutant },
-            { "mutant", BloodType.Mutant },
             { "frail", BloodType.None },
+            { "none", BloodType.None },
+            { "mutant", BloodType.Mutant },
             { "creature", BloodType.Creature },
             { "warrior", BloodType.Warrior },
             { "rogue", BloodType.Rogue },
@@ -74,7 +61,7 @@ namespace OpenRPG.Systems
             { "worker", BloodType.Worker }
         };
 
-        private static readonly Random rand = new Random();
+        private static readonly Random Rand = new Random();
 
         public static void UpdateBloodline(Entity killer, Entity victim)
         {
@@ -100,6 +87,13 @@ namespace OpenRPG.Systems
                 return; 
             }
 
+            if (killerBloodType == BloodType.None)
+            {
+                Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"killer has frail blood, not modifying: Killer ({killer}), Victim ({victim})");
+                Output.SendLore(killerUserEntity, $"<color=#9f0000>Your bloodline is too weak to get mastery...</color>");
+                return;
+            }
+
             BloodType victimBloodType;
             float victimBloodQuality;
             if (_em.TryGetComponentData<BloodConsumeSource>(victim, out var victimBlood)) {
@@ -112,14 +106,11 @@ namespace OpenRPG.Systems
                 return;
             }
             
-            if (GrowthSubsystemEnabled)
-            {
-                var bld = Database.playerBloodline[steamID];
-                growthVal *= bld[killerBloodType].Growth;
-            }
+            var bld = Database.playerBloodline[steamID];
+            var bloodlineMastery = bld[killerBloodType];
+            growthVal *= bloodlineMastery.Growth;
 
             var isVBlood = victimBloodType == BloodType.VBlood;
-            var bloodlineMastery = Database.playerBloodline[steamID][killerBloodType];
             
             if (MercilessBloodlines){
                 if (!isVBlood) // VBlood is allowed to boost all blood types
@@ -128,6 +119,7 @@ namespace OpenRPG.Systems
                     {
                         Plugin.Log(LogSystem.Bloodline, LogLevel.Info,
                             $"merciless bloodlines exit: Blood types are different: Killer ({Enum.GetName(killerBloodType)}), Victim ({Enum.GetName(victimBloodType)})");
+                        Output.SendLore(killerUserEntity, $"<color=#9f0000>Their bloodline is not compatible with your own...</color>");
                         return;
                     }
                     
@@ -135,13 +127,7 @@ namespace OpenRPG.Systems
                     {
                         Plugin.Log(LogSystem.Bloodline, LogLevel.Info,
                             $"merciless bloodlines exit: victim blood quality less than killer mastery: Killer ({bloodlineMastery.Mastery}), Victim ({victimBloodQuality})");
-                        return;
-                    }
-
-                    if (killerBloodQuality <= bloodlineMastery.Mastery)
-                    {
-                        Plugin.Log(LogSystem.Bloodline, LogLevel.Info,
-                            $"merciless bloodlines exit: killer blood quality less than mastery: blood quality ({killerBloodQuality}), mastery ({bloodlineMastery.Mastery})");
+                        Output.SendLore(killerUserEntity, $"<color=#9f0000>Their bloodline is too weak to increase mastery...</color>");
                         return;
                     }
                 }
@@ -154,7 +140,7 @@ namespace OpenRPG.Systems
                 growthVal *= VBloodMultiplier;
             }
 
-            growthVal *= Math.Max(0.1, rand.NextDouble());
+            growthVal *= Math.Max(0.1, Rand.NextDouble());
 
             if (_em.HasComponent<PlayerCharacter>(victim))
             {
@@ -162,14 +148,12 @@ namespace OpenRPG.Systems
                 var bonusMastery = victimGear.ArmorLevel + victimGear.WeaponLevel + victimGear.SpellLevel;
                 growthVal *= (1 + (bonusMastery * 0.01));
                 
-                Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Bonus mastery {bonusMastery:F3}]");
+                Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Bonus bloodline mastery {bonusMastery:F3}]");
             }
-
-            growthVal = growthVal * GrowthMultiplier / 1000;
 
             var updatedMastery = ModBloodline(steamID, killerBloodType, growthVal);
 
-            if (Database.playerLogBloodline.TryGetValue(steamID, out var isLogging) && isLogging)
+            if (Database.playerLogConfig[steamID].LoggingBloodline)
             {
                 var updatedValue = updatedMastery.Mastery;
                 var bloodTypeName = GetBloodTypeName(killerBloodType);
@@ -215,8 +199,7 @@ namespace OpenRPG.Systems
             // If it is already 0, then this won't have much effect.
             if (bloodMastery.Mastery > 0)
             {
-                bld[type] = bloodMastery.ResetMastery(MaxBloodlineStrength, MaxBloodlineEffectiveness,
-                    GrowthPerEffectiveness, MaxBloodlineGrowth, MinBloodlineGrowth);
+                bld[type] = bloodMastery.ResetMastery(MaxBloodlineEffectiveness, GrowthPerEffectiveness);
                 Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Bloodline reset: {GetBloodTypeName(type)}: {bloodMastery}");
             }
 
@@ -234,19 +217,21 @@ namespace OpenRPG.Systems
         }
         private static void ApplyBloodlineBuffs(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, BloodType bloodType, ulong steamID)
         {
-            var isDracula = bloodType == BloodType.None && DraculaGetsAll;
-            
             var bld = Database.playerBloodline[steamID];
 
-            if (isDracula)
+            if (InactiveMultiplier > 0)
             {
-                var draculaMastery = bld.GetValueOrDefault(BloodType.None);
-                foreach (var data in bld)
+                foreach (var (type, mastery) in bld)
                 {
-                    var config = Database.bloodlineStatConfig.GetValueOrDefault(data.Key);
+                    var multiplier = type == bloodType ? 1.0 : InactiveMultiplier;
+                    var effectiveness = (EffectivenessSubSystemEnabled ? mastery.Effectiveness : 1) * multiplier;
+                    var masteryValue = Math.Max(mastery.Mastery, 0);
+                    var config = Database.bloodlineStatConfig[type];
                     foreach (var statConfig in config)
                     {
-                        var value = CalcDraculaBuffValue(draculaMastery, data.Value, statConfig, bloodTypeCount);
+                        // Skip if we don't have enough mastery for this bonus
+                        if (mastery.Mastery < statConfig.strength) continue;
+                        var value = Helper.CalcBuffValue(masteryValue, effectiveness, statConfig.rate, statConfig.type);
                         buffer.Add(Helper.MakeBuff(statConfig.type, value));
                     }
                 }
@@ -254,37 +239,17 @@ namespace OpenRPG.Systems
             else
             {
                 var bloodlineMastery = bld[bloodType];
-                var config = Database.bloodlineStatConfig.GetValueOrDefault(bloodType);
+                var effectiveness = EffectivenessSubSystemEnabled ? bloodlineMastery.Effectiveness : 1;
+                var masteryValue = Math.Max(bloodlineMastery.Mastery, 0);
+                var config = Database.bloodlineStatConfig[bloodType];
                 foreach (var statConfig in config)
                 {
-                    var value = CalcBuffValue(bloodlineMastery, statConfig);
+                    if (bloodlineMastery.Mastery < statConfig.strength) continue;
+                    
+                    var value = Helper.CalcBuffValue(masteryValue, effectiveness, statConfig.rate, statConfig.type);
                     buffer.Add(Helper.MakeBuff(statConfig.type, value));
                 }
             }
-        }
-
-        public static double CalcDraculaBuffValue(MasteryData draculaMastery, MasteryData bloodlineMastery, StatConfig config, double typeCount) {
-            var effectiveness = bloodlineMastery.Effectiveness;
-            var strength = bloodlineMastery.Mastery;
-            if (bloodlineMastery.Mastery >= config.strength)
-            {
-                // If we don't have the required mastery level, return the base value.
-                return config.type == UnitStatType.CooldownModifier ? 1.0 : 0;
-            }
-            strength *= (draculaMastery.Mastery / 100) * draculaMastery.Effectiveness / typeCount;
-
-            return Helper.CalcBuffValue(strength, effectiveness, config.rate, config.type);
-        }
-
-        public static double CalcBuffValue(MasteryData bloodlineMastery, StatConfig config) {
-            if (bloodlineMastery.Mastery >= config.strength)
-            {
-                // If we don't have the required mastery level, return the base value.
-                return config.type == UnitStatType.CooldownModifier ? 1.0 : 0;
-            }
-
-            var effectiveness = EffectivenessSubSystemEnabled ? bloodlineMastery.Effectiveness : 1;
-            return Helper.CalcBuffValue(bloodlineMastery.Mastery, effectiveness, config.rate, config.type);
         }
 
         public static MasteryData ModBloodline(ulong steamID, BloodType type, double changeInMastery)
@@ -299,8 +264,8 @@ namespace OpenRPG.Systems
         private static BloodlineMasteryData ModBloodline(ulong steamID, BloodlineMasteryData bloodlineMasteryData, BloodType type, double changeInMastery)
         {
             var bloodMastery = bloodlineMasteryData[type];
-            
-            bloodMastery.Mastery = Math.Clamp(bloodMastery.Mastery + changeInMastery, 0, MaxBloodlineStrength);
+
+            bloodMastery.Mastery += changeInMastery * MasteryGainMultiplier;
             Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Blood mastery changed: {steamID}: {GetBloodTypeName(type)}: {bloodMastery.Mastery}");
             bloodlineMasteryData[type] = bloodMastery;
 
@@ -321,37 +286,12 @@ namespace OpenRPG.Systems
 
         public static string GetBloodTypeName(BloodType type)
         {
-            // TODO Consider switching to display flavour names.
-            // switch (type)
-            // {
-            //     case BloodType.VBlood:
-            //     case BloodType.None:
-            //         return "Dracula, Vampire Progenitor";
-            //     case BloodType.Brute:
-            //         return "Nytheria the Destroyer";
-            //     case BloodType.Creature:
-            //         return "Arwen the Godeater";
-            //     case BloodType.Mutant:
-            //         return "Semika the Ever-shifting";
-            //     case BloodType.Rogue:
-            //         return "Aya the Shadowlord";
-            //     case BloodType.Scholar:
-            //         return "Hadubert the Inferno";
-            //     case BloodType.Warrior:
-            //         return "Ilvris Dragonblood";
-            //     case BloodType.Worker:
-            //         return "Rei the Binder";
-            //     default:
-            //         Plugin.Log(LogSystem.Bloodline, LogLevel.Warning, $"Unknown bloodline type {Enum.GetName(type)}.");
-            //         return "Unknown bloodline";
-            // }
-            
             return Enum.GetName(type);
         }
 
-        public static Dictionary<BloodType, List<StatConfig>> DefaultBloodlineConfig()
+        public static LazyDictionary<BloodType, List<StatConfig>> DefaultBloodlineConfig()
         {
-            return new Dictionary<BloodType, List<StatConfig>>()
+            return new LazyDictionary<BloodType, List<StatConfig>>()
             {
                 { BloodType.None, new List<StatConfig>() },
                 { BloodType.Creature, new List<StatConfig>

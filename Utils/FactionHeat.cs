@@ -139,7 +139,7 @@ public static class FactionHeat {
         var steamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
         var playerLevel = 0;
         if (Database.player_experience.TryGetValue(steamID, out int exp)) {
-            playerLevel = ExperienceSystem.convertXpToLevel(exp);
+            playerLevel = ExperienceSystem.ConvertXpToLevel(exp);
         }
         
         var squadMessage = SquadList.SpawnSquad(playerLevel, position, faction, wantedLevel);

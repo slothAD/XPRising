@@ -14,7 +14,6 @@ namespace OpenRPG.Configuration
         private static ConfigFile _npcsConfig;
         private static ConfigFile _itemsConfig;
 
-        public static ConfigEntry<bool> Enabled { get; private set; }
         public static ConfigEntry<bool> SkipPlayersInCastle { get; private set; }
         public static ConfigEntry<int> EncounterTimerMin { get; private set; }
         public static ConfigEntry<int> EncounterTimerMax { get; private set; }
@@ -52,7 +51,6 @@ namespace OpenRPG.Configuration
             var itemsConfigFilePath = Path.Combine(configFolderRE, "Items.cfg");
             _itemsConfig = File.Exists(itemsConfigFilePath) ? new ConfigFile(itemsConfigFilePath, false) : new ConfigFile(itemsConfigFilePath, true);
 
-            Enabled = _mainConfig.Bind("Main", "Enabled", true, "Determines whether the random encounter timer is enabled or not.");
             SkipPlayersInCastle = _mainConfig.Bind("Main", "SkipPlayersInCastle", true, "When enabled, players who are in a castle are excluded from encounters");
             SkipPlayersInCombat = _mainConfig.Bind("Main", "SkipPlayersInCombat", false, "When enabled, players who are in combat are excluded from the random encounters.");
             EncounterTimerMin = _mainConfig.Bind("Main", "EncounterTimerMin", 1200, "Minimum seconds before a new encounter is initiated. This value is divided by the online users count.");

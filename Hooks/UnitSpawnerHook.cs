@@ -48,7 +48,7 @@ namespace OpenRPG.Hooks
                         }
                     }
                     
-                    if(RandomEncountersConfig.Enabled.Value && Plugin.isInitialized)
+                    if(Plugin.RandomEncountersSystemActive && Plugin.IsInitialized)
                     {
                         RandomEncountersSystem.ServerEvents_OnUnitSpawned(__instance.EntityManager, entity);
                     }

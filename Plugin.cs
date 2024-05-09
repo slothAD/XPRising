@@ -15,6 +15,7 @@ using UnityEngine;
 using VRising.GameData;
 using OpenRPG.Configuration;
 using OpenRPG.Components.RandomEncounters;
+using OpenRPG.Utils.Prefabs;
 using ProjectM;
 
 namespace OpenRPG
@@ -28,16 +29,15 @@ namespace OpenRPG
 
         internal static Plugin Instance { get; private set; }
 
-        private static ConfigEntry<int> WaypointLimit;
-
-        private static ConfigEntry<int> buffID;
-        private static ConfigEntry<int> forbiddenBuffID;
-        private static ConfigEntry<int> appliedBuff;
-        private static ConfigEntry<bool> humanReadablePercentageStats;
-        private static ConfigEntry<bool> inverseMultiplersDisplayReduction;
-        private static ConfigEntry<bool> disableCommandAdminRequirement;
-
-        public static bool isInitialized = false;
+        public static bool IsInitialized = false;
+        public static bool BloodlineSystemActive = false;
+        public static bool ExperienceSystemActive = true;
+        public static bool RandomEncountersSystemActive = false;
+        public static bool WeaponMasterySystemActive = false;
+        public static bool WantedSystemActive = true;
+        public static bool WaypointsActive = false;
+        
+        private static bool _disableCommandAdminRequirement = false;
 
         private static ManualLogSource _logger;
         private static World _serverWorld;
@@ -70,16 +70,30 @@ namespace OpenRPG
 
         public void InitConfig()
         {
-            // TODO move this config to the same place as the rest
-            WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for per non-admin user.");
-
-            buffID = Config.Bind("Buff System", "Buff GUID", Helper.buffGUID, "The GUID of the buff you want to hijack for the buffs from mastery, bloodlines, and everything else from this mod\nDefault is now boneguard set bonus 2, 1409441911 is cloak, but you can set anything else too");
-            forbiddenBuffID = Config.Bind("Buff System", "Forbidden Buff GUID", Helper.forbiddenBuffGUID, "The GUID of the buff that prohibits you from getting mastery buffs\nDefault is boneguard set bonus 1, so you cant double up.");
-            appliedBuff = Config.Bind("Buff System", "Applied Buff", Helper.buffGUID, "The GUID of the buff that gets applied when mastery, bloodline, etc changes. Doesnt need to be the same as the Buff GUID.");
-            humanReadablePercentageStats = Config.Bind("Buff System", "Human Readable Percentage Stats", false, "Determines if rates for percentage stats should be read as out of 100 instead of 1, off by default for compatability.");
-            inverseMultiplersDisplayReduction = Config.Bind("Buff System", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats display their reduction, or the final value.");
+            Helper.buffGUID = Config.Bind("Core", "Buff GUID", (int)SetBonus.SetBonus_Damage_Minor_Buff_01, "The GUID of the buff that gets used when mastery, bloodline, etc changes.\nDefault is now boneguard set bonus 2, but you can set anything else too.\nThe only reason to change this is if it clashes with another mod.").Value;
+            Helper.AppliedBuff = new PrefabGUID(Helper.buffGUID);
+            Helper.forbiddenBuffGUID = Config.Bind("Core", "Forbidden Buff GUID", Helper.forbiddenBuffGUID, "The GUID of the buff that prohibits you from getting mastery buffs\nDefault is boneguard set bonus 1. If this is the same value as Buff GUID, then none will get buffs.\nThe only reason to change this is if it clashes with another mod.").Value;
+            Helper.humanReadablePercentageStats = Config.Bind("Core", "Human Readable Percentage Stats", true, "Determines if rates for percentage stats should be read as out of 100 instead of 1.").Value;
+            Helper.inverseMultipersDisplayReduction = Config.Bind("Core", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats display their reduction, or the final value.").Value;
             
-            disableCommandAdminRequirement = Config.Bind("Admin", "Disable command admin requirement", false, "Disables all \"isAdmin\" checks for running commands.");
+            _disableCommandAdminRequirement = Config.Bind("Admin", "Disable command admin requirement", false, "Disables all admin checks when running commands.").Value;
+
+            BloodlineSystemActive = Config.Bind("System", "Enable Bloodline Mastery system", false,  "Enable/disable the bloodline mastery system.").Value;
+            ExperienceSystemActive = Config.Bind("System", "Enable Experience system", true,  "Enable/disable the experience system.").Value;
+            RandomEncountersSystemActive = Config.Bind("System", "Enable Random Encounters system", true,  "Enable/disable the random encounters system.").Value;
+            WeaponMasterySystemActive = Config.Bind("System", "Enable Weapon Mastery system", false,  "Enable/disable the weapon mastery system.").Value;
+            WantedSystemActive = Config.Bind("System", "Enable Wanted system", false,  "Enable/disable the wanted system.").Value;
+            
+            // I only want to keep waypoints around as it makes it easier to test.
+            //WaypointsActive = Config.Bind("Core", "Enable Wanted system", false,  "Enable/disable waypoints.").Value;
+
+            if (WaypointsActive)
+            {
+                Waypoint.WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for per non-admin user.").Value;
+            }
+            
+            AutoSaveSystem.AutoSaveFrequency = Config.Bind("Auto-save", "Frequency", 0, "Enable and set the frequency for auto-saving the database. 0 is disabled, 1 is 1 min").Value;
+            AutoSaveSystem.BackupFrequency = Config.Bind("Auto-save", "Backup", 0, "Enable and set the frequency for saving to the backup folder. The backup save will run every X saves. 0 to disable.").Value;
         }
 
         public override void Load()
@@ -106,10 +120,10 @@ namespace OpenRPG
 
         private static void GameDataOnInitialize(World world)
         {
-            RandomEncounters.GameData_OnInitialize();
-            RandomEncounters._encounterTimer = new Timer();
-            if (RandomEncountersConfig.Enabled.Value)
+            if (RandomEncountersSystemActive)
             {
+                RandomEncounters.GameData_OnInitialize();
+                RandomEncounters.EncounterTimer = new Timer();
                 RandomEncounters.StartEncounterTimer();
             }
             
@@ -129,8 +143,8 @@ namespace OpenRPG
 
         public static void Initialize()
         {
-            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Trying to Initialize {MyPluginInfo.PLUGIN_NAME}: isInitialized == {isInitialized}", isInitialized);
-            if (isInitialized) return;
+            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Trying to Initialize {MyPluginInfo.PLUGIN_NAME}: isInitialized == {IsInitialized}", IsInitialized);
+            if (IsInitialized) return;
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Initializing {MyPluginInfo.PLUGIN_NAME}...", true);
             
             //-- Initialize System
@@ -140,33 +154,27 @@ namespace OpenRPG
             Helper.GetUserActivityGridSystem(out _);
 
             DebugLoggingConfig.Initialize();
-            WantedConfig.Initialize();
-            ExperienceConfig.Initialize();
-            MasteryConfig.Initialize();
-            BloodlineConfig.Initialize();
+            if (BloodlineSystemActive) BloodlineConfig.Initialize();
+            if (ExperienceSystemActive) ExperienceConfig.Initialize();
+            if (WeaponMasterySystemActive) MasteryConfig.Initialize();
+            if (WantedSystemActive) WantedConfig.Initialize();
 
             //-- Apply configs
-            Waypoint.WaypointLimit = WaypointLimit.Value;
-
-            Helper.buffGUID = buffID.Value;
-            Helper.AppliedBuff = new PrefabGUID(appliedBuff.Value);
-            Helper.forbiddenBuffGUID = forbiddenBuffID.Value;
-            Helper.humanReadablePercentageStats = humanReadablePercentageStats.Value;
-            Helper.inverseMultipersDisplayReduction = inverseMultiplersDisplayReduction.Value;
             
             Plugin.Log(LogSystem.Core, LogLevel.Info, "Initialising player cache and internal database...");
             Helper.CreatePlayerCache();
-            AutoSaveSystem.LoadDatabase();
+            AutoSaveSystem.LoadOrInitialiseDatabase();
             
             // Validate any potential change in permissions
             var commands = Command.GetAllCommands();
             Command.ValidatedCommandPermissions(commands);
             // Note for devs: To regenerate Command.md and PermissionSystem.DefaultCommandPermissions, uncomment the following:
-            // Command.GenerateCommandMd(commands);
-            // Command.GenerateDefaultCommandPermissions(commands);
+            // TODO re-comment out this.
+            Command.GenerateCommandMd(commands);
+            Command.GenerateDefaultCommandPermissions(commands);
             
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Setting CommandRegistry middleware");
-            if (disableCommandAdminRequirement.Value)
+            if (_disableCommandAdminRequirement)
             {
                 Plugin.Log(LogSystem.Core, LogLevel.Info, "Removing admin privilege requirements");
                 CommandRegistry.Middlewares.Clear();                
@@ -175,7 +183,7 @@ namespace OpenRPG
 
             Plugin.Log(LogSystem.Core, LogLevel.Info, "Finished initialising", true);
 
-            isInitialized = true;
+            IsInitialized = true;
         }
 
         public enum LogSystem

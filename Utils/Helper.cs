@@ -5,7 +5,6 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using OpenRPG.Hooks;
-using OpenRPG.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
@@ -50,6 +49,9 @@ namespace OpenRPG.Utils
         public static PrefabGUID AB_BloodBuff_VBlood_0 = new PrefabGUID((int)Effects.AB_BloodBuff_VBlood_0);          //-- Does it do anything negative...? How can i check for this, seems like it's a total blank o.o
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
+        
+        public static bool humanReadablePercentageStats = false;
+        public static bool inverseMultipersDisplayReduction = true;
 
         public static bool GetUserActivityGridSystem(out UserActivityGridSystem userActivityGridSystem)
         {
@@ -94,12 +96,8 @@ namespace OpenRPG.Utils
             ModifyUnitStatBuff_DOTS buff;
 
             var modType = ModificationType.Add;
-            if (Helper.inverseMultiplierStats.Contains(type)) {
-                if (type == UnitStatType.CooldownModifier && !WeaponMasterySystem.CdrStacks) {
-                    modType = ModificationType.Set;
-                } else if (Helper.multiplierStats.Contains(type)) {
-                    modType = ModificationType.Multiply;
-                }
+            if (Helper.multiplierStats.Contains(type)) {
+                modType = ModificationType.Multiply;
             }
             buff = (new ModifyUnitStatBuff_DOTS() {
                 StatType = type,
@@ -110,25 +108,14 @@ namespace OpenRPG.Utils
             return buff;
         }
         
-        public static bool humanReadablePercentageStats = false;
-        public static bool inverseMultipersDisplayReduction = true;
         public static double CalcBuffValue(double strength, double effectiveness, double rate, UnitStatType type)
         {
             effectiveness = Math.Max(effectiveness, 1);
-            if (Helper.percentageStats.Contains(type) && humanReadablePercentageStats) {
-                rate /= 100;
-            }
-            double value = strength * rate * effectiveness;
             if (Helper.inverseMultiplierStats.Contains(type)) {
-                if (WeaponMasterySystem.LinearCdr) {
-                    value = strength * effectiveness;
-                    value = value / (value + rate);
-                } else {
-                    value = (strength * effectiveness) / (rate * 2);
-                }
-                value = 1 - value;
+                var value = strength * effectiveness;
+                return 1 - value / (value + rate);
             }
-            return value;
+            return strength * rate * effectiveness;
         }
 
         public static FixedString64 GetTrueName(string name)
@@ -186,7 +173,6 @@ namespace OpenRPG.Utils
             {
                 BuffPrefabGUID = GUID
             };
-            Database.playerBuffs.Add(buffEvent);
             des.ApplyBuff(fromCharacter, buffEvent);
         }
 

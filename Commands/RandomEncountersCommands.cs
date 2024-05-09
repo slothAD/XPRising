@@ -44,11 +44,11 @@ namespace OpenRPG.Commands
         [Command("enable", usage: "", description: "Enables the random encounter timer.", adminOnly: true)]
         public static void EnableCommand(ChatCommandContext ctx)
         {
-            if (RandomEncountersConfig.Enabled.Value)
+            if (Plugin.RandomEncountersSystemActive)
             {
                 throw ctx.Error("Already enabled.");
             }
-            RandomEncountersConfig.Enabled.Value = true;
+            Plugin.RandomEncountersSystemActive = true;
             RandomEncounters.StartEncounterTimer();
             ctx.Reply($"Enabled");
         }
@@ -56,12 +56,12 @@ namespace OpenRPG.Commands
         [Command("disable", usage: "", description: "Disables the random encounter timer.", adminOnly: true)]
         public static void DisableCommand(ChatCommandContext ctx)
         {
-            if (!RandomEncountersConfig.Enabled.Value)
+            if (!Plugin.RandomEncountersSystemActive)
             {
                 throw ctx.Error("Already disabled.");
             }
-            RandomEncountersConfig.Enabled.Value = false;
-            RandomEncounters._encounterTimer.Stop();
+            Plugin.RandomEncountersSystemActive = false;
+            RandomEncounters.EncounterTimer.Stop();
             ctx.Reply("Disabled.");
         }
     }

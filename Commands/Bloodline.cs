@@ -24,9 +24,13 @@ namespace OpenRPG.Commands
             {
                 if (masteryData.Mastery >= statConfig.strength)
                 {
-                    var val = BloodlineSystem.CalcBuffValue(masteryData, statConfig);
+                    var val = Helper.CalcBuffValue(masteryData.Mastery, masteryData.Effectiveness, statConfig.rate, statConfig.type);
+                    // If the value was inverted for the buff calculation, un-invert it here.
                     if (Helper.inverseMultipersDisplayReduction && Helper.inverseMultiplierStats.Contains(statConfig.type)) {
                         val = 1 - val;
+                    }
+                    if (Helper.percentageStats.Contains(statConfig.type) && Helper.humanReadablePercentageStats) {
+                        return $"{Helper.CamelCaseToSpaces(statConfig.type)} <color=#75FF33>{val/100:F3}%</color>";
                     }
                     return $"{Helper.CamelCaseToSpaces(statConfig.type)} <color=#75FF33>{val:F3}</color>";
                 }
@@ -38,7 +42,7 @@ namespace OpenRPG.Commands
         
         [Command("get", "g", "", "Display your current bloodline progression")]
         public static void GetBloodline(ChatCommandContext ctx) {
-            if (!BloodlineSystem.IsBloodlineSystemEnabled) {
+            if (!Plugin.BloodlineSystemActive) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
@@ -58,7 +62,7 @@ namespace OpenRPG.Commands
                 return;
             }
 
-            var bloodlineConfig = Database.bloodlineStatConfig.GetValueOrDefault(bloodType);
+            var bloodlineConfig = Database.bloodlineStatConfig[bloodType];
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
             
             ctx.Reply(BloodlineToPrint(bloodType, masteryData, bloodlineConfig));
@@ -66,7 +70,7 @@ namespace OpenRPG.Commands
         
         [Command("get-all", "ga", "", "Display all your bloodline progressions")]
         public static void GetAllBloodlines(ChatCommandContext ctx) {
-            if (!BloodlineSystem.IsBloodlineSystemEnabled) {
+            if (!Plugin.BloodlineSystemActive) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
@@ -85,7 +89,7 @@ namespace OpenRPG.Commands
                 return;
             }
 
-            var bloodlineConfig = Database.bloodlineStatConfig.GetValueOrDefault(bloodType);
+            var bloodlineConfig = Database.bloodlineStatConfig[bloodType];
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
 
             foreach (var data in bld)
@@ -105,14 +109,14 @@ namespace OpenRPG.Commands
             {
                 throw ctx.Error($"{type} Bloodline not found! Did you typo?");
             }
-            BloodlineSystem.ModBloodline(steamID, type, amount);
+            BloodlineSystem.ModBloodline(steamID, type, amount / BloodlineSystem.MasteryGainMultiplier);
             ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{name}\" adjusted by <color=#ffffff>{amount}%</color>");
             Helper.ApplyBuff(userEntity, charEntity, Helper.AppliedBuff);
         }
 
         [Command("set", "s", "<playerName> <bloodline> <value>", "Sets the specified players bloodline to a specific value", adminOnly: true)]
         public static void SetBloodline(ChatCommandContext ctx, string playerName, string bloodlineName, double value) {
-            if (!BloodlineSystem.IsBloodlineSystemEnabled) {
+            if (!Plugin.BloodlineSystemActive) {
                 ctx.Reply("Bloodline system is not enabled.");
                 return;
             }
@@ -127,7 +131,7 @@ namespace OpenRPG.Commands
                 throw ctx.Error($"{bloodlineName} Bloodline not found! Did you typo?");
             }
             BloodlineSystem.ModBloodline(steamID, type, -100000);
-            BloodlineSystem.ModBloodline(steamID, type, value);
+            BloodlineSystem.ModBloodline(steamID, type, value / BloodlineSystem.MasteryGainMultiplier);
             ctx.Reply($"{BloodlineSystem.GetBloodTypeName(type)} bloodline for \"{playerName}\" set to <color=#ffffff>{value}%</color>");
         }
 
@@ -135,18 +139,12 @@ namespace OpenRPG.Commands
         public static void LogBloodline(ChatCommandContext ctx)
         {
             var steamID = ctx.User.PlatformId;
-            var currentValue = Database.playerLogBloodline.GetValueOrDefault(steamID, false);
-            Database.playerLogBloodline.Remove(steamID);
-            if (currentValue)
-            {
-                Database.playerLogBloodline.Add(steamID, false);
-                ctx.Reply($"Bloodline gain is no longer being logged.");
-            }
-            else
-            {
-                Database.playerLogBloodline.Add(steamID, true);
-                ctx.Reply("Bloodline gain is now being logged.");
-            }
+            var loggingData = Database.playerLogConfig[steamID];
+            loggingData.LoggingBloodline = !loggingData.LoggingBloodline;
+            ctx.Reply(loggingData.LoggingBloodline
+                ? "Bloodline gain is now being logged."
+                : $"Bloodline gain is no longer being logged.");
+            Database.playerLogConfig[steamID] = loggingData;
         }
 
         [Command("reset", "r", "<bloodline>", "Resets a bloodline to gain more power with it.", adminOnly: false)]

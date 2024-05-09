@@ -4,6 +4,7 @@ using ProjectM.Network;
 using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using OpenRPG.Models;
 using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using VampireCommandFramework;
@@ -70,9 +71,9 @@ namespace OpenRPG.Systems
             ctx.Reply($"===================================");
         }
 
-        public static Dictionary<string, int> DefaultCommandPermissions()
+        public static LazyDictionary<string, int> DefaultCommandPermissions()
         {
-            var permissions = new Dictionary<string, int>()
+            var permissions = new LazyDictionary<string, int>()
             {
                 {"ban info", 0},
                 {"ban player", 100},

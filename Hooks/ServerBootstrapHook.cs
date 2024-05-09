@@ -32,7 +32,7 @@ namespace OpenRPG.Hooks
         public static void Postfix()
         {
             // Save before we quit the server
-            AutoSaveSystem.SaveDatabase();
+            AutoSaveSystem.SaveDatabase(true, false);
             RandomEncounters.Unload();
         }
     }
@@ -53,8 +53,8 @@ namespace OpenRPG.Hooks
                 if (!isNewVampire)
                 {
                     Helper.UpdatePlayerCache(userEntity, userData);
-                    if ((WeaponMasterySystem.IsDecaySystemEnabled && WeaponMasterySystem.IsMasteryEnabled) ||
-                        BloodlineSystem.IsDecaySystemEnabled && BloodlineSystem.IsBloodlineSystemEnabled)
+                    if ((WeaponMasterySystem.IsDecaySystemEnabled && Plugin.WeaponMasterySystemActive) ||
+                        BloodlineSystem.IsDecaySystemEnabled && Plugin.BloodlineSystemActive)
                     {
                         if (Database.player_logout.TryGetValue(userData.PlatformId, out var playerLogout))
                         {

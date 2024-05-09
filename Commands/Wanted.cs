@@ -43,7 +43,7 @@ namespace OpenRPG.Commands
         
         [Command("get","g", "", "Shows your current wanted level", adminOnly: false)]
         public static void GetWanted(ChatCommandContext ctx){
-            if (!HunterHuntedSystem.isActive){
+            if (!Plugin.WantedSystemActive){
                 ctx.Reply("HunterHunted system is not enabled.");
                 return;
             }
@@ -90,30 +90,18 @@ namespace OpenRPG.Commands
         
         [Command("log", "l", "", "Toggle logging of heat data.", adminOnly: false)]
         public static void LogWanted(ChatCommandContext ctx){
-            if (!HunterHuntedSystem.isActive){
+            if (!Plugin.WantedSystemActive){
                 ctx.Reply("Wanted system is not enabled.");
                 return;
             }
 
-            var userEntity = ctx.Event.SenderUserEntity;
-            var steamID = ctx.Event.User.PlatformId;
-            
-            var isLogging = false;
-            if (Cache.heatCache.TryGetValue(steamID, out var heatData))
-            {
-                isLogging = heatData.isLogging;
-            }
-
-            if (isLogging)
-            {
-                HunterHuntedSystem.SetLogging(userEntity, false);
-                ctx.Reply("Heat levels no longer being logged.");
-            }
-            else
-            {
-                HunterHuntedSystem.SetLogging(userEntity, true);
-                ctx.Reply("Heat levels now being logged.");
-            }
+            var steamID = ctx.User.PlatformId;
+            var loggingData = Database.playerLogConfig[steamID];
+            loggingData.LoggingWanted = !loggingData.LoggingWanted;
+            ctx.Reply(loggingData.LoggingWanted
+                ? "Heat levels now being logged."
+                : "Heat levels no longer being logged.");
+            Database.playerLogConfig[steamID] = loggingData;
         }
 
         [Command("trigger","t", "<name>", "Triggers the ambush check for the given user", adminOnly: true)]

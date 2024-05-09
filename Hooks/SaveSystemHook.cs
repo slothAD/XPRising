@@ -9,7 +9,7 @@ namespace OpenRPG.Hooks
     {
         public static void Postfix()
         {
-            AutoSaveSystem.SaveDatabase();
+            AutoSaveSystem.SaveDatabase(false, false);
         }
     }
 }

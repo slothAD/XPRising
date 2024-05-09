@@ -8,7 +8,7 @@ namespace OpenRPG.Commands
     public static class Permission
     {
         [Command(name: "permission", shortHand: "p", usage: "<command | user>", description: "Display current privilege levels for users or commands.", adminOnly: true)]
-        public static void permissionList(ChatCommandContext ctx, string option = "user")
+        public static void PermissionList(ChatCommandContext ctx, string option = "user")
         {
             switch (option)
             {
@@ -24,7 +24,7 @@ namespace OpenRPG.Commands
         }
         
         [Command(name: "permission set user", shortHand: "psu", usage: "<playerName> <0-100>", description: "Sets the privilege level for a user.", adminOnly: true)]
-        public static void permissionSetUser(ChatCommandContext ctx, string playerName, int level)
+        public static void PermissionSetUser(ChatCommandContext ctx, string playerName, int level)
         {
             level = Math.Clamp(level, 0, 100);
 
@@ -37,7 +37,7 @@ namespace OpenRPG.Commands
         }
         
         [Command(name: "permission set command", shortHand: "psc", usage: "<command> <0-100>", description: "Sets the required privilege level for a command.", adminOnly: true)]
-        public static void permissionSetCommand(ChatCommandContext ctx, string command, int level)
+        public static void PermissionSetCommand(ChatCommandContext ctx, string command, int level)
         {
             var maxPrivilege = PermissionSystem.GetUserPermission(ctx.User.PlatformId);
             if (level > maxPrivilege)

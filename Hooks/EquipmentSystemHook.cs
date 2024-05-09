@@ -18,7 +18,7 @@ public class ArmorLevelSystem_Spawn_Patch
     private static void Prefix(ArmorLevelSystem_Spawn __instance)
     {
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Armor System Patch Entry");
-        if (ExperienceSystem.isEXPActive)
+        if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -45,7 +45,7 @@ public class ArmorLevelSystem_Spawn_Patch
                     Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
                     ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
 
-                    float levelEfficiency = (level.Level / 10 - ExperienceSystem.getLevel(SteamID) / 3) / 2;
+                    float levelEfficiency = (level.Level / 10 - ExperienceSystem.GetLevel(SteamID) / 3) / 2;
                     if (levelEfficiency > 0) level.Level = levelEfficiency * 10;
                 }
 
@@ -62,7 +62,7 @@ public class WeaponLevelSystem_Spawn_Patch
     private static void Prefix(WeaponLevelSystem_Spawn __instance)
     {
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Weapon System Patch Entry");
-        if (ExperienceSystem.isEXPActive || WeaponMasterySystem.IsMasteryEnabled)
+        if (Plugin.ExperienceSystemActive || Plugin.WeaponMasterySystemActive)
         {
             var entityManager = __instance.EntityManager;
             var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -71,12 +71,12 @@ public class WeaponLevelSystem_Spawn_Patch
             {
                 Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                 Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-                if (WeaponMasterySystem.IsMasteryEnabled || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
+                if (Plugin.WeaponMasterySystemActive || ExperienceSystem.ShouldAllowGearLevel || ExperienceSystem.LevelRewardsOn)
                 {
                     Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Applying Helper.AppliedBuff: {Helper.AppliedBuff.GuidHash}");
                     Helper.ApplyBuff(User, Owner, Helper.AppliedBuff);
                 }
-                if (ExperienceSystem.isEXPActive)
+                if (Plugin.ExperienceSystemActive)
                 {
                     WeaponLevel level = new WeaponLevel();
                     level.Level = 0;
@@ -98,7 +98,7 @@ public class WeaponLevelSystem_Spawn_Patch
                     {                            
                         ulong SteamID = entityManager.GetComponentData<User>(User).PlatformId;
 
-                        float levelEfficiency = (level.Level * .3f - ExperienceSystem.getLevel(SteamID) / 3) / 2;
+                        float levelEfficiency = (level.Level * .3f - ExperienceSystem.GetLevel(SteamID) / 3) / 2;
                         if (levelEfficiency > 0) level.Level = levelEfficiency / .3f;
 
                         if (ExperienceSystem.ShouldAllowGearLevel)
@@ -120,7 +120,7 @@ public class WeaponLevelSystem_Destroy_Patch
 {
     private static void Prefix(WeaponLevelSystem_Destroy __instance)
     {
-        if (ExperienceSystem.isEXPActive && (ExperienceSystem.LevelRewardsOn || ExperienceSystem.ShouldAllowGearLevel))
+        if (Plugin.ExperienceSystemActive && (ExperienceSystem.LevelRewardsOn || ExperienceSystem.ShouldAllowGearLevel))
         {
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -148,7 +148,7 @@ public class SpellLevelSystem_Spawn_Patch
 {
     private static void Prefix(SpellLevelSystem_Spawn __instance)
     {
-        if (ExperienceSystem.isEXPActive)
+        if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -175,19 +175,17 @@ public class SpellLevelSystem_Spawn_Patch
 
     private static void Postfix(SpellLevelSystem_Spawn __instance)
     {
-        if (ExperienceSystem.isEXPActive)
+        if (Plugin.ExperienceSystemActive)
         {
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
                 Entity Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
                 if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
-                if (ExperienceSystem.isEXPActive)
-                {
-                    Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-                    ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
-                    ExperienceSystem.SetLevel(Owner, User, SteamID);
-                }
+
+                Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
+                ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
+                ExperienceSystem.SetLevel(Owner, User, SteamID);
             }
         }
     }
@@ -199,7 +197,7 @@ public class SpellLevelSystem_Destroy_Patch
     private static void Prefix(SpellLevelSystem_Destroy __instance)
     {
 
-        if (ExperienceSystem.isEXPActive)
+        if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
@@ -225,7 +223,7 @@ public class SpellLevelSystem_Destroy_Patch
 
     private static void Postfix(SpellLevelSystem_Destroy __instance)
     {
-        if (ExperienceSystem.isEXPActive)
+        if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;
             NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);

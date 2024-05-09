@@ -5,17 +5,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BepInEx;
 using BepInEx.Logging;
-using OpenRPG.Commands;
-using OpenRPG.Models;
 using OpenRPG.Systems;
 using ProjectM;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils
 {
-    using WeaponMasteryData = LazyDictionary<WeaponMasterySystem.MasteryType, MasteryData>;
-    using BloodlineMasteryData = LazyDictionary<BloodlineSystem.BloodType, MasteryData>;
-    
     //-- AutoSave is now directly hooked into the Server game save activity.
     public static class AutoSaveSystem
     {
@@ -32,22 +27,22 @@ namespace OpenRPG.Utils
         public static readonly string WeaponMasteryJson = "weapon_mastery.json";
         public static readonly string PlayerLogoutJson = "player_logout.json";
         public static readonly string WeaponMasteryConfigJson = "weapon_mastery_config.json";
-        public static readonly string PlayerLogMasteryJson = "player_log_mastery.json";
+        public static readonly string PlayerLogConfigJson = "playerLogConfig.json";
         public static readonly string BloodlinesJson = "bloodlines.json";
         public static readonly string BloodlineConfigJson = "bloodline_config.json";
-        public static readonly string PlayerLogBloodlinesJson = "player_log_bloodlines.json";
         public static readonly string PlayerExperienceJson = "player_experience.json";
-        public static readonly string PlayerLogExperienceJson = "player_log_exp.json";
         public static readonly string PlayerAbilityPointsJson = "player_ability_points.json";
         public static readonly string PlayerLevelStatsJson = "player_level_stats.json";
         public static readonly string ExperienceClassStatsJson = "experience_class_stats.json";
         public static readonly string CommandPermissionJson = "command_permission.json";
         public static readonly string UserPermissionJson = "user_permission.json";
         
-        private static int saveCount = 0;
-        public static int backupFrequency = 5;
+        private static int _saveCount = 0;
+        private static int _autoSaveCount = 0;
+        public static int AutoSaveFrequency = 1;
+        public static int BackupFrequency = 0;
         
-        private static JsonSerializerOptions JSON_options = new()
+        private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = false,
             IncludeFields = true,
@@ -56,7 +51,7 @@ namespace OpenRPG.Utils
                 new PrefabGuidConverter()
             }
         };
-        private static JsonSerializerOptions Pretty_JSON_options = new()
+        private static readonly JsonSerializerOptions PrettyJsonOptions = new()
         {
             WriteIndented = true,
             IncludeFields = true,
@@ -65,77 +60,191 @@ namespace OpenRPG.Utils
                 new PrefabGuidConverter()
             }
         };
-        
-        public static void SaveDatabase()
+
+        private enum LoadMethod
         {
-            saveCount++;
-            var saveBackup = saveCount % backupFrequency == 0;
-            var saveFolder = saveBackup ? BackupsPath : SavesPath;
-            
-            SaveDB(saveFolder, CommandPermissionJson, Database.command_permission, Pretty_JSON_options);
-            SaveDB(saveFolder, UserPermissionJson, Database.user_permission, Pretty_JSON_options);
-            SaveDB(saveFolder, WaypointCountJson, Database.waypoints_owned, JSON_options);
-            SaveDB(saveFolder, GlobalWaypointsJson, Database.waypoints, JSON_options);
-            SaveDB(saveFolder, PowerUpJson, Database.PowerUpList, JSON_options);
+            Both,
+            Main,
+            Backup,
+            None,
+        }
+
+        // Returns true on all succeeding, false on any errors
+        public static bool SaveDatabase(bool forceSave, bool forceBackup = false)
+        {
+            var anyErrors = false;
+            if (forceSave)
+            {
+                anyErrors |= !InternalSaveDatabase(SavesPath);
+                if (forceBackup) anyErrors |= !InternalSaveDatabase(BackupsPath);
+            }
+            else
+            {
+                // TODO test time between logs so that we can a comment for it in the config
+                Plugin.Log(LogSystem.Core, LogLevel.Info, "AUTO-SAVING NOW: TODO REMOVE THIS", true);
+                
+                var autoSave = _saveCount % AutoSaveFrequency == 0;
+                if (autoSave)
+                {
+                    anyErrors |= !InternalSaveDatabase(SavesPath);
+                    var saveBackup = _autoSaveCount % BackupFrequency == 0;
+                    if (forceBackup || saveBackup) anyErrors |= !InternalSaveDatabase(BackupsPath);
+                    
+                    // Just ensure that it wraps around. No need to support ludicrously high save count numbers
+                    _autoSaveCount = (_autoSaveCount + 1) % 100;
+                }
+                
+                // Just ensure that it wraps around. No need to support ludicrously high save count numbers
+                _saveCount = (_saveCount + 1) % 100;
+            }
+
+            return !anyErrors;
+        }
+        
+        // Returns true on all succeeding, false on any errors
+        private static bool InternalSaveDatabase(string saveFolder)
+        {
+            var anyErrors = false;
+            anyErrors |= !SaveDB(saveFolder, CommandPermissionJson, Database.command_permission, PrettyJsonOptions);
+            anyErrors |= !SaveDB(saveFolder, UserPermissionJson, Database.user_permission, PrettyJsonOptions);
+            anyErrors |= !SaveDB(saveFolder, WaypointCountJson, Database.waypoints_owned, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, GlobalWaypointsJson, Database.waypoints, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, PowerUpJson, Database.PowerUpList, JsonOptions);
 
             //-- System Related
-            SaveDB(saveFolder, PlayerLogoutJson, Database.player_logout, JSON_options);
-            SaveDB(saveFolder, PlayerExperienceJson, Database.player_experience, JSON_options);
-            SaveDB(saveFolder, PlayerLogExperienceJson, Database.player_log_exp, JSON_options);
-            SaveDB(saveFolder, PlayerAbilityPointsJson, Database.player_abilityIncrease, JSON_options);
-            SaveDB(saveFolder, PlayerLevelStatsJson, Database.player_level_stats, JSON_options);
-            SaveDB(saveFolder, ExperienceClassStatsJson, Database.experience_class_stats, Pretty_JSON_options);
-            SaveDB(saveFolder, WeaponMasteryJson, Database.player_weaponmastery, JSON_options);
-            SaveDB(saveFolder, WeaponMasteryConfigJson, Database.masteryStatConfig, Pretty_JSON_options);
-            SaveDB(saveFolder, PlayerLogMasteryJson, Database.player_log_mastery, JSON_options);
-            SaveDB(saveFolder, BloodlinesJson, Database.playerBloodline, JSON_options);
-            SaveDB(saveFolder, BloodlineConfigJson, Database.bloodlineStatConfig, Pretty_JSON_options);
-            SaveDB(saveFolder, PlayerLogBloodlinesJson, Database.playerLogBloodline, JSON_options);
+            anyErrors |= !SaveDB(saveFolder, PlayerLogoutJson, Database.player_logout, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, PlayerExperienceJson, Database.player_experience, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, PlayerLogConfigJson, Database.playerLogConfig, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, PlayerAbilityPointsJson, Database.player_abilityIncrease, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, PlayerLevelStatsJson, Database.player_level_stats, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, ExperienceClassStatsJson, Database.experience_class_stats, PrettyJsonOptions);
+            anyErrors |= !SaveDB(saveFolder, WeaponMasteryJson, Database.player_weaponmastery, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, WeaponMasteryConfigJson, Database.masteryStatConfig, PrettyJsonOptions);
+            anyErrors |= !SaveDB(saveFolder, BloodlinesJson, Database.playerBloodline, JsonOptions);
+            anyErrors |= !SaveDB(saveFolder, BloodlineConfigJson, Database.bloodlineStatConfig, PrettyJsonOptions);
 
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
+            return !anyErrors;
         }
 
-        public static void LoadDatabase()
+        public static void LoadOrInitialiseDatabase()
         {
-            //-- Commands Related
-            Database.command_permission = LoadDB(CommandPermissionJson, PermissionSystem.DefaultCommandPermissions);
-            Database.user_permission = LoadDB<Dictionary<ulong, int>>(UserPermissionJson);
-            Database.waypoints_owned = LoadDB<Dictionary<ulong, int>>(WaypointCountJson);
-            Database.waypoints = LoadDB<Dictionary<string, WaypointData>>(GlobalWaypointsJson);
-            Database.PowerUpList = LoadDB<Dictionary<ulong, PowerUpData>>(PowerUpJson);
+            InternalLoadDatabase(true, LoadMethod.Both);
+        }
 
-            //-- System Related
-            Database.player_logout = LoadDB<Dictionary<ulong, DateTime>>(PlayerLogoutJson);
-            Database.player_experience = LoadDB<Dictionary<ulong, int>>(PlayerExperienceJson);
-            Database.player_log_exp = LoadDB<Dictionary<ulong, bool>>(PlayerLogExperienceJson);
-            Database.player_abilityIncrease = LoadDB<Dictionary<ulong, int>>(PlayerAbilityPointsJson);
-            Database.player_level_stats = LoadDB<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(PlayerLevelStatsJson);
-            Database.experience_class_stats = LoadDB(ExperienceClassStatsJson, ExperienceSystem.DefaultExperienceClassStats);
-            Database.player_weaponmastery = LoadDB<LazyDictionary<ulong, WeaponMasteryData>>(WeaponMasteryJson);
-            Database.masteryStatConfig = LoadDB(WeaponMasteryConfigJson, WeaponMasterySystem.DefaultMasteryConfig);
-            Database.player_log_mastery = LoadDB<Dictionary<ulong, bool>>(PlayerLogMasteryJson);
-            Database.playerBloodline = LoadDB<LazyDictionary<ulong, BloodlineMasteryData>>(BloodlinesJson);
-            Database.bloodlineStatConfig = LoadDB(BloodlineConfigJson, BloodlineSystem.DefaultBloodlineConfig);
-            Database.playerLogBloodline = LoadDB<Dictionary<ulong, bool>>(PlayerLogBloodlinesJson);
+        public static bool LoadDatabase(bool loadBackup)
+        {
+            return InternalLoadDatabase(false, loadBackup ? LoadMethod.Backup : LoadMethod.Main);
+        }
 
-            Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
+        public static bool WipeDatabase()
+        {
+            return InternalLoadDatabase(true, LoadMethod.None);
         }
         
-        private static void SaveDB<TData>(string saveFolder, string specificFile, TData data, JsonSerializerOptions options)
+        private static bool InternalLoadDatabase(bool useInitialiser, LoadMethod loadMethod)
+        {
+            var anyErrors = false;
+            //-- Commands Related
+            Database.command_permission = LoadDB(CommandPermissionJson, loadMethod, useInitialiser, Database.command_permission, out var success, PermissionSystem.DefaultCommandPermissions);
+            anyErrors |= !success;
+            Database.user_permission = LoadDB(UserPermissionJson, loadMethod, useInitialiser, Database.user_permission, out success);
+            anyErrors |= !success;
+            Database.waypoints_owned = LoadDB(WaypointCountJson, loadMethod, useInitialiser, Database.waypoints_owned, out success);
+            anyErrors |= !success;
+            Database.waypoints = LoadDB(GlobalWaypointsJson, loadMethod, useInitialiser, Database.waypoints, out success);
+            anyErrors |= !success;
+            Database.PowerUpList = LoadDB(PowerUpJson, loadMethod, useInitialiser, Database.PowerUpList, out success);
+            anyErrors |= !success;
+
+            //-- System Related
+            Database.player_logout = LoadDB(PlayerLogoutJson, loadMethod, useInitialiser, Database.player_logout, out success);
+            anyErrors |= !success;
+            Database.player_experience = LoadDB(PlayerExperienceJson, loadMethod, useInitialiser, Database.player_experience, out success);
+            anyErrors |= !success;
+            Database.playerLogConfig = LoadDB(PlayerLogConfigJson, loadMethod, useInitialiser, Database.playerLogConfig, out success);
+            anyErrors |= !success;
+            Database.player_abilityIncrease = LoadDB(PlayerAbilityPointsJson, loadMethod, useInitialiser, Database.player_abilityIncrease, out success);
+            anyErrors |= !success;
+            Database.player_level_stats = LoadDB(PlayerLevelStatsJson, loadMethod, useInitialiser, Database.player_level_stats, out success);
+            anyErrors |= !success;
+            Database.experience_class_stats = LoadDB(ExperienceClassStatsJson, loadMethod, useInitialiser, Database.experience_class_stats, out success, ExperienceSystem.DefaultExperienceClassStats);
+            anyErrors |= !success;
+            Database.player_weaponmastery = LoadDB(WeaponMasteryJson, loadMethod, useInitialiser, Database.player_weaponmastery, out success);
+            anyErrors |= !success;
+            Database.masteryStatConfig = LoadDB(WeaponMasteryConfigJson, loadMethod, useInitialiser, Database.masteryStatConfig, out success, WeaponMasterySystem.DefaultMasteryConfig);
+            anyErrors |= !success;
+            Database.playerBloodline = LoadDB(BloodlinesJson, loadMethod, useInitialiser, Database.playerBloodline, out success);
+            anyErrors |= !success;
+            Database.bloodlineStatConfig = LoadDB(BloodlineConfigJson, loadMethod, useInitialiser, Database.bloodlineStatConfig, out success, BloodlineSystem.DefaultBloodlineConfig);
+            anyErrors |= !success;
+
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
+            return !anyErrors;
+        }
+        
+        
+        
+        private static bool SaveDB<TData>(string saveFolder, string specificFile, TData data, JsonSerializerOptions options)
         {
             try
             {
                 var outputFile = Path.Combine(saveFolder, specificFile);
                 File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
                 Plugin.Log(LogSystem.Core, LogLevel.Info, $"{specificFile} Saved.");
+                return true;
             }
             catch (Exception e)
             {
                 Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
+                return false;
             }
         }
 
-        private static TData LoadDB<TData>(string specificFile, Func<TData> initialiser = null) where TData : class, new()
+        private static TData LoadDB<TData>(string specificFile, LoadMethod loadMethod, bool useInitialiser, TData currentRef, out bool success, Func<TData> initialiser = null) where TData : class, new()
+        {
+            success = false;
+            TData data;
+            switch (loadMethod)
+            {
+                case LoadMethod.Main:
+                    if (LoadDB(SavesPath, specificFile, out data))
+                    {
+                        success = true;
+                        return data;
+                    }
+                    break;
+                case LoadMethod.Backup:
+                    if (LoadDB(BackupsPath, specificFile, out data))
+                    {
+                        success = true;
+                        return data;
+                    }
+                    break;
+                case LoadMethod.Both:
+                default:
+                    // attempt to load the main save first
+                    if (LoadDB(SavesPath, specificFile, out data) ||
+                        LoadDB(BackupsPath, specificFile, out data))
+                    {
+                        success = true;
+                        return data;
+                    }
+                    break;
+                case LoadMethod.None:
+                    success = true;
+                    Plugin.Log(LogSystem.Core, LogLevel.Info, $"Initialising DB for {specificFile}");
+                    return initialiser == null ? new TData() : initialiser();
+            }
+
+            // If nothing loaded correctly, check if we should use the initialiser or just return the current value.
+            if (!useInitialiser) return currentRef;
+            
+            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
+            return initialiser == null ? new TData() : initialiser();
+        }
+
+        private static bool LoadDB<TData>(string folder, string specificFile, out TData data) where TData : class, new()
         {
             // Default JSON content to valid json so that they have a chance to be serialised without errors when loading for the first time.
             var genericType = typeof(TData);
@@ -144,27 +253,16 @@ namespace OpenRPG.Utils
                                   genericType.GetGenericTypeDefinition().IsAssignableFrom(typeof(HashSet<>)));
             var defaultContents = isJsonListData ? "[]" : "{}";
             try {
-                var saveFile = ConfirmFile(SavesPath, specificFile, defaultContents);
+                var saveFile = ConfirmFile(folder, specificFile, defaultContents);
                 var json = File.ReadAllText(saveFile);
-                var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
+                data = JsonSerializer.Deserialize<TData>(json, JsonOptions);
                 Plugin.Log(LogSystem.Core, LogLevel.Info, $"Main DB Loaded for {specificFile}");
-                return data;
+                return true;
             } catch (Exception e) {
                 Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
+                data = new TData();
+                return false;
             }
-            
-            try {
-                var backupFile = ConfirmFile(BackupsPath, specificFile, defaultContents);
-                var json = File.ReadAllText(backupFile);
-                var data = JsonSerializer.Deserialize<TData>(json, JSON_options);
-                Plugin.Log(LogSystem.Core, LogLevel.Info, $"Backup DB Loaded for {specificFile}");
-                return data;
-            } catch (Exception e) {
-                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not load backup {specificFile}: {e.Message}", true);
-            }
-            
-            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
-            return initialiser == null ? new TData() : initialiser();
         }
         
         public static string ConfirmFile(string address, string file, string defaultContents = "") {

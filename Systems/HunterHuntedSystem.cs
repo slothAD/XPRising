@@ -19,7 +19,6 @@ namespace OpenRPG.Systems
 
         private const LogSystem LoggingSystem = LogSystem.Faction;
 
-        public static bool isActive = true;
         public static int heat_cooldown = 10;
         public static int ambush_interval = 60;
         public static int ambush_chance = 50;
@@ -92,7 +91,7 @@ namespace OpenRPG.Systems
             // Update the heatCache with the new data
             Cache.heatCache[steamID] = heatData;
 
-            LogHeatData(heatData, userEntity, "kill");
+            LogHeatData(steamID, heatData, userEntity, "kill");
         }
 
         public static void PlayerDied(Entity victimEntity) {
@@ -104,7 +103,7 @@ namespace OpenRPG.Systems
             // Reset player heat to 0
             var heatData = new PlayerHeatData();
             Cache.heatCache[steamID] = heatData;
-            LogHeatData(heatData, userEntity, "died");
+            LogHeatData(steamID, heatData, userEntity, "died");
         }
 
         private struct AllyHeat {
@@ -119,7 +118,7 @@ namespace OpenRPG.Systems
 
         // This is expected to only be called at the start of combat
         public static void CheckForAmbush(Entity triggeringPlayerEntity) {
-            var useGroup = ExperienceSystem.groupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
+            var useGroup = ExperienceSystem.CurrentGroupLevelScheme != ExperienceSystem.GroupLevelScheme.None;
             var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(triggeringPlayerEntity);
             var closeAllies = Alliance.GetClosePlayers(
                 triggerLocation.Position, triggeringPlayerEntity, ExperienceSystem.GroupMaxDistance, true, useGroup, LoggingSystem);
@@ -188,7 +187,7 @@ namespace OpenRPG.Systems
 
                     Cache.heatCache[allyHeat.player.steamID] = heatData;
             
-                    LogHeatData(heatData, allyHeat.player.userEntity, "check");
+                    LogHeatData(allyHeat.player.steamID, heatData, allyHeat.player.userEntity, "check");
                 }
             }
         }
@@ -196,7 +195,7 @@ namespace OpenRPG.Systems
         public static PlayerHeatData GetPlayerHeat(Entity userEntity) {
             // Ensure that the user has the up-to-date heat data and return the value
             HeatManager(userEntity, out var heatData, out var steamID);
-            LogHeatData(heatData, userEntity, "get");
+            LogHeatData(steamID, heatData, userEntity, "get");
             return heatData;
         }
 
@@ -210,15 +209,8 @@ namespace OpenRPG.Systems
             heatData.heat[heatFaction] = heat;
 
             Cache.heatCache[steamID] = heatData;
-            LogHeatData(heatData, userEntity, "set");
+            LogHeatData(steamID, heatData, userEntity, "set");
             return heatData;
-        }
-
-        public static void SetLogging(Entity userEntity, bool on) {
-            HeatManager(userEntity, out var heatData, out var steamID);
-            heatData.isLogging = on;
-            Cache.heatCache[steamID] = heatData;
-            LogHeatData(heatData, userEntity, $"log({on})");
         }
 
         private static void HeatManager(Entity userEntity, out PlayerHeatData heatData, out ulong steamID) {
@@ -285,8 +277,8 @@ namespace OpenRPG.Systems
             return sb.ToString();
         }
 
-        private static void LogHeatData(PlayerHeatData heatData, Entity userEntity, string origin) {
-            if (heatData.isLogging) Output.SendLore(userEntity, HeatDataString(heatData, true));
+        private static void LogHeatData(ulong steamID, PlayerHeatData heatData, Entity userEntity, string origin) {
+            if (Database.playerLogConfig[steamID].LoggingWanted) Output.SendLore(userEntity, HeatDataString(heatData, true));
             Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat({origin}): {HeatDataString(heatData, false)}");
         }
     }

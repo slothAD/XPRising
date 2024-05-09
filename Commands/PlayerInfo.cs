@@ -37,8 +37,8 @@ namespace OpenRPG.Commands
             var ping = entityManager.GetComponentData<Latency>(playerEntity).Value;
             var position = entityManager.GetComponentData<Translation>(playerEntity).Value;
 
-            var currentXp = ExperienceSystem.getXp(steamID);
-            var currentLevel = ExperienceSystem.convertXpToLevel(currentXp);
+            var currentXp = ExperienceSystem.GetXp(steamID);
+            var currentLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
             ExperienceSystem.GetLevelAndProgress(currentXp, out var levelProgress, out var xpEarned, out var xpNeeded);
 
             ctx.Reply($"Name: {Utils.Color.White(name)}");

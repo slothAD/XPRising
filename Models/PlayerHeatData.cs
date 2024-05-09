@@ -13,7 +13,6 @@ public struct PlayerHeatData {
         
     public Dictionary<Faction, Heat> heat { get; } = new();
     public DateTime lastCooldown { get; set; }
-    public bool isLogging { get; set; }
 
     public PlayerHeatData() {
         foreach (Faction faction in FactionHeat.ActiveFactions) {

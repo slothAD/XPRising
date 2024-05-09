@@ -14,11 +14,10 @@ namespace OpenRPG.Systems
     {
         private static EntityManager _em = Plugin.Server.EntityManager;
 
-        public static bool IsMasteryEnabled = true;
         public static int MasteryCombatTick = 5;
         public static int MaxCombatTick = 12;
-        public static double MasteryMultiplier = 1;
-        public static double MaxMastery = 100;
+        public static double MasteryGainMultiplier = 0.1;
+        public static double InactiveMultiplier = 0.1;
         public static double VBloodMultiplier = 15;
         
         // TODO online decay
@@ -30,15 +29,10 @@ namespace OpenRPG.Systems
         // Shou Change - make options for spell mastery with weapons active.
         public static bool SpellMasteryNeedsUnarmedToUse = true;
         public static bool SpellMasteryNeedsUnarmedToLearn = true;
-        public static bool LinearCdr = false;
-        public static bool CdrStacks = false;
 
         public static double MaxEffectiveness = 10;
         public static bool EffectivenessSubSystemEnabled = false;
-        public static bool GrowthSubSystemEnabled = false;
-        public static double MinGrowth = 0.1f;
-        public static double MaxGrowth = 10;
-        public static double GrowthPerEffectiveness = 1;
+        public static double GrowthPerEffectiveness = -1;
 
         private static readonly Random Rand = new Random();
         
@@ -107,13 +101,8 @@ namespace OpenRPG.Systems
             
             var wd = Database.player_weaponmastery[steamID];
 
-            double weaponGrowth = 1;
-            double spellGrowth = 1;
-
-            if (GrowthSubSystemEnabled) {
-                weaponGrowth = wd[masteryType].Growth;
-                spellGrowth = wd.GetValueOrDefault(MasteryType.Spell).Growth;
-            }
+            var weaponGrowth = wd[masteryType].Growth;
+            var spellGrowth = wd[MasteryType.Spell].Growth;
             
             var isVBlood = false;
             if (_em.HasComponent<BloodConsumeSource>(victim))
@@ -131,8 +120,8 @@ namespace OpenRPG.Systems
             }
 
             var vBloodMultiplier = isVBlood ? VBloodMultiplier : 1;
-            var changeInMastery = CalculateMasteryChange(masteryValue, weaponGrowth) * vBloodMultiplier * MasteryMultiplier;
-            var changeInSpellMastery = CalculateMasteryChange(spellMasteryValue, spellGrowth) * vBloodMultiplier * MasteryMultiplier;
+            var changeInMastery = CalculateMasteryChange(masteryValue, weaponGrowth) * vBloodMultiplier;
+            var changeInSpellMastery = CalculateMasteryChange(spellMasteryValue, spellGrowth) * vBloodMultiplier;
             
             wd = ModMastery(steamID, wd, masteryType, changeInMastery);
             var updateSpellMastery = !SpellMasteryNeedsUnarmedToLearn || masteryType == MasteryType.Unarmed;
@@ -142,7 +131,7 @@ namespace OpenRPG.Systems
 
             Database.player_weaponmastery[steamID] = wd;
 
-            if (Database.player_log_mastery.TryGetValue(steamID, out bool isLogging) && isLogging)
+            if (Database.playerLogConfig[steamID].LoggingMastery)
             {
                 var currentMastery = wd[masteryType].Mastery;
                 Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {changeInMastery:F3}% [ {Enum.GetName(masteryType)}: {currentMastery:F2}% ]</color>");
@@ -170,18 +159,13 @@ namespace OpenRPG.Systems
             if (combatTicks > MaxCombatTick) return;
             var masteryType = WeaponToMasteryType(GetWeaponType(player));
             
-            double weaponGrowth = 1;
-            double spellGrowth = 1;
-            
             var wd = Database.player_weaponmastery[steamID];
+            
+            var weaponGrowth = wd[masteryType].Growth;
+            var spellGrowth = wd.GetValueOrDefault(MasteryType.Spell).Growth;
 
-            if (GrowthSubSystemEnabled) {
-                weaponGrowth = wd[masteryType].Growth;
-                spellGrowth = wd.GetValueOrDefault(MasteryType.Spell).Growth;
-            }
-
-            var changeInMastery = (MasteryCombatTick * MasteryMultiplier * weaponGrowth)/1000.0;
-            var changeInSpellMastery = (MasteryCombatTick * MasteryMultiplier * spellGrowth)/1000.0;
+            var changeInMastery = (MasteryCombatTick * weaponGrowth)/1000.0;
+            var changeInSpellMastery = (MasteryCombatTick * spellGrowth)/1000.0;
             Cache.player_combat_ticks[steamID] = combatTicks + 1;
             
             wd = ModMastery(steamID, wd, masteryType, changeInMastery);
@@ -219,39 +203,28 @@ namespace OpenRPG.Systems
         public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, Entity owner, ulong steamID)
         {
             var masteryType = WeaponToMasteryType(GetWeaponType(owner));
-            var hasMastery = CalcBuffValue(steamID, masteryType, out var masteryValue, out var masterySpellValue);
-            
-            if (hasMastery)
+            var weaponMasterData = Database.player_weaponmastery[steamID];
+
+            if (InactiveMultiplier > 0)
             {
-                ApplyBuff(buffer, masteryType, masteryValue, steamID);
-                if(!SpellMasteryNeedsUnarmedToUse || masteryType == MasteryType.Unarmed){
-                    ApplyBuff(buffer, MasteryType.Spell, masterySpellValue, steamID);
-                }                 
+                var applySpellAtFull = !SpellMasteryNeedsUnarmedToUse || masteryType == MasteryType.Unarmed;
+                foreach (var (type, mastery) in weaponMasterData)
+                {
+                    var multiplier = type == masteryType || (type == MasteryType.Spell && applySpellAtFull) ? 1.0 : InactiveMultiplier;
+                    var effectiveness = (EffectivenessSubSystemEnabled ? mastery.Effectiveness : 1) * multiplier;
+                    var masteryValue = Math.Max(mastery.Mastery, 0);
+                    ApplyBuff(buffer, masteryValue, effectiveness, type);
+                }
             }
         }
 
-        private static void ApplyBuff(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, MasteryType type, double mastery, ulong steamID)
+        private static void ApplyBuff(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, double mastery, double effectiveness, MasteryType type)
         {
-            var wd = Database.player_weaponmastery[steamID];
             var config = Database.masteryStatConfig[type];
             foreach (var statConfig in config)
             {
-                var effectiveness = EffectivenessSubSystemEnabled ? wd[type].Effectiveness : 1;
                 buffer.Add(Helper.MakeBuff(statConfig.type, Helper.CalcBuffValue(mastery, effectiveness, statConfig.rate, statConfig.type)));
             }
-        }
-
-        private static bool CalcBuffValue(ulong steamID, MasteryType masteryType, out double masteryValue, out double masterySpellValue){
-            masteryValue = 0;
-            masterySpellValue = 0;
-
-            bool isFound = Database.player_weaponmastery.TryGetValue(steamID, out var mastery);
-            if (!isFound) return false;
-            
-            masteryValue = Math.Max(mastery[masteryType].Mastery, 0);
-            masterySpellValue = Math.Max(mastery.GetValueOrDefault(MasteryType.Spell).Mastery, 0);
-
-            return true;
         }
 
         public static void ModMastery(ulong steamID, MasteryType type, double changeInMastery)
@@ -266,9 +239,9 @@ namespace OpenRPG.Systems
             if (type == MasteryType.Unarmed){
                 if (changeInMastery > 0) changeInMastery *= 2;
             }
-            
+
             var mastery = wd[type];
-            mastery.Mastery = Math.Clamp(mastery.Mastery + changeInMastery, 0, MaxMastery);
+            mastery.Mastery += changeInMastery * MasteryGainMultiplier;
             Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery changed: {steamID}: {Enum.GetName(type)}: {mastery.Mastery}");
             wd[type] = mastery;
             return wd;
@@ -287,7 +260,7 @@ namespace OpenRPG.Systems
                 // If it is already 0, then this won't have much effect.
                 if (mastery.Mastery > 0)
                 {
-                    wd[type] = mastery.ResetMastery(MaxMastery, MaxEffectiveness, GrowthPerEffectiveness, MaxGrowth, MinGrowth);
+                    wd[type] = mastery.ResetMastery(MaxEffectiveness, GrowthPerEffectiveness);
                     Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery reset: {Enum.GetName(type)}: {mastery}");
                 }
                 Database.player_weaponmastery[steamID] = wd;
@@ -341,9 +314,9 @@ namespace OpenRPG.Systems
             }
         }
 
-        public static Dictionary<MasteryType, List<StatConfig>> DefaultMasteryConfig()
+        public static LazyDictionary<MasteryType, List<StatConfig>> DefaultMasteryConfig()
         {
-            return new Dictionary<MasteryType, List<StatConfig>>
+            return new LazyDictionary<MasteryType, List<StatConfig>>
             {
                 { MasteryType.Unarmed, new List<StatConfig>() { new(UnitStatType.PhysicalPower, 0, 0.25f), new(UnitStatType.MovementSpeed, 0, 0.01f) } },
                 { MasteryType.Spear, new List<StatConfig>() { new(UnitStatType.PhysicalPower, 0, 0.25f) } },

@@ -5,21 +5,27 @@ namespace OpenRPG.Models;
 
 public struct MasteryData()
 {
-    public double Mastery = 0;
-    public double Effectiveness = 1;
+    private const double MinGrowth = 0;
+    private const double MaxMastery = 100;
+    private const double BaseEffectiveness = 1;
+
+    private double _mastery = 0;
+    private double _effectiveness = BaseEffectiveness;
+    public double Mastery { get => _mastery; set => _mastery = Math.Clamp(value, 0, MaxMastery); }
+    public double Effectiveness { get => _effectiveness; set => _effectiveness = Math.Max(value, BaseEffectiveness); }
     public double Growth = 1;
 
-    public MasteryData ResetMastery(double maxMastery, double maxEffectiveness, double growthPerEffectiveness, double maxGrowth, double minGrowth)
+    public MasteryData ResetMastery(double maxEffectiveness, double growthPerEffectiveness)
     {
-        Effectiveness = Math.Min(maxEffectiveness, Effectiveness + Mastery / maxMastery);
+        Effectiveness = Math.Min(maxEffectiveness, Effectiveness + Mastery / MaxMastery);
         Mastery = 0;
 
-        var percentageEffectiveness = Effectiveness / maxEffectiveness;
-        if (growthPerEffectiveness >= 0) {
-            Growth = Math.Min(maxGrowth, Growth + (percentageEffectiveness * growthPerEffectiveness));
-        }
-        else {
-            Growth = Math.Max(minGrowth, Growth * (1 - (percentageEffectiveness / (percentageEffectiveness - growthPerEffectiveness))));
+        // Set the growth rate to a reduced amount
+        var additionalEffectiveness = Effectiveness - BaseEffectiveness;
+        if (additionalEffectiveness > 0 && growthPerEffectiveness > 0)
+        {
+            Growth = Math.Max(MinGrowth,
+                1 - additionalEffectiveness / (additionalEffectiveness + Math.Abs(growthPerEffectiveness)));
         }
 
         return this;
