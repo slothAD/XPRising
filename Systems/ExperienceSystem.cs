@@ -85,6 +85,8 @@ namespace OpenRPG.Systems
             var multiplier = ExpValueMultiplier(victimEntity, isVBlood);
             
             var sumGroupLevel = (double)closeAllies.Sum(x => x.playerLevel);
+            // TODO consider exposing option to use either average or max functions for group level
+            var avgGroupLevel = (int)Math.Ceiling(closeAllies.Average(x => x.playerLevel));
 
             // Calculate an XP bonus that grows as groups get larger
             var baseGroupXpBonus = Math.Min(Math.Pow(1 + GroupXpBuffGrowth, closeAllies.Count - 1.0), MaxGroupXpBuff);
@@ -97,14 +99,14 @@ namespace OpenRPG.Systems
                 var groupMultiplier = GroupMaxDistance > 0 ? baseGroupXpBonus * (teammate.playerLevel / sumGroupLevel) : 1.0;
                 
                 Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel}");
-                AssignExp(teammate, unitLevel.Level, multiplier * groupMultiplier);
+                AssignExp(teammate, avgGroupLevel, unitLevel.Level, multiplier * groupMultiplier);
             }
         }
 
-        private static void AssignExp(Alliance.ClosePlayer player, int mobLevel, double multiplier) {
+        private static void AssignExp(Alliance.ClosePlayer player, int groupLevel, int mobLevel, double multiplier) {
             if (player.currentXp >= ConvertLevelToXp(MaxLevel)) return;
             
-            var xpGained = CalculateXp(player.playerLevel, mobLevel, multiplier);
+            var xpGained = CalculateXp(groupLevel, mobLevel, multiplier);
 
             var newXp = Math.Max(player.currentXp, 0) + xpGained;
             Database.PlayerExperience[player.steamID] = newXp;

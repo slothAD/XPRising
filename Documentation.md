@@ -6,33 +6,16 @@ complete with exp sharing between clan members or other players designated as al
 </details>
 Now with a class system, currently undocumented.
 
-#### Group XP
-Killing with other vampires can provide group XP. This is governed by `Group Modifier`, `Group Level Scheme` and `Ally Max Distance`.
+#### Clans and Groups and XP sharing
+Killing with other vampires can provide group XP and wanted levels.
 <details>
+
+A vampire is considered in your group if they are in your clan or if you use the `group` commands to create a group with
+them. A group will only share XP if the members are close enough to each other, governed by the `Ally Max Distance` config.
+
 <summary>Group XP options</summary>
-
-A vampire is considered to be in your group if they are in the same clan and within the distance specified by `Ally Max Distance`.
-
-Group XP is modified by the `Group Modifier` and `Group Level Scheme`.
-
-Given a scenario of 2 allied vampires close together, PC 1 (lvl 10), PC 2 (lvl 20), where PC 1 kills the mob, \
-the following table shows the level used to calculate each players XP:
-
-| Scheme | Name        | PC 1 | PC 2 |
-|--------|-------------|------|------|
-| 0      | None        | 10   | N/A  |
-| 1      | Average     | 15   | 15   |
-| 2      | Max         | 20   | 20   |
-| 3      | Each player | 10   | 20   |
-| 4      | Killer      | 10   | 10   |
-
-Notes:
-- `0`: Effectively disables group XP. Each vampire only gets XP for mobs that they get the killing blow on
-- `1`: Higher level vampires get more XP when grouped with lower level vampires
-- `2`: Lower level players are penalised when playing with higher level players
-- `3`: Each player gets XP based on their own level (Default behaviour)
-- `4`: Each player gets XP based on who killed the mob (Previous version behaviour)
-
+Group XP is awarded based on the ratio of the average group level to the sum of the group level. It is then multiplied
+by a bonus value `( 1.2^(group size - 1) )`, up to a maximum of `1.5`.
 </details>
 
 ## Mastery System
@@ -134,7 +117,7 @@ With 0 as the default privilege for users (lowest), and 100 as the highest privi
 <details>
 <summary>Mastery</summary>
 
-The stat IDs that the mastery of a given weapon should boost are shown on the table below.
+The stat IDs that weapon mastery and bloodline mastery used to determine which stats to boost are shown on below.
 
 Stat IDs copied from the code.
 PhysicalPower = 0,
