@@ -11,7 +11,6 @@ namespace OpenRPG.Configuration
     internal class RandomEncountersConfig
     {
         private static ConfigFile _mainConfig;
-        private static ConfigFile _npcsConfig;
         private static ConfigFile _itemsConfig;
 
         public static ConfigEntry<bool> SkipPlayersInCastle { get; private set; }
@@ -46,8 +45,6 @@ namespace OpenRPG.Configuration
             }
             var mainConfigFilePath = Path.Combine(configFolderRE, "Main.cfg");
             _mainConfig = File.Exists(mainConfigFilePath) ? new ConfigFile(mainConfigFilePath, false) : new ConfigFile(mainConfigFilePath, true);
-            var npcsConfigFilePath = Path.Combine(configFolderRE, "NPCs.cfg");
-            _npcsConfig = File.Exists(npcsConfigFilePath) ? new ConfigFile(npcsConfigFilePath, false) : new ConfigFile(npcsConfigFilePath, true);
             var itemsConfigFilePath = Path.Combine(configFolderRE, "Items.cfg");
             _itemsConfig = File.Exists(itemsConfigFilePath) ? new ConfigFile(itemsConfigFilePath, false) : new ConfigFile(itemsConfigFilePath, true);
 
@@ -65,11 +62,6 @@ namespace OpenRPG.Configuration
             NotifyAllPlayersAboutRewards = _mainConfig.Bind("Main", "NotifyAllPlayersAboutRewards", false, "When enabled, all online players are notified about any player's rewards.");
             MinSpawnDistance = _mainConfig.Bind("Main", "MinSpawnDistance", 2, "Minimum spawn distance for the spawned unit.");
             MaxSpawnDistance = _mainConfig.Bind("Main", "MaxSpawnDistance", 4, "Maximum spawn distance for the spawned unit.");
-            foreach (var npcModel in DataFactory.GetAllNpcs().OrderBy(i => i.Name))
-            {
-                Npcs[npcModel.Id] = _npcsConfig.Bind("NPCs", npcModel.PrefabName, true,
-                    $"{npcModel.Name} - {(npcModel.BloodType == string.Empty ? "None" : npcModel.BloodType)} (Level: {npcModel.Level}) https://gaming.tools/v-rising/npcs/{npcModel.PrefabName.ToLowerInvariant()}");
-            }
 
             foreach (var itemModel in DataFactory.GetAllItems().OrderBy(i => i.Name))
             {
@@ -81,7 +73,6 @@ namespace OpenRPG.Configuration
         public static void Destroy()
         {
             _mainConfig.Clear();
-            _npcsConfig.Clear();
             _itemsConfig.Clear();
         }
 

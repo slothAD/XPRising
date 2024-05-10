@@ -9,10 +9,11 @@ using OpenRPG.Systems;
 
 namespace OpenRPG.Hooks
 {
-    [HarmonyPatch(typeof(HandleGameplayEventsBase), nameof(HandleGameplayEventsBase.OnUpdate))]
+    // TODO check this change works
+    [HarmonyPatch(typeof(GameplayEventsSystem), nameof(GameplayEventsSystem.OnUpdate))]
     public class HandleGameplayEventsBase_Patch
     {
-        private static void Postfix(HandleGameplayEventsBase __instance)
+        private static void Postfix(GameplayEventsSystem __instance)
         {
             //-- Spawn Custom NPC Task
             if (Cache.spawnNPC_Listen.Count > 0)
@@ -29,7 +30,9 @@ namespace OpenRPG.Hooks
                         if (__instance.EntityManager.HasComponent<BloodConsumeSource>(entity))
                         {
                             var BloodSource = __instance.EntityManager.GetComponentData<BloodConsumeSource>(entity);
-                            BloodSource.UnitBloodType = Option.BloodType;
+                            // TODO check
+                            //BloodSource.UnitBloodType = Option.BloodType;
+                            ModifiablePrefabGUID.ModifyValue(ref BloodSource.UnitBloodType._Value, ModificationType.Set, Option.BloodType);
                             BloodSource.BloodQuality = Option.BloodQuality;
                             BloodSource.CanBeConsumed = Option.BloodConsumeable;
                             __instance.EntityManager.SetComponentData(entity, BloodSource);

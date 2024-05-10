@@ -81,6 +81,7 @@ public static class FactionUnits
 
     private static Unit[] cultist_units =
     {
+        new(Units.CHAR_Scarecrow, 54, 1),
         new(Units.CHAR_Cultist_Pyromancer, 60, 2),
         new(Units.CHAR_Cultist_Slicer, 60, 2),
     };
@@ -210,7 +211,6 @@ public static class FactionUnits
 
     private static Unit[] wtf =
     {
-        new(Units.CHAR_Scarecrow, 54, 3),
         new(Units.CHAR_ChurchOfLight_Sommelier_BarrelMinion, 50, 1),
         new(Units.CHAR_Farmlands_HostileVillager_Werewolf, 20, 2), // level 20?
         // Units.CHAR_Poloma_VBlood, // 35 - geomancer
@@ -302,7 +302,7 @@ public static class FactionUnits
     private static Unit[] werewolves =
     {
         new(Units.CHAR_Werewolf, 62, 1),
-        new(Units.CHAR_WerewolfChieftain_VBlood, 64, 2),
+        // new(Units.CHAR_WerewolfChieftain_VBlood, 64, 2),
     };
 
     private static Unit[] winter =
@@ -391,6 +391,21 @@ public static class FactionUnits
         return new ArraySegment<Unit>(units, 0, i);
     }
 
+    public static readonly Faction[] SupportedFactions = {
+        Faction.Bandits,
+        Faction.ChurchOfLum_Slaves,
+        Faction.ChurchOfLum_SpotShapeshiftVampire,
+        Faction.Critters,
+        Faction.Cursed,
+        Faction.Gloomrot,
+        Faction.Elementals,
+        Faction.Harpy,
+        Faction.Militia,
+        Faction.Mutants,
+        Faction.Spiders,
+        Faction.Undead,
+        Faction.Werewolf
+    };
     // This should only really handle the "active" factions
     public static ArraySegment<Unit> GetFactionUnits(Faction faction, int playerLevel, int wantedLevel)
     {
@@ -398,8 +413,20 @@ public static class FactionUnits
         {
             case Faction.Bandits:
                 return GetUnitsForLevel(bandit_units, playerLevel);
-            case Faction.Undead:
-                return GetUnitsForLevel(undead_minions, playerLevel);
+            case Faction.ChurchOfLum_Slaves:
+                return GetUnitsForLevel(cultist_units, playerLevel);
+            case Faction.ChurchOfLum_SpotShapeshiftVampire:
+                return GetUnitsForLevel(church, playerLevel);
+            case Faction.Critters:
+                return GetUnitsForLevel(playerLevel < 50 ? forest : winter, playerLevel);
+            case Faction.Cursed:
+                return GetUnitsForLevel(cursed_units, playerLevel);
+            case Faction.Gloomrot:
+                return GetUnitsForLevel(gloomrot, playerLevel);
+            case Faction.Elementals:
+                return GetUnitsForLevel(golems, playerLevel);
+            case Faction.Harpy:
+                return GetUnitsForLevel(harpy, playerLevel);
             case Faction.Militia:
                 if (wantedLevel > 3)
                 {
@@ -412,32 +439,28 @@ public static class FactionUnits
                 }
 
                 return GetUnitsForLevel(farmlands, playerLevel);
-            case Faction.ChurchOfLum_SpotShapeshiftVampire:
-                return GetUnitsForLevel(church, playerLevel);
-            case Faction.Gloomrot:
-                return GetUnitsForLevel(gloomrot, playerLevel);
+            case Faction.Mutants:
+                return GetUnitsForLevel(mutants, playerLevel);
+            case Faction.Spiders:
+                return GetUnitsForLevel(spiders, playerLevel);
+            case Faction.Undead:
+                return GetUnitsForLevel(undead_minions, playerLevel);
+            case Faction.Werewolf:
+                return GetUnitsForLevel(werewolves, playerLevel);
             case Faction.Bear:
             case Faction.ChurchOfLum:
-            case Faction.ChurchOfLum_Slaves:
             case Faction.ChurchOfLum_Slaves_Rioters:
-            case Faction.Critters:
-            case Faction.Cursed:
-            case Faction.Elementals:
-            case Faction.Harpy:
             case Faction.Ignored:
-            case Faction.Mutants:
             case Faction.NatureSpirit:
             case Faction.Plants:
             case Faction.Players:
             case Faction.Players_Castle_Prisoners:
             case Faction.Players_Mutant:
             case Faction.Players_Shapeshift_Human:
-            case Faction.Spiders:
             case Faction.Traders_T01:
             case Faction.Traders_T02:
             case Faction.Unknown:
             case Faction.VampireHunters:
-            case Faction.Werewolf:
             case Faction.WerewolfHuman:
             case Faction.Wendigo:
             case Faction.Wolves:

@@ -15,7 +15,7 @@ namespace OpenRPG.Utils
         //-- Cache (Wiped on plugin reload, server restart, and shutdown.)
 
         //-- -- Player Cache
-        public static LazyDictionary<FixedString64, PlayerData> NamePlayerCache = new();
+        public static LazyDictionary<FixedString64Bytes, PlayerData> NamePlayerCache = new();
         public static LazyDictionary<ulong, PlayerData> SteamPlayerCache = new();
         public static LazyDictionary<ulong, List<BuffData>> buffData = new();
         

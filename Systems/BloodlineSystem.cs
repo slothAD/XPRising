@@ -7,6 +7,7 @@ using OpenRPG.Models;
 using Unity.Entities;
 using OpenRPG.Utils;
 using OpenRPG.Utils.Prefabs;
+using Stunlock.Core;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Systems
@@ -316,12 +317,12 @@ namespace OpenRPG.Systems
                 {
                     new(UnitStatType.SunResistance, 0, 0.25),
                     new(UnitStatType.PhysicalCriticalStrikeChance, 50, 0.001),
-                    new(UnitStatType.DamageVsPlayerVampires, 100, 0.0025)
+                    new(UnitStatType.DamageVsVampires, 100, 0.0025)
                 } },
                 { BloodType.Scholar, new List<StatConfig>
                 {
                     new(UnitStatType.SpellPower, 0, 0.1),
-                    new(UnitStatType.CooldownModifier, 50, 200),
+                    new(UnitStatType.PrimaryCooldownModifier, 50, 200),
                     new(UnitStatType.DamageVsDemons, 100, 0.0025)
                 } },
                 { BloodType.VBlood, new List<StatConfig>() },

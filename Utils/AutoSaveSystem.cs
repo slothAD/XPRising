@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 using BepInEx;
 using BepInEx.Logging;
 using OpenRPG.Systems;
-using ProjectM;
+using Stunlock.Core;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils

@@ -6,7 +6,6 @@ using System.Reflection;
 using BepInEx.Logging;
 using OpenRPG.Systems;
 using VampireCommandFramework;
-using VRising.GameData;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils;
@@ -31,7 +30,7 @@ public static class Command
                 return true;
             }
                 
-            var steamId = GameData.Users.GetUserByCharacterName(ctx.Name).PlatformId;
+            var steamId = Helper.GetSteamIDFromName(ctx.Name);
             var userPrivilege = Database.UserPermission.GetValueOrDefault(steamId, PermissionSystem.LowestPrivilege);
 
             // If the user privilege is equal or greater to the required privilege, then they have permission

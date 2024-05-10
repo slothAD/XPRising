@@ -39,6 +39,7 @@ namespace OpenRPG.Components.RandomEncounters
         {
             Update(Plugin.Server);
         }
+        
         private void Update(World world)
         {
             if (!_enabled || _isRunning)

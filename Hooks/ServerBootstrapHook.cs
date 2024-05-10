@@ -36,6 +36,26 @@ namespace OpenRPG.Hooks
             RandomEncounters.Unload();
         }
     }
+    
+    [HarmonyPatch(typeof(LoadPersistenceSystemV2), nameof(LoadPersistenceSystemV2.SetLoadState))]
+    public static class LoadPersistenceSystem_Patch
+    {
+        public static void Postfix(ServerStartupState.State loadState, LoadPersistenceSystemV2 __instance)
+        {
+            try
+            {
+                if (loadState == ServerStartupState.State.SuccessfulStartup)
+                {
+                    //OnGameDataInitialized?.Invoke(__instance.World);
+                    Plugin.Initialize();
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, ex.Message, true);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserConnected))]
     public static class OnUserConnected_Patch

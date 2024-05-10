@@ -1,4 +1,5 @@
 ﻿using ProjectM;
+using Stunlock.Core;
 using Unity.Entities;
 
 namespace OpenRPG.Models;

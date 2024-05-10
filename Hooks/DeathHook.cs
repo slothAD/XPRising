@@ -4,6 +4,7 @@ using OpenRPG.Configuration;
 using ProjectM;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
+using ProjectM.Network;
 using Unity.Collections;
 using Unity.Transforms;
 using LogSystem = OpenRPG.Plugin.LogSystem;
@@ -58,7 +59,7 @@ namespace OpenRPG.Hooks {
                         {
                             var isVBlood =
                                 Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) &&
-                                bS.UnitBloodType.Equals(Helper.vBloodType);
+                                bS.UnitBloodType.Value.Equals(Helper.vBloodType);
 
                             var useGroup = ExperienceSystem.GroupMaxDistance > 0;
 
@@ -74,6 +75,14 @@ namespace OpenRPG.Hooks {
 
                         if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.UpdateMastery(killer, ev.Died);
                         if (Plugin.BloodlineSystemActive) BloodlineSystem.UpdateBloodline(killer, ev.Died);
+                        
+                        //-- Random Encounters
+                        if (Plugin.RandomEncountersSystemActive && Plugin.IsInitialized)
+                        {
+                            var userEntity = Plugin.Server.EntityManager.GetComponentData<PlayerCharacter>(killer).UserEntity;
+                            var userModel = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
+                            RandomEncountersSystem.ServerEvents_OnDeath(ev, userModel);
+                        }
                     }
                 }
 
@@ -84,12 +93,6 @@ namespace OpenRPG.Hooks {
                     if (Plugin.ExperienceSystemActive) ExperienceSystem.DeathXpLoss(ev.Died, ev.Killer);
                 }
             }
-            
-            // TODO this should integrate iterating into the loop above
-            //-- Random Encounters
-            if (deathEvents.Length > 0 && Plugin.RandomEncountersSystemActive && Plugin.IsInitialized)
-                RandomEncountersSystem.ServerEvents_OnDeath(__instance, deathEvents);
-            //-- ----------------------------------------
         }
     }
 }

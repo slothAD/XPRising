@@ -269,7 +269,7 @@ namespace OpenRPG.Systems
 
         public static WeaponType GetWeaponType(Entity player)
         {
-            var weaponEntity = _em.GetComponentData<Equipment>(player).WeaponSlotEntity._Entity;
+            var weaponEntity = _em.GetComponentData<Equipment>(player).WeaponSlot.SlotEntity._Entity;
             var weaponType = WeaponType.None;
             if (_em.HasComponent<EquippableData>(weaponEntity))
             {
@@ -330,7 +330,7 @@ namespace OpenRPG.Systems
                 { MasteryType.Rapier, new List<StatConfig>() { new(UnitStatType.PhysicalCriticalStrikeChance, 0,  0.00125f ), new(UnitStatType.PhysicalCriticalStrikeDamage, 0,  0.00125f ) } },
                 { MasteryType.Pistol, new List<StatConfig>() { new(UnitStatType.PhysicalCriticalStrikeChance, 0,  0.00125f ), new(UnitStatType.PhysicalCriticalStrikeDamage, 0,  0.00125f ) } },
                 { MasteryType.GreatSword, new List<StatConfig>() { new(UnitStatType.PhysicalPower, 0,  0.125f ), new(UnitStatType.PhysicalCriticalStrikeDamage, 0,  0.00125f ) } },
-                { MasteryType.Spell, new List<StatConfig>() { new(UnitStatType.CooldownModifier, 0,  100f )} }
+                { MasteryType.Spell, new List<StatConfig>() { new(UnitStatType.PrimaryCooldownModifier, 0,  100f )} }
             };
         }
     }

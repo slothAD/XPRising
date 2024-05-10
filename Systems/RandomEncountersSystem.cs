@@ -6,12 +6,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Entities;
-using VRising.GameData.Models;
-using VRising.GameData;
 using OpenRPG.Configuration;
 using System.Collections.Concurrent;
 using BepInEx.Logging;
-using VRising.GameData.Methods;
+using Bloodstone.API;
+using OpenRPG.Models;
+using OpenRPG.Utils;
+using OpenRPG.Utils.Prefabs;
+using ProjectM.Network;
+using Stunlock.Core;
+using Unity.Transforms;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Systems
@@ -20,7 +24,7 @@ namespace OpenRPG.Systems
     {
         private static readonly ConcurrentDictionary<ulong, ConcurrentDictionary<int, ItemDataModel>> RewardsMap = new();
 
-        private static readonly ConcurrentDictionary<int, UserModel> NpcPlayerMap = new();
+        private static readonly ConcurrentDictionary<int, ulong> NpcPlayerMap = new();
 
         private static readonly Entity StationEntity = new();
         private static float Lifetime => RandomEncountersConfig.EncounterLength.Value;
@@ -31,47 +35,43 @@ namespace OpenRPG.Systems
         private static System.Random Random = new System.Random();
         private const LogSystem LoggingSystem = LogSystem.RandomEncounter;
 
-        internal static void StartEncounter(UserModel user = null)
+        internal static void StartEncounter()
         {
-            var world = GameData.World;
-
-            if (user == null)
-            {
-                var users = GameData.Users.Online;
-                if (RandomEncountersConfig.SkipPlayersInCastle.Value)
+            var validUsers = Cache.NamePlayerCache.Values
+                .Where(data =>
                 {
-                    users = users.Where(u => !u.IsInCastle());
-                }
+                    return data.IsOnline &&
+                           !Helper.IsInCastle(data.UserEntity) &&
+                           !Cache.PlayerInCombat(data.SteamID);
+                });
 
-                if (RandomEncountersConfig.SkipPlayersInCombat.Value)
-                {
-                    users = users.Where(u => !u.IsInCombat());
-                }
-                user = users.OrderBy(_ => Random.Next()).FirstOrDefault();
-            }
-
-            if (user == null)
+            if (validUsers.Any())
             {
-                Plugin.Log(LoggingSystem, LogLevel.Message, "Could not find any eligible players for a random encounter...");
-                return;
+                var randomPlayer = validUsers.MinBy(_ => Random.Next());
+                StartEncounter(randomPlayer);
             }
+            
+            Plugin.Log(LoggingSystem, LogLevel.Message, "Could not find any eligible players for a random encounter...");
+        }
+        
+        internal static void StartEncounter(PlayerData user)
+        {
+            var world = Plugin.Server;
 
-            var npc = DataFactory.GetRandomNpc(user.Character.Equipment.Level);
-            if (npc == null)
-            {
-                Plugin.Log(LoggingSystem, LogLevel.Warning,$"Could not find any NPCs within the given level range. , User Level: {user.Character.Equipment.Level})");
-                return;
-            }
-            Plugin.Log(LoggingSystem, LogLevel.Message, $"Attempting to start a new encounter for {user.CharacterName} with {npc.Name}");
+            var userLevel = ExperienceSystem.GetLevel(user.SteamID);
+            var npc = DataFactory.GetRandomNpc(userLevel);
+            var npcPrefab = new PrefabGUID((int)npc.type);
+            Plugin.Log(LoggingSystem, LogLevel.Message, $"Attempting to start a new encounter for {user.CharacterName} with {Helper.GetPrefabName(npcPrefab)}");
             var minSpawnDistance = RandomEncountersConfig.MinSpawnDistance.Value;
             var maxSpawnDistance = RandomEncountersConfig.MaxSpawnDistance.Value;
             try
             {
-                NpcPlayerMap[npc.Id] = user;
-                var spawnPosition = user.Position;
+                NpcPlayerMap[(int)npc.type] = user.SteamID;
+                var localToWorld = world.EntityManager.GetComponentData<LocalToWorld>(user.UserEntity);
+                var spawnPosition = localToWorld.Position;
 
-                world.GetExistingSystem<UnitSpawnerUpdateSystem>()
-                    .SpawnUnit(StationEntity, new PrefabGUID(npc.Id), spawnPosition, 1, minSpawnDistance, maxSpawnDistance, Lifetime);
+                world.GetExistingSystemManaged<UnitSpawnerUpdateSystem>()
+                    .SpawnUnit(StationEntity, npcPrefab, spawnPosition, 1, minSpawnDistance, maxSpawnDistance, Lifetime);
 
             }
             catch (Exception ex)
@@ -89,7 +89,7 @@ namespace OpenRPG.Systems
             }
 
             var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
-            if (!NpcPlayerMap.TryGetValue(prefabGuid.GuidHash, out var user))
+            if (!NpcPlayerMap.TryGetValue(prefabGuid.GuidHash, out var steamID))
             {
                 return;
             }
@@ -103,81 +103,67 @@ namespace OpenRPG.Systems
                 return;
             }
 
-            var npcData = DataFactory.GetAllNpcs().FirstOrDefault(n => n.Id == prefabGuid.GuidHash);
-            if (npcData == null)
-            {
-                return;
-            }
-
             NpcPlayerMap.TryRemove(prefabGuid.GuidHash, out _);
 
-            if (!RewardsMap.ContainsKey(user.PlatformId))
+            if (!RewardsMap.ContainsKey(steamID))
             {
-                RewardsMap[user.PlatformId] = new ConcurrentDictionary<int, ItemDataModel>();
+                RewardsMap[steamID] = new ConcurrentDictionary<int, ItemDataModel>();
             }
-            var message =
-                string.Format(
-                    MessageTemplate,
-                    npcData.Name, Lifetime);
 
-            user.SendSystemMessage(message);
-            Plugin.Log(LoggingSystem, LogLevel.Info, $"Encounters started: {user.CharacterName} vs. {npcData.Name}");
+            var npcName = Helper.GetPrefabName(prefabGuid);
+
+            var message = string.Format(MessageTemplate, npcName, Lifetime);
+
+            Cache.SteamPlayerCache.TryGetValue(steamID, out var user);
+
+            Output.SendLore(user.UserEntity, message);
+            Plugin.Log(LoggingSystem, LogLevel.Info, $"Encounters started: {user.CharacterName} vs. {npcName}");
 
             if (RandomEncountersConfig.NotifyAdminsAboutEncountersAndRewards.Value)
             {
                 var onlineAdmins = DataFactory.GetOnlineAdmins();
                 foreach (var onlineAdmin in onlineAdmins)
                 {
-                    onlineAdmin.SendSystemMessage($"Encounter started: {user.CharacterName} vs. {npcData.Name}");
+                    Output.SendLore(onlineAdmin.UserEntity, $"Encounter started: {user.CharacterName} vs. {npcName}");
                 }
             }
-            RewardsMap[user.PlatformId][entity.Index] = DataFactory.GetRandomItem();
+            RewardsMap[steamID][entity.Index] = DataFactory.GetRandomItem();
         }
 
-        internal static void ServerEvents_OnDeath(DeathEventListenerSystem sender, NativeArray<DeathEvent> deathEvents)
+        internal static void ServerEvents_OnDeath(DeathEvent deathEvent, User userModel)
         {
-            foreach (var deathEvent in deathEvents)
+            if (RewardsMap.TryGetValue(userModel.PlatformId, out var bounties) &&
+                bounties.TryGetValue(deathEvent.Died.Index, out var itemModel))
             {
-                if (!sender.EntityManager.HasComponent<PlayerCharacter>(deathEvent.Killer))
+                var itemGuid = new PrefabGUID(itemModel.Id);
+                var quantity = RandomEncountersConfig.Items[itemModel.Id];
+                if (!Helper.TryGiveItem(deathEvent.Killer, new PrefabGUID(itemModel.Id), quantity.Value, out _))
                 {
-                    continue;
+                    Helper.DropItemNearby(deathEvent.Killer, itemGuid, quantity.Value);
                 }
-
-                var playerCharacter = sender.EntityManager.GetComponentData<PlayerCharacter>(deathEvent.Killer);
-                var userModel = GameData.Users.FromEntity(playerCharacter.UserEntity);
-
-
-                if (RewardsMap.TryGetValue(userModel.PlatformId, out var bounties) &&
-                    bounties.TryGetValue(deathEvent.Died.Index, out var itemModel))
+                var message = string.Format(RandomEncountersConfig.RewardMessageTemplate.Value, itemModel.Color, itemModel.Name);
+                userModel.SendSystemMessage(message);
+                bounties.TryRemove(deathEvent.Died.Index, out _);
+                Plugin.Log(LoggingSystem, LogLevel.Info, $"{userModel.CharacterName} earned reward: {itemModel.Name}");
+                var globalMessage = string.Format(RandomEncountersConfig.RewardAnnouncementMessageTemplate.Value,
+                    userModel.CharacterName, itemModel.Color, itemModel.Name);
+                if (RandomEncountersConfig.NotifyAllPlayersAboutRewards.Value)
                 {
-                    var itemGuid = new PrefabGUID(itemModel.Id);
-                    var quantity = RandomEncountersConfig.Items[itemModel.Id];
-                    if (!userModel.TryGiveItem(new PrefabGUID(itemModel.Id), quantity.Value, out _))
+                    var onlineUsers = Cache.NamePlayerCache.Values
+                        .Where(data => data.IsOnline && data.SteamID != userModel.PlatformId);
+                    foreach (var player in onlineUsers)
                     {
-                        userModel.DropItemNearby(itemGuid, quantity.Value);
+                        Output.SendLore(player.UserEntity, globalMessage);
                     }
-                    var message = string.Format(RandomEncountersConfig.RewardMessageTemplate.Value, itemModel.Color, itemModel.Name);
-                    userModel.SendSystemMessage(message);
-                    bounties.TryRemove(deathEvent.Died.Index, out _);
-                    Plugin.Log(LoggingSystem, LogLevel.Info, $"{userModel.CharacterName} earned reward: {itemModel.Name}");
-                    var globalMessage = string.Format(RandomEncountersConfig.RewardAnnouncementMessageTemplate.Value,
-                        userModel.CharacterName, itemModel.Color, itemModel.Name);
-                    if (RandomEncountersConfig.NotifyAllPlayersAboutRewards.Value)
-                    {
-                        var onlineUsers = GameData.Users.Online;
-                        foreach (var model in onlineUsers.Where(u => u.PlatformId != userModel.PlatformId))
-                        {
-                            model.SendSystemMessage(globalMessage);
-                        }
 
-                    }
-                    else if (RandomEncountersConfig.NotifyAdminsAboutEncountersAndRewards.Value)
+                }
+                else if (RandomEncountersConfig.NotifyAdminsAboutEncountersAndRewards.Value)
+                {
+                    var onlineAdmins = Cache.NamePlayerCache.Values
+                        .Where(data => data.IsOnline && data.IsAdmin && data.SteamID != userModel.PlatformId);
+                    foreach (var onlineAdmin in onlineAdmins)
                     {
-                        var onlineAdmins = DataFactory.GetOnlineAdmins();
-                        foreach (var onlineAdmin in onlineAdmins)
-                        {
-                            onlineAdmin.SendSystemMessage($"{userModel.CharacterName} earned an encounter reward: <color={itemModel.Color}>{itemModel.Name}</color>");
-                        }
+                        Output.SendLore(onlineAdmin.UserEntity, $"{userModel.CharacterName} earned an encounter reward: <color={itemModel.Color}>{itemModel.Name}</color>");
                     }
                 }
             }

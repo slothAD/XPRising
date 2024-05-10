@@ -11,6 +11,7 @@ using OpenRPG.Utils;
 using OpenRPG.Systems;
 using OpenRPG.Utils.Prefabs;
 using ProjectM.Scripting;
+using Stunlock.Core;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Hooks;
@@ -95,7 +96,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
     public static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
 
         EntityManager entityManager = __instance.EntityManager;
-        NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+        NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Entities Length of " + entities.Length);
 
@@ -110,6 +111,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             }
         }
     }
+    
     public static void rebuiltBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
         EntityManager em = __instance.EntityManager;
         bool hasSGM = Helper.GetServerGameManager(out var sgm);
@@ -154,8 +156,6 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                 applyBuff(em, buff, sgm, entity);
                 //baseStats.PhysicalPower.ApplyModification(sgm, entity, entity, buff.ModificationType, buff.Value);
             }
-
-
         }
     }
 
@@ -174,8 +174,8 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                 stat = baseStats.ResourcePower;
             } else if (tar == UnitStatType.SiegePower) {
                 stat = baseStats.SiegePower;
-            } else if (tar == UnitStatType.AttackSpeed || tar == UnitStatType.PrimaryAttackSpeed) {
-                stat = baseStats.AttackSpeed;
+            // } else if (tar == UnitStatType.AttackSpeed || tar == UnitStatType.PrimaryAttackSpeed) {
+            //     stat = baseStats.AttackSpeed; // Looks like AttackSpeed is no longer modifiable
             } else if (tar == UnitStatType.FireResistance) {
                 statInt = baseStats.FireResistance; targetIsInt = true;
             } else if (tar == UnitStatType.GarlicResistance) {
@@ -209,18 +209,26 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             } else if (tar == UnitStatType.ReducedResourceDurabilityLoss) {
                 stat = baseStats.ReducedResourceDurabilityLoss;
             }
-        } else if (tar == UnitStatType.MaxHealth) {
+        }
+        else if (tar == UnitStatType.MaxHealth) {
+            // TODO check if these changes are valid..
+            // they probably aren't but we aren't using this part of the buff hook any?
             em.TryGetComponentData<Health>(e, out Health health);
-            health.MaxHealth.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
-        } else if (tar == UnitStatType.MovementSpeed) {
+            //health.MaxHealth.UpdateValue(sgm, e, e, buff.ModificationType, buff.Value);
+            ModifiableFloat.ModifyValue(ref health.MaxHealth._Value, ref health.MaxHealth._Value, buff.ModificationType, buff.Value);
+        }
+        else if (tar == UnitStatType.MovementSpeed) {
             em.TryGetComponentData<Movement>(e, out Movement speed);
-            speed.Speed.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
+            // speed.Speed.UpdateValue(sgm, e, e, buff.ModificationType, buff.Value);
+            ModifiableFloat.ModifyValue(ref speed.Speed._Value, ref speed.Speed._Value, buff.ModificationType, buff.Value);
         }
         try {
             if (targetIsInt) {
-                statInt.ApplyModification(sgm, e, e, buff.ModificationType, (int)buff.Value);
+                // statInt.ApplyModification(sgm, e, e, buff.ModificationType, (int)buff.Value);
+                ModifiableInt.ModifyValue(ref statInt._Value, ref statInt._Value, buff.ModificationType, (int)buff.Value);
             } else {
-                stat.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
+                // stat.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
+                ModifiableFloat.ModifyValue(ref stat._Value, ref stat._Value, buff.ModificationType, buff.Value);
             }
             applied = true;
         } catch {
@@ -235,7 +243,7 @@ public class BuffSystem_Spawn_Server_Patch {
     private static void Postfix(BuffSystem_Spawn_Server __instance) {
 
         if (Plugin.WeaponMasterySystemActive) {
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            NativeArray<Entity> entities = __instance.__query_401358634_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
                 if (!__instance.EntityManager.HasComponent<InCombatBuff>(entity)) continue;
                 Entity e_Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
@@ -253,7 +261,7 @@ public class DebugBuffSystem_Patch
 {
     private static void Prefix(BuffDebugSystem __instance)
     {
-        NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+        NativeArray<Entity> entities = __instance.__query_401358786_0.ToEntityArray(Allocator.Temp);
         foreach (var entity in entities) {
             var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
 

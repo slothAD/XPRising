@@ -1,7 +1,6 @@
-﻿using OpenRPG.Configuration;
-using OpenRPG.Systems;
+﻿using OpenRPG.Systems;
+using OpenRPG.Utils;
 using VampireCommandFramework;
-using VRising.GameData;
 
 namespace OpenRPG.Commands
 {
@@ -19,26 +18,29 @@ namespace OpenRPG.Commands
         [Command("me", usage: "", description: "Starts an encounter for the admin who sends the command.", adminOnly: true)]
         public static void MeCommand(ChatCommandContext ctx)
         {
-            var senderModel = GameData.Users.FromEntity(ctx.Event.SenderUserEntity);
-            RandomEncountersSystem.StartEncounter(senderModel);
+            if (!Cache.SteamPlayerCache.TryGetValue(ctx.User.PlatformId, out var playerData))
+            {
+                throw ctx.Error("For some reason your user is not in the player cache...");
+            }
+            
+            RandomEncountersSystem.StartEncounter(playerData);
             ctx.Reply("Prepare for the fight...");
             return;
         }
 
         [Command("player", usage: "<PlayerName>", description: "Starts an encounter for the given player.", adminOnly: true)]
-        public static void PlayerCommand(ChatCommandContext ctx, string PlayerName)
+        public static void PlayerCommand(ChatCommandContext ctx, string playerName)
         {
-            var senderModel = GameData.Users.GetUserByCharacterName(PlayerName);
-            if(senderModel == null)
+            if (!Cache.NamePlayerCache.TryGetValue(playerName.ToLower(), out var playerData))
             {
                 throw ctx.Error($"Player not found");
             }
-            if(!senderModel.IsConnected)
+            if(!playerData.IsOnline)
             {
-                throw ctx.Error($"Could not find an online player with name {PlayerName}");
+                throw ctx.Error($"Could not find an online player with name {playerName}");
             }
-            RandomEncountersSystem.StartEncounter(senderModel);
-            ctx.Reply($"Sending an ambush to {PlayerName}.");
+            RandomEncountersSystem.StartEncounter(playerData);
+            ctx.Reply($"Sending an ambush to {playerName}.");
         }
 
         [Command("enable", usage: "", description: "Enables the random encounter timer.", adminOnly: true)]

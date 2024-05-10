@@ -9,12 +9,11 @@ using OpenRPG.Utils;
 using System.Reflection;
 using Unity.Entities;
 using UnityEngine;
-using VRising.GameData;
 using OpenRPG.Configuration;
 using OpenRPG.Components.RandomEncounters;
 using OpenRPG.Systems;
 using OpenRPG.Utils.Prefabs;
-using ProjectM;
+using Stunlock.Core;
 
 namespace OpenRPG
 {
@@ -109,8 +108,6 @@ namespace OpenRPG
             }
             
             InitCoreConfig();
-            GameData.OnInitialize += GameDataOnInitialize;
-            GameData.OnDestroy += GameDataOnDestroy;
             
             Instance = this;
             GameFrame.Initialize();
@@ -136,22 +133,6 @@ namespace OpenRPG
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Plugin is loaded [version: {MyPluginInfo.PLUGIN_VERSION}]", true);
         }
 
-        private static void GameDataOnInitialize(World world)
-        {
-            if (RandomEncountersSystemActive)
-            {
-                RandomEncounters.GameData_OnInitialize();
-                RandomEncounters.EncounterTimer = new Timer();
-                RandomEncounters.StartEncounterTimer();
-            }
-            
-            Initialize();
-        }
-
-        private static void GameDataOnDestroy()
-        {
-        }
-
         public override bool Unload()
         {
             Config.Clear();
@@ -167,9 +148,9 @@ namespace OpenRPG
             
             //-- Initialize System
             // Pre-initialise some constants
-            Helper.GetServerGameSettings(out _);
+            // Helper.GetServerGameSettings(out _);
             Helper.GetServerGameManager(out _);
-            Helper.GetUserActivityGridSystem(out _);
+            // Helper.GetUserActivityGridSystem(out _);
             
             DebugLoggingConfig.Initialize();
             if (BloodlineSystemActive) BloodlineConfig.Initialize();
@@ -199,6 +180,13 @@ namespace OpenRPG
             }
             CommandRegistry.Middlewares.Add(new Command.PermissionMiddleware());
 
+            if (RandomEncountersSystemActive)
+            {
+                RandomEncounters.GameData_OnInitialize();
+                RandomEncounters.EncounterTimer = new Timer();
+                RandomEncounters.StartEncounterTimer();
+            }
+            
             Plugin.Log(LogSystem.Core, LogLevel.Info, "Finished initialising", true);
 
             IsInitialized = true;

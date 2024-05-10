@@ -67,11 +67,8 @@ public class Alliance {
         }
                         
         var steamID = userComponent.PlatformId;
-        var playerLevel = 0;
-        if (Database.PlayerExperience.TryGetValue(steamID, out int currentXp))
-        {
-            playerLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
-        }
+        var currentXp = ExperienceSystem.GetXp(steamID);
+        var playerLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
                         
         player = new ClosePlayer() {
             currentXp = currentXp,

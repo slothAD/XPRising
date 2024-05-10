@@ -21,7 +21,7 @@ public class ArmorLevelSystem_Spawn_Patch
         if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            NativeArray<Entity> entities = __instance.__query_663986227_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities){
                 Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
                 ArmorLevel level = new ArmorLevel();
@@ -65,7 +65,7 @@ public class WeaponLevelSystem_Spawn_Patch
         if (Plugin.ExperienceSystemActive || Plugin.WeaponMasterySystemActive)
         {
             var entityManager = __instance.EntityManager;
-            var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            var entities = __instance.__query_1111682356_0.ToEntityArray(Allocator.Temp);
 
             foreach (var entity in entities)
             {
@@ -123,7 +123,7 @@ public class WeaponLevelSystem_Destroy_Patch
         if (Plugin.ExperienceSystemActive && (ExperienceSystem.LevelRewardsOn || ExperienceSystem.ShouldAllowGearLevel))
         {
             EntityManager entityManager = __instance.EntityManager;
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            NativeArray<Entity> entities = __instance.__query_1111682408_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
                 Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
@@ -150,8 +150,8 @@ public class SpellLevelSystem_Spawn_Patch
     {
         if (Plugin.ExperienceSystemActive)
         {
-            EntityManager entityManager = __instance.EntityManager;
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            var entityManager = Plugin.Server.EntityManager;
+            NativeArray<Entity> entities = __instance.__query_934077387_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
                 SpellLevel level = new SpellLevel();
@@ -177,14 +177,15 @@ public class SpellLevelSystem_Spawn_Patch
     {
         if (Plugin.ExperienceSystemActive)
         {
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            var entityManager = Plugin.Server.EntityManager;
+            NativeArray<Entity> entities = __instance.__query_934077387_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
-                Entity Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                if (!__instance.EntityManager.HasComponent<PlayerCharacter>(Owner)) return;
+                Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
+                if (!entityManager.HasComponent<PlayerCharacter>(Owner)) return;
 
-                Entity User = __instance.EntityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
-                ulong SteamID = __instance.EntityManager.GetComponentData<User>(User).PlatformId;
+                Entity User = entityManager.GetComponentData<PlayerCharacter>(Owner).UserEntity;
+                ulong SteamID = entityManager.GetComponentData<User>(User).PlatformId;
                 ExperienceSystem.SetLevel(Owner, User, SteamID);
             }
         }
@@ -199,8 +200,8 @@ public class SpellLevelSystem_Destroy_Patch
 
         if (Plugin.ExperienceSystemActive)
         {
-            EntityManager entityManager = __instance.EntityManager;
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            var entityManager = Plugin.Server.EntityManager;
+            NativeArray<Entity> entities = __instance.__query_934077457_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
                 SpellLevel level = new SpellLevel();
@@ -225,8 +226,8 @@ public class SpellLevelSystem_Destroy_Patch
     {
         if (Plugin.ExperienceSystemActive)
         {
-            EntityManager entityManager = __instance.EntityManager;
-            NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+            var entityManager = Plugin.Server.EntityManager;
+            NativeArray<Entity> entities = __instance.__query_934077457_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {
                 if (!entityManager.HasComponent<LastTranslation>(entity))

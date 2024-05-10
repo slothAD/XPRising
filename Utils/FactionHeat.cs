@@ -14,11 +14,11 @@ namespace OpenRPG.Utils;
 
 public static class FactionHeat {
     public static readonly Faction[] ActiveFactions = {
-        Faction.Militia,
         Faction.Bandits,
-        Faction.Undead,
-        Faction.Gloomrot,
         Faction.Critters,
+        Faction.Gloomrot,
+        Faction.Militia,
+        Faction.Undead,
         Faction.Werewolf
     };
     

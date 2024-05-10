@@ -4,6 +4,7 @@ using HarmonyLib;
 using OpenRPG.Configuration;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
+using Stunlock.Core;
 using Prefabs = OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Hooks
@@ -15,7 +16,7 @@ namespace OpenRPG.Hooks
         public static void Prefix(UnitSpawnerReactSystem __instance)
         {
             {
-                var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+                var entities = __instance.__query_2099432189_0.ToEntityArray(Unity.Collections.Allocator.Temp);
                 foreach (var entity in entities) {
                     if (!__instance.EntityManager.HasComponent<LifeTime>(entity)) return;
 
@@ -26,12 +27,17 @@ namespace OpenRPG.Hooks
                         if (faction != SpawnUnit.SpawnFaction.Default) {
                             // Change faction to Vampire Hunters for spawned units
                             var Faction = __instance.EntityManager.GetComponentData<FactionReference>(entity);
-                            Faction.FactionGuid = ModifiablePrefabGUID.Create(entity, __instance.EntityManager, new PrefabGUID((int)Prefabs.Faction.VampireHunters));
+                            Faction.FactionGuid = new ModifiablePrefabGUID(new PrefabGUID((int)Prefabs.Faction.VampireHunters));
                             __instance.EntityManager.SetComponentData(entity, Faction);
                         }
                         if (level > 0) {
                             // Set the spawned unit level to the provided level
-                            __instance.EntityManager.SetComponentData(entity, new UnitLevel() {Level = level});
+                            __instance.EntityManager.SetComponentData(
+                                entity,
+                                new UnitLevel()
+                                {
+                                    Level = new ModifiableInt(level)
+                                });
                         }
                     }
 
@@ -60,7 +66,7 @@ namespace OpenRPG.Hooks
     [HarmonyPatch(typeof(MinionSpawnSystem), nameof(MinionSpawnSystem.OnUpdate))]
     public static class MinionSpawnSystem_Patch {
         public static void Prefix(MinionSpawnSystem __instance) {
-            var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+            var entities = __instance.__query_166459767_0.ToEntityArray(Unity.Collections.Allocator.Temp);
             foreach (var entity in entities) {
                 // Gloomrot spider-tanks spawn a gloomrot technician minion that does not despawn when the spider-tank gets destroyed
                 // by the "Lifetime" component. This will check for that case and destroy the minion on load so it doesn't get stuck.
