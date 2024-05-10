@@ -21,21 +21,21 @@ namespace OpenRPG.Utils
         public static readonly string BackupsPath = Path.Combine(SavesPath, "Backup");
         
         // Config files
-        public static readonly string PowerUpJson = "power_up.json";
-        public static readonly string WaypointCountJson = "waypoint_count.json";
+        public static readonly string PowerUpJson = "powerUp.json";
         public static readonly string GlobalWaypointsJson = "waypoints.json";
-        public static readonly string WeaponMasteryJson = "weapon_mastery.json";
-        public static readonly string PlayerLogoutJson = "player_logout.json";
-        public static readonly string WeaponMasteryConfigJson = "weapon_mastery_config.json";
+        public static readonly string WeaponMasteryJson = "weaponMastery.json";
+        public static readonly string PlayerLogoutJson = "playerLogout.json";
+        public static readonly string WeaponMasteryConfigJson = "weaponMasteryConfig.json";
         public static readonly string PlayerLogConfigJson = "playerLogConfig.json";
         public static readonly string BloodlinesJson = "bloodlines.json";
-        public static readonly string BloodlineConfigJson = "bloodline_config.json";
-        public static readonly string PlayerExperienceJson = "player_experience.json";
-        public static readonly string PlayerAbilityPointsJson = "player_ability_points.json";
-        public static readonly string PlayerLevelStatsJson = "player_level_stats.json";
-        public static readonly string ExperienceClassStatsJson = "experience_class_stats.json";
-        public static readonly string CommandPermissionJson = "command_permission.json";
-        public static readonly string UserPermissionJson = "user_permission.json";
+        public static readonly string BloodlineConfigJson = "bloodlineConfig.json";
+        public static readonly string PlayerExperienceJson = "playerExperience.json";
+        public static readonly string PlayerAbilityPointsJson = "playerAbilityPoints.json";
+        public static readonly string PlayerLevelStatsJson = "playerLevelStats.json";
+        public static readonly string ExperienceClassStatsJson = "experienceClassStats.json";
+        public static readonly string CommandPermissionJson = "commandPermission.json";
+        public static readonly string UserPermissionJson = "userPermission.json";
+        public static readonly string AlliancePrefsJson = "alliancePreferences.json";
         
         private static int _saveCount = 0;
         private static int _autoSaveCount = 0;
@@ -107,7 +107,6 @@ namespace OpenRPG.Utils
             var anyErrors = false;
             anyErrors |= !SaveDB(saveFolder, CommandPermissionJson, Database.command_permission, PrettyJsonOptions);
             anyErrors |= !SaveDB(saveFolder, UserPermissionJson, Database.user_permission, PrettyJsonOptions);
-            anyErrors |= !SaveDB(saveFolder, WaypointCountJson, Database.waypoints_owned, JsonOptions);
             anyErrors |= !SaveDB(saveFolder, GlobalWaypointsJson, Database.waypoints, JsonOptions);
             anyErrors |= !SaveDB(saveFolder, PowerUpJson, Database.PowerUpList, JsonOptions);
 
@@ -122,6 +121,7 @@ namespace OpenRPG.Utils
             anyErrors |= !SaveDB(saveFolder, WeaponMasteryConfigJson, Database.masteryStatConfig, PrettyJsonOptions);
             anyErrors |= !SaveDB(saveFolder, BloodlinesJson, Database.playerBloodline, JsonOptions);
             anyErrors |= !SaveDB(saveFolder, BloodlineConfigJson, Database.bloodlineStatConfig, PrettyJsonOptions);
+            anyErrors |= !SaveDB(saveFolder, AlliancePrefsJson, Database.AlliancePlayerPrefs, JsonOptions);
 
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
             return !anyErrors;
@@ -150,8 +150,6 @@ namespace OpenRPG.Utils
             anyErrors |= !success;
             Database.user_permission = LoadDB(UserPermissionJson, loadMethod, useInitialiser, Database.user_permission, out success);
             anyErrors |= !success;
-            Database.waypoints_owned = LoadDB(WaypointCountJson, loadMethod, useInitialiser, Database.waypoints_owned, out success);
-            anyErrors |= !success;
             Database.waypoints = LoadDB(GlobalWaypointsJson, loadMethod, useInitialiser, Database.waypoints, out success);
             anyErrors |= !success;
             Database.PowerUpList = LoadDB(PowerUpJson, loadMethod, useInitialiser, Database.PowerUpList, out success);
@@ -177,6 +175,8 @@ namespace OpenRPG.Utils
             Database.playerBloodline = LoadDB(BloodlinesJson, loadMethod, useInitialiser, Database.playerBloodline, out success);
             anyErrors |= !success;
             Database.bloodlineStatConfig = LoadDB(BloodlineConfigJson, loadMethod, useInitialiser, Database.bloodlineStatConfig, out success, BloodlineSystem.DefaultBloodlineConfig);
+            anyErrors |= !success;
+            Database.AlliancePlayerPrefs = LoadDB(AlliancePrefsJson, loadMethod, useInitialiser, Database.AlliancePlayerPrefs, out success);
             anyErrors |= !success;
 
             Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);

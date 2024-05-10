@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BepInEx.Logging;
+using Bloodstone.API;
 using ProjectM;
 using ProjectM.Network;
 using OpenRPG.Systems;
@@ -28,6 +29,27 @@ public class Alliance {
         public HashSet<Entity> Allies { get; } = new();
         public HashSet<Entity> Enemies { get; } = new();
         public DateTime TimeStamp { get; } = DateTime.Now;
+
+        public string PrintAllies()
+        {
+            List<string> names = new();
+            foreach (var ally in Allies)
+            {
+                if (!Plugin.Server.EntityManager.TryGetComponentData(ally, out PlayerCharacter pc)) {
+                    Plugin.Log(LogSystem.Alliance, LogLevel.Error, "Player Character Component unavailable, but should be.");
+                    continue;
+                }
+
+                names.Add(pc.Name.ToString());
+            }
+
+            if (names.Count == 0)
+            {
+                return "Group has no members.";
+            }
+
+            return $"Group members:\n{string.Join(", ", names)}";
+        }
     }
     
     private static bool ConvertToClosePlayer(Entity entity, float3 position, LogSystem system, out ClosePlayer player) {
@@ -35,7 +57,7 @@ public class Alliance {
             Plugin.Log(system, LogLevel.Info, "Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
             player = new ClosePlayer();
             return false;
-        } 
+        }
         var user = pc.UserEntity;
         if (!Plugin.Server.EntityManager.TryGetComponentData(user, out User userComponent)) {
             Plugin.Log(system, LogLevel.Info, "User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(user));
@@ -78,11 +100,16 @@ public class Alliance {
             }
         }
         else {
-            GetPlayerTeams(triggerEntity, system, out var playerGroup);
+            GetPlayerClanAllies(triggerEntity, system, out var playerClan);
             
             Plugin.Log(system, LogLevel.Info, $"Getting close players");
 
-            var playerList = areAllies ? playerGroup.Allies : playerGroup.Enemies;
+            var playerList = new HashSet<Entity>(areAllies ? playerClan.Allies : playerClan.Enemies);
+            if (areAllies && Cache.AlliancePlayerToGroupId.TryGetValue(triggerEntity, out var groupId))
+            {
+                var playerGroup = Cache.AlliancePlayerGroups[groupId];
+                playerList.UnionWith(playerGroup.Allies);
+            }
             
             foreach (var player in playerList) {
                 Plugin.Log(system, LogLevel.Info, "Iterating over players, entity is " + player.GetHashCode());
@@ -114,17 +141,18 @@ public class Alliance {
     // The list of allies includes PlayerCharacter.
     private static readonly int CacheAgeLimit = 30;
     
-    private static EntityQuery ConnectedPlayerCharactersQuery = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
+    private static EntityQuery _connectedPlayerCharactersQuery = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
     {
-        All = new ComponentType[]
+        All = new[]
         {
             ComponentType.ReadOnly<PlayerCharacter>(),
             ComponentType.ReadOnly<IsConnected>()
         },
         Options = EntityQueryOptions.IncludeDisabled
     });
-    public static void GetPlayerTeams(Entity playerCharacter, LogSystem system, out PlayerGroup playerGroup) {
-        if (Cache.PlayerAllies.TryGetValue(playerCharacter, out playerGroup)) {
+    
+    public static void GetPlayerClanAllies(Entity playerCharacter, LogSystem system, out PlayerGroup playerGroup) {
+        if (Cache.AllianceAutoPlayerAllies.TryGetValue(playerCharacter, out playerGroup)) {
             Plugin.Log(system, LogLevel.Info, $"Player found in cache, cache timestamp is {playerGroup.TimeStamp:u}");
             var cacheAge = DateTime.Now - playerGroup.TimeStamp;
             if (cacheAge.TotalSeconds < CacheAgeLimit) return;
@@ -153,7 +181,7 @@ public class Alliance {
 
         Plugin.Log(system, LogLevel.Info, $"Beginning To Parse Player Group");
 
-        var playerEntityBuffer = ConnectedPlayerCharactersQuery.ToEntityArray(Allocator.Temp);
+        var playerEntityBuffer = _connectedPlayerCharactersQuery.ToEntityArray(Allocator.Temp);
         Plugin.Log(system, LogLevel.Info, $"got connected PC entities buffer of length {playerEntityBuffer.Length}");
         
         foreach (var entity in playerEntityBuffer) {
@@ -208,6 +236,65 @@ public class Alliance {
             }
         }
         
-        Cache.PlayerAllies[playerCharacter] = playerGroup;
+        Cache.AllianceAutoPlayerAllies[playerCharacter] = playerGroup;
+    }
+    
+    public static void GetLocalPlayers(Entity playerCharacter, LogSystem system, out PlayerGroup playerGroup) {
+        playerGroup = new PlayerGroup();
+        
+        if (!Plugin.Server.EntityManager.HasComponent<PlayerCharacter>(playerCharacter)) {
+            Plugin.Log(system, LogLevel.Info, $"Entity is not user: {playerCharacter}");
+            return;
+        }
+        Plugin.Log(system, LogLevel.Info, $"LP: Beginning To Parse Player Group");
+
+        var playerEntityBuffer = _connectedPlayerCharactersQuery.ToEntityArray(Allocator.Temp);
+        Plugin.Log(system, LogLevel.Info, $"LP: got connected PC entities buffer of length {playerEntityBuffer.Length}");
+        
+        foreach (var entity in playerEntityBuffer) {
+            Plugin.Log(system, LogLevel.Info, "got Entity " + entity);
+            if (Plugin.Server.EntityManager.HasComponent<PlayerCharacter>(entity)) {
+                Plugin.Log(system, LogLevel.Info, "Entity is User " + entity);
+                if (entity.Equals(playerCharacter)) {
+                    Plugin.Log(system, LogLevel.Info, "Entity is self");
+                    // We are our own ally.
+                    playerGroup.Allies.Add(entity);
+                    continue;
+                }
+
+                Plugin.Log(system, LogLevel.Info, $"Adding player to group: {playerCharacter} - {entity}");
+                playerGroup.Allies.Add(entity);
+            }
+            else {
+                // Should never get here as the query should only return PlayerCharacter entities
+                Plugin.Log(system, LogLevel.Info, "No Associated User!");
+            }
+        }
+    }
+
+    public static void RemoveUserOnLogout(Entity playerCharacter, string playerName)
+    {
+        // Clear any pending invites as well
+        Cache.AlliancePendingInvites.Remove(playerCharacter);
+        
+        if (!Cache.AlliancePlayerToGroupId.Remove(playerCharacter, out var groupId))
+        {
+            return;
+        }
+
+        if (!Cache.AlliancePlayerGroups.TryGetValue(groupId, out var group))
+        {
+            // This should never happen, but just in case we can just skip.
+            return;
+        }
+
+        group.Allies.Remove(playerCharacter);
+
+        var em = VWorld.Server.EntityManager;
+        foreach (var ally in group.Allies)
+        {
+            var allyUserEntity = em.GetComponentData<PlayerCharacter>(ally).UserEntity;
+            Output.SendLore(allyUserEntity, $"{playerName} has logout out and left your group.");
+        }
     }
 }

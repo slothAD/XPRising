@@ -32,6 +32,7 @@ namespace OpenRPG
         public static bool IsInitialized = false;
         public static bool BloodlineSystemActive = false;
         public static bool ExperienceSystemActive = true;
+        public static bool PlayerGroupsActive = true;
         public static bool RandomEncountersSystemActive = false;
         public static bool WeaponMasterySystemActive = false;
         public static bool WantedSystemActive = true;
@@ -80,7 +81,9 @@ namespace OpenRPG
 
             BloodlineSystemActive = Config.Bind("System", "Enable Bloodline Mastery system", false,  "Enable/disable the bloodline mastery system.").Value;
             ExperienceSystemActive = Config.Bind("System", "Enable Experience system", true,  "Enable/disable the experience system.").Value;
-            RandomEncountersSystemActive = Config.Bind("System", "Enable Random Encounters system", true,  "Enable/disable the random encounters system.").Value;
+            PlayerGroupsActive = Config.Bind("System", "Enable Player Groups", true,  "Enable/disable the player group system.").Value;
+            // Disabling this for now as it needs more attention.
+            //RandomEncountersSystemActive = Config.Bind("System", "Enable Random Encounters system", false,  "Enable/disable the random encounters system.").Value;
             WeaponMasterySystemActive = Config.Bind("System", "Enable Weapon Mastery system", false,  "Enable/disable the weapon mastery system.").Value;
             WantedSystemActive = Config.Bind("System", "Enable Wanted system", false,  "Enable/disable the wanted system.").Value;
             
@@ -188,6 +191,7 @@ namespace OpenRPG
 
         public enum LogSystem
         {
+            Alliance,
             Bloodline,
             Buff,
             Core,

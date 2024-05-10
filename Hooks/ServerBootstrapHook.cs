@@ -81,6 +81,8 @@ namespace OpenRPG.Hooks
 
                 Helper.UpdatePlayerCache(serverClient.UserEntity, userData, true);
                 Database.player_logout[userData.PlatformId] = DateTime.Now;
+                
+                Alliance.RemoveUserOnLogout(userData.LocalCharacter._Entity, userData.CharacterName.ToString());
             }
             catch (Exception e)
             {

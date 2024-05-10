@@ -1,5 +1,4 @@
 ﻿using ProjectM;
-using ProjectM.Network;
 using System;
 using System.Collections.Generic;
 using OpenRPG.Models;
@@ -18,14 +17,13 @@ namespace OpenRPG.Utils
         //-- -- Player Cache
         public static LazyDictionary<FixedString64, PlayerData> NamePlayerCache = new();
         public static LazyDictionary<ulong, PlayerData> SteamPlayerCache = new();
-        public static LazyDictionary<Entity, Alliance.PlayerGroup> PlayerAllies = new();
         public static LazyDictionary<ulong, List<BuffData>> buffData = new();
         
         //-- -- Combat
         public static LazyDictionary<ulong, DateTime> playerCombatStart = new();
         public static LazyDictionary<ulong, DateTime> playerCombatEnd = new();
 
-        //-- -- HunterHunted System
+        //-- -- Wanted System
         public static LazyDictionary<ulong, PlayerHeatData> heatCache = new();
 
         //-- -- Mastery System
@@ -34,11 +32,17 @@ namespace OpenRPG.Utils
 
         //-- -- Experience System
         public static LazyDictionary<ulong, float> player_level = new();
-        public static LazyDictionary <ulong,Dictionary<UnitStatType, float>> player_geartypedonned = new();
+        public static LazyDictionary<ulong, Dictionary<UnitStatType, float>> player_geartypedonned = new();
+        
+        //-- -- Alliance System
+        public static LazyDictionary<Entity, Guid> AlliancePlayerToGroupId = new();
+        public static LazyDictionary<Guid, Alliance.PlayerGroup> AlliancePlayerGroups = new();
+        public static LazyDictionary<Entity, Alliance.PlayerGroup> AllianceAutoPlayerAllies = new();
+        public static LazyDictionary<Entity, HashSet<AlliancePendingInvite>> AlliancePendingInvites = new();
 
         //-- -- CustomNPC Spawner
         public static SizedDictionaryAsync<float, SpawnNpcListen> spawnNPC_Listen = new(500);
-        
+
         public static DateTime GetCombatStart(ulong steamID) {
             if (!playerCombatStart.TryGetValue(steamID, out var start)) {
                 start = DateTime.MinValue;
@@ -67,7 +71,6 @@ namespace OpenRPG.Utils
 
         //-- -- Commands
         public static LazyDictionary<string, WaypointData> waypoints { get; set; }
-        public static LazyDictionary<ulong, int> waypoints_owned { get; set; }
         public static LazyDictionary<ulong, int> user_permission { get; set; }
         public static LazyDictionary<string, int> command_permission { get; set; }
         public static LazyDictionary<ulong, PowerUpData> PowerUpList { get; set; }
@@ -98,5 +101,8 @@ namespace OpenRPG.Utils
         //-- -- Bloodline System
         public static LazyDictionary<ulong, BloodlineMasteryData> playerBloodline { get; set; }
         public static LazyDictionary<BloodlineSystem.BloodType, List<StatConfig>> bloodlineStatConfig { get; set; }
+        
+        //-- -- Alliance System
+        public static LazyDictionary<Entity, AlliancePlayerPreferences> AlliancePlayerPrefs = new();
     }
 }

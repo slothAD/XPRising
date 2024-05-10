@@ -36,7 +36,6 @@ namespace OpenRPG.Commands
             ctx.Reply(response);
         }
 
-
         [Command("set", "s", "<playerName> <XP>", "Sets the specified player's current xp to the given value", adminOnly: true)]
         public static void SetXp(ChatCommandContext ctx, string name, int xp){
             if (!Plugin.ExperienceSystemActive){
