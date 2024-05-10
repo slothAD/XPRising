@@ -235,7 +235,7 @@ namespace OpenRPG.Utils
             var squad = GetSquad(faction, playerLevel, wantedLevel);
             
             foreach (var unit in squad.units) {
-                var lifetime = SpawnUnit.EncodeLifetime((int)HunterHuntedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
+                var lifetime = SpawnUnit.EncodeLifetime((int)WantedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
                 SpawnUnit.Spawn(unit.type, position, unit.count, unit.range, unit.range + 4f, lifetime);
                 Plugin.Log(LogSystem.SquadSpawn, LogLevel.Info, $"Spawning: {unit.count}*{unit.type}");
             }

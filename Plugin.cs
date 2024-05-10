@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using BepInEx;
-using BepInEx.Configuration;
 using VampireCommandFramework;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
@@ -15,6 +12,7 @@ using UnityEngine;
 using VRising.GameData;
 using OpenRPG.Configuration;
 using OpenRPG.Components.RandomEncounters;
+using OpenRPG.Systems;
 using OpenRPG.Utils.Prefabs;
 using ProjectM;
 
@@ -33,6 +31,7 @@ namespace OpenRPG
         public static bool BloodlineSystemActive = false;
         public static bool ExperienceSystemActive = true;
         public static bool PlayerGroupsActive = true;
+        public static bool PowerUpCommandsActive = false;
         public static bool RandomEncountersSystemActive = false;
         public static bool WeaponMasterySystemActive = false;
         public static bool WantedSystemActive = true;
@@ -69,7 +68,7 @@ namespace OpenRPG
             return null;
         }
 
-        public void InitConfig()
+        public void InitCoreConfig()
         {
             Helper.buffGUID = Config.Bind("Core", "Buff GUID", (int)SetBonus.SetBonus_Damage_Minor_Buff_01, "The GUID of the buff that gets used when mastery, bloodline, etc changes.\nDefault is now boneguard set bonus 2, but you can set anything else too.\nThe only reason to change this is if it clashes with another mod.").Value;
             Helper.AppliedBuff = new PrefabGUID(Helper.buffGUID);
@@ -92,10 +91,10 @@ namespace OpenRPG
 
             if (WaypointsActive)
             {
-                Waypoint.WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for per non-admin user.").Value;
+                WaypointCommands.WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for per non-admin user.").Value;
             }
             
-            AutoSaveSystem.AutoSaveFrequency = Config.Bind("Auto-save", "Frequency", 0, "Enable and set the frequency for auto-saving the database. 0 is disabled, 1 is 1 min").Value;
+            AutoSaveSystem.AutoSaveFrequency = Config.Bind("Auto-save", "Frequency", 0, "Enable and set the frequency for auto-saving the database. 0 is disabled, 1 is every time the server saves, 2 is every second time, etc.").Value;
             AutoSaveSystem.BackupFrequency = Config.Bind("Auto-save", "Backup", 0, "Enable and set the frequency for saving to the backup folder. The backup save will run every X saves. 0 to disable.").Value;
         }
 
@@ -109,12 +108,28 @@ namespace OpenRPG
                 return;
             }
             
-            InitConfig();
-            CommandRegistry.RegisterAll();
+            InitCoreConfig();
             GameData.OnInitialize += GameDataOnInitialize;
             GameData.OnDestroy += GameDataOnDestroy;
+            
             Instance = this;
-            RandomEncounters.Load();
+            GameFrame.Initialize();
+            
+            // Load command registry for systems that are active
+            // Note: Displaying these in alphabetical order for ease of maintenance
+            if (PlayerGroupsActive) CommandRegistry.RegisterCommandType(typeof(AllianceCommands));
+            if (BloodlineSystemActive) CommandRegistry.RegisterCommandType(typeof(BloodlineCommands));
+            CommandRegistry.RegisterCommandType(typeof(CacheCommands));
+            if (ExperienceSystemActive) CommandRegistry.RegisterCommandType(typeof(ExperienceSystem));
+            if (WeaponMasterySystemActive) CommandRegistry.RegisterCommandType(typeof(MasteryCommands));
+            CommandRegistry.RegisterCommandType(typeof(PermissionCommands));
+            CommandRegistry.RegisterCommandType(typeof(PlayerInfoCommands));
+            if (PowerUpCommandsActive) CommandRegistry.RegisterCommandType(typeof(PowerUpCommands)); // Currently unused.
+            if (RandomEncountersSystemActive) CommandRegistry.RegisterCommandType(typeof(RandomEncountersCommands));
+            if (WantedSystemActive) CommandRegistry.RegisterCommandType(typeof(WantedCommands));
+            if (WaypointsActive) CommandRegistry.RegisterCommandType(typeof(WaypointCommands));
+            
+            
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
@@ -155,7 +170,7 @@ namespace OpenRPG
             Helper.GetServerGameSettings(out _);
             Helper.GetServerGameManager(out _);
             Helper.GetUserActivityGridSystem(out _);
-
+            
             DebugLoggingConfig.Initialize();
             if (BloodlineSystemActive) BloodlineConfig.Initialize();
             if (ExperienceSystemActive) ExperienceConfig.Initialize();

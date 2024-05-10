@@ -76,7 +76,7 @@ namespace OpenRPG.Systems
         
         public static bool IsPlayerLoggingExperience(ulong steamId)
         {
-            return Database.playerLogConfig[steamId].LoggingExp;
+            return Database.PlayerLogConfig[steamId].LoggingExp;
         }
 
         public static void ExpMonitor(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood)
@@ -107,7 +107,7 @@ namespace OpenRPG.Systems
             var xpGained = CalculateXp(player.playerLevel, mobLevel, multiplier);
 
             var newXp = Math.Max(player.currentXp, 0) + xpGained;
-            Database.player_experience[player.steamID] = newXp;
+            Database.PlayerExperience[player.steamID] = newXp;
 
             if (IsPlayerLoggingExperience(player.steamID))
             {
@@ -131,7 +131,7 @@ namespace OpenRPG.Systems
             var user = _entityManager.GetComponentData<User>(userEntity);
             var steamID = user.PlatformId;
 
-            Database.player_experience.TryGetValue(steamID, out var exp);
+            Database.PlayerExperience.TryGetValue(steamID, out var exp);
             var pLvl = ConvertXpToLevel(exp);
             var killerLvl = pLvl;
             var pvpKill = _entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out _);
@@ -155,7 +155,7 @@ namespace OpenRPG.Systems
 
             var currentXp = Math.Max(exp - (int)xpLost, 0);
             Plugin.Log(LogSystem.Xp, LogLevel.Info, "subtracting that from our " + exp + " we get " + currentXp);
-            Database.player_experience[steamID] = currentXp;
+            Database.PlayerExperience[steamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, steamID);
             GetLevelAndProgress(currentXp, out _, out var earned, out var needed);
@@ -164,14 +164,14 @@ namespace OpenRPG.Systems
 
         public static void SetLevel(Entity entity, Entity user, ulong steamID)
         {
-            Database.player_experience.TryAdd(steamID, 0);
-            Database.player_abilityIncrease.TryAdd(steamID, 0);
+            Database.PlayerExperience.TryAdd(steamID, 0);
+            Database.PlayerAbilityIncrease.TryAdd(steamID, 0);
 
-            float level = ConvertXpToLevel(Database.player_experience[steamID]);
+            float level = ConvertXpToLevel(Database.PlayerExperience[steamID]);
             if (level < 0) return;
             if (level > MaxLevel){
                 level = MaxLevel;
-                Database.player_experience[steamID] = ConvertLevelToXp(MaxLevel);
+                Database.PlayerExperience[steamID] = ConvertLevelToXp(MaxLevel);
             }
 
             bool levelDataExists = Cache.player_level.TryGetValue(steamID, out var storedLevel);
@@ -187,8 +187,8 @@ namespace OpenRPG.Systems
                         for (var i = storedLevel+1; i <= level; i++)
                         {
                             //default rewards for leveling up
-                            Database.player_abilityIncrease[steamID] += 1;
-                            Database.player_level_stats[steamID][UnitStatType.MaxHealth] += .5f;
+                            Database.PlayerAbilityIncrease[steamID] += 1;
+                            Database.PlayerLevelStats[steamID][UnitStatType.MaxHealth] += .5f;
 
                             Helper.ApplyBuff(user, entity, Helper.AppliedBuff);
 
@@ -196,7 +196,7 @@ namespace OpenRPG.Systems
                             switch (i)
                             {
                                 case 1:
-                                    Database.player_abilityIncrease[steamID] += 1;
+                                    Database.PlayerAbilityIncrease[steamID] += 1;
                                     break;
                             }
                         }
@@ -232,7 +232,7 @@ namespace OpenRPG.Systems
             float multiplier = 1;
             try
             {
-                foreach (var gearType in Database.player_level_stats[steamID])
+                foreach (var gearType in Database.PlayerLevelStats[steamID])
                 {
                     //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
                     //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
@@ -277,7 +277,7 @@ namespace OpenRPG.Systems
 
         public static int GetXp(ulong steamID)
         {
-            return Database.player_experience.GetValueOrDefault(steamID, 0);
+            return Database.PlayerExperience.GetValueOrDefault(steamID, 0);
         }
 
         public static int GetLevel(ulong steamID)

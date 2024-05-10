@@ -13,7 +13,7 @@ namespace OpenRPG.Commands
 {
 
     [CommandGroup("experience","xp")]
-    public static class Experience{
+    public static class ExperienceCommands {
         private static EntityManager _entityManager = Plugin.Server.EntityManager;
 
         [Command("get", "g", "", "Display your current xp", adminOnly: false)]
@@ -32,7 +32,7 @@ namespace OpenRPG.Commands
             string response = "-- <color=#ffffff>" + characterName + "</color> --\n";
             response += $"Level:<color=#ffffff> {userLevel}</color> (<color=#ffffff>{progress}%</color>) ";
             response += $" [ XP:<color=#ffffff> {earnedXp}</color>/<color=#ffffff>{neededXp}</color> ]";
-            if (ExperienceSystem.LevelRewardsOn) response += $" You have {(Database.player_abilityIncrease.ContainsKey(steamID) ? Database.player_abilityIncrease[steamID] : 0)} ability points to spend.";
+            if (ExperienceSystem.LevelRewardsOn) response += $" You have {(Database.PlayerAbilityIncrease.ContainsKey(steamID) ? Database.PlayerAbilityIncrease[steamID] : 0)} ability points to spend.";
             ctx.Reply(response);
         }
 
@@ -52,7 +52,7 @@ namespace OpenRPG.Commands
                 ctx.Reply($"Could not find specified player \"{name}\".");
                 return;
             }
-            Database.player_experience[steamID] = xp;
+            Database.PlayerExperience[steamID] = xp;
             ExperienceSystem.SetLevel(targetEntity, targetUserEntity, steamID);
             ctx.Reply($"Player \"{name}\" Experience is now set to be<color=#ffffff> {ExperienceSystem.GetXp(steamID)}</color>");
         }
@@ -64,12 +64,12 @@ namespace OpenRPG.Commands
                 return;
             }
             var steamID = ctx.User.PlatformId;
-            var loggingData = Database.playerLogConfig[steamID];
+            var loggingData = Database.PlayerLogConfig[steamID];
             loggingData.LoggingExp = !loggingData.LoggingExp;
             ctx.Reply(loggingData.LoggingExp
                 ? "Experience gain is now being logged."
                 : $"Experience gain is no longer being logged.");
-            Database.playerLogConfig[steamID] = loggingData;
+            Database.PlayerLogConfig[steamID] = loggingData;
         }
 
         [Command("ability", "a", "<AbilityName> <amount>", "Spend given points on given ability", adminOnly: false)]
@@ -91,30 +91,30 @@ namespace OpenRPG.Commands
                 int spendPoints = amount;
                 string abilityName = name;
 
-                if (!Database.player_abilityIncrease.ContainsKey(steamID)) Database.player_abilityIncrease[steamID] = 0;
+                if (!Database.PlayerAbilityIncrease.ContainsKey(steamID)) Database.PlayerAbilityIncrease[steamID] = 0;
 
-                if (Database.player_abilityIncrease[steamID] < spendPoints){
+                if (Database.PlayerAbilityIncrease[steamID] < spendPoints){
                     ctx.Reply("Not enough points!");
                     return;
                 }
 
-                if (Database.experience_class_stats.ContainsKey(abilityName.ToLower())){
-                    foreach (var buff in Database.experience_class_stats[abilityName.ToLower()]){
-                        Database.player_level_stats[steamID][buff.Key] += buff.Value * spendPoints;
+                if (Database.ExperienceClassStats.ContainsKey(abilityName.ToLower())){
+                    foreach (var buff in Database.ExperienceClassStats[abilityName.ToLower()]){
+                        Database.PlayerLevelStats[steamID][buff.Key] += buff.Value * spendPoints;
                     }
 
-                    Database.player_abilityIncrease[steamID] -= spendPoints;
+                    Database.PlayerAbilityIncrease[steamID] -= spendPoints;
                     Helper.ApplyBuff(userEntity, playerCharacter, Helper.AppliedBuff);
-                    ctx.Reply($"Spent {spendPoints}. You have {Database.player_abilityIncrease[steamID]} points left to spend.");
-                    foreach (var buff in Database.player_level_stats[steamID]){
+                    ctx.Reply($"Spent {spendPoints}. You have {Database.PlayerAbilityIncrease[steamID]} points left to spend.");
+                    foreach (var buff in Database.PlayerLevelStats[steamID]){
                         ctx.Reply($"{buff.Key} : {buff.Value}");
                     }
                 }
                 else {
                     ctx.Reply("Type \".xp ability show\" to see current buffs.");
-                    ctx.Reply($"Type .xp ability <ability> to spend ability points. You have {Database.player_abilityIncrease[steamID]} points left to spend.");
+                    ctx.Reply($"Type .xp ability <ability> to spend ability points. You have {Database.PlayerAbilityIncrease[steamID]} points left to spend.");
                     ctx.Reply("You can spend ability points on:");
-                    ctx.Reply(string.Join(", ", Database.experience_class_stats.Keys.ToList()));
+                    ctx.Reply(string.Join(", ", Database.ExperienceClassStats.Keys.ToList()));
                 }
 
             }
@@ -137,7 +137,7 @@ namespace OpenRPG.Commands
             
             var steamID = ctx.User.PlatformId;
             
-            foreach (var buff in Database.player_level_stats[steamID]){
+            foreach (var buff in Database.PlayerLevelStats[steamID]){
                 ctx.Reply($"{buff.Key} : {buff.Value}");
             }
         }
@@ -157,8 +157,8 @@ namespace OpenRPG.Commands
             var userEntity = ctx.Event.SenderUserEntity;
             var playerCharacter = ctx.Event.SenderCharacterEntity;
             
-            Database.player_level_stats[steamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
-            Database.player_abilityIncrease[steamID] = 0;
+            Database.PlayerLevelStats[steamID] = new LazyDictionary<ProjectM.UnitStatType, float>();
+            Database.PlayerAbilityIncrease[steamID] = 0;
             Cache.player_level[steamID] = 0;
             ExperienceSystem.SetLevel(playerCharacter, userEntity, steamID);
             ctx.Reply("Ability level up points reset.");

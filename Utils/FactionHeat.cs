@@ -116,7 +116,7 @@ public static class FactionHeat {
                 break;
         }
         
-        if (isVBlood) heatValue *= HunterHuntedSystem.vBloodMultiplier;
+        if (isVBlood) heatValue *= WantedSystem.vBloodMultiplier;
         else if (ExtraHeatUnits.Contains(victim)) heatValue = (int)(heatValue * 1.5);
     }
 
@@ -138,7 +138,7 @@ public static class FactionHeat {
         
         var steamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
         var playerLevel = 0;
-        if (Database.player_experience.TryGetValue(steamID, out int exp)) {
+        if (Database.PlayerExperience.TryGetValue(steamID, out int exp)) {
             playerLevel = ExperienceSystem.ConvertXpToLevel(exp);
         }
         

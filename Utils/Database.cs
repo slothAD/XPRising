@@ -70,37 +70,40 @@ namespace OpenRPG.Utils
         //-- Initialization for the data loading is on each command or related CS file.
 
         //-- -- Commands
-        public static LazyDictionary<string, WaypointData> waypoints { get; set; }
-        public static LazyDictionary<ulong, int> user_permission { get; set; }
-        public static LazyDictionary<string, int> command_permission { get; set; }
-        public static LazyDictionary<ulong, PowerUpData> PowerUpList { get; set; }
+        public static LazyDictionary<string, WaypointData> Waypoints = new();
+        public static LazyDictionary<ulong, int> UserPermission = new();
+        public static LazyDictionary<string, int> CommandPermission = new();
+        public static LazyDictionary<ulong, PowerUpData> PowerUpList = new();
 
         //-- -- EXP System
-        public static LazyDictionary<ulong, int> player_experience { get; set; }
+        public static LazyDictionary<ulong, int> PlayerExperience = new();
+
         /// <summary>
         /// Ability points awarded per level.
         /// </summary>
-        public static LazyDictionary<ulong, int> player_abilityIncrease { get; set; }
+        public static LazyDictionary<ulong, int> PlayerAbilityIncrease = new();
+
         /// <summary>
         /// Buff stat bonuses from leveling
         /// </summary>
-        public static LazyDictionary<ulong, LazyDictionary<UnitStatType,float>> player_level_stats { get; set; }   
+        public static LazyDictionary<ulong, LazyDictionary<UnitStatType, float>> PlayerLevelStats = new();
+
         /// <summary>
         /// A configuration database of class stats per ability point spent.
         /// </summary>
-        public static LazyDictionary<string, LazyDictionary<UnitStatType, float>> experience_class_stats { get; set; }
+        public static LazyDictionary<string, LazyDictionary<UnitStatType, float>> ExperienceClassStats = new();
 
-        public static LazyDictionary<ulong, PlayerLog> playerLogConfig { get; set; }
-        
-        public static LazyDictionary<ulong, DateTime> player_logout { get; set; }
+        public static LazyDictionary<ulong, PlayerLog> PlayerLogConfig = new();
+
+        public static LazyDictionary<ulong, DateTime> PlayerLogout = new();
 
         //-- -- Mastery System
-        public static LazyDictionary<ulong, WeaponMasteryData> player_weaponmastery { get; set; }
-        public static LazyDictionary<WeaponMasterySystem.MasteryType, List<StatConfig>> masteryStatConfig { get; set; }
+        public static LazyDictionary<ulong, WeaponMasteryData> PlayerWeaponmastery = new();
+        public static LazyDictionary<WeaponMasterySystem.MasteryType, List<StatConfig>> MasteryStatConfig = new();
 
         //-- -- Bloodline System
-        public static LazyDictionary<ulong, BloodlineMasteryData> playerBloodline { get; set; }
-        public static LazyDictionary<BloodlineSystem.BloodType, List<StatConfig>> bloodlineStatConfig { get; set; }
+        public static LazyDictionary<ulong, BloodlineMasteryData> PlayerBloodline = new();
+        public static LazyDictionary<BloodlineSystem.BloodType, List<StatConfig>> BloodlineStatConfig = new();
         
         //-- -- Alliance System
         public static LazyDictionary<Entity, AlliancePlayerPreferences> AlliancePlayerPrefs = new();

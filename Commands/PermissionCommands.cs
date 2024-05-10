@@ -5,7 +5,7 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands
 {
-    public static class Permission
+    public static class PermissionCommands
     {
         [Command(name: "permission", shortHand: "p", usage: "<command | user>", description: "Display current privilege levels for users or commands.", adminOnly: true)]
         public static void PermissionList(ChatCommandContext ctx, string option = "user")
@@ -31,8 +31,8 @@ namespace OpenRPG.Commands
             var steamID = Helper.GetSteamIDFromName(playerName);
             if (steamID == ctx.User.PlatformId) throw ctx.Error($"You cannot modify your own privilege level.");
             if (steamID == 0) throw ctx.Error($"Could not find specified player \"{playerName}\".");
-            if (level == 0) Database.user_permission.Remove(steamID);
-            else Database.user_permission[steamID] = level;
+            if (level == 0) Database.UserPermission.Remove(steamID);
+            else Database.UserPermission[steamID] = level;
             ctx.Reply($"Player \"{playerName}\" permission is now set to <color=#ffffff>{level}</color>.");
         }
         
@@ -45,12 +45,12 @@ namespace OpenRPG.Commands
                 throw ctx.Error($"You cannot set a command's privilege higher than your own");
             }
             level = Math.Clamp(level, 0, maxPrivilege);
-            if (!Database.command_permission.ContainsKey(command))
+            if (!Database.CommandPermission.ContainsKey(command))
             {
                 throw ctx.Error($"Command ({command}) is not recognised as a valid command.");
             }
 
-            Database.command_permission[command] = level;
+            Database.CommandPermission[command] = level;
             ctx.Reply($"Command \"{command}\" required privilege is now set to <color=#ffffff>{level}</color>.");
         }
     }

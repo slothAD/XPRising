@@ -9,7 +9,7 @@ using Unity.Entities;
 
 namespace OpenRPG.Commands
 {
-    public static class PlayerInfo
+    public static class PlayerInfoCommands
     {
         private static EntityManager entityManager = VWorld.Server.EntityManager;
 
@@ -37,10 +37,6 @@ namespace OpenRPG.Commands
             var ping = entityManager.GetComponentData<Latency>(playerEntity).Value;
             var position = entityManager.GetComponentData<Translation>(playerEntity).Value;
 
-            var currentXp = ExperienceSystem.GetXp(steamID);
-            var currentLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
-            ExperienceSystem.GetLevelAndProgress(currentXp, out var levelProgress, out var xpEarned, out var xpNeeded);
-
             ctx.Reply($"Name: {Utils.Color.White(name)}");
             ctx.Reply($"SteamID: {Utils.Color.White(steamID.ToString())}");
             ctx.Reply($"Latency: {Utils.Color.White(ping.ToString())}s");
@@ -52,8 +48,14 @@ namespace OpenRPG.Commands
             ctx.Reply($"-- {Utils.Color.White("Entities")} --");
             ctx.Reply($"Char Entity: {Utils.Color.White(playerEntityString)}");
             ctx.Reply($"User Entity: {Utils.Color.White(userEntityString)}");
-            ctx.Reply($"-- {Utils.Color.White("Experience")} --");
-            ctx.Reply($"Level: {Utils.Color.White(currentLevel.ToString())} [{Utils.Color.White(xpEarned.ToString())}/{Utils.Color.White(xpNeeded.ToString())}]");
+            if (Plugin.ExperienceSystemActive)
+            {
+                var currentXp = ExperienceSystem.GetXp(steamID);
+                var currentLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
+                ExperienceSystem.GetLevelAndProgress(currentXp, out var levelProgress, out var xpEarned, out var xpNeeded);
+                ctx.Reply($"-- {Utils.Color.White("Experience")} --");
+                ctx.Reply($"Level: {Utils.Color.White(currentLevel.ToString())} [{Utils.Color.White(xpEarned.ToString())}/{Utils.Color.White(xpNeeded.ToString())}]");
+            }
         }
     }
 }

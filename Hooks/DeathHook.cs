@@ -69,7 +69,7 @@ namespace OpenRPG.Hooks {
 
                             // If you get experience for the kill, you get heat for the kill
                             if (Plugin.ExperienceSystemActive) ExperienceSystem.ExpMonitor(closeAllies, ev.Died, isVBlood);
-                            if (Plugin.WantedSystemActive) HunterHuntedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
+                            if (Plugin.WantedSystemActive) WantedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
                         }
 
                         if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.UpdateMastery(killer, ev.Died);
@@ -77,10 +77,10 @@ namespace OpenRPG.Hooks {
                     }
                 }
 
-                //-- HunterHunted System Begin
+                //-- Wanted System Begin
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
                     Plugin.Log(LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
-                    if (Plugin.WantedSystemActive) HunterHuntedSystem.PlayerDied(ev.Died);
+                    if (Plugin.WantedSystemActive) WantedSystem.PlayerDied(ev.Died);
                     if (Plugin.ExperienceSystemActive) ExperienceSystem.DeathXpLoss(ev.Died, ev.Killer);
                 }
             }

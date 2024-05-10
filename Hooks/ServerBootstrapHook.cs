@@ -56,7 +56,7 @@ namespace OpenRPG.Hooks
                     if ((WeaponMasterySystem.IsDecaySystemEnabled && Plugin.WeaponMasterySystemActive) ||
                         BloodlineSystem.IsDecaySystemEnabled && Plugin.BloodlineSystemActive)
                     {
-                        if (Database.player_logout.TryGetValue(userData.PlatformId, out var playerLogout))
+                        if (Database.PlayerLogout.TryGetValue(userData.PlatformId, out var playerLogout))
                         {
                             WeaponMasterySystem.DecayMastery(userEntity, playerLogout);
                             BloodlineSystem.DecayBloodline(userEntity, playerLogout);
@@ -80,7 +80,7 @@ namespace OpenRPG.Hooks
                 var userData = __instance.EntityManager.GetComponentData<User>(serverClient.UserEntity);
 
                 Helper.UpdatePlayerCache(serverClient.UserEntity, userData, true);
-                Database.player_logout[userData.PlatformId] = DateTime.Now;
+                Database.PlayerLogout[userData.PlatformId] = DateTime.Now;
                 
                 Alliance.RemoveUserOnLogout(userData.LocalCharacter._Entity, userData.CharacterName.ToString());
             }

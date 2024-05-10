@@ -7,9 +7,9 @@ using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
 
-namespace OpenRPG.Commands{
+namespace OpenRPG.Commands {
     [CommandGroup("mastery", "m")]
-    public static class Mastery{
+    public static class MasteryCommands {
         private static EntityManager _entityManager = Plugin.Server.EntityManager;
 
         [Command("get", "g", "[masteryType]", "Display your current mastery progression for your equipped or specified weapon type")]
@@ -20,7 +20,7 @@ namespace OpenRPG.Commands{
             }
             var steamID = ctx.Event.User.PlatformId;
 
-            if (!Database.player_weaponmastery.ContainsKey(steamID)) {
+            if (!Database.PlayerWeaponmastery.ContainsKey(steamID)) {
                 ctx.Reply("You haven't even tried to master anything...");
                 return;
             }
@@ -49,7 +49,7 @@ namespace OpenRPG.Commands{
             }
             var steamID = ctx.Event.User.PlatformId;
             
-            if (!Database.player_weaponmastery.ContainsKey(steamID)) {
+            if (!Database.PlayerWeaponmastery.ContainsKey(steamID)) {
                 ctx.Reply("You haven't even tried to master anything...");
                 return;
             }
@@ -63,7 +63,7 @@ namespace OpenRPG.Commands{
         }
 
         private static string GetMasteryDataStringForType(ulong steamID, WeaponMasterySystem.MasteryType type){
-            var wd = Database.player_weaponmastery[steamID];
+            var wd = Database.PlayerWeaponmastery[steamID];
             var wdType = wd[type]; 
 
             var name = Enum.GetName(type);
@@ -71,7 +71,7 @@ namespace OpenRPG.Commands{
             var effectiveness = WeaponMasterySystem.EffectivenessSubSystemEnabled ? wdType.Effectiveness : 1;
             var growth = wdType.Growth;
             
-            var statData = Database.masteryStatConfig.GetValueOrDefault(type).Select(config =>
+            var statData = Database.MasteryStatConfig.GetValueOrDefault(type).Select(config =>
             {
                 var val = Helper.CalcBuffValue(mastery, effectiveness, config.rate, config.type);
                 
@@ -141,12 +141,12 @@ namespace OpenRPG.Commands{
         public static void LogMastery(ChatCommandContext ctx)
         {
             var steamID = ctx.User.PlatformId;
-            var loggingData = Database.playerLogConfig[steamID];
+            var loggingData = Database.PlayerLogConfig[steamID];
             loggingData.LoggingMastery = !loggingData.LoggingMastery;
             ctx.Reply(loggingData.LoggingMastery
                 ? "Mastery gain is now being logged."
                 : $"Mastery gain is no longer being logged.");
-            Database.playerLogConfig[steamID] = loggingData;
+            Database.PlayerLogConfig[steamID] = loggingData;
         }
 
 

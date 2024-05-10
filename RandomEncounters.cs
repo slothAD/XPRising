@@ -14,8 +14,7 @@ namespace OpenRPG
         public static Timer EncounterTimer;
 
         public static void Load()
-        {
-            GameFrame.Initialize();
+        {;
         }
 
         internal static void GameData_OnInitialize()

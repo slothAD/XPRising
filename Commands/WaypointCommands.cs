@@ -8,7 +8,7 @@ using VampireCommandFramework;
 
 namespace OpenRPG.Commands {
     [CommandGroup("waypoint", "wp")]
-    public static class Waypoint {
+    public static class WaypointCommands {
         public static int WaypointLimit = 3;
 
         [Command("go", "g", "<waypoint name>", "Teleports you to the specified waypoint", adminOnly: false)]
@@ -19,10 +19,10 @@ namespace OpenRPG.Commands {
                 return;
             }
 
-            if (Database.waypoints.TryGetValue(waypoint + "_" + steamID, out var wpData)) {
+            if (Database.Waypoints.TryGetValue(waypoint + "_" + steamID, out var wpData)) {
                 if (WaypointLimit <= 0 && !ctx.IsAdmin) {
                     ctx.Reply("Personal Waypoints are forbidden to you.");
-                    if(Database.waypoints.Remove(waypoint + "_" + steamID)) {
+                    if(Database.Waypoints.Remove(waypoint + "_" + steamID)) {
                         ctx.Reply("The forbidden waypoint has been destroyed.");
                     }
                     return;
@@ -31,7 +31,7 @@ namespace OpenRPG.Commands {
                 return;
             }
 
-            if (Database.waypoints.TryGetValue(waypoint, out wpData)) {
+            if (Database.Waypoints.TryGetValue(waypoint, out wpData)) {
                 Helper.TeleportTo(ctx, wpData.ToFloat3());
                 return;
             }
@@ -46,30 +46,30 @@ namespace OpenRPG.Commands {
             }
             var steamID = ctx.Event.User.PlatformId;
 
-            var waypointCount = Database.waypoints.Keys.Count(wpName => wpName.EndsWith($"{steamID}"));
+            var waypointCount = Database.Waypoints.Keys.Count(wpName => wpName.EndsWith($"{steamID}"));
             if (waypointCount >= WaypointLimit && !ctx.IsAdmin) {
                 throw ctx.Error("You already have reached your total waypoint limit.");
             }
             var waypointName = name + "_" + steamID;
-            if (Database.waypoints.TryGetValue(name, out _)) {
+            if (Database.Waypoints.TryGetValue(name, out _)) {
                 ctx.Reply($"You already have a waypoint with the same name.");
                 return;
             }
             var location = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-            Database.waypoints[waypointName] = new WaypointData(location);
+            Database.Waypoints[waypointName] = new WaypointData(location);
             ctx.Reply("Successfully added Waypoint.");
         }
 
         [Command("set global", "sg", "<waypoint name>", "Creates the specified global waypoint", adminOnly: true)]
         public static void SetGlobalWaypoint(ChatCommandContext ctx, string name) {
             var location = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position;
-            Database.waypoints[name] = new WaypointData(location);
+            Database.Waypoints[name] = new WaypointData(location);
             ctx.Reply("Successfully added Waypoint.");
         }
 
         [Command("remove global", "rg", "<waypoint name>", "Removes the specified global waypoint", adminOnly: true)]
         public static void RemoveGlobalWaypoint(ChatCommandContext ctx, string name) {
-            Database.waypoints.Remove(name);
+            Database.Waypoints.Remove(name);
             ctx.Reply("Successfully removed Waypoint.");
         }
 
@@ -77,12 +77,12 @@ namespace OpenRPG.Commands {
         public static void RemoveWaypoint(ChatCommandContext ctx, string name) {
             var steamID = ctx.Event.User.PlatformId;
             var waypointName = name + "_" + steamID;
-            if (!Database.waypoints.TryGetValue(waypointName, out _)) {
+            if (!Database.Waypoints.TryGetValue(waypointName, out _)) {
                 ctx.Reply($"You do not have any waypoint with this name.");
                 return;
             }
 
-            Database.waypoints.Remove(name);
+            Database.Waypoints.Remove(name);
             ctx.Reply("Successfully removed Waypoint.");
         }
 
@@ -93,7 +93,7 @@ namespace OpenRPG.Commands {
             int count = 0;
             int wpPerMsg = 5;
             string reply = "";
-            foreach (var wp in Database.waypoints) {
+            foreach (var wp in Database.Waypoints) {
                 if(!wp.Key.Contains("_")) {
                     if (count < wpPerMsg) {
                         reply += $" - <color=#ffff00>{wp.Key}</color> [<color=#00dd00>Global</color>]";

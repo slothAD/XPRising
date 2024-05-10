@@ -17,13 +17,6 @@ public static class MasteryConfig
         _configFile = new ConfigFile(configPath, true);
         
         // Currently, we are never updating and saving the config file in game, so just load the values.
-        var masteryConfigDocumentation =
-            $"{AutoSaveSystem.WeaponMasteryConfigJson}: This file contains the configuration for the buffs that get applied for increasing mastery in a Mastery type. The format consists of a Type => {{Stat, growth rate}}. " +
-            "The stat IDs for what a Mastery type should boost should be able to handle any number of stats. See the documentation for a list of stat IDs. " + 
-            "The growth rate describes the amount per point of mastery the stat should be boosted by. Some stats, like crit, have 1 as 100%, and CDR is % mastery to reach 50% cdr, so configure appropriately.";
-        // Bind some dummy value so the documentation is written to the config file.
-        _configFile.Bind("Documentation, weapon_mastery_config.json", "Config", 0, masteryConfigDocumentation);
-        
         WeaponMasterySystem.SpellMasteryNeedsUnarmedToUse = _configFile.Bind("Mastery", "Unarmed Only Spell Mastery Use", false, "Gain the benefits of spell mastery only when you have no weapon equipped.").Value;
         WeaponMasterySystem.SpellMasteryNeedsUnarmedToLearn = _configFile.Bind("Mastery", "Unarmed Only Spell Mastery Learning", true, "Progress spell mastery only when you have no weapon equipped.").Value;
         WeaponMasterySystem.MasteryCombatTick = _configFile.Bind("Mastery", "Mastery Value/Combat Ticks", 5, "Configure the amount of mastery gained per combat ticks. (5 -> 0.005%)").Value;

@@ -7,7 +7,7 @@ using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Commands
 {
-    public static class PowerUp {
+    public static class PowerUpCommands {
         [Command("powerup", "pu", "<player_name> <max hp> <p.atk> <s.atk> <p.def> <s.def>", "Buff player with the given values.", adminOnly:true)]
         public static void PowerUpCommand(ChatCommandContext ctx, string name, string flag, float MaxHP = 0, float PATK = 0, float SATK = 0, float PDEF = 0, float SDEF = 0){
 

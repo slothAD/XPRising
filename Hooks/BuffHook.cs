@@ -302,7 +302,7 @@ public class DebugBuffSystem_Patch
             Cache.playerCombatStart[steamID] = DateTime.Now;
 
             // Actions to check on combat start
-            if (Plugin.WantedSystemActive) HunterHuntedSystem.CheckForAmbush(ownerEntity);
+            if (Plugin.WantedSystemActive) WantedSystem.CheckForAmbush(ownerEntity);
         } else if (combatEnd) {
             Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat end");
             Cache.playerCombatEnd[steamID] = DateTime.Now;

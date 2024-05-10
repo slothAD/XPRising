@@ -106,7 +106,7 @@ namespace OpenRPG.Systems
                 return;
             }
             
-            var bld = Database.playerBloodline[steamID];
+            var bld = Database.PlayerBloodline[steamID];
             var bloodlineMastery = bld[killerBloodType];
             growthVal *= bloodlineMastery.Growth;
 
@@ -153,7 +153,7 @@ namespace OpenRPG.Systems
 
             var updatedMastery = ModBloodline(steamID, killerBloodType, growthVal);
 
-            if (Database.playerLogConfig[steamID].LoggingBloodline)
+            if (Database.PlayerLogConfig[steamID].LoggingBloodline)
             {
                 var updatedValue = updatedMastery.Mastery;
                 var bloodTypeName = GetBloodTypeName(killerBloodType);
@@ -174,14 +174,14 @@ namespace OpenRPG.Systems
 
                 Output.SendLore(userEntity, $"You've been offline for {elapsedTime.TotalMinutes} minute(s). Your bloodline mastery has decayed by {decayValue * 0.001:F3}%");
                 
-                var bld = Database.playerBloodline[steamID];
+                var bld = Database.PlayerBloodline[steamID];
 
                 foreach (var type in Enum.GetValues<BloodType>())
                 {
                     bld = ModBloodline(steamID, bld, type, decayValue);
                 }
 
-                Database.playerBloodline[steamID] = bld;
+                Database.PlayerBloodline[steamID] = bld;
             }
         }
         
@@ -193,7 +193,7 @@ namespace OpenRPG.Systems
                 return;
             }
 
-            var bld = Database.playerBloodline[steamID];
+            var bld = Database.PlayerBloodline[steamID];
             var bloodMastery = bld[type];
             
             // If it is already 0, then this won't have much effect.
@@ -203,7 +203,7 @@ namespace OpenRPG.Systems
                 Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Bloodline reset: {GetBloodTypeName(type)}: {bloodMastery}");
             }
 
-            Database.playerBloodline[steamID] = bld;
+            Database.PlayerBloodline[steamID] = bld;
         }
         
         public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, Entity owner, ulong steamID) {
@@ -217,7 +217,7 @@ namespace OpenRPG.Systems
         }
         private static void ApplyBloodlineBuffs(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, BloodType bloodType, ulong steamID)
         {
-            var bld = Database.playerBloodline[steamID];
+            var bld = Database.PlayerBloodline[steamID];
 
             if (InactiveMultiplier > 0)
             {
@@ -226,7 +226,7 @@ namespace OpenRPG.Systems
                     var multiplier = type == bloodType ? 1.0 : InactiveMultiplier;
                     var effectiveness = (EffectivenessSubSystemEnabled ? mastery.Effectiveness : 1) * multiplier;
                     var masteryValue = Math.Max(mastery.Mastery, 0);
-                    var config = Database.bloodlineStatConfig[type];
+                    var config = Database.BloodlineStatConfig[type];
                     foreach (var statConfig in config)
                     {
                         // Skip if we don't have enough mastery for this bonus
@@ -241,7 +241,7 @@ namespace OpenRPG.Systems
                 var bloodlineMastery = bld[bloodType];
                 var effectiveness = EffectivenessSubSystemEnabled ? bloodlineMastery.Effectiveness : 1;
                 var masteryValue = Math.Max(bloodlineMastery.Mastery, 0);
-                var config = Database.bloodlineStatConfig[bloodType];
+                var config = Database.BloodlineStatConfig[bloodType];
                 foreach (var statConfig in config)
                 {
                     if (bloodlineMastery.Mastery < statConfig.strength) continue;
@@ -254,10 +254,10 @@ namespace OpenRPG.Systems
 
         public static MasteryData ModBloodline(ulong steamID, BloodType type, double changeInMastery)
         {
-            var bloodlineMasteryData = Database.playerBloodline[steamID];
+            var bloodlineMasteryData = Database.PlayerBloodline[steamID];
             bloodlineMasteryData = ModBloodline(steamID, bloodlineMasteryData, type, changeInMastery);
 
-            Database.playerBloodline[steamID] = bloodlineMasteryData;
+            Database.PlayerBloodline[steamID] = bloodlineMasteryData;
             return bloodlineMasteryData[type];
         }
         

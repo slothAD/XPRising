@@ -20,12 +20,12 @@ namespace OpenRPG.Systems
 
         public static int GetUserPermission(ulong steamID)
         {
-            return Database.user_permission.GetValueOrDefault(steamID, LowestPrivilege);
+            return Database.UserPermission.GetValueOrDefault(steamID, LowestPrivilege);
         }
 
         public static int GetCommandPermission(string command)
         {
-            return Database.command_permission.GetValueOrDefault(command, HighestPrivilege);
+            return Database.CommandPermission.GetValueOrDefault(command, HighestPrivilege);
         }
 
         private static object SendPermissionList(ChatCommandContext ctx, List<string> messages)
@@ -39,7 +39,7 @@ namespace OpenRPG.Systems
 
         public static void UserPermissionList(ChatCommandContext ctx)
         {
-            var sortedPermission = Database.user_permission.ToList();
+            var sortedPermission = Database.UserPermission.ToList();
             // Sort by privilege descending
             sortedPermission.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
             ctx.Reply($"===================================");
@@ -56,7 +56,7 @@ namespace OpenRPG.Systems
         
         public static void CommandPermissionList(ChatCommandContext ctx)
         {
-            var sortedPermission = Database.command_permission.ToList();
+            var sortedPermission = Database.CommandPermission.ToList();
             // Sort by command name
             sortedPermission.Sort((pair1, pair2) => String.Compare(pair1.Key, pair2.Key, StringComparison.CurrentCultureIgnoreCase));
             ctx.Reply($"===================================");

@@ -99,7 +99,7 @@ namespace OpenRPG.Systems
             double masteryValue = victimStats.PhysicalPower;
             double spellMasteryValue = victimStats.SpellPower;
             
-            var wd = Database.player_weaponmastery[steamID];
+            var wd = Database.PlayerWeaponmastery[steamID];
 
             var weaponGrowth = wd[masteryType].Growth;
             var spellGrowth = wd[MasteryType.Spell].Growth;
@@ -129,9 +129,9 @@ namespace OpenRPG.Systems
                 wd = ModMastery(steamID, wd, MasteryType.Spell, changeInSpellMastery);
             }
 
-            Database.player_weaponmastery[steamID] = wd;
+            Database.PlayerWeaponmastery[steamID] = wd;
 
-            if (Database.playerLogConfig[steamID].LoggingMastery)
+            if (Database.PlayerLogConfig[steamID].LoggingMastery)
             {
                 var currentMastery = wd[masteryType].Mastery;
                 Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {changeInMastery:F3}% [ {Enum.GetName(masteryType)}: {currentMastery:F2}% ]</color>");
@@ -159,7 +159,7 @@ namespace OpenRPG.Systems
             if (combatTicks > MaxCombatTick) return;
             var masteryType = WeaponToMasteryType(GetWeaponType(player));
             
-            var wd = Database.player_weaponmastery[steamID];
+            var wd = Database.PlayerWeaponmastery[steamID];
             
             var weaponGrowth = wd[masteryType].Growth;
             var spellGrowth = wd.GetValueOrDefault(MasteryType.Spell).Growth;
@@ -173,7 +173,7 @@ namespace OpenRPG.Systems
                 wd = ModMastery(steamID, wd, MasteryType.Spell, changeInSpellMastery);
             }
 
-            Database.player_weaponmastery[steamID] = wd;
+            Database.PlayerWeaponmastery[steamID] = wd;
         }
 
         public static void DecayMastery(Entity userEntity, DateTime lastDecay)
@@ -189,21 +189,21 @@ namespace OpenRPG.Systems
 
                 Output.SendLore(userEntity, $"You've been offline for {elapsedTime.TotalMinutes} minute(s). Your weapon mastery has decayed by {decayValue * 0.001:F3}%");
                 
-                var wd = Database.player_weaponmastery[steamID];
+                var wd = Database.PlayerWeaponmastery[steamID];
 
                 foreach (var type in Enum.GetValues<MasteryType>())
                 {
                     wd = ModMastery(steamID, wd, type, decayValue);
                 }
 
-                Database.player_weaponmastery[steamID] = wd;
+                Database.PlayerWeaponmastery[steamID] = wd;
             }
         }
 
         public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, Entity owner, ulong steamID)
         {
             var masteryType = WeaponToMasteryType(GetWeaponType(owner));
-            var weaponMasterData = Database.player_weaponmastery[steamID];
+            var weaponMasterData = Database.PlayerWeaponmastery[steamID];
 
             if (InactiveMultiplier > 0)
             {
@@ -220,7 +220,7 @@ namespace OpenRPG.Systems
 
         private static void ApplyBuff(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, double mastery, double effectiveness, MasteryType type)
         {
-            var config = Database.masteryStatConfig[type];
+            var config = Database.MasteryStatConfig[type];
             foreach (var statConfig in config)
             {
                 buffer.Add(Helper.MakeBuff(statConfig.type, Helper.CalcBuffValue(mastery, effectiveness, statConfig.rate, statConfig.type)));
@@ -229,9 +229,9 @@ namespace OpenRPG.Systems
 
         public static void ModMastery(ulong steamID, MasteryType type, double changeInMastery)
         {
-            var wd = Database.player_weaponmastery[steamID];
+            var wd = Database.PlayerWeaponmastery[steamID];
             wd = ModMastery(steamID, wd, type, changeInMastery);
-            Database.player_weaponmastery[steamID] = wd;
+            Database.PlayerWeaponmastery[steamID] = wd;
         }
 
         private static WeaponMasteryData ModMastery(ulong steamID, WeaponMasteryData wd, MasteryType type, double changeInMastery)
@@ -254,7 +254,7 @@ namespace OpenRPG.Systems
                 }
                 return;
             }
-            if (Database.player_weaponmastery.TryGetValue(steamID, out var wd))
+            if (Database.PlayerWeaponmastery.TryGetValue(steamID, out var wd))
             {
                 var mastery = wd[type];
                 // If it is already 0, then this won't have much effect.
@@ -263,7 +263,7 @@ namespace OpenRPG.Systems
                     wd[type] = mastery.ResetMastery(MaxEffectiveness, GrowthPerEffectiveness);
                     Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery reset: {Enum.GetName(type)}: {mastery}");
                 }
-                Database.player_weaponmastery[steamID] = wd;
+                Database.PlayerWeaponmastery[steamID] = wd;
             }
         }
 

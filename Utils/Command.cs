@@ -24,7 +24,7 @@ public static class Command
             var groupName = type?.GetCustomAttribute<CommandGroupAttribute>()?.Name ?? "";
             var permissionKey = CommandAttributesToPermissionKey(groupName, command.Name);
 
-            if (!Database.command_permission.TryGetValue(permissionKey, out var requiredPrivilege))
+            if (!Database.CommandPermission.TryGetValue(permissionKey, out var requiredPrivilege))
             {
                 // If it doesn't exist it may be a command belonging to a different mod.
                 // As far as we know, it should have permission.
@@ -32,7 +32,7 @@ public static class Command
             }
                 
             var steamId = GameData.Users.GetUserByCharacterName(ctx.Name).PlatformId;
-            var userPrivilege = Database.user_permission.GetValueOrDefault(steamId, PermissionSystem.LowestPrivilege);
+            var userPrivilege = Database.UserPermission.GetValueOrDefault(steamId, PermissionSystem.LowestPrivilege);
 
             // If the user privilege is equal or greater to the required privilege, then they have permission
             if (userPrivilege >= requiredPrivilege) return true;
@@ -88,18 +88,18 @@ public static class Command
     public static void ValidatedCommandPermissions(IEnumerable<string[]> commands)
     {
         var commandsDictionary = commands.ToDictionary(command => command[0], command => command[4].Equals("True"));
-        var currentPermissions = Database.command_permission.Keys;
+        var currentPermissions = Database.CommandPermission.Keys;
         foreach (var permission in currentPermissions.Where(permission => !commandsDictionary.ContainsKey(permission)))
         {
             Plugin.Log(LogSystem.Core, LogLevel.Message, $"Removing old permission: {permission}");
-            Database.command_permission.Remove(permission);
+            Database.CommandPermission.Remove(permission);
         }
 
         var defaultCommandPermissions = PermissionSystem.DefaultCommandPermissions();
         foreach (var command in commandsDictionary)
         {
             // Add the permission if it doesn't already exist there
-            var added = Database.command_permission.TryAdd(command.Key, DefaultPrivilege(command.Value));
+            var added = Database.CommandPermission.TryAdd(command.Key, DefaultPrivilege(command.Value));
             if (added) Plugin.Log(LogSystem.Core, LogLevel.Message, $"Added new permission: {command.Key}");
 
             // Warn if the default permissions does not include this command

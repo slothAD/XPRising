@@ -14,7 +14,7 @@ using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Systems
 {
-    public static class HunterHuntedSystem {
+    public static class WantedSystem {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
         private const LogSystem LoggingSystem = LogSystem.Faction;
@@ -278,7 +278,7 @@ namespace OpenRPG.Systems
         }
 
         private static void LogHeatData(ulong steamID, PlayerHeatData heatData, Entity userEntity, string origin) {
-            if (Database.playerLogConfig[steamID].LoggingWanted) Output.SendLore(userEntity, HeatDataString(heatData, true));
+            if (Database.PlayerLogConfig[steamID].LoggingWanted) Output.SendLore(userEntity, HeatDataString(heatData, true));
             Plugin.Log(LoggingSystem, LogLevel.Info, $"Heat({origin}): {HeatDataString(heatData, false)}");
         }
     }

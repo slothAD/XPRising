@@ -12,7 +12,7 @@ using VampireCommandFramework;
 namespace OpenRPG.Commands
 {
     [CommandGroup("bloodline", "bl")]
-    public static class Bloodline
+    public static class BloodlineCommands
     {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
@@ -56,13 +56,13 @@ namespace OpenRPG.Commands
                 return;
             }
 
-            if (!Database.playerBloodline.TryGetValue(steamID, out var bld) ||
+            if (!Database.PlayerBloodline.TryGetValue(steamID, out var bld) ||
                 !bld.TryGetValue(bloodType, out var masteryData)) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
 
-            var bloodlineConfig = Database.bloodlineStatConfig[bloodType];
+            var bloodlineConfig = Database.BloodlineStatConfig[bloodType];
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
             
             ctx.Reply(BloodlineToPrint(bloodType, masteryData, bloodlineConfig));
@@ -84,12 +84,12 @@ namespace OpenRPG.Commands
                 return;
             }
 
-            if (!Database.playerBloodline.TryGetValue(steamID, out var bld)) {
+            if (!Database.PlayerBloodline.TryGetValue(steamID, out var bld)) {
                 ctx.Reply("You haven't developed any bloodline...");
                 return;
             }
 
-            var bloodlineConfig = Database.bloodlineStatConfig[bloodType];
+            var bloodlineConfig = Database.BloodlineStatConfig[bloodType];
             ctx.Reply("-- <color=#ffffffff>Bloodlines</color> --");
 
             foreach (var data in bld)
@@ -139,12 +139,12 @@ namespace OpenRPG.Commands
         public static void LogBloodline(ChatCommandContext ctx)
         {
             var steamID = ctx.User.PlatformId;
-            var loggingData = Database.playerLogConfig[steamID];
+            var loggingData = Database.PlayerLogConfig[steamID];
             loggingData.LoggingBloodline = !loggingData.LoggingBloodline;
             ctx.Reply(loggingData.LoggingBloodline
                 ? "Bloodline gain is now being logged."
                 : $"Bloodline gain is no longer being logged.");
-            Database.playerLogConfig[steamID] = loggingData;
+            Database.PlayerLogConfig[steamID] = loggingData;
         }
 
         [Command("reset", "r", "<bloodline>", "Resets a bloodline to gain more power with it.", adminOnly: false)]

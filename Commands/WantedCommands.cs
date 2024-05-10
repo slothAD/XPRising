@@ -17,7 +17,7 @@ using LogSystem = OpenRPG.Plugin.LogSystem;
 namespace OpenRPG.Commands
 {
     [CommandGroup("wanted", "w")]
-    public static class Wanted{
+    public static class WantedCommands {
         private static void SendFactionWantedMessage(PlayerHeatData heatData, Entity userEntity, bool userIsAdmin) {
             bool isWanted = false;
             foreach (Faction faction in FactionHeat.ActiveFactions) {
@@ -31,8 +31,8 @@ namespace OpenRPG.Commands
                 if (userIsAdmin && DebugLoggingConfig.IsLogging(LogSystem.Wanted))
                 {
                     var sinceAmbush = DateTime.Now - heat.lastAmbushed;
-                    var nextAmbush = Math.Max((int)(HunterHuntedSystem.ambush_interval - sinceAmbush.TotalSeconds), 0);
-                    Output.SendLore(userEntity, $"Level: {Color.White(heat.level.ToString())} Possible ambush in {Color.White(nextAmbush.ToString())}s Chance: {Color.White(HunterHuntedSystem.ambush_chance.ToString())}%");
+                    var nextAmbush = Math.Max((int)(WantedSystem.ambush_interval - sinceAmbush.TotalSeconds), 0);
+                    Output.SendLore(userEntity, $"Level: {Color.White(heat.level.ToString())} Possible ambush in {Color.White(nextAmbush.ToString())}s Chance: {Color.White(WantedSystem.ambush_chance.ToString())}%");
                 }
             }
 
@@ -44,13 +44,13 @@ namespace OpenRPG.Commands
         [Command("get","g", "", "Shows your current wanted level", adminOnly: false)]
         public static void GetWanted(ChatCommandContext ctx){
             if (!Plugin.WantedSystemActive){
-                ctx.Reply("HunterHunted system is not enabled.");
+                ctx.Reply("Wanted system is not enabled.");
                 return;
             }
             var user = ctx.Event.User;
             var userEntity = ctx.Event.SenderUserEntity;
             
-            var heatData = HunterHuntedSystem.GetPlayerHeat(userEntity);
+            var heatData = WantedSystem.GetPlayerHeat(userEntity);
             SendFactionWantedMessage(heatData, userEntity, ctx.IsAdmin);
         }
 
@@ -75,11 +75,11 @@ namespace OpenRPG.Commands
                 : FactionHeat.HeatLevels[Math.Clamp(value - 1, 0, FactionHeat.HeatLevels.Length - 1)] + 10;
 
             // Set wanted level and reset last ambushed so the user can be ambushed from now (ie, greater than ambush_interval seconds ago) 
-            var updatedHeatData = HunterHuntedSystem.SetPlayerHeat(
+            var updatedHeatData = WantedSystem.SetPlayerHeat(
                 targetUserEntity,
                 heatFaction,
                 heatLevel,
-                DateTime.Now - TimeSpan.FromSeconds(HunterHuntedSystem.ambush_interval + 1));
+                DateTime.Now - TimeSpan.FromSeconds(WantedSystem.ambush_interval + 1));
                 
             ctx.Reply($"Player \"{name}\" wanted value changed.");
             SendFactionWantedMessage(updatedHeatData, contextUserEntity, ctx.IsAdmin);
@@ -96,12 +96,12 @@ namespace OpenRPG.Commands
             }
 
             var steamID = ctx.User.PlatformId;
-            var loggingData = Database.playerLogConfig[steamID];
+            var loggingData = Database.PlayerLogConfig[steamID];
             loggingData.LoggingWanted = !loggingData.LoggingWanted;
             ctx.Reply(loggingData.LoggingWanted
                 ? "Heat levels now being logged."
                 : "Heat levels no longer being logged.");
-            Database.playerLogConfig[steamID] = loggingData;
+            Database.PlayerLogConfig[steamID] = loggingData;
         }
 
         [Command("trigger","t", "<name>", "Triggers the ambush check for the given user", adminOnly: true)]
@@ -112,7 +112,7 @@ namespace OpenRPG.Commands
                 return;
             }
             
-            HunterHuntedSystem.CheckForAmbush(playerEntity);
+            WantedSystem.CheckForAmbush(playerEntity);
             ctx.Reply($"Successfully triggered ambush check for \"{name}\"");
         }
 
