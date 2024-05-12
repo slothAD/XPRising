@@ -134,12 +134,12 @@ namespace OpenRPG.Systems
             if (Database.PlayerLogConfig[steamID].LoggingMastery)
             {
                 var currentMastery = wd[masteryType].Mastery;
-                Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {changeInMastery:F3}% [ {Enum.GetName(masteryType)}: {currentMastery:F2}% ]</color>");
+                Output.SendLore(userEntity, $"<color={Output.DarkYellow}>Weapon mastery has increased by {changeInMastery:F3}% [ {Enum.GetName(masteryType)}: {currentMastery:F2}% ]</color>");
                 
                 if (updateSpellMastery)
                 {
                     var currentSpellMastery = wd.GetValueOrDefault(MasteryType.Spell).Mastery;
-                    Output.SendLore(userEntity, $"<color=#ffb700>Weapon mastery has increased by {changeInSpellMastery:F3}% [ Spell: {currentSpellMastery:F2}% ]</color>");
+                    Output.SendLore(userEntity, $"<color={Output.DarkYellow}>Weapon mastery has increased by {changeInSpellMastery:F3}% [ Spell: {currentSpellMastery:F2}% ]</color>");
                 }
             }
         }

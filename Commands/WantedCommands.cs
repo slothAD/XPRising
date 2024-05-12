@@ -10,7 +10,6 @@ using ProjectM.Shared;
 using Unity.Collections;
 using Unity.Entities;
 using VampireCommandFramework;
-using Color = OpenRPG.Utils.Color;
 using Faction = OpenRPG.Utils.Prefabs.Faction;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
@@ -32,7 +31,11 @@ namespace OpenRPG.Commands
                 {
                     var sinceAmbush = DateTime.Now - heat.lastAmbushed;
                     var nextAmbush = Math.Max((int)(WantedSystem.ambush_interval - sinceAmbush.TotalSeconds), 0);
-                    Output.SendLore(userEntity, $"Level: {Color.White(heat.level.ToString())} Possible ambush in {Color.White(nextAmbush.ToString())}s Chance: {Color.White(WantedSystem.ambush_chance.ToString())}%");
+                    Output.SendLore(
+                        userEntity,
+                        $"Level: <color={Output.White}>{heat.level:D}</color> " +
+                        $"Possible ambush in <color={Color.White}>{nextAmbush:D}</color>s " +
+                        $"Chance: <color={Color.White}>{WantedSystem.ambush_chance:D}</color>%");
                 }
             }
 
@@ -47,7 +50,6 @@ namespace OpenRPG.Commands
                 ctx.Reply("Wanted system is not enabled.");
                 return;
             }
-            var user = ctx.Event.User;
             var userEntity = ctx.Event.SenderUserEntity;
             
             var heatData = WantedSystem.GetPlayerHeat(userEntity);
@@ -58,7 +60,7 @@ namespace OpenRPG.Commands
         public static void SetWanted(ChatCommandContext ctx, string name, string faction, int value) {
             var contextUserEntity = ctx.Event.SenderUserEntity;
                 
-            if (!Helper.FindPlayer(name, true, out var targetEntity, out var targetUserEntity))
+            if (!Helper.FindPlayer(name, true, out _, out var targetUserEntity))
             {
                 ctx.Reply($"Could not find specified player \"{name}\".");
                 return;

@@ -114,7 +114,7 @@ namespace OpenRPG.Systems
             if (IsPlayerLoggingExperience(player.steamID))
             {
                 GetLevelAndProgress(newXp, out _, out var earned, out var needed);
-                Output.SendLore(player.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#ffffff>{earned}</color>/<color=#ffffff>{needed}</color> ]");
+                Output.SendLore(player.userEntity, $"<color={Output.LightYellow}>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
             }
             
             SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
@@ -161,14 +161,11 @@ namespace OpenRPG.Systems
 
             SetLevel(playerEntity, userEntity, steamID);
             GetLevelAndProgress(currentXp, out _, out var earned, out var needed);
-            Output.SendLore(userEntity, $"You've been defeated, <color=#ffffff>{xpLost}</color> XP is lost. [ XP: <color=#ffffff>{earned}</color>/<color=#ffffff>{needed}</color> ]");
+            Output.SendLore(userEntity, $"You've been defeated, <color={Output.White}>{xpLost}</color> XP is lost. [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
         }
 
         public static void SetLevel(Entity entity, Entity user, ulong steamID)
         {
-            Database.PlayerExperience.TryAdd(steamID, 0);
-            Database.PlayerAbilityIncrease.TryAdd(steamID, 0);
-
             float level = ConvertXpToLevel(Database.PlayerExperience[steamID]);
             if (level < 0) return;
             if (level > MaxLevel){
@@ -176,45 +173,38 @@ namespace OpenRPG.Systems
                 Database.PlayerExperience[steamID] = ConvertLevelToXp(MaxLevel);
             }
 
-            bool levelDataExists = Cache.player_level.TryGetValue(steamID, out var storedLevel);
-            if (levelDataExists){
-                if (storedLevel < level) 
+            if (Cache.player_level.TryGetValue(steamID, out var storedLevel)) 
+            {
+                if (storedLevel < level) Helper.ApplyBuff(user, entity, Helper.LevelUp_Buff);
+
+                // if (LevelRewardsOn)
+                // {
+                //     //increases by level
+                //     for (var i = storedLevel+1; i <= level; i++)
+                //     {
+                //         //default rewards for leveling up
+                //         Database.PlayerAbilityIncrease[steamID] += 1;
+                //         Database.PlayerLevelStats[steamID][UnitStatType.MaxHealth] += .5f;
+                //
+                //         Helper.ApplyBuff(user, entity, Helper.AppliedBuff);
+                //
+                //         //extra ability point rewards to spend for achieve certain level milestones
+                //         switch (i)
+                //         {
+                //             case 1:
+                //                 Database.PlayerAbilityIncrease[steamID] += 1;
+                //                 break;
+                //         }
+                //     }
+                // }
+
+                if (IsPlayerLoggingExperience(steamID))
                 {
-                    Cache.player_level[steamID] = level;
-                    Helper.ApplyBuff(user, entity, Helper.LevelUp_Buff);
-
-                    if (LevelRewardsOn)
-                    {
-                        //increases by level
-                        for (var i = storedLevel+1; i <= level; i++)
-                        {
-                            //default rewards for leveling up
-                            Database.PlayerAbilityIncrease[steamID] += 1;
-                            Database.PlayerLevelStats[steamID][UnitStatType.MaxHealth] += .5f;
-
-                            Helper.ApplyBuff(user, entity, Helper.AppliedBuff);
-
-                            //extra ability point rewards to spend for achieve certain level milestones
-                            switch (i)
-                            {
-                                case 1:
-                                    Database.PlayerAbilityIncrease[steamID] += 1;
-                                    break;
-                            }
-                        }
-                    }
-
-                    if (IsPlayerLoggingExperience(steamID))
-                    {
-                        Output.SendLore(user, $"<color=#ffdd00>Level up! You're now level</color> <color=#ffffff>{level}</color><color=#ffdd00ff>!</color>");
-                    }
-                    
+                    Output.SendLore(user, $"<color={Output.LightYellow}>Level up! You're now level</color> <color={Output.White}>{level}</color><color={Output.LightYellow}>!</color>");
                 }
             }
-            else
-            {
-                Cache.player_level[steamID] = level;
-            }
+            Cache.player_level[steamID] = level;
+                
             Equipment equipment = _entityManager.GetComponentData<Equipment>(entity);
             
             equipment.SpellLevel._Value = level;

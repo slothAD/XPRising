@@ -36,7 +36,7 @@ namespace OpenRPG.Commands {
                 return;
             }
             
-            ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
+            ctx.Reply($"-- <color={Output.White}>Weapon Mastery</color> --");
 
             ctx.Reply(GetMasteryDataStringForType(steamID, type));
         }
@@ -54,7 +54,7 @@ namespace OpenRPG.Commands {
                 return;
             }
 
-            ctx.Reply("-- <color=#ffffffff>Weapon Mastery</color> --");
+            ctx.Reply($"-- <color={Output.White}>Weapon Mastery</color> --");
 
             foreach (var type in Enum.GetValues<WeaponMasterySystem.MasteryType>())
             {
@@ -82,13 +82,13 @@ namespace OpenRPG.Commands {
                 }
                 
                 if (Helper.percentageStats.Contains(config.type) && Helper.humanReadablePercentageStats) {
-                    return $"{Helper.CamelCaseToSpaces(config.type)} <color=#75FF33>{val/100:F3}%</color>";
+                    return $"{Helper.CamelCaseToSpaces(config.type)} <color={Output.Green}>{val/100:F3}%</color>";
                 }
 
-                return $"{Helper.CamelCaseToSpaces(config.type)} <color=#75FF33>{val:F3}</color>";
+                return $"{Helper.CamelCaseToSpaces(config.type)} <color={Output.Green}>{val:F3}</color>";
             });
 
-            return $"{name}:<color=#ffffff> {mastery:F2}%</color> ({string.Join(",", statData)}) Effectiveness: {effectiveness * 100}%, Growth: {growth * 100}%";
+            return $"{name}: <color={Output.White}>{mastery:F2}%</color> ({string.Join(",", statData)}) Effectiveness: {effectiveness * 100}%, Growth: {growth * 100}%";
         }
 
         [Command("add", "a", "<weaponType> <amount>", "Adds the amount to the mastery of the specified weaponType", adminOnly: true)]
@@ -109,7 +109,7 @@ namespace OpenRPG.Commands {
             }
 
             WeaponMasterySystem.ModMastery(steamID, masteryType, amount / WeaponMasterySystem.MasteryGainMultiplier);
-            ctx.Reply($"{Enum.GetName(masteryType)} Mastery for \"{charName}\" adjusted by <color=#ffffff>{amount:F2}%</color>");
+            ctx.Reply($"{Enum.GetName(masteryType)} Mastery for \"{charName}\" adjusted by <color={Output.White}>{amount:F2}%</color>");
             Helper.ApplyBuff(userEntity, charEntity, Helper.AppliedBuff);
         }
         
@@ -134,7 +134,7 @@ namespace OpenRPG.Commands {
 
             WeaponMasterySystem.ModMastery(steamID, masteryType, -100000);
             WeaponMasterySystem.ModMastery(steamID, masteryType, value / WeaponMasterySystem.MasteryGainMultiplier);
-            ctx.Reply($"{Enum.GetName(masteryType)} Mastery for \"{name}\" set to <color=#ffffff>{value:F2}%</color>");
+            ctx.Reply($"{Enum.GetName(masteryType)} Mastery for \"{name}\" set to <color={Output.White}>{value:F2}%</color>");
         }
 
         [Command("log", "l", "", "Toggles logging of mastery gain.", adminOnly: false)]

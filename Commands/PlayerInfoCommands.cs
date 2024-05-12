@@ -1,17 +1,16 @@
-﻿using ProjectM.Network;
+﻿using Bloodstone.API;
 using OpenRPG.Systems;
 using OpenRPG.Utils;
-using System;
+using ProjectM.Network;
+using Unity.Entities;
 using Unity.Transforms;
 using VampireCommandFramework;
-using Bloodstone.API;
-using Unity.Entities;
 
 namespace OpenRPG.Commands
 {
     public static class PlayerInfoCommands
     {
-        private static EntityManager entityManager = VWorld.Server.EntityManager;
+        private static EntityManager _entityManager = VWorld.Server.EntityManager;
 
         [Command(name: "playerinfo", shortHand: "pi", adminOnly: false, usage: "[PlayerName]", description: "Display the player information details.")]
         public static void PlayerInfoCommand(ChatCommandContext ctx, string playerName = null)
@@ -27,34 +26,34 @@ namespace OpenRPG.Commands
                     throw ctx.Error("Player not found.");
                 }
 
-                user = entityManager.GetComponentData<User>(userEntity);
+                user = _entityManager.GetComponentData<User>(userEntity);
             }
             
             var steamID = user.PlatformId;
             var name = user.CharacterName.ToString();
             var playerEntityString = $"{playerEntity.Index.ToString()}:{playerEntity.Version.ToString()}";
             var userEntityString = $"{userEntity.Index.ToString()}:{userEntity.Version.ToString()}";
-            var ping = entityManager.GetComponentData<Latency>(playerEntity).Value;
-            var position = entityManager.GetComponentData<Translation>(playerEntity).Value;
+            var ping = _entityManager.GetComponentData<Latency>(playerEntity).Value;
+            var position = _entityManager.GetComponentData<Translation>(playerEntity).Value;
 
-            ctx.Reply($"Name: {Utils.Color.White(name)}");
-            ctx.Reply($"SteamID: {Utils.Color.White(steamID.ToString())}");
-            ctx.Reply($"Latency: {Utils.Color.White(ping.ToString())}s");
-            ctx.Reply($"Admin: {Utils.Color.White(user.IsAdmin.ToString())}s");
-            ctx.Reply($"-- Position --");
-            ctx.Reply($"X: {Utils.Color.White(Math.Round(position.x, 2).ToString())} " +
-                      $"Y: {Utils.Color.White(Math.Round(position.y, 2).ToString())} " +
-                      $"Z: {Utils.Color.White(Math.Round(position.z, 2).ToString())}");
-            ctx.Reply($"-- {Utils.Color.White("Entities")} --");
-            ctx.Reply($"Char Entity: {Utils.Color.White(playerEntityString)}");
-            ctx.Reply($"User Entity: {Utils.Color.White(userEntityString)}");
+            ctx.Reply($"Name: <color={Output.White}>{name}</color>");
+            ctx.Reply($"SteamID: <color={Output.White}>{steamID:D}</color>");
+            ctx.Reply($"Latency: <color={Output.White}>{ping:F3}</color>s");
+            ctx.Reply($"Admin: <color={Output.White}>{user.IsAdmin.ToString()}</color>s");
+            ctx.Reply("-- Position --");
+            ctx.Reply($"X: <color={Output.White}>{position.x:F2}</color> " +
+                      $"Y: <color={Output.White}>{position.y:F2}</color> " +
+                      $"Z: <color={Output.White}>{position.z:F2}</color>");
+            ctx.Reply($"-- <color={Output.White}>Entities</color> --");
+            ctx.Reply($"Char Entity: <color={Output.White}>{playerEntityString}");
+            ctx.Reply($"User Entity: <color={Output.White}>{userEntityString}");
             if (Plugin.ExperienceSystemActive)
             {
                 var currentXp = ExperienceSystem.GetXp(steamID);
                 var currentLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
-                ExperienceSystem.GetLevelAndProgress(currentXp, out var levelProgress, out var xpEarned, out var xpNeeded);
-                ctx.Reply($"-- {Utils.Color.White("Experience")} --");
-                ctx.Reply($"Level: {Utils.Color.White(currentLevel.ToString())} [{Utils.Color.White(xpEarned.ToString())}/{Utils.Color.White(xpNeeded.ToString())}]");
+                ExperienceSystem.GetLevelAndProgress(currentXp, out _, out var xpEarned, out var xpNeeded);
+                ctx.Reply($"-- <color={Output.White}>Experience --");
+                ctx.Reply($"Level: <color={Output.White}>{currentLevel.ToString()}</color> [<color={Output.White}>{xpEarned.ToString()}</color>/<color={Output.White}>{xpNeeded.ToString()}</color>]");
             }
         }
     }

@@ -91,7 +91,7 @@ namespace OpenRPG.Systems
             if (killerBloodType == BloodType.None)
             {
                 Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"killer has frail blood, not modifying: Killer ({killer}), Victim ({victim})");
-                Output.SendLore(killerUserEntity, $"<color=#9f0000>Your bloodline is too weak to get mastery...</color>");
+                Output.SendLore(killerUserEntity, $"<color={Output.DarkRed}>You have no bloodline to get mastery...</color>");
                 return;
             }
 
@@ -120,7 +120,7 @@ namespace OpenRPG.Systems
                     {
                         Plugin.Log(LogSystem.Bloodline, LogLevel.Info,
                             $"merciless bloodlines exit: Blood types are different: Killer ({Enum.GetName(killerBloodType)}), Victim ({Enum.GetName(victimBloodType)})");
-                        Output.SendLore(killerUserEntity, $"<color=#9f0000>Their bloodline is not compatible with your own...</color>");
+                        Output.SendLore(killerUserEntity, $"<color={Output.DarkRed}>Bloodline is not compatible with yours...</color>");
                         return;
                     }
                     
@@ -128,7 +128,7 @@ namespace OpenRPG.Systems
                     {
                         Plugin.Log(LogSystem.Bloodline, LogLevel.Info,
                             $"merciless bloodlines exit: victim blood quality less than killer mastery: Killer ({bloodlineMastery.Mastery}), Victim ({victimBloodQuality})");
-                        Output.SendLore(killerUserEntity, $"<color=#9f0000>Their bloodline is too weak to increase mastery...</color>");
+                        Output.SendLore(killerUserEntity, $"<color={Output.DarkRed}>Bloodline is too weak to increase mastery...</color>");
                         return;
                     }
                 }
@@ -158,7 +158,7 @@ namespace OpenRPG.Systems
             {
                 var updatedValue = updatedMastery.Mastery;
                 var bloodTypeName = GetBloodTypeName(killerBloodType);
-                Output.SendLore(killerUserEntity, $"<color=#ffb700>Bloodline mastery has increased by {growthVal:F3}% [ {bloodTypeName}: {updatedValue:F3}%]</color>");
+                Output.SendLore(killerUserEntity, $"<color={Output.DarkYellow}>Bloodline mastery has increased by {growthVal:F3}% [ {bloodTypeName}: {updatedValue:F3}%]</color>");
             }
         }
         

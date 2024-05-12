@@ -96,7 +96,7 @@ namespace OpenRPG.Commands {
             foreach (var wp in Database.Waypoints) {
                 if(!wp.Key.Contains("_")) {
                     if (count < wpPerMsg) {
-                        reply += $" - <color=#ffff00>{wp.Key}</color> [<color=#00dd00>Global</color>]";
+                        reply += $" - <color={Output.LightYellow}>{wp.Key}</color> [<color={Output.Green}>Global</color>]";
                         count++;
                     } else {
                         ctx.Reply(reply);
@@ -109,7 +109,7 @@ namespace OpenRPG.Commands {
                 if (wp.Key.Contains(steamID.ToString())) {
                     if (count < wpPerMsg) {
                         string easyName = wp.Key.Substring(0, wp.Key.IndexOf("_", StringComparison.Ordinal));
-                        reply += $" - <color=#ffff00>{easyName}</color>";
+                        reply += $" - <color={Output.LightYellow}>{easyName}</color>";
                         count++;
                     } else {
                         ctx.Reply(reply);

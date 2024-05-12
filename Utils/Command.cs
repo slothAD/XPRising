@@ -36,7 +36,7 @@ public static class Command
             // If the user privilege is equal or greater to the required privilege, then they have permission
             if (userPrivilege >= requiredPrivilege) return true;
             
-            ctx.Reply($"{Color.Red("[permission denied]")} {permissionKey}");
+            ctx.Reply($"<color={Color.Red}>[permission denied]</color> {permissionKey}");
             return false;
         }
     }

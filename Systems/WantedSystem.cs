@@ -268,7 +268,7 @@ namespace OpenRPG.Systems
             var activeHeat =
                 heatData.heat.Where(faction => faction.Value.level > 0)
                     .Select(faction =>
-                        useColor ? $"{Enum.GetName(faction.Key)}: {Color.White(faction.Value.level.ToString())}" :
+                        useColor ? $"{Enum.GetName(faction.Key)}: <color={Output.White}>{faction.Value.level.ToString()}</color>" :
                             $"{Enum.GetName(faction.Key)}: {faction.Value.level.ToString()}"
                         )
                     .DefaultIfEmpty("All heat levels 0");

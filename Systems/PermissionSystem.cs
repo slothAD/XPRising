@@ -43,12 +43,12 @@ namespace OpenRPG.Systems
             // Sort by privilege descending
             sortedPermission.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
             ctx.Reply($"===================================");
-            if (sortedPermission.Count == 0) ctx.Reply($"<color=#ffffff>No permissions</color>");
+            if (sortedPermission.Count == 0) ctx.Reply($"<color={Output.White}>No permissions</color>");
             else
             {
                 foreach (var (item, index) in sortedPermission.Select((item, index) => (item, index)))
                 {
-                    ctx.Reply($"{index}. <color=#ffffff>{Helper.GetNameFromSteamID(item.Key)} : {item.Value}</color>");
+                    ctx.Reply($"{index}. <color={Output.White}>{Helper.GetNameFromSteamID(item.Key)} : {item.Value}</color>");
                 }
             }
             ctx.Reply($"===================================");
@@ -60,12 +60,12 @@ namespace OpenRPG.Systems
             // Sort by command name
             sortedPermission.Sort((pair1, pair2) => String.Compare(pair1.Key, pair2.Key, StringComparison.CurrentCultureIgnoreCase));
             ctx.Reply($"===================================");
-            if (sortedPermission.Count == 0) ctx.Reply($"<color=#ffffff>No commands</color>");
+            if (sortedPermission.Count == 0) ctx.Reply($"<color={Output.White}>No commands</color>");
             else
             {
                 foreach (var (item, index) in sortedPermission.Select((item, index) => (item, index)))
                 {
-                    ctx.Reply($"{index}. <color=#ffffff>{item.Key} : {item.Value}</color>");
+                    ctx.Reply($"{index}. <color={Output.White}>{item.Key} : {item.Value}</color>");
                 }
             }
             ctx.Reply($"===================================");

@@ -33,7 +33,7 @@ namespace OpenRPG.Commands
             if (steamID == 0) throw ctx.Error($"Could not find specified player \"{playerName}\".");
             if (level == 0) Database.UserPermission.Remove(steamID);
             else Database.UserPermission[steamID] = level;
-            ctx.Reply($"Player \"{playerName}\" permission is now set to <color=#ffffff>{level}</color>.");
+            ctx.Reply($"Player \"{playerName}\" permission is now set to <color={Output.White}>{level}</color>.");
         }
         
         [Command(name: "permission set command", shortHand: "psc", usage: "<command> <0-100>", description: "Sets the required privilege level for a command.", adminOnly: true)]
@@ -51,7 +51,7 @@ namespace OpenRPG.Commands
             }
 
             Database.CommandPermission[command] = level;
-            ctx.Reply($"Command \"{command}\" required privilege is now set to <color=#ffffff>{level}</color>.");
+            ctx.Reply($"Command \"{command}\" required privilege is now set to <color={Output.White}>{level}</color>.");
         }
     }
 }
