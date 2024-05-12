@@ -1,7 +1,7 @@
 ﻿namespace OpenRPG.Utils.Prefabs;
 
-// Note that these prefabs are as of Gloomrot launch
-// Thanks https://github.com/decaprime
+// Note that these prefabs are as of 1.0 launch
+// Thanks https://github.com/Odjit
 public enum Faction
 {
     Bandits = -413163549,
@@ -16,6 +16,7 @@ public enum Faction
     Gloomrot = -1632475814, // HumanGloomrot
     Harpy = 1731533561,
     Ignored = -1430861195, // Horse
+    Legion = -772044125, // TODO new faction
     Militia = 1057375699, // HumanFarmer
     Mutants = -210606557,
     NatureSpirit = 1597367490,
@@ -25,6 +26,7 @@ public enum Faction
     Players_Mutant = 2146780972,
     Players_Shapeshift_Human = -1036907707,
     Spiders = -1632009503,
+    Spiders_Shapeshifted = -733057474, // TODO new faction
     Traders_T01 = 30052367,
     Traders_T02 = 887347866,
     Undead = 929074293,

@@ -80,11 +80,11 @@ namespace OpenRPG.Utils
             }
             else
             {
-                var autoSave = _saveCount % AutoSaveFrequency == 0;
+                var autoSave = AutoSaveFrequency > 0 && _saveCount % AutoSaveFrequency == 0;
                 if (autoSave)
                 {
                     anyErrors |= !InternalSaveDatabase(SavesPath);
-                    var saveBackup = _autoSaveCount % BackupFrequency == 0;
+                    var saveBackup = BackupFrequency > 0 && _autoSaveCount % BackupFrequency == 0;
                     if (forceBackup || saveBackup) anyErrors |= !InternalSaveDatabase(BackupsPath);
                     
                     // Just ensure that it wraps around. No need to support ludicrously high save count numbers

@@ -23,7 +23,6 @@ namespace OpenRPG.Systems
         public static float GroupMaxDistance = 50;
         public static bool ShouldAllowGearLevel = true;
         public static bool LevelRewardsOn = true;
-        public static bool EasyLvl15 = true;
 
         public static float PvpXpLossPercent = 0;
         public static float PveXpLossPercent = 10;
@@ -93,12 +92,10 @@ namespace OpenRPG.Systems
 
             Plugin.Log(LogSystem.Xp, LogLevel.Info, "Running Assign EXP for all close allied players");
             foreach (var teammate in closeAllies) {
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, "Assigning EXP to " + teammate.steamID);
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Assigning EXP to {teammate.steamID}: LVL: {teammate.playerLevel}, IsKiller: {teammate.isTrigger}, IsVBlood: {isVBlood}");
                 
                 // Calculate the portion of the total XP that this player should get.
                 var groupMultiplier = GroupMaxDistance > 0 ? baseGroupXpBonus * (teammate.playerLevel / sumGroupLevel) : 1.0;
-                
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"IsKiller: {teammate.isTrigger} LVL: {teammate.playerLevel}");
                 AssignExp(teammate, avgGroupLevel, unitLevel.Level, multiplier * groupMultiplier);
             }
         }
@@ -111,9 +108,10 @@ namespace OpenRPG.Systems
             var newXp = Math.Max(player.currentXp, 0) + xpGained;
             Database.PlayerExperience[player.steamID] = newXp;
 
+            GetLevelAndProgress(newXp, out _, out var earned, out var needed);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Gained {xpGained} from Lv.{mobLevel} [{earned}/{needed} (total {newXp})]");
             if (IsPlayerLoggingExperience(player.steamID))
             {
-                GetLevelAndProgress(newXp, out _, out var earned, out var needed);
                 Output.SendLore(player.userEntity, $"<color={Output.LightYellow}>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
             }
             
@@ -128,35 +126,30 @@ namespace OpenRPG.Systems
         }
         
         public static void DeathXpLoss(Entity playerEntity, Entity killerEntity) {
+            var pvpKill = !playerEntity.Equals(killerEntity) && _entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out _);
+            var xpLossPercent = pvpKill ? PvpXpLossPercent : PveXpLossPercent;
+            
+            if (xpLossPercent == 0)
+            {
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"xpLossPercent is 0. No lost XP. (PvP: {pvpKill})");
+                return;
+            }
+            
             var player = _entityManager.GetComponentData<PlayerCharacter>(playerEntity);
             var userEntity = player.UserEntity;
             var user = _entityManager.GetComponentData<User>(userEntity);
             var steamID = user.PlatformId;
 
             Database.PlayerExperience.TryGetValue(steamID, out var exp);
-            var pLvl = ConvertXpToLevel(exp);
-            var killerLvl = pLvl;
-            var pvpKill = _entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out _);
-            if (pvpKill)
-            {
-                var killerGear = _entityManager.GetComponentData<Equipment>(killerEntity);
-                killerLvl = (int)(killerGear.ArmorLevel.Value + killerGear.WeaponLevel.Value + killerGear.SpellLevel.Value);
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Killer: [{killerGear.ArmorLevel.Value:F1},{killerGear.WeaponLevel.Value:F1},{killerGear.SpellLevel.Value:F1}]");
-            }
-            else if (_entityManager.TryGetComponentData<UnitLevel>(killerEntity, out var killerUnitLevel)) killerLvl = killerUnitLevel.Level;
-            else {
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Killer has no level to be found. Entity: {killerEntity}, Prefab: {Helper.GetPrefabGUID(killerEntity)}, Name {Helper.GetPrefabName(killerEntity)}");
-            }
             
-            var lvlDiff = pLvl - killerLvl;
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Level Difference: {lvlDiff} (Victim: {pLvl}, Killer:{killerLvl})");
-            
-            var newPvEXp = Math.Max(exp * (1 - PveXpLossPercent), ConvertLevelToXp(ConvertXpToLevel(exp)));
-            var newPvPXp = Math.Max(exp * (1 - PvpXpLossPercent * lvlDiff), ConvertLevelToXp(ConvertXpToLevel(exp)));
-            var xpLost = pvpKill ? newPvPXp : newPvEXp;
+            var calculatedNewXp = exp * (1 - xpLossPercent/100);
 
-            var currentXp = Math.Max(exp - (int)xpLost, 0);
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, "subtracting that from our " + exp + " we get " + currentXp);
+            // The minimum our XP is allowed to drop to
+            // TODO consider allowing "iron man" mode, which would set xp to 0 on death (or maybe even kick player and force them to create a new character)
+            var minXp = ConvertLevelToXp(ConvertXpToLevel(exp));
+            var currentXp = Math.Max((int)Math.Ceiling(calculatedNewXp), minXp);
+            var xpLost = exp - currentXp;
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Calculated XP: {steamID}: {currentXp} = Max({exp} * {xpLossPercent}, {minXp}) [lost {xpLost}]");
             Database.PlayerExperience[steamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, steamID);
@@ -249,10 +242,7 @@ namespace OpenRPG.Systems
         public static int ConvertXpToLevel(int xp)
         {
             // Level = 0.05 * sqrt(xp)
-            int lvl = (int)Math.Floor(ExpConstant * Math.Sqrt(xp));
-            if(lvl < 15 && EasyLvl15){
-                lvl = Math.Min(15, (int)Math.Sqrt(xp));
-            }
+            int lvl = (int)Math.Floor(ExpConstant * Math.Pow(xp, 1 / ExpPower));
             return lvl;
         }
 
@@ -260,10 +250,6 @@ namespace OpenRPG.Systems
         {
             // XP = (Level / 0.05) ^ 2
             int xp = (int)Math.Pow(level / ExpConstant, ExpPower);
-            if (level <= 15 && EasyLvl15)
-            {
-                xp = level * level;
-            }
             return xp;
         }
 

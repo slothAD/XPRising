@@ -82,6 +82,8 @@ namespace OpenRPG.Hooks
                             BloodlineSystem.DecayBloodline(userEntity, playerLogout);
                         }
                     }
+                    
+                    ExperienceSystem.SetLevel(userData.LocalCharacter._Entity, userEntity, userData.PlatformId);
                 }
             }
             catch { }

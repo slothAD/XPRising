@@ -219,7 +219,7 @@ namespace OpenRPG.Utils
                 case Faction.Werewolf:
                     return new Squad($"A {faction} squad is ambushing you!",
                         new List<UnitDetails>() {
-                            new(Units.CHAR_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
+                            new(Units.CHAR_Farmlands_HostileVillager_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
                         });
                 default:
                     Plugin.Log(LogSystem.Core, LogLevel.Warning, $"No specific squad generation handling has been added for {faction}");

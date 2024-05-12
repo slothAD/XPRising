@@ -19,7 +19,6 @@ public static class ExperienceConfig
         // Currently, we are never updating and saving the config file in game, so just load the values.
         ExperienceSystem.ShouldAllowGearLevel = _configFile.Bind("Experience", "Allow Gear Level", false, "Enable/disable gear level adjustment.").Value;
         ExperienceSystem.LevelRewardsOn = _configFile.Bind("Experience", "Enable Level Rewards", false, "Enable rewards per level.").Value;
-        ExperienceSystem.EasyLvl15 = _configFile.Bind("Experience", "Easy lvl 15", true, "Makes level 15 much easier to reach so players dont get held up by the quest on it.").Value;
 
         ExperienceSystem.MaxLevel = _configFile.Bind("Experience", "Max Level", 100, "Configure the experience system max level.").Value;
         ExperienceSystem.ExpMultiplier = _configFile.Bind("Experience", "Multiplier", 1.5f, "Multiply the EXP gained by player.\n" +

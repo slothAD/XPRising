@@ -1,11 +1,8 @@
 ﻿using System;
-using ProjectM;
-using ProjectM.Network;
 using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using OpenRPG.Models;
-using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using VampireCommandFramework;
 
@@ -75,32 +72,34 @@ namespace OpenRPG.Systems
         {
             var permissions = new LazyDictionary<string, int>()
             {
-                {"ban info", 0},
-                {"ban player", 100},
-                {"ban unban", 100},
                 {"bloodline add", 100},
                 {"bloodline get", 0},
                 {"bloodline get-all", 0},
                 {"bloodline log", 0},
                 {"bloodline reset", 0},
                 {"bloodline set", 100},
+                {"db load", 100},
+                {"db save", 100},
+                {"db wipe", 100},
                 {"experience ability", 0},
                 {"experience ability reset", 50},
                 {"experience ability show", 0},
                 {"experience get", 0},
                 {"experience log", 0},
                 {"experience set", 100},
-                {"godmode", 100},
-                {"kick", 100},
-                {"kit", 100},
-                {"load", 100},
+                {"group add", 0},
+                {"group ignore", 0},
+                {"group leave", 0},
+                {"group no", 0},
+                {"group show", 0},
+                {"group wipe", 100},
+                {"group yes", 0},
                 {"mastery add", 100},
                 {"mastery get", 0},
                 {"mastery get-all", 0},
                 {"mastery log", 0},
                 {"mastery reset", 0},
                 {"mastery set", 100},
-                {"nocooldown", 100},
                 {"permission", 100},
                 {"permission set command", 100},
                 {"permission set user", 100},
@@ -112,14 +111,6 @@ namespace OpenRPG.Systems
                 {"re me", 100},
                 {"re player", 100},
                 {"re start", 100},
-                {"save", 100},
-                {"speed", 100},
-                {"sunimmunity", 100},
-                {"unlock achievements", 100},
-                {"unlock research", 100},
-                {"unlock vbloodability", 100},
-                {"unlock vbloodpassive", 100},
-                {"unlock vbloodshapeshift", 100},
                 {"wanted fixminions", 100},
                 {"wanted get", 0},
                 {"wanted log", 0},
@@ -130,12 +121,7 @@ namespace OpenRPG.Systems
                 {"waypoint remove", 100},
                 {"waypoint remove global", 100},
                 {"waypoint set", 100},
-                {"waypoint set global", 100},
-                {"worlddynamics ignore", 100},
-                {"worlddynamics info", 0},
-                {"worlddynamics load", 100},
-                {"worlddynamics save", 100},
-                {"worlddynamics unignore", 100}
+                {"waypoint set global", 100}
             };
             return permissions;
         }

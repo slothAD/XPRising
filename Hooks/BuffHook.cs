@@ -19,69 +19,67 @@ namespace OpenRPG.Hooks;
 public class ModifyUnitStatBuffSystem_Spawn_Patch
 {
     private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance) {
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Entered Buff System, attempting Old Style");
         oldStyleBuffHook(__instance);
-        //Plugin.SystemLog(LogSystem.Buff, LogLevel.Info, "Old Style Done, attemping New Style, just cause");
-        //rebuiltBuffHook(__instance);
+        rebuiltBuffHook(__instance);
     }
 
-    public static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
+    private static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Applying OpenRPG Buffs");
-        Entity Owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Owner found, hash: " + Owner.GetHashCode());
-        if (!entityManager.HasComponent<PlayerCharacter>(Owner)) return;
+        var owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Owner found, hash: " + owner.GetHashCode());
+        if (!entityManager.HasComponent<PlayerCharacter>(owner)) return;
 
-        PlayerCharacter playerCharacter = entityManager.GetComponentData<PlayerCharacter>(Owner);
-        Entity User = playerCharacter.UserEntity;
-        User Data = entityManager.GetComponentData<User>(User);
+        var playerCharacter = entityManager.GetComponentData<PlayerCharacter>(owner);
+        var userEntity = playerCharacter.UserEntity;
+        var user = entityManager.GetComponentData<User>(userEntity);
 
-        var Buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer acquired, length: " + Buffer.Length);
+        var buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer acquired, length: " + buffer.Length);
 
         //Buffer.Clear();
         //Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer cleared, to confirm length: " + Buffer.Length);
 
 
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Reciever");
-        if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Reciever");
-        if (Plugin.BloodlineSystemActive) BloodlineSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Reciever");
-        if (ExperienceSystem.LevelRewardsOn && Plugin.ExperienceSystemActive) ExperienceSystem.BuffReceiver(Buffer, Owner, Data.PlatformId);
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Receiver");
+        if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.BuffReceiver(buffer, owner, user.PlatformId);
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Receiver");
+        if (Plugin.BloodlineSystemActive) BloodlineSystem.BuffReceiver(buffer, owner, user.PlatformId);
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Receiver");
+        if (ExperienceSystem.LevelRewardsOn && Plugin.ExperienceSystemActive) ExperienceSystem.BuffReceiver(buffer, owner, user.PlatformId);
 
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing PowerUp Command");
-        if (Database.PowerUpList.TryGetValue(Data.PlatformId, out var powerUpData)) {
-            Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+        if (Database.PowerUpList.TryGetValue(user.PlatformId, out var powerUpData)) {
+            buffer.Add(new ModifyUnitStatBuff_DOTS() {
                 StatType = UnitStatType.MaxHealth,
                 Value = powerUpData.MaxHP,
                 ModificationType = ModificationType.Add,
                 Id = ModificationId.NewId(0)
             });
 
-            Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+            buffer.Add(new ModifyUnitStatBuff_DOTS() {
                 StatType = UnitStatType.PhysicalPower,
                 Value = powerUpData.PATK,
                 ModificationType = ModificationType.Add,
                 Id = ModificationId.NewId(0)
             });
 
-            Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+            buffer.Add(new ModifyUnitStatBuff_DOTS() {
                 StatType = UnitStatType.SpellPower,
                 Value = powerUpData.SATK,
                 ModificationType = ModificationType.Add,
                 Id = ModificationId.NewId(0)
             });
 
-            Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+            buffer.Add(new ModifyUnitStatBuff_DOTS() {
                 StatType = UnitStatType.PhysicalResistance,
                 Value = powerUpData.PDEF,
                 ModificationType = ModificationType.Add,
                 Id = ModificationId.NewId(0)
             });
 
-            Buffer.Add(new ModifyUnitStatBuff_DOTS() {
+            buffer.Add(new ModifyUnitStatBuff_DOTS() {
                 StatType = UnitStatType.SpellResistance,
                 Value = powerUpData.SDEF,
                 ModificationType = ModificationType.Add,
@@ -89,11 +87,12 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             });
         }
 
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + Buffer.Length);
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + buffer.Length);
 
     }
 
-    public static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
+    private static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Attempting Old Style");
 
         EntityManager entityManager = __instance.EntityManager;
         NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
@@ -111,8 +110,9 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             }
         }
     }
-    
-    public static void rebuiltBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
+
+    private static void rebuiltBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
+        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Attempting New Style");
         EntityManager em = __instance.EntityManager;
         bool hasSGM = Helper.GetServerGameManager(out var sgm);
         if (!hasSGM) {
@@ -128,14 +128,18 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                     },
             Options = EntityQueryOptions.IncludeDisabled
         });
-        NativeArray<Entity> pcArray = query.ToEntityArray(Allocator.Temp);
+        var pcArray = query.ToEntityArray(Allocator.Temp);
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "got connected Players, array of length " + pcArray.Length);
         foreach (var entity in pcArray) {
             em.TryGetComponentData<PlayerCharacter>(entity, out var pc);
             em.TryGetComponentData<User>(entity, out var userEntity);
-            ulong SteamID = userEntity.PlatformId;
-            bool hasBuffs = Cache.buffData.TryGetValue(SteamID, out List<BuffData> bdl);
-            if (!hasBuffs) { continue; }
+            var steamID = userEntity.PlatformId;
+            var hasBuffs = Cache.buffData.TryGetValue(steamID, out List<BuffData> bdl);
+            if (!hasBuffs)
+            {
+                Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID} has no buffs");
+                continue;
+            }
 
             var Buffer = em.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
             //em.TryGetComponentData<BuffBuffer>(entity, out BuffBuffer buffer2);
@@ -159,7 +163,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         }
     }
 
-    public static bool applyBuff(EntityManager em, ModifyUnitStatBuff_DOTS buff, ServerGameManager sgm, Entity e) {
+    private static bool applyBuff(EntityManager em, ModifyUnitStatBuff_DOTS buff, ServerGameManager sgm, Entity e) {
         ModifiableFloat stat = new ModifiableFloat();
         ModifiableInt statInt = new ModifiableInt();
         bool targetIsInt = false;

@@ -6,6 +6,7 @@ using BepInEx.Logging;
 using OpenRPG.Models;
 using Unity.Entities;
 using OpenRPG.Utils;
+using OpenRPG.Utils.Prefabs;
 
 namespace OpenRPG.Systems
 {
@@ -78,11 +79,6 @@ namespace OpenRPG.Systems
             { "xbow", MasteryType.Crossbow }
         };
 
-        private static double CalculateMasteryChange(double value, double growth)
-        {
-            return (value * (Rand.Next(1, 10) * 0.1) * growth)/1000.0;
-        }
-
         public static void UpdateMastery(Entity killer, Entity victim)
         {
             if (killer == victim) return;
@@ -101,15 +97,10 @@ namespace OpenRPG.Systems
             
             var wd = Database.PlayerWeaponmastery[steamID];
 
-            var weaponGrowth = wd[masteryType].Growth;
-            var spellGrowth = wd[MasteryType.Spell].Growth;
+            var weaponMastery = wd[masteryType];
+            var spellMastery = wd[MasteryType.Spell];
             
-            var isVBlood = false;
-            if (_em.HasComponent<BloodConsumeSource>(victim))
-            {
-                var bloodSource = _em.GetComponentData<BloodConsumeSource>(victim);
-                isVBlood = bloodSource.UnitBloodType.Equals(Helper.vBloodType);
-            }
+            var isVBlood = _em.TryGetComponentData<BloodConsumeSource>(victim, out var victimBlood) && Helper.IsVBlood(victimBlood);
             
             if (_em.HasComponent<PlayerCharacter>(victim) && _em.TryGetComponentData<Equipment>(victim, out var victimGear))
             {
@@ -120,12 +111,14 @@ namespace OpenRPG.Systems
             }
 
             var vBloodMultiplier = isVBlood ? VBloodMultiplier : 1;
-            var changeInMastery = CalculateMasteryChange(masteryValue, weaponGrowth) * vBloodMultiplier;
-            var changeInSpellMastery = CalculateMasteryChange(spellMasteryValue, spellGrowth) * vBloodMultiplier;
+            var changeInMastery = weaponMastery.CalculateBaseMasteryGrowth(masteryValue, Rand) * vBloodMultiplier;
+            var changeInSpellMastery = spellMastery.CalculateBaseMasteryGrowth(spellMasteryValue, Rand) * vBloodMultiplier;
             
+            Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery change {Enum.GetName(masteryType)}: [{masteryValue},{changeInMastery}]");
             wd = ModMastery(steamID, wd, masteryType, changeInMastery);
             var updateSpellMastery = !SpellMasteryNeedsUnarmedToLearn || masteryType == MasteryType.Unarmed;
             if (updateSpellMastery) {
+                Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery change {MasteryType.Spell}: [{spellMasteryValue},{changeInSpellMastery}]");
                 wd = ModMastery(steamID, wd, MasteryType.Spell, changeInSpellMastery);
             }
 

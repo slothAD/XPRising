@@ -6,6 +6,7 @@ using OpenRPG.Systems;
 using OpenRPG.Utils;
 using ProjectM.Network;
 using Unity.Collections;
+using Unity.Entities;
 using Unity.Transforms;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
@@ -16,50 +17,53 @@ namespace OpenRPG.Hooks {
         public static void Postfix(DeathEventListenerSystem __instance) {
             NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
             foreach (DeathEvent ev in deathEvents) {
-                Plugin.Log(LogSystem.Death, LogLevel.Info, $"Death Event occured for: {ev.Died}");
+                Plugin.Log(LogSystem.Death, LogLevel.Info, () => $"Death Event occured for: {ev.Died} - {Helper.GetPrefabName(ev.Died)}");
 
                 //-- Player Creature Kill Tracking
                 var killer = ev.Killer;
-                Plugin.Log(LogSystem.Death, LogLevel.Info, () => $"[{ev.Source},{ev.Killer},{ev.Died}] => [{Helper.GetPrefabName(ev.Source)},{Helper.GetPrefabName(ev.Killer)},{Helper.GetPrefabName(ev.Died)}]");
-
+                
                 //-- Check if victim is a minion
-                var ignoreKill = false;
+                var ignoreAsKill = false;
                 if (__instance.EntityManager.HasComponent<Minion>(ev.Died)) {
-                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Minion killed, ignoring");
-                    ignoreKill = true;
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Minion killed, ignoring as kill");
+                    ignoreAsKill = true;
                 }
                 
                 //-- Check victim has a level
                 if (!__instance.EntityManager.HasComponent<UnitLevel>(ev.Died)) {
-                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Has no level, ignoring");
-                    ignoreKill = true;
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Has no level, ignoring as kill");
+                    ignoreAsKill = true;
                 }
+
+                if (!__instance.EntityManager.HasComponent<Movement>(ev.Died))
+                {
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, "Entity doesn't move, ignoring as kill");
+                    ignoreAsKill = true;
+                }
+
+                // If the entity killing is a minion, switch the killer to the owner of the minion.
+                if (__instance.EntityManager.HasComponent<Minion>(killer))
+                {
+                    Plugin.Log(LogSystem.Death, LogLevel.Info, $"Minion killed entity. Getting owner...");
+                    if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner))
+                    {
+                        killer = entityOwner.Owner;
+                        Plugin.Log(LogSystem.Death, LogLevel.Info, $"Owner found, switching killer to owner.");
+                    }
+                }
+                Plugin.Log(LogSystem.Death, LogLevel.Info, () => $"[{ev.Source},{ev.Killer},{ev.Died}] => [{Helper.GetPrefabName(ev.Source)},{Helper.GetPrefabName(ev.Killer)},{Helper.GetPrefabName(ev.Died)}]");
                 
                 // If the killer is the victim, then we can skip trying to add xp, heat, mastery, bloodline.
-                if (!ignoreKill && !killer.Equals(ev.Died))
+                if (!ignoreAsKill && !killer.Equals(ev.Died))
                 {
-                    // If the entity killing is a minion, switch the killer to the owner of the minion.
-                    if (__instance.EntityManager.HasComponent<Minion>(killer))
-                    {
-                        Plugin.Log(LogSystem.Death, LogLevel.Info, $"Minion killed entity. Getting owner...");
-                        if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner))
-                        {
-                            killer = entityOwner.Owner;
-                            Plugin.Log(LogSystem.Death, LogLevel.Info, $"Owner found, switching killer to owner.");
-                        }
-                    }
-
-                    if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) &&
-                        __instance.EntityManager.HasComponent<Movement>(ev.Died))
+                    if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer))
                     {
                         Plugin.Log(LogSystem.Death, LogLevel.Info,
                             $"Killer ({killer}) is a player, running xp and heat and the like");
 
                         if (Plugin.ExperienceSystemActive || Plugin.WantedSystemActive)
                         {
-                            var isVBlood =
-                                Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource bS) &&
-                                bS.UnitBloodType.Value.Equals(Helper.vBloodType);
+                            var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource victimBlood) && Helper.IsVBlood(victimBlood);
 
                             var useGroup = ExperienceSystem.GroupMaxDistance > 0;
 
@@ -85,13 +89,14 @@ namespace OpenRPG.Hooks {
                         }
                     }
                 }
-
-                //-- Wanted System Begin
+                
+                //-- Player death
                 if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
                     Plugin.Log(LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
                     if (Plugin.WantedSystemActive) WantedSystem.PlayerDied(ev.Died);
-                    if (Plugin.ExperienceSystemActive) ExperienceSystem.DeathXpLoss(ev.Died, ev.Killer);
+                    if (Plugin.ExperienceSystemActive) ExperienceSystem.DeathXpLoss(ev.Died, killer);
                 }
+
             }
         }
     }

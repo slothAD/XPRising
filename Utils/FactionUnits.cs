@@ -275,7 +275,6 @@ public static class FactionUnits
         new(Units.CHAR_Undead_Necromancer, 46, 3),
         new(Units.CHAR_Undead_Necromancer_TombSummon, 46, 3),
         new(Units.CHAR_Undead_SkeletonMage, 44, 3),
-        new(Units.CHAR_Unholy_Baneling, 58, 1),
         new(Units.CHAR_Undead_CursedSmith_FloatingWeapon_Base, 60, 3),
         new(Units.CHAR_Undead_CursedSmith_FloatingWeapon_Mace, 60, 3),
         new(Units.CHAR_Undead_CursedSmith_FloatingWeapon_Slashers, 60, 3),
@@ -301,7 +300,7 @@ public static class FactionUnits
 
     private static Unit[] werewolves =
     {
-        new(Units.CHAR_Werewolf, 62, 1),
+        new(Units.CHAR_Farmlands_HostileVillager_Werewolf, 62, 1), // TODO check level
         // new(Units.CHAR_WerewolfChieftain_VBlood, 64, 2),
     };
 
@@ -370,7 +369,6 @@ public static class FactionUnits
         new(Units.CHAR_Gloomrot_TractorBeamer_Servant, 58, 1),
         new(Units.CHAR_Gloomrot_Villager_Female_Servant, 50, 1),
         new(Units.CHAR_Gloomrot_Villager_Male_Servant, 50, 1),
-        new(Units.CHAR_NecromancyDagger_SkeletonBerserker_Armored_Farbane, 20, 1), // Giant skeleton - friendly
         new(Units.CHAR_Paladin_FallenAngel, 80, 1),
         new(Units.CHAR_Spectral_Guardian, 1, 1),
         new(Units.CHAR_Spectral_SpellSlinger, 60, 1),

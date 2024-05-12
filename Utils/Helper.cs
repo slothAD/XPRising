@@ -26,10 +26,7 @@ namespace OpenRPG.Utils
         private static Entity empty_entity = new Entity();
         private static System.Random rand = new System.Random();
         
-        // TODO later
-        // private static IsSystemInitialised<ServerGameSettings> _serverGameSettings = default;
         private static IsSystemInitialised<ServerGameManager> _serverGameManager = default;
-        // private static IsSystemInitialised<UserActivityGridSystem> _userActivityGridSystem = default;
 
         public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
         public static int forbiddenBuffGUID = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
@@ -40,9 +37,6 @@ namespace OpenRPG.Utils
         //-- LevelUp Buff
         public static PrefabGUID LevelUp_Buff = new PrefabGUID((int)Effects.AB_ChurchOfLight_Priest_HealBomb_Buff);
         public static PrefabGUID HostileMark_Buff = new PrefabGUID((int)Buffs.Buff_Cultist_BloodFrenzy_Buff);
-
-        //-- Nice Effect...
-        public static PrefabGUID AB_Undead_BishopOfShadows_ShadowSoldier_Minion_Buff = new PrefabGUID((int)Effects.AB_Undead_BishopOfShadows_ShadowSoldier_Minion_Buff);   //-- Impair cast & movement
 
         //-- Fun
         public static PrefabGUID HolyNuke = new PrefabGUID((int)Effects.AB_Paladin_HolyNuke_Buff);
@@ -57,21 +51,6 @@ namespace OpenRPG.Utils
         
         public static bool humanReadablePercentageStats = false;
         public static bool inverseMultipersDisplayReduction = true;
-
-        // TODO later
-        // public static bool GetUserActivityGridSystem(out UserActivityGridSystem userActivityGridSystem)
-        // {
-        //     userActivityGridSystem = _userActivityGridSystem.system;
-        //     if (!_userActivityGridSystem.isInitialised)
-        //     {
-        //         // TODO maybe?
-        //         // var aps = Plugin.Server.GetExistingSystemManaged<AiPrioritizationSystem>();
-        //         // if (aps == null) return false;
-        //         // _userActivityGridSystem.system = aps._UserActivityGridSystem;
-        //         // userActivityGridSystem = _userActivityGridSystem.system;
-        //     }
-        //     return true;
-        // }
         
         public static bool GetServerGameManager(out ServerGameManager serverGameManager)
         {
@@ -85,19 +64,6 @@ namespace OpenRPG.Utils
             }
             return true;
         }
-        
-        // public static bool GetServerGameSettings(out ServerGameSettings settings)
-        // {
-        //     settings = _serverGameSettings.system;
-        //     if (!_serverGameSettings.isInitialised)
-        //     {
-        //         var sgs = Plugin.Server.GetExistingSystem<ServerGameSettingsSystem>();
-        //         if (sgs == null) return false;
-        //         _serverGameSettings.system = sgs._Settings;
-        //         settings = _serverGameSettings.system;
-        //     }
-        //     return true;
-        // }
 
         public static ModifyUnitStatBuff_DOTS MakeBuff(UnitStatType type, double strength) {
             ModifyUnitStatBuff_DOTS buff;
@@ -466,18 +432,24 @@ namespace OpenRPG.Utils
             }
             return false;
         }
-        
-        public static PrefabGUID vBloodType = new((int)Remainders.BloodType_VBlood);
 
+        public static bool IsVBlood(BloodConsumeSource bloodSource)
+        {
+            var guidHash = bloodSource.UnitBloodType._Value.GuidHash;
+            return guidHash == (int)Remainders.BloodType_VBlood ||
+                   guidHash == (int)Remainders.BloodType_GateBoss ||
+                   guidHash == (int)Remainders.BloodType_DraculaTheImmortal;
+        }
 
         // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the stat, and 0.75 quarters it.
         // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
         public static HashSet<UnitStatType> inverseMultiplierStats = new()
             {
-                UnitStatType.PrimaryCooldownModifier,
-                UnitStatType.WeaponCooldownRecoveryRate,
-                UnitStatType.SpellCooldownRecoveryRate,
-                UnitStatType.UltimateCooldownRecoveryRate
+                // TODO check these, but the latest patch notes suggest that there are no longer any inverse stats
+                // UnitStatType.PrimaryCooldownModifier,
+                // UnitStatType.WeaponCooldownRecoveryRate,
+                // UnitStatType.SpellCooldownRecoveryRate,
+                // UnitStatType.UltimateCooldownRecoveryRate
                 /*,
                 UnitStatType.PhysicalResistance,
                 UnitStatType.SpellResistance,

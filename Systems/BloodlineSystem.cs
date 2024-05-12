@@ -37,19 +37,19 @@ namespace OpenRPG.Systems
             None = Remainders.BloodType_None,
             Brute = Remainders.BloodType_Brute,
             Creature = Remainders.BloodType_Creature,
+            Dracula = Remainders.BloodType_DraculaTheImmortal,
+            Draculin = Remainders.BloodType_Draculin,
+            GateBoss = Remainders.BloodType_GateBoss,
             Mutant = Remainders.BloodType_Mutant,
             Rogue = Remainders.BloodType_Rogue,
             Scholar = Remainders.BloodType_Scholar,
             VBlood = Remainders.BloodType_VBlood,
             Warrior = Remainders.BloodType_Warrior,
-            Worker = Remainders.BloodType_Worker,   
+            Worker = Remainders.BloodType_Worker,
         }
-        
-        // None and VBlood types don't count for this number.
-        private static int _bloodTypeCount = Enum.GetValues<BloodType>().Length - 2;
 
         // This is a "potential" name to blood type map. Multiple keywords map to the same blood type
-        public static Dictionary<string, BloodType> KeywordToBloodMap = new()
+        public static readonly Dictionary<string, BloodType> KeywordToBloodMap = new()
         {
             { "frail", BloodType.None },
             { "none", BloodType.None },
@@ -75,7 +75,7 @@ namespace OpenRPG.Systems
             
             Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Updating bloodline mastery for {steamID}");
             
-            double growthVal = victimLevel.Level;
+            double growthVal = Math.Clamp(victimLevel.Level.Value - ExperienceSystem.GetLevel(steamID), 1, 10);
             
             BloodType killerBloodType;
             float killerBloodQuality;
@@ -97,9 +97,11 @@ namespace OpenRPG.Systems
 
             BloodType victimBloodType;
             float victimBloodQuality;
+            bool isVBlood;
             if (_em.TryGetComponentData<BloodConsumeSource>(victim, out var victimBlood)) {
                 victimBloodQuality = victimBlood.BloodQuality;
                 if (!GuidToBloodType(victimBlood.UnitBloodType, false, out victimBloodType)) return;
+                isVBlood = Helper.IsVBlood(victimBlood);
             }
             else
             {
@@ -110,8 +112,6 @@ namespace OpenRPG.Systems
             var bld = Database.PlayerBloodline[steamID];
             var bloodlineMastery = bld[killerBloodType];
             growthVal *= bloodlineMastery.Growth;
-
-            var isVBlood = victimBloodType == BloodType.VBlood;
             
             if (MercilessBloodlines){
                 if (!isVBlood) // VBlood is allowed to boost all blood types
@@ -133,7 +133,7 @@ namespace OpenRPG.Systems
                     }
                 }
 
-                growthVal *= 1 + ((victimBloodQuality + killerBloodQuality) - (bloodlineMastery.Mastery*2))/100;
+                growthVal *= (1 + Math.Clamp((victimBloodQuality - bloodlineMastery.Mastery)/100, 0.0, 0.5))*5;
                 Plugin.Log(LogSystem.Bloodline, LogLevel.Info,
                     $"Merciless growth {GetBloodTypeName(killerBloodType)}: [{victimBloodQuality:F3},{killerBloodQuality:F3},{bloodlineMastery.Mastery:F3},{growthVal:F3}]");
             } else if (isVBlood)
@@ -141,7 +141,7 @@ namespace OpenRPG.Systems
                 growthVal *= VBloodMultiplier;
             }
 
-            growthVal *= Math.Max(0.1, Rand.NextDouble());
+            growthVal *= Math.Max(Rand.NextDouble(), 0.1) * 0.02;
 
             if (_em.HasComponent<PlayerCharacter>(victim))
             {
@@ -208,9 +208,8 @@ namespace OpenRPG.Systems
         }
         
         public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, Entity owner, ulong steamID) {
-            BloodType bloodType;
             if (!_em.TryGetComponentData<Blood>(owner, out var bloodline) ||
-                !GuidToBloodType(bloodline.BloodType, false, out bloodType))
+                !GuidToBloodType(bloodline.BloodType, false, out var bloodType))
             {
                 return;
             }
@@ -267,7 +266,7 @@ namespace OpenRPG.Systems
             var bloodMastery = bloodlineMasteryData[type];
 
             bloodMastery.Mastery += changeInMastery * MasteryGainMultiplier;
-            Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Blood mastery changed: {steamID}: {GetBloodTypeName(type)}: {bloodMastery.Mastery}");
+            Plugin.Log(LogSystem.Bloodline, LogLevel.Info, $"Mastery changed: {steamID}: {GetBloodTypeName(type)}: {bloodMastery.Mastery}");
             bloodlineMasteryData[type] = bloodMastery;
 
             return bloodlineMasteryData;

@@ -27,8 +27,13 @@ namespace OpenRPG.Systems
 
         private static Random rand = new();
 
-        public static void PlayerKillEntity(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood) {
-            var victim = entityManager.GetComponentData<FactionReference>(victimEntity);
+        public static void PlayerKillEntity(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood)
+        {
+            if (!entityManager.TryGetComponentData<FactionReference>(victimEntity, out var victim))
+            {
+                Plugin.Log(LoggingSystem, LogLevel.Warning, () => $"Player killed: Entity: {Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity))}, but it has no faction");
+                return;
+            }
             var victimFaction = victim.FactionGuid._Value;
             
             var unit = Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity));
@@ -36,8 +41,11 @@ namespace OpenRPG.Systems
             var faction = Helper.ConvertGuidToFaction(victimFaction);
 
             FactionHeat.GetActiveFactionHeatValue(faction, unit, isVBlood, out var heatValue, out var activeFaction);
-            Plugin.Log(LoggingSystem, LogLevel.Warning, 
-                $"Player killed: Entity: {Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity))} Faction: {victimFaction.GuidHash} {Enum.GetName(faction)}", faction == Faction.Unknown);
+            Plugin.Log(
+                LoggingSystem,
+                LogLevel.Warning,
+                () => $"Player killed: Entity: {Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity))} Faction: {victimFaction.GuidHash} {Enum.GetName(faction)}",
+                faction == Faction.Unknown);
 
             if (activeFaction == Faction.Unknown || heatValue == 0) return;
 

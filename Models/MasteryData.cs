@@ -15,6 +15,11 @@ public struct MasteryData()
     public double Effectiveness { get => _effectiveness; set => _effectiveness = Math.Max(value, BaseEffectiveness); }
     public double Growth = 1;
 
+    public double CalculateBaseMasteryGrowth(double value, Random random)
+    {
+        return value * Math.Max(random.NextDouble(), 0.1) * Growth/1000.0;
+    }
+    
     public MasteryData ResetMastery(double maxEffectiveness, double growthPerEffectiveness)
     {
         Effectiveness = Math.Min(maxEffectiveness, Effectiveness + Mastery / MaxMastery);

@@ -36,7 +36,7 @@ namespace OpenRPG
         public static bool WantedSystemActive = true;
         public static bool WaypointsActive = false;
         
-        private static bool _disableCommandAdminRequirement = false;
+        private static bool _adminCommandsRequireAdmin = false;
 
         private static ManualLogSource _logger;
         private static World _serverWorld;
@@ -75,7 +75,7 @@ namespace OpenRPG
             Helper.humanReadablePercentageStats = Config.Bind("Core", "Human Readable Percentage Stats", true, "Determines if rates for percentage stats should be read as out of 100 instead of 1.").Value;
             Helper.inverseMultipersDisplayReduction = Config.Bind("Core", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats display their reduction, or the final value.").Value;
             
-            _disableCommandAdminRequirement = Config.Bind("Admin", "Disable command admin requirement", false, "Disables all admin checks when running commands.").Value;
+            _adminCommandsRequireAdmin = Config.Bind("Admin", "Admin commands require admin", true, "When set to false, commands marked as requiring admin, no longer require admin.").Value;
 
             BloodlineSystemActive = Config.Bind("System", "Enable Bloodline Mastery system", false,  "Enable/disable the bloodline mastery system.").Value;
             ExperienceSystemActive = Config.Bind("System", "Enable Experience system", true,  "Enable/disable the experience system.").Value;
@@ -117,7 +117,7 @@ namespace OpenRPG
             if (PlayerGroupsActive) CommandRegistry.RegisterCommandType(typeof(AllianceCommands));
             if (BloodlineSystemActive) CommandRegistry.RegisterCommandType(typeof(BloodlineCommands));
             CommandRegistry.RegisterCommandType(typeof(CacheCommands));
-            if (ExperienceSystemActive) CommandRegistry.RegisterCommandType(typeof(ExperienceSystem));
+            if (ExperienceSystemActive) CommandRegistry.RegisterCommandType(typeof(ExperienceCommands));
             if (WeaponMasterySystemActive) CommandRegistry.RegisterCommandType(typeof(MasteryCommands));
             CommandRegistry.RegisterCommandType(typeof(PermissionCommands));
             CommandRegistry.RegisterCommandType(typeof(PlayerInfoCommands));
@@ -168,12 +168,11 @@ namespace OpenRPG
             var commands = Command.GetAllCommands();
             Command.ValidatedCommandPermissions(commands);
             // Note for devs: To regenerate Command.md and PermissionSystem.DefaultCommandPermissions, uncomment the following:
-            // TODO re-comment out this.
-            Command.GenerateCommandMd(commands);
-            Command.GenerateDefaultCommandPermissions(commands);
+            // Command.GenerateCommandMd(commands);
+            // Command.GenerateDefaultCommandPermissions(commands);
             
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Setting CommandRegistry middleware");
-            if (_disableCommandAdminRequirement)
+            if (!_adminCommandsRequireAdmin)
             {
                 Plugin.Log(LogSystem.Core, LogLevel.Info, "Removing admin privilege requirements");
                 CommandRegistry.Middlewares.Clear();                
@@ -215,9 +214,9 @@ namespace OpenRPG
         }
         
         // Log overload to allow potentially more computationally expensive logs to be hidden when not being logged
-        public new static void Log(LogSystem system, LogLevel logLevel, Func<string> messageGenerator)
+        public new static void Log(LogSystem system, LogLevel logLevel, Func<string> messageGenerator, bool forceLog = false)
         {
-            Log(system, logLevel, messageGenerator());
+            Log(system, logLevel, messageGenerator(), forceLog);
         }
     }
 }

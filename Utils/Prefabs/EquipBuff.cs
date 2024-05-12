@@ -1,16 +1,17 @@
 ﻿namespace OpenRPG.Utils.Prefabs;
 
-// Note that these prefabs are as of Gloomrot launch
-// Thanks https://github.com/decaprime
+// Note that these prefabs are as of 1.0 launch
+// Thanks https://github.com/Odjit
 public enum EquipBuffs
 {
+  EquipBuff_Bag_Base = -783958722,
   EquipBuff_Boots_Base = -1465458722,
   EquipBuff_Chest_Base = 1872694456,
   EquipBuff_Cloak_Base = 1409441911,
   EquipBuff_Gloves_Base = 541298575,
   EquipBuff_Headgear_Base = -1390242325,
   EquipBuff_Legs_Base = 1971020070,
-  EquipBuff_ShroudOfTheForest = 476186894,
+  EquipBuff_ShroudOfTheForest = 1504279833,
   EquipBuff_Weapon_Axe_Ability01 = 1708326236,
   EquipBuff_Weapon_Axe_Ability02 = 467582216,
   EquipBuff_Weapon_Axe_Ability03 = 1164259129,
@@ -25,22 +26,18 @@ public enum EquipBuffs
   EquipBuff_Weapon_GreatSword_Ability02 = 755528190,
   EquipBuff_Weapon_GreatSword_Ability03 = -698138214,
   EquipBuff_Weapon_GreatSword_Base = 977673555,
-  EquipBuff_Weapon_GreatSword_Fast = -573535019,
-  EquipBuff_Weapon_GreatSword_MoveCast = -1293308798,
+  EquipBuff_Weapon_Longbow_Ability01 = 1799766155,
+  EquipBuff_Weapon_Longbow_Ability02 = 443801770,
+  EquipBuff_Weapon_Longbow_Ability03 = -441436093,
   EquipBuff_Weapon_Longbow_Base = -1467765290,
   EquipBuff_Weapon_Mace_Ability01 = 1964376161,
   EquipBuff_Weapon_Mace_Ability02 = 955941306,
   EquipBuff_Weapon_Mace_Ability03 = 250456816,
   EquipBuff_Weapon_Mace_Base = -1776512609,
-  EquipBuff_Weapon_NecromancyDagger_Base = -1766561750,
   EquipBuff_Weapon_Pistols_Ability01 = 942607349,
   EquipBuff_Weapon_Pistols_Ability02 = 640056855,
   EquipBuff_Weapon_Pistols_Ability03 = -187287183,
   EquipBuff_Weapon_Pistols_Base = -1275287654,
-  EquipBuff_Weapon_Rapier_Ability01 = 998349137,
-  EquipBuff_Weapon_Rapier_Ability02 = -1776689354,
-  EquipBuff_Weapon_Rapier_Ability03 = 792191968,
-  EquipBuff_Weapon_Rapier_Base = -477126925,
   EquipBuff_Weapon_Reaper_Ability01 = -1327674928,
   EquipBuff_Weapon_Reaper_Ability02 = 1503954288,
   EquipBuff_Weapon_Reaper_Ability03 = -244154805,
@@ -58,5 +55,9 @@ public enum EquipBuffs
   EquipBuff_Weapon_Sword_Ability03 = 1232942168,
   EquipBuff_Weapon_Sword_Base = -1534520401,
   EquipBuff_Weapon_Unarmed_Base = 2031959313,
-  EquipBuff_Weapon_Unarmed_Start01 = -2075546002
+  EquipBuff_Weapon_Unarmed_Start01 = -2075546002,
+  EquipBuff_Weapon_Whip_Ability01 = 1576309437,
+  EquipBuff_Weapon_Whip_Ability02 = -954627543,
+  EquipBuff_Weapon_Whip_Ability03 = -1414560949,
+  EquipBuff_Weapon_Whip_Base = 881048998
 }
