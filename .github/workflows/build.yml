@@ -14,17 +14,18 @@ jobs:
 
     steps:
       - name: Setup .NET
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
-
+          dotnet-version: '6.0.x'
+          dotnet-quality: 'preview'
+          
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.9.7
+        uses: gittools/actions/gitversion/setup@v1.1.1
         with:
           versionSpec: "5.x"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -32,7 +33,7 @@ jobs:
         run: dotnet restore
 
       - name: Determine Version
-        uses: gittools/actions/gitversion/execute@v0.9.7
+        uses: gittools/actions/gitversion/execute@v1.1.1
         with:
           additionalArguments: '/updateprojectfiles /overrideconfig "mode=Mainline"'
 
@@ -42,7 +43,7 @@ jobs:
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.0
         with:
-          path: ./dist
+          path: ./bin/Release/net6.0/XPRising.dll
 
       - name: GH Release
         uses: softprops/action-gh-release@v1
@@ -50,7 +51,7 @@ jobs:
         with:
           body: Automatic pre-release of ${{ env.GitVersion_SemVer }} for ${{ env.GitVersion_ShortSha }}
           name: v${{ env.GitVersion_SemVer }}
-          files: ./dist/XPRising.dll
+          files: ./bin/Release/net6.0/XPRising.dll
           fail_on_unmatched_files: true
           prerelease: true
           tag_name: v${{ env.GitVersion_SemVer }}
