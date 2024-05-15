@@ -8,6 +8,7 @@ using System.Linq;
 using BepInEx.Logging;
 using OpenRPG.Models;
 using OpenRPG.Utils.Prefabs;
+using Unity.Collections;
 using Cache = OpenRPG.Utils.Cache;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
@@ -29,19 +30,19 @@ namespace OpenRPG.Systems
         
         /*
          * The following values have been tweaked to have the following stats:
-         * Total xp: 225,010
-         * Last level xp: 4,991
+         * Total xp: 355,085
+         * Last level xp: 7,7765
          *
          * Assuming:
          * - ExpMultiplier = 1.5
-         * - Ignoring VBlood bonus
+         * - Ignoring VBlood bonus (2x in last column)
          * - MaxLevel = 100 (and assuming that the max mob level matches)
          * 
-         * player level=> | same   | +5   |  -5  | +5 => -5 | same (VBlood only) |
+         *    mob level=> | same   | +5   |  -5  | +5 => -5 | same (VBlood only) |
          * _______________|________|______|______|__________|____________________|
-         * Total kills    | 2668   | 1602 | 6407 | 3310     | 178                |
-         * lvl 0 kills    | 5      | 1    | 5    | 1        | 1                  |
-         * Last lvl kills | 34     | 34   | 116  | 71       | 3                  |
+         * Total kills    | 4258   | 2720 | 8644 | 4891     | 2129               |
+         * lvl 0 kills    | 10     | 2    | 10   | 2        | 5                  |
+         * Last lvl kills | 52     | 52   | 164  | 91       | 26                 |
          *
          * +5/-5 offset to levels in the above table as still clamped to the range [1, 100].
          * 
@@ -53,8 +54,9 @@ namespace OpenRPG.Systems
          * of those do not exist).
          * 
          */
-        private const float ExpConstant = 0.4f;
-        private const float ExpPower = 2.232f;
+        private const float ExpConstant = 0.3f;
+        private const float ExpPower = 2.2f;
+        private const float ExpLevelDiffMultiplier = 0.08f;
 
         private static HashSet<Units> _noExpUnits = new HashSet<Units>(
             FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
@@ -88,7 +90,7 @@ namespace OpenRPG.Systems
             var avgGroupLevel = (int)Math.Ceiling(closeAllies.Average(x => x.playerLevel));
 
             // Calculate an XP bonus that grows as groups get larger
-            var baseGroupXpBonus = Math.Min(Math.Pow(1 + GroupXpBuffGrowth, closeAllies.Count - 1.0), MaxGroupXpBuff);
+            var baseGroupXpBonus = Math.Min(Math.Pow(1 + GroupXpBuffGrowth, closeAllies.Count - 1), MaxGroupXpBuff);
 
             Plugin.Log(LogSystem.Xp, LogLevel.Info, "Running Assign EXP for all close allied players");
             foreach (var teammate in closeAllies) {
@@ -121,8 +123,8 @@ namespace OpenRPG.Systems
         private static int CalculateXp(int playerLevel, int mobLevel, double multiplier) {
             var levelDiff = mobLevel - playerLevel;
 
-            return (int)(Math.Max(1,
-                mobLevel * multiplier * (1 + levelDiff * 0.1))*ExpMultiplier);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"--- Max(1, {mobLevel} * {multiplier} * (1 + {levelDiff} * 0.1))*{ExpMultiplier}");
+            return (int)(Math.Max(1, mobLevel * multiplier * (1 + levelDiff * ExpLevelDiffMultiplier))*ExpMultiplier);
         }
         
         public static void DeathXpLoss(Entity playerEntity, Entity killerEntity) {
@@ -146,10 +148,10 @@ namespace OpenRPG.Systems
 
             // The minimum our XP is allowed to drop to
             // TODO consider allowing "iron man" mode, which would set xp to 0 on death (or maybe even kick player and force them to create a new character)
-            var minXp = ConvertLevelToXp(ConvertXpToLevel(exp));
+            var minXp = ConvertLevelToXp(ConvertXpToLevel(exp)) + 1; // 1 more XP than the start of the level
             var currentXp = Math.Max((int)Math.Ceiling(calculatedNewXp), minXp);
             var xpLost = exp - currentXp;
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Calculated XP: {steamID}: {currentXp} = Max({exp} * {xpLossPercent}, {minXp}) [lost {xpLost}]");
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Calculated XP: {steamID}: {currentXp} = Max({exp} * {xpLossPercent/100}, {minXp}) [lost {xpLost}]");
             Database.PlayerExperience[steamID] = currentXp;
 
             SetLevel(playerEntity, userEntity, steamID);
@@ -159,48 +161,47 @@ namespace OpenRPG.Systems
 
         public static void SetLevel(Entity entity, Entity user, ulong steamID)
         {
-            float level = ConvertXpToLevel(Database.PlayerExperience[steamID]);
-            if (level < 0) return;
-            if (level > MaxLevel){
+            var level = ConvertXpToLevel(Database.PlayerExperience[steamID]);
+            if (level < 0)
+            {
+                level = 1;
+                Database.PlayerExperience[steamID] = ConvertLevelToXp(level);
+            }
+            else if (level > MaxLevel)
+            {
                 level = MaxLevel;
                 Database.PlayerExperience[steamID] = ConvertLevelToXp(MaxLevel);
             }
 
-            if (Cache.player_level.TryGetValue(steamID, out var storedLevel)) 
+            if (Cache.player_level.TryGetValue(steamID, out var storedLevel))
             {
-                if (storedLevel < level) Helper.ApplyBuff(user, entity, Helper.LevelUp_Buff);
-
-                // if (LevelRewardsOn)
-                // {
-                //     //increases by level
-                //     for (var i = storedLevel+1; i <= level; i++)
-                //     {
-                //         //default rewards for leveling up
-                //         Database.PlayerAbilityIncrease[steamID] += 1;
-                //         Database.PlayerLevelStats[steamID][UnitStatType.MaxHealth] += .5f;
-                //
-                //         Helper.ApplyBuff(user, entity, Helper.AppliedBuff);
-                //
-                //         //extra ability point rewards to spend for achieve certain level milestones
-                //         switch (i)
-                //         {
-                //             case 1:
-                //                 Database.PlayerAbilityIncrease[steamID] += 1;
-                //                 break;
-                //         }
-                //     }
-                // }
-
-                if (IsPlayerLoggingExperience(steamID))
+                if (storedLevel < level)
                 {
-                    Output.SendLore(user, $"<color={Output.LightYellow}>Level up! You're now level</color> <color={Output.White}>{level}</color><color={Output.LightYellow}>!</color>");
+                    Helper.ApplyBuff(user, entity, Helper.LevelUp_Buff);
+                    if (IsPlayerLoggingExperience(steamID))
+                    {
+                        Output.SendLore(user,
+                            $"<color={Output.LightYellow}>Level up! You're now level</color> <color={Output.White}>{level}</color><color={Output.LightYellow}>!</color>");
+                    }
                 }
+
+                Plugin.Log(LogSystem.Xp, LogLevel.Info,
+                    $"Set player level: LVL: {level} (stored: {storedLevel}) XP: {Database.PlayerExperience[steamID]}");
             }
+            else
+            {
+                Plugin.Log(LogSystem.Xp, LogLevel.Info,
+                    $"Player logged in: LVL: {level} (stored: {storedLevel}) XP: {Database.PlayerExperience[steamID]}");
+            }
+
             Cache.player_level[steamID] = level;
                 
             Equipment equipment = _entityManager.GetComponentData<Equipment>(entity);
-            
-            equipment.SpellLevel._Value = level;
+            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Current gear levels: {equipment.ArmorLevel.Value} {equipment.SpellLevel.Value} {equipment.WeaponLevel.Value}");
+            var halfOfLevel = level / 2;
+            equipment.ArmorLevel._Value = MathF.Floor(halfOfLevel);
+            equipment.WeaponLevel._Value = MathF.Ceiling(halfOfLevel);
+            equipment.SpellLevel._Value = 0;
 
             _entityManager.SetComponentData(entity, equipment);
         }
@@ -211,27 +212,31 @@ namespace OpenRPG.Systems
         /// <param name="buffer"></param>
         /// <param name="owner"></param>
         /// <param name="steamID"></param>
-        public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> buffer, Entity owner, ulong steamID)
+        public static void BuffReceiver(ref LazyDictionary<UnitStatType, float> statBonus, Entity owner, ulong steamID)
         {
             if (!LevelRewardsOn) return;
             float multiplier = 1;
             try
             {
-                foreach (var gearType in Database.PlayerLevelStats[steamID])
-                {
-                    //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
-                    //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
-                    //Maybe im just dumb, but I checked the array and tried that approach thinking i was double buffing due to logical error                    
-                    if (WeaponMasterySystem.GetWeaponType(owner) == WeaponType.None) multiplier = 2; 
-
-                    buffer.Add(new ModifyUnitStatBuff_DOTS()
-                    {
-                        StatType = gearType.Key,
-                        Value = gearType.Value * multiplier,
-                        ModificationType = ModificationType.AddToBase,
-                        Id = ModificationId.NewId(0)
-                    });
-                }
+                // foreach (var gearType in Database.PlayerLevelStats[steamID])
+                // {
+                //     // TODO is this still true?
+                //     //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
+                //     //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
+                //     //Maybe im just dumb, but I checked the array and tried that approach thinking i was double buffing due to logical error                    
+                //     if (WeaponMasterySystem.GetWeaponType(owner) == WeaponType.None) multiplier = 2; 
+                //
+                //     buffer.Add(new ModifyUnitStatBuff_DOTS()
+                //     {
+                //         StatType = gearType.Key,
+                //         Value = gearType.Value * multiplier,
+                //         ModificationType = ModificationType.AddToBase,
+                //         Id = ModificationId.NewId(0)
+                //     });
+                // }
+                var playerLevel = GetLevel(steamID);
+                var healthBuff = 2f * playerLevel * multiplier;
+                statBonus[UnitStatType.MaxHealth] = healthBuff;
             }
             catch (Exception ex)
             {
@@ -241,15 +246,19 @@ namespace OpenRPG.Systems
 
         public static int ConvertXpToLevel(int xp)
         {
-            // Level = 0.05 * sqrt(xp)
-            int lvl = (int)Math.Floor(ExpConstant * Math.Pow(xp, 1 / ExpPower));
+            // Shortcut for exceptional cases
+            if (xp < 1) return 1;
+            // Level = CONSTANT * (xp)^1/POWER
+            int lvl = 1 + (int)Math.Floor(ExpConstant * Math.Pow(xp, 1 / ExpPower));
             return lvl;
         }
 
         public static int ConvertLevelToXp(int level)
         {
-            // XP = (Level / 0.05) ^ 2
-            int xp = (int)Math.Pow(level / ExpConstant, ExpPower);
+            // Shortcut for exceptional cases
+            if (level < 1) return 1;
+            // XP = (Level / CONSTANT) ^ POWER
+            int xp = (int)Math.Pow((level - 1) / ExpConstant, ExpPower);
             return xp;
         }
 

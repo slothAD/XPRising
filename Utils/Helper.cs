@@ -21,6 +21,7 @@ using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Utils
 {
+    // TODO test wanted level display in game
     public static class Helper
     {
         private static Entity empty_entity = new Entity();
@@ -28,9 +29,6 @@ namespace OpenRPG.Utils
         
         private static IsSystemInitialised<ServerGameManager> _serverGameManager = default;
 
-        public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
-        public static int forbiddenBuffGUID = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
-        public static PrefabGUID AppliedBuff = new PrefabGUID(buffGUID);
         public static PrefabGUID SeverePunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Fever);          //-- Using this for PvP Punishment debuff
         public static PrefabGUID MinorPunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Area_Inside);
 
@@ -41,11 +39,16 @@ namespace OpenRPG.Utils
         //-- Fun
         public static PrefabGUID HolyNuke = new PrefabGUID((int)Effects.AB_Paladin_HolyNuke_Buff);
         public static PrefabGUID Pig_Transform_Debuff = new PrefabGUID((int)Remainders.Witch_PigTransformation_Buff);
-
-
-        //-- Possible Buff use
-        public static PrefabGUID EquipBuff_Chest_Base = new PrefabGUID((int)EquipBuffs.EquipBuff_Chest_Base);         //-- Hmm... not sure what to do with this right now...
-        public static PrefabGUID AB_BloodBuff_VBlood_0 = new PrefabGUID((int)Effects.AB_BloodBuff_VBlood_0);          //-- Does it do anything negative...? How can i check for this, seems like it's a total blank o.o
+        
+        // TODO are either of these a better applied buff/forbidden buff?
+        public static PrefabGUID AB_BloodBuff_VBlood_0 = new PrefabGUID((int)Effects.AB_BloodBuff_VBlood_0);
+        public static PrefabGUID AB_BloodBuff_Base = new PrefabGUID((int)Effects.AB_BloodBuff_Base);
+        
+        //public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
+        //public static PrefabGUID AppliedBuff = new PrefabGUID(buffGUID);
+        public static int buffGUID = (int)Effects.AB_BloodBuff_VBlood_0;
+        public static int ForbiddenBuffGuid = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
+        public static PrefabGUID AppliedBuff = AB_BloodBuff_VBlood_0;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
         
@@ -60,6 +63,7 @@ namespace OpenRPG.Utils
                 var ssm = Plugin.Server.GetExistingSystemManaged<ServerScriptMapper>();
                 if (ssm == null) return false;
                 _serverGameManager.system = ssm._ServerGameManager;
+                _serverGameManager.isInitialised = true;
                 serverGameManager = _serverGameManager.system;
             }
             return true;
@@ -76,6 +80,7 @@ namespace OpenRPG.Utils
                 StatType = type,
                 Value = (float)strength,
                 ModificationType = modType,
+                Modifier = 1,
                 Id = ModificationId.NewId(0)
             });
             return buff;
@@ -162,11 +167,10 @@ namespace OpenRPG.Utils
 
         public static void RemoveBuff(Entity Char, PrefabGUID GUID)
         {
-            if (BuffUtility.HasBuff(Plugin.Server.EntityManager, Char, GUID))
+            if (BuffUtility.HasBuff(Plugin.Server.EntityManager, Char, GUID) &&
+                BuffUtility.TryGetBuff(Plugin.Server.EntityManager, Char, GUID, out var buffEntity))
             {
-                BuffUtility.TryGetBuff(Plugin.Server.EntityManager, Char, GUID, out var BuffEntity_);
-                Plugin.Server.EntityManager.AddComponent<DestroyTag>(BuffEntity_);
-                return;
+                Plugin.Server.EntityManager.AddComponent<DestroyTag>(buffEntity);
             }
         }
 
@@ -320,7 +324,7 @@ namespace OpenRPG.Utils
                 duration_final = default_duration + UniqueID;
             }
 
-            UnitSpawnerReactSystem_Patch.listen = true;
+            UnitSpawnerReactSystemPatch.listen = true;
             identifier = duration_final;
             var Data = new SpawnNpcListen(duration, default, default, default, false);
             Cache.spawnNPC_Listen.Add(duration_final, Data);
@@ -410,6 +414,12 @@ namespace OpenRPG.Utils
         
         public static bool IsInCastle(Entity user)
         {
+            // TODO check if these can better check if someone is in a castle:
+            // Helper.ismounted || helper.isInCastle 
+            // ProjectM.Mounter
+            // ProjectM.Resident
+            // ProjectM.Residency
+            
             var userLocalToWorld = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(user);
             var userPosition = userLocalToWorld.Position;
             var query = Plugin.Server.EntityManager.CreateEntityQuery(
@@ -439,6 +449,59 @@ namespace OpenRPG.Utils
             return guidHash == (int)Remainders.BloodType_VBlood ||
                    guidHash == (int)Remainders.BloodType_GateBoss ||
                    guidHash == (int)Remainders.BloodType_DraculaTheImmortal;
+        }
+        
+        public static bool IsItemEquipBuff(PrefabGUID prefabGuid)
+        {
+            switch ((Items)prefabGuid.GuidHash)
+            {
+                case Items.Item_EquipBuff_Armor_Base:
+                case Items.Item_EquipBuff_Base:
+                case Items.Item_EquipBuff_Clothes_Base:
+                case Items.Item_EquipBuff_MagicSource_Base:
+                case Items.Item_EquipBuff_MagicSource_BloodKey_T01:
+                case Items.Item_EquipBuff_MagicSource_General:
+                case Items.Item_EquipBuff_MagicSource_NoAbility_Base:
+                case Items.Item_EquipBuff_MagicSource_Soulshard:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_Dracula:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_Manticore:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_Solarus:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_TheMonster:
+                case Items.Item_EquipBuff_MagicSource_T06_Blood:
+                case Items.Item_EquipBuff_MagicSource_T06_Chaos:
+                case Items.Item_EquipBuff_MagicSource_T06_Frost:
+                case Items.Item_EquipBuff_MagicSource_T06_Illusion:
+                case Items.Item_EquipBuff_MagicSource_T06_Storm:
+                case Items.Item_EquipBuff_MagicSource_T06_Unholy:
+                case Items.Item_EquipBuff_MagicSource_T08_Blood:
+                case Items.Item_EquipBuff_MagicSource_T08_Chaos:
+                case Items.Item_EquipBuff_MagicSource_T08_Frost:
+                case Items.Item_EquipBuff_MagicSource_T08_Illusion:
+                case Items.Item_EquipBuff_MagicSource_T08_Storm:
+                case Items.Item_EquipBuff_MagicSource_T08_Unholy:
+                case Items.Item_EquipBuff_MagicSource_TriggerBuffOnPrimaryHit:
+                case Items.Item_EquipBuff_MagicSource_TriggerCastOnPrimaryHit:
+                case Items.Item_EquipBuff_MagicSource_Utility_Base:
+                case Items.Item_EquipBuff_Shared_General:
+                case Items.Item_EquipBuff_Weapon_Base:
+                    // Item was equipped, set level.
+                    return true;
+                default:
+                    if (Enum.IsDefined((EquipBuffs)prefabGuid.GuidHash))
+                    {
+                        return true;
+                    }
+                    break;
+            }
+
+            return false;
+        }
+
+        public static void LogEntityDebugInfo(Entity entity)
+        {
+            var sb = new Il2CppSystem.Text.StringBuilder();
+            ProjectM.EntityDebuggingUtility.DumpEntity(Plugin.Server, entity, true, sb);
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Debug entity: {sb.ToString()}", true);
         }
 
         // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the stat, and 0.75 quarters it.

@@ -82,11 +82,15 @@ namespace OpenRPG.Hooks
                             BloodlineSystem.DecayBloodline(userEntity, playerLogout);
                         }
                     }
-                    
+
                     ExperienceSystem.SetLevel(userData.LocalCharacter._Entity, userEntity, userData.PlatformId);
+                    Helper.ApplyBuff(userEntity, userData.LocalCharacter._Entity, Helper.AppliedBuff);
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Failed OnUserConnected_Patch: {e.Message}");
+            }
         }
     }
     

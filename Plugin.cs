@@ -69,9 +69,9 @@ namespace OpenRPG
 
         public void InitCoreConfig()
         {
-            Helper.buffGUID = Config.Bind("Core", "Buff GUID", (int)SetBonus.SetBonus_Damage_Minor_Buff_01, "The GUID of the buff that gets used when mastery, bloodline, etc changes.\nDefault is now boneguard set bonus 2, but you can set anything else too.\nThe only reason to change this is if it clashes with another mod.").Value;
+            Helper.buffGUID = Config.Bind("Core", "Buff GUID", (int)Effects.AB_BloodBuff_VBlood_0, "The GUID of the buff that gets used when mastery, bloodline, etc changes.\nDefault is now boneguard set bonus 2, but you can set anything else too.\nThe only reason to change this is if it clashes with another mod.").Value;
             Helper.AppliedBuff = new PrefabGUID(Helper.buffGUID);
-            Helper.forbiddenBuffGUID = Config.Bind("Core", "Forbidden Buff GUID", Helper.forbiddenBuffGUID, "The GUID of the buff that prohibits you from getting mastery buffs\nDefault is boneguard set bonus 1. If this is the same value as Buff GUID, then none will get buffs.\nThe only reason to change this is if it clashes with another mod.").Value;
+            Helper.ForbiddenBuffGuid = Config.Bind("Core", "Forbidden Buff GUID", Helper.ForbiddenBuffGuid, "The GUID of the buff that prohibits you from getting mastery buffs\nDefault is boneguard set bonus 1. If this is the same value as Buff GUID, then none will get buffs.\nThe only reason to change this is if it clashes with another mod.").Value;
             Helper.humanReadablePercentageStats = Config.Bind("Core", "Human Readable Percentage Stats", true, "Determines if rates for percentage stats should be read as out of 100 instead of 1.").Value;
             Helper.inverseMultipersDisplayReduction = Config.Bind("Core", "Inverse Multipliers Display Reduction", true, "Determines if inverse multiplier stats display their reduction, or the final value.").Value;
             
@@ -125,7 +125,7 @@ namespace OpenRPG
             if (RandomEncountersSystemActive) CommandRegistry.RegisterCommandType(typeof(RandomEncountersCommands));
             if (WantedSystemActive) CommandRegistry.RegisterCommandType(typeof(WantedCommands));
             if (WaypointsActive) CommandRegistry.RegisterCommandType(typeof(WaypointCommands));
-            
+            // CommandRegistry.RegisterCommandType(typeof(DebugCommands));
             
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());

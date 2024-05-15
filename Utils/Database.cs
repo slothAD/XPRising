@@ -17,7 +17,6 @@ namespace OpenRPG.Utils
         //-- -- Player Cache
         public static LazyDictionary<FixedString64Bytes, PlayerData> NamePlayerCache = new();
         public static LazyDictionary<ulong, PlayerData> SteamPlayerCache = new();
-        public static LazyDictionary<ulong, List<BuffData>> buffData = new();
         
         //-- -- Combat
         public static LazyDictionary<ulong, DateTime> playerCombatStart = new();
@@ -40,6 +39,9 @@ namespace OpenRPG.Utils
         public static LazyDictionary<Entity, Alliance.PlayerGroup> AllianceAutoPlayerAllies = new();
         public static LazyDictionary<Entity, HashSet<AlliancePendingInvite>> AlliancePendingInvites = new();
 
+        // Buff data
+        public static LazyDictionary<Entity, LazyDictionary<UnitStatType, float>> PlayerToStatBonuses = new();
+        
         //-- -- CustomNPC Spawner
         public static SizedDictionaryAsync<float, SpawnNpcListen> spawnNPC_Listen = new(500);
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using BepInEx.Logging;
 using HarmonyLib;
 using OpenRPG.Models;
@@ -10,251 +9,192 @@ using ProjectM;
 using OpenRPG.Utils;
 using OpenRPG.Systems;
 using OpenRPG.Utils.Prefabs;
-using ProjectM.Scripting;
 using Stunlock.Core;
 using LogSystem = OpenRPG.Plugin.LogSystem;
 
 namespace OpenRPG.Hooks;
+
 [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Spawn), nameof(ModifyUnitStatBuffSystem_Spawn.OnUpdate))]
 public class ModifyUnitStatBuffSystem_Spawn_Patch
 {
-    private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance) {
-        oldStyleBuffHook(__instance);
-        rebuiltBuffHook(__instance);
+    private static void DebugBuffBuffer(EntityManager entityManager, Entity entityWithPlayerCharacter)
+    {
+        if (entityManager.TryGetBuffer<BuffBuffer>(entityWithPlayerCharacter, out var buffBuffer))
+        {
+            for (int i = 0; i < buffBuffer.Length; i++)
+            {
+                var data = buffBuffer[i];
+                Plugin.Log(LogSystem.Buff, LogLevel.Info,
+                    $"Debug BuffBuffer[{i}]: Prefab is: {Helper.GetPrefabName(data.PrefabGuid)} ({data.PrefabGuid.GuidHash})");
+                Plugin.Log(LogSystem.Buff, LogLevel.Info,
+                    $"Debug BuffBuffer[{i}]: Prefab is: {data.Entity} ({entityManager.Debug.GetEntityInfo(data.Entity)})");
+            }
+        }
     }
 
-    private static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager) {
+    private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
+    {
+        oldStyleBuffHook(__instance);
+    }
+
+    private static ModifyUnitStatBuff_DOTS makeModifyUnitStatBuff_DOTS(UnitStatType type, float value,
+        ModificationType modType)
+    {
+        if (Helper.multiplierStats.Contains(type))
+        {
+            modType = ModificationType.Multiply;
+        }
+
+        return new ModifyUnitStatBuff_DOTS()
+        {
+            StatType = type,
+            Value = value,
+            ModificationType = modType,
+            Modifier = 1,
+            Id = ModificationId.NewId(0)
+        };
+    }
+
+    private static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager)
+    {
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Applying OpenRPG Buffs");
         var owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Owner found, hash: " + owner.GetHashCode());
-        if (!entityManager.HasComponent<PlayerCharacter>(owner)) return;
+        if (!entityManager.TryGetComponentData<PlayerCharacter>(owner, out var playerCharacter)) return;
+        if (!entityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
+            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"has no user");
 
-        var playerCharacter = entityManager.GetComponentData<PlayerCharacter>(owner);
-        var userEntity = playerCharacter.UserEntity;
-        var user = entityManager.GetComponentData<User>(userEntity);
+        if (!entityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entity, out var buffer))
+        {
+            Plugin.Log(LogSystem.Buff, LogLevel.Error, "entity did not have buffer");
+            return;
+        }
 
-        var buffer = entityManager.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer acquired, length: " + buffer.Length);
+        //Gotta clear the buffer before applying more stats as it is persistent
+        buffer.Clear();
 
-        //Buffer.Clear();
-        //Plugin.Log(LogSystem.Buff, LogLevel.Info, "Buffer cleared, to confirm length: " + Buffer.Length);
-
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Receiver");
-        if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.BuffReceiver(buffer, owner, user.PlatformId);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Receiver");
-        if (Plugin.BloodlineSystemActive) BloodlineSystem.BuffReceiver(buffer, owner, user.PlatformId);
+        // Should this be stored rather than calculated each time?
+        LazyDictionary<UnitStatType, float> statusBonus = new();
+        // Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Weapon Mastery System Buff Receiver");
+        // if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.BuffReceiver(buffer, owner, user.PlatformId);
+        // Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Receiver");
+        // if (Plugin.BloodlineSystemActive) BloodlineSystem.BuffReceiver(buffer, owner, user.PlatformId);
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Receiver");
-        if (ExperienceSystem.LevelRewardsOn && Plugin.ExperienceSystemActive) ExperienceSystem.BuffReceiver(buffer, owner, user.PlatformId);
+        if (ExperienceSystem.LevelRewardsOn && Plugin.ExperienceSystemActive)
+            ExperienceSystem.BuffReceiver(ref statusBonus, owner, user.PlatformId);
 
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing PowerUp Command");
-        if (Database.PowerUpList.TryGetValue(user.PlatformId, out var powerUpData)) {
-            buffer.Add(new ModifyUnitStatBuff_DOTS() {
-                StatType = UnitStatType.MaxHealth,
-                Value = powerUpData.MaxHP,
-                ModificationType = ModificationType.Add,
-                Id = ModificationId.NewId(0)
-            });
-
-            buffer.Add(new ModifyUnitStatBuff_DOTS() {
-                StatType = UnitStatType.PhysicalPower,
-                Value = powerUpData.PATK,
-                ModificationType = ModificationType.Add,
-                Id = ModificationId.NewId(0)
-            });
-
-            buffer.Add(new ModifyUnitStatBuff_DOTS() {
-                StatType = UnitStatType.SpellPower,
-                Value = powerUpData.SATK,
-                ModificationType = ModificationType.Add,
-                Id = ModificationId.NewId(0)
-            });
-
-            buffer.Add(new ModifyUnitStatBuff_DOTS() {
-                StatType = UnitStatType.PhysicalResistance,
-                Value = powerUpData.PDEF,
-                ModificationType = ModificationType.Add,
-                Id = ModificationId.NewId(0)
-            });
-
-            buffer.Add(new ModifyUnitStatBuff_DOTS() {
-                StatType = UnitStatType.SpellResistance,
-                Value = powerUpData.SDEF,
-                ModificationType = ModificationType.Add,
-                Id = ModificationId.NewId(0)
-            });
+        foreach (var bonus in statusBonus)
+        {
+            buffer.Add(makeModifyUnitStatBuff_DOTS(bonus.Key, bonus.Value, ModificationType.Add));
         }
 
         Plugin.Log(LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + buffer.Length);
-
     }
 
-    private static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Attempting Old Style");
-
+    private static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance)
+    {
         EntityManager entityManager = __instance.EntityManager;
         NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
-
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Entities Length of " + entities.Length);
-
-        foreach (var entity in entities) {
-            var GUID = entityManager.GetComponentData<PrefabGUID>(entity);
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, "GUID of " + GUID.GuidHash);
-            if (GUID.GuidHash == Helper.forbiddenBuffGUID) {
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + GUID.GuidHash);
+        
+        foreach (var entity in entities)
+        {
+            var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
+            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Prefab is: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+            if (prefabGuid.GuidHash == Helper.ForbiddenBuffGuid)
+            {
+                Plugin.Log(LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + prefabGuid.GuidHash);
             }
-            else if (GUID == Helper.AppliedBuff) {
+            else if (prefabGuid == Helper.AppliedBuff)
+            {
                 oldStyleBuffApplicaiton(entity, entityManager);
             }
         }
     }
 
-    private static void rebuiltBuffHook(ModifyUnitStatBuffSystem_Spawn __instance) {
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Attempting New Style");
-        EntityManager em = __instance.EntityManager;
-        bool hasSGM = Helper.GetServerGameManager(out var sgm);
-        if (!hasSGM) {
-            Plugin.Log(LogSystem.Buff, LogLevel.Error, "No Server Game Manager, Something is WRONG.");
-            return;
-        }
+    private static void Postfix(ModifyUnitStatBuffSystem_Spawn __instance)
+    {
+        EntityManager entityManager = __instance.EntityManager;
+        NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
 
-        EntityQuery query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc() {
-            All = new ComponentType[]
-                    {
-                        ComponentType.ReadOnly<PlayerCharacter>(),
-                        ComponentType.ReadOnly<IsConnected>()
-                    },
-            Options = EntityQueryOptions.IncludeDisabled
-        });
-        var pcArray = query.ToEntityArray(Allocator.Temp);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "got connected Players, array of length " + pcArray.Length);
-        foreach (var entity in pcArray) {
-            em.TryGetComponentData<PlayerCharacter>(entity, out var pc);
-            em.TryGetComponentData<User>(entity, out var userEntity);
-            var steamID = userEntity.PlatformId;
-            var hasBuffs = Cache.buffData.TryGetValue(steamID, out List<BuffData> bdl);
-            if (!hasBuffs)
+        foreach (var entity in entities)
+        {
+            var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
+            var itemEquipped = Helper.IsItemEquipBuff(prefabGuid);
+
+            if (itemEquipped)
             {
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID} has no buffs");
-                continue;
-            }
+                if (!__instance.EntityManager.TryGetComponentData<EntityOwner>(entity, out var owner) ||
+                    !__instance.EntityManager.TryGetComponentData<PlayerCharacter>(owner.Owner,
+                        out var playerCharacter) ||
+                    !__instance.EntityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
+                {
+                    // Item equipped on a non-pc entity.
+                    Plugin.Log(LogSystem.Buff, LogLevel.Info,
+                        $"Item not equipped by PC: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+                    continue;
+                }
 
-            var Buffer = em.GetBuffer<ModifyUnitStatBuff_DOTS>(entity);
-            //em.TryGetComponentData<BuffBuffer>(entity, out BuffBuffer buffer2);
-
-            em.TryGetBuffer<ModifyUnitStats>(entity, out var stats);
-
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, "got entities modifyunitystatbuffDOTS buffer of length " + Buffer.Length);
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, "got entities modifyunitystatbuff buffer of length " + stats.Length);
-
-            foreach (BuffData bd in bdl) {
-                if (bd.isApplied) { continue; }
-                ModifyUnitStatBuff_DOTS buff = new ModifyUnitStatBuff_DOTS {
-                    StatType = (UnitStatType)bd.targetStat,
-                    Value = (float)bd.value,
-                    ModificationType = (ModificationType)bd.modificationType,
-                    Id = ModificationId.NewId(bd.ID)
-                };
-                applyBuff(em, buff, sgm, entity);
-                //baseStats.PhysicalPower.ApplyModification(sgm, entity, entity, buff.ModificationType, buff.Value);
+                ExperienceSystem.SetLevel(owner, playerCharacter.UserEntity, user.PlatformId);
             }
         }
     }
+}
+[HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Destroy), nameof(ModifyUnitStatBuffSystem_Destroy.OnUpdate))]
+public class ModifyUnitStatBuffSystem_Destroy_Patch
+{
+    private static void Postfix(ModifyUnitStatBuffSystem_Destroy __instance)
+    {
+        EntityManager entityManager = __instance.EntityManager;
+        NativeArray<Entity> entities = __instance.__query_1735840524_0.ToEntityArray(Allocator.Temp);
 
-    private static bool applyBuff(EntityManager em, ModifyUnitStatBuff_DOTS buff, ServerGameManager sgm, Entity e) {
-        ModifiableFloat stat = new ModifiableFloat();
-        ModifiableInt statInt = new ModifiableInt();
-        bool targetIsInt = false;
-        bool applied = false;
-        UnitStatType tar = buff.StatType;
+        foreach (var entity in entities)
+        {
+            var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
+            var itemEquipped = Helper.IsItemEquipBuff(prefabGuid);
 
-        if (Helper.baseStatsSet.Contains(tar)) {
-            em.TryGetComponentData<UnitStats>(e, out var baseStats);
-            if (tar == UnitStatType.PhysicalPower) {
-                stat = baseStats.PhysicalPower;
-            } else if (tar == UnitStatType.ResourcePower) {
-                stat = baseStats.ResourcePower;
-            } else if (tar == UnitStatType.SiegePower) {
-                stat = baseStats.SiegePower;
-            // } else if (tar == UnitStatType.AttackSpeed || tar == UnitStatType.PrimaryAttackSpeed) {
-            //     stat = baseStats.AttackSpeed; // Looks like AttackSpeed is no longer modifiable
-            } else if (tar == UnitStatType.FireResistance) {
-                statInt = baseStats.FireResistance; targetIsInt = true;
-            } else if (tar == UnitStatType.GarlicResistance) {
-                statInt = baseStats.GarlicResistance; targetIsInt = true;
-            } else if (tar == UnitStatType.SilverResistance) {
-                statInt = baseStats.SilverResistance; targetIsInt = true;
-            } else if (tar == UnitStatType.HolyResistance) {
-                statInt = baseStats.HolyResistance; targetIsInt = true;
-            } else if (tar == UnitStatType.SunResistance) {
-                statInt = baseStats.SunResistance; targetIsInt = true;
-            } else if (tar == UnitStatType.SpellResistance) {
-                stat = baseStats.SpellResistance;
-            } else if (tar == UnitStatType.PhysicalResistance) {
-                stat = baseStats.PhysicalResistance;
-            } else if (tar == UnitStatType.PhysicalCriticalStrikeChance) {
-                stat = baseStats.PhysicalCriticalStrikeChance;
-            } else if (tar == UnitStatType.PhysicalCriticalStrikeDamage) {
-                stat = baseStats.PhysicalCriticalStrikeDamage;
-            } else if (tar == UnitStatType.SpellCriticalStrikeChance) {
-                stat = baseStats.SpellCriticalStrikeChance;
-            } else if (tar == UnitStatType.SpellCriticalStrikeDamage) {
-                stat = baseStats.SpellCriticalStrikeDamage;
-            } else if (tar == UnitStatType.PassiveHealthRegen) {
-                stat = baseStats.PassiveHealthRegen;
-            } else if (tar == UnitStatType.PvPResilience) {
-                statInt = baseStats.PvPResilience; targetIsInt = true;
-            } else if (tar == UnitStatType.ResourceYield) {
-                stat = baseStats.ResourceYieldModifier;
-            } else if (tar == UnitStatType.PvPResilience) {
-                statInt = baseStats.PvPResilience; targetIsInt = true;
-            } else if (tar == UnitStatType.ReducedResourceDurabilityLoss) {
-                stat = baseStats.ReducedResourceDurabilityLoss;
+            if (itemEquipped)
+            {
+                if (!__instance.EntityManager.TryGetComponentData<EntityOwner>(entity, out var owner) ||
+                    !__instance.EntityManager.TryGetComponentData<PlayerCharacter>(owner.Owner, out var playerCharacter) ||
+                    !__instance.EntityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
+                {
+                    // Item equipped on a non-pc entity.
+                    Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Item not equipped by PC: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+                    continue;
+                }
+                Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Post: Prefab is: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+                ExperienceSystem.SetLevel(owner, playerCharacter.UserEntity, user.PlatformId);
+            }
+            
+            if (!entityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entity, out var buffer))
+            {
+                Plugin.Log(LogSystem.Buff, LogLevel.Info, "Post: entity did not have buffer");
+                return;
+            }
+            
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                var data = buffer[i];
+                Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Post: B[{i}]: {data.StatType} {data.Value} {data.ModificationType} {data.Id.Id} {data.Priority} {data.ValueByStacks} {data.IncreaseByStacks}");
             }
         }
-        else if (tar == UnitStatType.MaxHealth) {
-            // TODO check if these changes are valid..
-            // they probably aren't but we aren't using this part of the buff hook any?
-            em.TryGetComponentData<Health>(e, out Health health);
-            //health.MaxHealth.UpdateValue(sgm, e, e, buff.ModificationType, buff.Value);
-            ModifiableFloat.ModifyValue(ref health.MaxHealth._Value, ref health.MaxHealth._Value, buff.ModificationType, buff.Value);
-        }
-        else if (tar == UnitStatType.MovementSpeed) {
-            em.TryGetComponentData<Movement>(e, out Movement speed);
-            // speed.Speed.UpdateValue(sgm, e, e, buff.ModificationType, buff.Value);
-            ModifiableFloat.ModifyValue(ref speed.Speed._Value, ref speed.Speed._Value, buff.ModificationType, buff.Value);
-        }
-        try {
-            if (targetIsInt) {
-                // statInt.ApplyModification(sgm, e, e, buff.ModificationType, (int)buff.Value);
-                ModifiableInt.ModifyValue(ref statInt._Value, ref statInt._Value, buff.ModificationType, (int)buff.Value);
-            } else {
-                // stat.ApplyModification(sgm, e, e, buff.ModificationType, buff.Value);
-                ModifiableFloat.ModifyValue(ref stat._Value, ref stat._Value, buff.ModificationType, buff.Value);
-            }
-            applied = true;
-        } catch {
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, "Failed to apply buff to statID: " + tar);
-        }
-        return applied;
     }
 }
 
 [HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
 public class BuffSystem_Spawn_Server_Patch {
     private static void Postfix(BuffSystem_Spawn_Server __instance) {
-
         if (Plugin.WeaponMasterySystemActive) {
-            NativeArray<Entity> entities = __instance.__query_401358634_0.ToEntityArray(Allocator.Temp);
+            // TODO maybe just move this into a timer
+            var entities = __instance.__query_401358634_0.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
                 if (!__instance.EntityManager.HasComponent<InCombatBuff>(entity)) continue;
-                Entity e_Owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
-                if (!__instance.EntityManager.HasComponent<PlayerCharacter>(e_Owner)) continue;
-                Entity e_User = __instance.EntityManager.GetComponentData<PlayerCharacter>(e_Owner).UserEntity;
+                var owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
+                if (!__instance.EntityManager.HasComponent<PlayerCharacter>(owner)) continue;
+                var user = __instance.EntityManager.GetComponentData<PlayerCharacter>(owner).UserEntity;
 
-                WeaponMasterySystem.LoopMastery(e_User, e_Owner);
+                WeaponMasterySystem.LoopMastery(user, owner);
             }
         }
     }
@@ -272,6 +212,7 @@ public class DebugBuffSystem_Patch
             var combatStart = false;
             var combatEnd = false;
             var newPlayer = false;
+            var addingBloodBuff = false;
             switch (guid.GuidHash)
             {
                 case (int)Buffs.Buff_InCombat:
@@ -282,6 +223,9 @@ public class DebugBuffSystem_Patch
                     break;
                 case (int)Effects.AB_Interact_TombCoffinSpawn_Travel:
                     newPlayer = true;
+                    break;
+                case (int)Effects.AB_BloodBuff_VBlood_0:
+                    addingBloodBuff = true;
                     break;
                 default:
                     continue;
@@ -298,6 +242,13 @@ public class DebugBuffSystem_Patch
             
             if (newPlayer) Helper.UpdatePlayerCache(userEntity, userData);
             if (combatStart || combatEnd) TriggerCombatUpdate(ownerEntity, steamID, combatStart, combatEnd);
+            if (addingBloodBuff)
+            {
+                // We are intending to use the AB_BloodBuff_VBlood_0 buff as our internal adding stats buff, but
+                // it doesn't usually have a unit stat mod buffer. Add this buffer now.
+                if (__instance.EntityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entity, out var buffer)) continue;
+                __instance.EntityManager.AddBuffer<ModifyUnitStatBuff_DOTS>(entity);
+            }
         }
     }
 
