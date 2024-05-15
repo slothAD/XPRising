@@ -4,7 +4,6 @@ using System;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using OpenRPG.Hooks;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
@@ -12,14 +11,15 @@ using System.Runtime.InteropServices;
 using BepInEx.Logging;
 using VampireCommandFramework;
 using Bloodstone.API;
-using OpenRPG.Models;
-using OpenRPG.Utils.Prefabs;
 using ProjectM.CastleBuilding;
 using Stunlock.Core;
 using Unity.Transforms;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Hooks;
+using XPRising.Models;
+using XPRising.Utils.Prefabs;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils
+namespace XPRising.Utils
 {
     // TODO test wanted level display in game
     public static class Helper
@@ -133,7 +133,7 @@ namespace OpenRPG.Utils
 
             }
 
-            Plugin.Log(LogSystem.Core, LogLevel.Info, "Player Cache Created.");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "Player Cache Created.");
         }
         
         public static void UpdatePlayerCache(Entity userEntity, User userData, bool forceOffline = false)

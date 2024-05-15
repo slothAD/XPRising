@@ -2,9 +2,9 @@
 using System;
 using BepInEx.Logging;
 using UnityEngine;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Components.RandomEncounters;
+namespace XPRising.Components.RandomEncounters;
 
 public class GameFrame : MonoBehaviour
 {
@@ -30,7 +30,7 @@ public class GameFrame : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Plugin.Log(LogSystem.Core, LogLevel.Error, $"Error dispatching OnUpdate event:\n{ex}");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Error dispatching OnUpdate event:\n{ex}");
         }
     }
 
@@ -42,7 +42,7 @@ public class GameFrame : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Plugin.Log(LogSystem.Core, LogLevel.Error, $"Error dispatching OnLateUpdate event:\n{ex}");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Error dispatching OnLateUpdate event:\n{ex}");
         }
     }
 

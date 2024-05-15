@@ -1,4 +1,4 @@
-﻿namespace OpenRPG.Utils.Prefabs;
+﻿namespace XPRising.Utils.Prefabs;
 
 // Note that these prefabs are as of 1.0 launch
 // Thanks https://github.com/Odjit

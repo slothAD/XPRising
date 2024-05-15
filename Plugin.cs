@@ -4,18 +4,17 @@ using VampireCommandFramework;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-using OpenRPG.Commands;
-using OpenRPG.Utils;
 using System.Reflection;
 using Unity.Entities;
 using UnityEngine;
-using OpenRPG.Configuration;
-using OpenRPG.Components.RandomEncounters;
-using OpenRPG.Systems;
-using OpenRPG.Utils.Prefabs;
 using Stunlock.Core;
+using XPRising.Commands;
+using XPRising.Components.RandomEncounters;
+using XPRising.Configuration;
+using XPRising.Utils;
+using XPRising.Utils.Prefabs;
 
-namespace OpenRPG
+namespace XPRising
 {
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency("gg.deca.Bloodstone")]
@@ -125,7 +124,6 @@ namespace OpenRPG
             if (RandomEncountersSystemActive) CommandRegistry.RegisterCommandType(typeof(RandomEncountersCommands));
             if (WantedSystemActive) CommandRegistry.RegisterCommandType(typeof(WantedCommands));
             if (WaypointsActive) CommandRegistry.RegisterCommandType(typeof(WaypointCommands));
-            // CommandRegistry.RegisterCommandType(typeof(DebugCommands));
             
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());

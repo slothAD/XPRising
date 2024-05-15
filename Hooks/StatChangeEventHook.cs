@@ -3,9 +3,9 @@ using ProjectM.Gameplay.Systems;
 using Unity.Entities;
 using System;
 using BepInEx.Logging;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Hooks
+namespace XPRising.Hooks
 {
     public delegate void OnUpdateEventHandler(World world);
     [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.OnUpdate))]
@@ -15,7 +15,7 @@ namespace OpenRPG.Hooks
             try {
                 OnUpdate?.Invoke(__instance.World);
             } catch (Exception e) {
-                Plugin.Log(LogSystem.Core, LogLevel.Error, $"SCSHook: {e}");
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"SCSHook: {e}");
             }
         }
     }

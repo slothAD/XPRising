@@ -1,10 +1,10 @@
 ﻿using System;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
+using XPRising.Systems;
+using XPRising.Utils;
 
-namespace OpenRPG.Configuration;
+namespace XPRising.Configuration;
 
 public static class ExperienceConfig
 {

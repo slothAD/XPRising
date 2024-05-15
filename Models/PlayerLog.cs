@@ -1,4 +1,4 @@
-﻿namespace OpenRPG.Models;
+﻿namespace XPRising.Models;
 
 public struct PlayerLog
 {

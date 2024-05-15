@@ -1,12 +1,12 @@
 ﻿using System;
-using OpenRPG.Utils;
 using System.Collections.Generic;
 using System.Linq;
-using OpenRPG.Models;
 using Unity.Entities;
 using VampireCommandFramework;
+using XPRising.Models;
+using XPRising.Utils;
 
-namespace OpenRPG.Systems
+namespace XPRising.Systems
 {
     public static class PermissionSystem
     {
@@ -106,11 +106,6 @@ namespace OpenRPG.Systems
                 {"playerinfo", 0},
                 {"powerdown", 100},
                 {"powerup", 100},
-                {"re disable", 100},
-                {"re enable", 100},
-                {"re me", 100},
-                {"re player", 100},
-                {"re start", 100},
                 {"wanted fixminions", 100},
                 {"wanted get", 0},
                 {"wanted log", 0},

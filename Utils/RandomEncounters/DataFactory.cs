@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using BepInEx.Logging;
-using OpenRPG.Configuration;
-using OpenRPG.Models;
-using OpenRPG.Models.RandomEncounters;
-using OpenRPG.Properties;
-using OpenRPG.Utils.Prefabs;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Configuration;
+using XPRising.Models;
+using XPRising.Models.RandomEncounters;
 
-namespace OpenRPG.Utils.RandomEncounters
+namespace XPRising.Utils.RandomEncounters
 {
     internal static class DataFactory
     {
@@ -19,16 +15,17 @@ namespace OpenRPG.Utils.RandomEncounters
 
         internal static void Initialize()
         {
-            var tsv = Encoding.UTF8.GetString(Resources.npcs);
-            tsv = Encoding.UTF8.GetString(Resources.items);
-            _items = tsv.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Select(l => new ItemDataModel(l)).ToList();
+            // var tsv = Encoding.UTF8.GetString(Resources.npcs);
+            // tsv = Encoding.UTF8.GetString(Resources.items);
+            // _items = tsv.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Select(l => new ItemDataModel(l)).ToList();
+            _items = new();
         }
 
         internal static FactionUnits.Unit GetRandomNpc(float playerLevel)
         {
             var lowestLevel = playerLevel - RandomEncountersConfig.EncounterMaxLevelDifferenceLower.Value;
             var highestLevel = playerLevel + RandomEncountersConfig.EncounterMaxLevelDifferenceUpper.Value;
-            Plugin.Log(LogSystem.RandomEncounter, LogLevel.Info, $"Searching an NPC between levels {lowestLevel} and {highestLevel}");
+            Plugin.Log(Plugin.LogSystem.RandomEncounter, LogLevel.Info, $"Searching an NPC between levels {lowestLevel} and {highestLevel}");
             var faction = FactionUnits.SupportedFactions.ToList().GetRandomElement();
             return FactionUnits.GetFactionUnits(faction, (int)highestLevel, 1).ToList().GetRandomElement();
         }

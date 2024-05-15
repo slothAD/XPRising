@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Logging;
 using ProjectM.Network;
-using OpenRPG.Systems;
-using OpenRPG.Utils.Prefabs;
 using Unity.Entities;
 using Unity.Mathematics;
-using Faction = OpenRPG.Utils.Prefabs.Faction;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Systems;
+using XPRising.Utils.Prefabs;
+using Faction = XPRising.Utils.Prefabs.Faction;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils;
+namespace XPRising.Utils;
+
+using Faction = Prefabs.Faction;
 
 public static class FactionHeat {
     public static readonly Faction[] ActiveFactions = {
@@ -110,7 +112,7 @@ public static class FactionHeat {
                 activeFaction = Faction.Unknown;
                 break;
             default:
-                Plugin.Log(LogSystem.Wanted, LogLevel.Warning, $"Faction not handled for active faction: {Enum.GetName(faction)}");
+                Plugin.Log(Plugin.LogSystem.Wanted, LogLevel.Warning, $"Faction not handled for active faction: {Enum.GetName(faction)}");
                 heatValue = 0;
                 activeFaction = Faction.Unknown;
                 break;

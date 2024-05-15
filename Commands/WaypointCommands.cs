@@ -1,12 +1,12 @@
-using OpenRPG.Utils;
 using System;
 using System.Linq;
-using OpenRPG.Models;
 using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
+using XPRising.Models;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands {
+namespace XPRising.Commands {
     [CommandGroup("waypoint", "wp")]
     public static class WaypointCommands {
         public static int WaypointLimit = 3;

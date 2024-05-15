@@ -3,12 +3,12 @@ using ProjectM.Network;
 using System;
 using System.Collections.Generic;
 using BepInEx.Logging;
-using OpenRPG.Models;
 using Unity.Entities;
-using OpenRPG.Utils;
-using OpenRPG.Utils.Prefabs;
+using XPRising.Utils.Prefabs;
+using XPRising.Models;
+using XPRising.Utils;
 
-namespace OpenRPG.Systems
+namespace XPRising.Systems
 {
     using WeaponMasteryData = LazyDictionary<WeaponMasterySystem.MasteryType,MasteryData>;
     public static class WeaponMasterySystem

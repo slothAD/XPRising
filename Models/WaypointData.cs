@@ -1,6 +1,6 @@
 ﻿using Unity.Mathematics;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 // This is basically a float3, but more serialisable
 public struct WaypointData(float x, float y, float z)

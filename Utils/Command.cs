@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Logging;
-using OpenRPG.Systems;
 using VampireCommandFramework;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Systems;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils;
+namespace XPRising.Utils;
 
 public static class Command
 {
@@ -90,7 +90,7 @@ public static class Command
         var currentPermissions = Database.CommandPermission.Keys;
         foreach (var permission in currentPermissions.Where(permission => !commandsDictionary.ContainsKey(permission)))
         {
-            Plugin.Log(LogSystem.Core, LogLevel.Message, $"Removing old permission: {permission}");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Message, $"Removing old permission: {permission}");
             Database.CommandPermission.Remove(permission);
         }
 
@@ -99,16 +99,16 @@ public static class Command
         {
             // Add the permission if it doesn't already exist there
             var added = Database.CommandPermission.TryAdd(command.Key, DefaultPrivilege(command.Value));
-            if (added) Plugin.Log(LogSystem.Core, LogLevel.Message, $"Added new permission: {command.Key}");
+            if (added) Plugin.Log(Plugin.LogSystem.Core, LogLevel.Message, $"Added new permission: {command.Key}");
 
             // Warn if the default permissions does not include this command
             if (!defaultCommandPermissions.ContainsKey(command.Key))
             {
-                Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Default permissions do not include: {command.Key}\nRegenerate the default command permissions (and maybe Command.md).", true);
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Warning, $"Default permissions do not include: {command.Key}\nRegenerate the default command permissions (and maybe Command.md).", true);
             }
         }
             
-        Plugin.Log(LogSystem.Core, LogLevel.Info, "Permissions have been validated");
+        Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "Permissions have been validated");
     }
 
     private static string PadCommandString(int index, string command, int width)

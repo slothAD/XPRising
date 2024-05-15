@@ -4,13 +4,13 @@ using Unity.Entities;
 using Unity.Collections;
 using ProjectM.Network;
 using ProjectM;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
+using XPRising.Utils;
 using System;
 using BepInEx.Logging;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Systems;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Hooks;
+namespace XPRising.Hooks;
 
 [HarmonyPatch(typeof(ArmorLevelSystem_Spawn), nameof(ArmorLevelSystem_Spawn.OnUpdate))]
 public class ArmorLevelSystem_Spawn_Patch
@@ -31,7 +31,7 @@ public class ArmorLevelSystem_Spawn_Patch
     
     private static void Postfix(ArmorLevelSystem_Spawn __instance)
     {
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Post armour change");
+        Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Post armour change");
         if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;
@@ -56,7 +56,7 @@ public class ArmorLevelSystem_Destroy_Patch
 {
     private static void Postfix(ArmorLevelSystem_Destroy __instance)
     {
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Post armour change");
+        Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Post armour change");
         if (Plugin.ExperienceSystemActive)
         {
             EntityManager entityManager = __instance.EntityManager;

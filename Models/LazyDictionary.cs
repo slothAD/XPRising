@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 public class LazyDictionary<TKey,TValue> : Dictionary<TKey,TValue> where TValue : new()
 {

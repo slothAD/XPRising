@@ -1,7 +1,7 @@
 ﻿using ProjectM;
 using Unity.Entities;
 
-namespace OpenRPG.Utils
+namespace XPRising.Utils
 {
     public static class Output
     {

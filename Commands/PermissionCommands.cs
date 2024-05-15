@@ -1,9 +1,9 @@
 ﻿using System;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
 using VampireCommandFramework;
+using XPRising.Systems;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands
+namespace XPRising.Commands
 {
     public static class PermissionCommands
     {

@@ -1,10 +1,13 @@
 ﻿using System;
 using BepInEx.Logging;
-using Faction = OpenRPG.Utils.Prefabs.Faction;
-using Units = OpenRPG.Utils.Prefabs.Units;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using Faction = XPRising.Utils.Prefabs.Faction;
+using Units = XPRising.Utils.Prefabs.Units;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils;
+namespace XPRising.Utils;
+
+using Faction = Prefabs.Faction;
+using Units = Prefabs.Units;
 
 public static class FactionUnits
 {
@@ -465,7 +468,7 @@ public static class FactionUnits
             case Faction.Wolves:
             case Faction.World_Prisoners:
             default:
-                Plugin.Log(LogSystem.Wanted, LogLevel.Warning, $"{Enum.GetName(faction)} units not yet suppported");
+                Plugin.Log(Plugin.LogSystem.Wanted, LogLevel.Warning, $"{Enum.GetName(faction)} units not yet suppported");
                 return GetUnitsForLevel(bandit_units, playerLevel);
         }
     }

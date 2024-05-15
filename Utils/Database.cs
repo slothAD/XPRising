@@ -1,12 +1,12 @@
 ﻿using ProjectM;
 using System;
 using System.Collections.Generic;
-using OpenRPG.Models;
-using OpenRPG.Systems;
 using Unity.Collections;
 using Unity.Entities;
+using XPRising.Models;
+using XPRising.Systems;
 
-namespace OpenRPG.Utils
+namespace XPRising.Utils
 {
     using WeaponMasteryData = LazyDictionary<WeaponMasterySystem.MasteryType, MasteryData>;
     using BloodlineMasteryData = LazyDictionary<BloodlineSystem.BloodType, MasteryData>;

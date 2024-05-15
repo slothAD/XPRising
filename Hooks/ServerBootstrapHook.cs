@@ -3,11 +3,11 @@ using BepInEx.Logging;
 using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
 using Stunlock.Network;
+using XPRising.Systems;
+using XPRising.Utils;
 
-namespace OpenRPG.Hooks
+namespace XPRising.Hooks
 {
     [HarmonyPatch(typeof(SettingsManager), nameof(SettingsManager.VerifyServerGameSettings))]
     public class ServerGameSetting_Patch

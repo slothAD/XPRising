@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenRPG.Utils;
-using OpenRPG.Utils.Prefabs;
+using XPRising.Utils;
+using XPRising.Utils.Prefabs;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 public struct PlayerHeatData {
     public struct Heat {

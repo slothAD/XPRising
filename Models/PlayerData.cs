@@ -1,7 +1,7 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 public struct PlayerData(
     FixedString64Bytes characterName,

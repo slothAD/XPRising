@@ -1,24 +1,24 @@
-﻿using OpenRPG.Models.RandomEncounters;
-using OpenRPG.Utils.RandomEncounters;
-using ProjectM;
+﻿using ProjectM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Entities;
-using OpenRPG.Configuration;
 using System.Collections.Concurrent;
 using BepInEx.Logging;
 using Bloodstone.API;
-using OpenRPG.Models;
-using OpenRPG.Utils;
-using OpenRPG.Utils.Prefabs;
+using XPRising.Utils.Prefabs;
 using ProjectM.Network;
 using Stunlock.Core;
 using Unity.Transforms;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Configuration;
+using XPRising.Models;
+using XPRising.Models.RandomEncounters;
+using XPRising.Utils;
+using XPRising.Utils.RandomEncounters;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Systems
+namespace XPRising.Systems
 {
     internal static class RandomEncountersSystem
     {
@@ -33,7 +33,7 @@ namespace OpenRPG.Systems
         internal static Dictionary<long, (float actualDuration, Action<Entity> Actions)> PostActions = new();
 
         private static System.Random Random = new System.Random();
-        private const LogSystem LoggingSystem = LogSystem.RandomEncounter;
+        private const Plugin.LogSystem LoggingSystem = Plugin.LogSystem.RandomEncounter;
 
         internal static void StartEncounter()
         {

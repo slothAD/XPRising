@@ -1,12 +1,12 @@
 ﻿using System.Linq;
-using OpenRPG.Models;
-using OpenRPG.Utils;
 using ProjectM;
 using ProjectM.Network;
 using Unity.Entities;
 using VampireCommandFramework;
+using XPRising.Models;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands;
+namespace XPRising.Commands;
 
 public static class AllianceCommands
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 public struct AlliancePendingInvite
 {

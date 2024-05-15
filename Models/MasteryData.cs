@@ -1,7 +1,7 @@
 ﻿using System;
 using ProjectM;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 public struct MasteryData()
 {

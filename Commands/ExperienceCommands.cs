@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
 using BepInEx.Logging;
-using OpenRPG.Models;
 using ProjectM.Network;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Models;
+using XPRising.Systems;
+using XPRising.Utils;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Commands
+namespace XPRising.Commands
 {
 
     [CommandGroup("experience","xp")]
@@ -119,7 +119,7 @@ namespace OpenRPG.Commands
 
             }
             catch (Exception ex){
-                Plugin.Log(LogSystem.Xp, LogLevel.Error, $"Could not spend point! {ex}");
+                Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Error, $"Could not spend point! {ex}");
                 ctx.Reply($"Could not spend point! {ex.Message}");
             }
         }

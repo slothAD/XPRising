@@ -1,13 +1,14 @@
 ﻿using ProjectM;
 using ProjectM.Shared;
 using HarmonyLib;
-using OpenRPG.Configuration;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
+using XPRising.Configuration;
 using Stunlock.Core;
-using Prefabs = OpenRPG.Utils.Prefabs;
+using XPRising.Systems;
+using XPRising.Utils;
+using XPRising.Utils.Prefabs;
+using Prefabs = XPRising.Utils.Prefabs;
 
-namespace OpenRPG.Hooks;
+namespace XPRising.Hooks;
 
 [HarmonyPatch(typeof(UnitSpawnerReactSystem), nameof(UnitSpawnerReactSystem.OnUpdate))]
 public static class UnitSpawnerReactSystemPatch
@@ -27,7 +28,7 @@ public static class UnitSpawnerReactSystemPatch
                     if (faction != SpawnUnit.SpawnFaction.Default) {
                         // Change faction to Vampire Hunters for spawned units
                         var Faction = __instance.EntityManager.GetComponentData<FactionReference>(entity);
-                        Faction.FactionGuid = new ModifiablePrefabGUID(new PrefabGUID((int)Prefabs.Faction.VampireHunters));
+                        Faction.FactionGuid = new ModifiablePrefabGUID(new PrefabGUID((int)Utils.Prefabs.Faction.VampireHunters));
                         __instance.EntityManager.SetComponentData(entity, Faction);
                     }
                     if (level > 0) {
@@ -71,7 +72,7 @@ public static class MinionSpawnSystem_Patch {
             // Gloomrot spider-tanks spawn a gloomrot technician minion that does not despawn when the spider-tank gets destroyed
             // by the "Lifetime" component. This will check for that case and destroy the minion on load so it doesn't get stuck.
             // This does not impact the behaviour of the spider-tank (other than it does not drop the technician on death).
-            if (Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(entity)) != Prefabs.Units.CHAR_Gloomrot_Technician) continue;
+            if (Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(entity)) != Units.CHAR_Gloomrot_Technician) continue;
             
             if (__instance.EntityManager.TryGetComponentData(entity, out FactionReference faction)) {
                 if (__instance.EntityManager.TryGetComponentData(entity, out EntityOwner eo)) {

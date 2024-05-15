@@ -1,4 +1,4 @@
-﻿namespace OpenRPG.Models.RandomEncounters
+﻿namespace XPRising.Models.RandomEncounters
 {
     public class ItemDataModel
     {

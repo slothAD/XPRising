@@ -5,18 +5,18 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BepInEx;
 using BepInEx.Logging;
-using OpenRPG.Systems;
 using Stunlock.Core;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Systems;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils
+namespace XPRising.Utils
 {
     //-- AutoSave is now directly hooked into the Server game save activity.
     public static class AutoSaveSystem
     {
         // Config paths
         public static readonly string BasePath = Paths.ConfigPath ?? Path.Combine("BepInEx", "config");
-        public static readonly string ConfigPath = Path.Combine(BasePath, "OpenRPG");
+        public static readonly string ConfigPath = Path.Combine(BasePath, "XPRising");
         public static readonly string SavesPath = Path.Combine(ConfigPath, "Data");
         public static readonly string BackupsPath = Path.Combine(SavesPath, "Backup");
         
@@ -134,7 +134,7 @@ namespace OpenRPG.Utils
 
             if (Plugin.PlayerGroupsActive) anyErrors |= !SaveDB(saveFolder, AlliancePreferencesJson, Database.AlliancePlayerPrefs, JsonOptions);
 
-            Plugin.Log(LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
             return !anyErrors;
         }
 
@@ -187,7 +187,7 @@ namespace OpenRPG.Utils
             
             if (Plugin.PlayerGroupsActive) anyErrors |= !LoadDB(AlliancePreferencesJson, loadMethod, useInitialiser, ref Database.AlliancePlayerPrefs);
 
-            Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
             return !anyErrors;
         }
         
@@ -199,12 +199,12 @@ namespace OpenRPG.Utils
             {
                 var outputFile = Path.Combine(saveFolder, specificFile);
                 File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
-                Plugin.Log(LogSystem.Core, LogLevel.Info, $"{specificFile} Saved.");
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"{specificFile} Saved.");
                 return true;
             }
             catch (Exception e)
             {
-                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
                 return false;
             }
         }
@@ -229,7 +229,7 @@ namespace OpenRPG.Utils
                     }
                     break;
                 case LoadMethod.None:
-                    Plugin.Log(LogSystem.Core, LogLevel.Info, $"Initialising DB for {specificFile}");
+                    Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Initialising DB for {specificFile}");
                     currentRef = initialiser == null ? new TData() : initialiser();
                     return true;
             }
@@ -237,7 +237,7 @@ namespace OpenRPG.Utils
             // If nothing loaded correctly, check if we should use the initialiser or just return the current value.
             if (!useInitialiser) return false;
             
-            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
             currentRef = initialiser == null ? new TData() : initialiser();
             return false;
         }
@@ -254,10 +254,10 @@ namespace OpenRPG.Utils
                 var saveFile = ConfirmFile(folder, specificFile, defaultContents);
                 var json = File.ReadAllText(saveFile);
                 data = JsonSerializer.Deserialize<TData>(json, JsonOptions);
-                Plugin.Log(LogSystem.Core, LogLevel.Info, $"Main DB Loaded for {specificFile}");
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Main DB Loaded for {specificFile}");
                 return true;
             } catch (Exception e) {
-                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
                 return false;
             }
         }

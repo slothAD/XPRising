@@ -4,14 +4,14 @@ using BepInEx.Logging;
 using Bloodstone.API;
 using ProjectM;
 using ProjectM.Network;
-using OpenRPG.Systems;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Systems;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils; 
+namespace XPRising.Utils; 
 
 public class Alliance {
     public struct ClosePlayer {
@@ -36,7 +36,7 @@ public class Alliance {
             foreach (var ally in Allies)
             {
                 if (!Plugin.Server.EntityManager.TryGetComponentData(ally, out PlayerCharacter pc)) {
-                    Plugin.Log(LogSystem.Alliance, LogLevel.Error, "Player Character Component unavailable, but should be.");
+                    Plugin.Log(Plugin.LogSystem.Alliance, LogLevel.Error, "Player Character Component unavailable, but should be.");
                     continue;
                 }
 
@@ -52,7 +52,7 @@ public class Alliance {
         }
     }
     
-    private static bool ConvertToClosePlayer(Entity entity, float3 position, LogSystem system, out ClosePlayer player) {
+    private static bool ConvertToClosePlayer(Entity entity, float3 position, Plugin.LogSystem system, out ClosePlayer player) {
         if (!Plugin.Server.EntityManager.TryGetComponentData(entity, out PlayerCharacter pc)) {
             Plugin.Log(system, LogLevel.Info, "Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
             player = new ClosePlayer();
@@ -84,7 +84,7 @@ public class Alliance {
     // Determines the units close to the entity in question.
     // This will always include the entity that triggered this call, even if they are greater than groupMaxDistance away.
     public static List<ClosePlayer> GetClosePlayers(float3 position, Entity triggerEntity, float groupMaxDistance,
-        bool areAllies, bool useGroup, LogSystem system) {
+        bool areAllies, bool useGroup, Plugin.LogSystem system) {
         var maxDistanceSq = groupMaxDistance * groupMaxDistance;
         //-- Must be executed from main thread
         Plugin.Log(system, LogLevel.Info, "Fetching allies...");
@@ -148,7 +148,7 @@ public class Alliance {
         Options = EntityQueryOptions.IncludeDisabled
     });
     
-    public static void GetPlayerClanAllies(Entity playerCharacter, LogSystem system, out PlayerGroup playerGroup) {
+    public static void GetPlayerClanAllies(Entity playerCharacter, Plugin.LogSystem system, out PlayerGroup playerGroup) {
         if (Cache.AllianceAutoPlayerAllies.TryGetValue(playerCharacter, out playerGroup)) {
             Plugin.Log(system, LogLevel.Info, $"Player found in cache, cache timestamp is {playerGroup.TimeStamp:u}");
             var cacheAge = DateTime.Now - playerGroup.TimeStamp;
@@ -240,7 +240,7 @@ public class Alliance {
         Cache.AllianceAutoPlayerAllies[playerCharacter] = playerGroup;
     }
     
-    public static void GetLocalPlayers(Entity playerCharacter, LogSystem system, out PlayerGroup playerGroup) {
+    public static void GetLocalPlayers(Entity playerCharacter, Plugin.LogSystem system, out PlayerGroup playerGroup) {
         playerGroup = new PlayerGroup();
         
         if (!Plugin.Server.EntityManager.HasComponent<PlayerCharacter>(playerCharacter)) {

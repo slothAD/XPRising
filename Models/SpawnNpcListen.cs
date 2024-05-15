@@ -2,7 +2,7 @@
 using Stunlock.Core;
 using Unity.Entities;
 
-namespace OpenRPG.Models;
+namespace XPRising.Models;
 
 public struct SpawnNpcListen
 {

@@ -1,18 +1,18 @@
 ﻿using System;
 using BepInEx.Logging;
 using HarmonyLib;
-using OpenRPG.Models;
 using Unity.Entities;
 using Unity.Collections;
 using ProjectM.Network;
 using ProjectM;
-using OpenRPG.Utils;
-using OpenRPG.Systems;
-using OpenRPG.Utils.Prefabs;
 using Stunlock.Core;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Models;
+using XPRising.Systems;
+using XPRising.Utils;
+using XPRising.Utils.Prefabs;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Hooks;
+namespace XPRising.Hooks;
 
 [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Spawn), nameof(ModifyUnitStatBuffSystem_Spawn.OnUpdate))]
 public class ModifyUnitStatBuffSystem_Spawn_Patch
@@ -24,9 +24,9 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             for (int i = 0; i < buffBuffer.Length; i++)
             {
                 var data = buffBuffer[i];
-                Plugin.Log(LogSystem.Buff, LogLevel.Info,
+                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info,
                     $"Debug BuffBuffer[{i}]: Prefab is: {Helper.GetPrefabName(data.PrefabGuid)} ({data.PrefabGuid.GuidHash})");
-                Plugin.Log(LogSystem.Buff, LogLevel.Info,
+                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info,
                     $"Debug BuffBuffer[{i}]: Prefab is: {data.Entity} ({entityManager.Debug.GetEntityInfo(data.Entity)})");
             }
         }
@@ -58,16 +58,16 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
     private static void oldStyleBuffApplicaiton(Entity entity, EntityManager entityManager)
     {
 
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Applying OpenRPG Buffs");
+        Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Applying XPRising Buffs");
         var owner = entityManager.GetComponentData<EntityOwner>(entity).Owner;
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Owner found, hash: " + owner.GetHashCode());
+        Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Owner found, hash: " + owner.GetHashCode());
         if (!entityManager.TryGetComponentData<PlayerCharacter>(owner, out var playerCharacter)) return;
         if (!entityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"has no user");
+            Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"has no user");
 
         if (!entityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entity, out var buffer))
         {
-            Plugin.Log(LogSystem.Buff, LogLevel.Error, "entity did not have buffer");
+            Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Error, "entity did not have buffer");
             return;
         }
 
@@ -80,7 +80,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         // if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.BuffReceiver(buffer, owner, user.PlatformId);
         // Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Bloodline Buff Receiver");
         // if (Plugin.BloodlineSystemActive) BloodlineSystem.BuffReceiver(buffer, owner, user.PlatformId);
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Receiver");
+        Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Now doing Class System Buff Receiver");
         if (ExperienceSystem.LevelRewardsOn && Plugin.ExperienceSystemActive)
             ExperienceSystem.BuffReceiver(ref statusBonus, owner, user.PlatformId);
 
@@ -89,7 +89,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
             buffer.Add(makeModifyUnitStatBuff_DOTS(bonus.Key, bonus.Value, ModificationType.Add));
         }
 
-        Plugin.Log(LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + buffer.Length);
+        Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + buffer.Length);
     }
 
     private static void oldStyleBuffHook(ModifyUnitStatBuffSystem_Spawn __instance)
@@ -100,10 +100,10 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
         foreach (var entity in entities)
         {
             var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Prefab is: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+            Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"Prefab is: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
             if (prefabGuid.GuidHash == Helper.ForbiddenBuffGuid)
             {
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + prefabGuid.GuidHash);
+                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + prefabGuid.GuidHash);
             }
             else if (prefabGuid == Helper.AppliedBuff)
             {
@@ -130,7 +130,7 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
                     !__instance.EntityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
                 {
                     // Item equipped on a non-pc entity.
-                    Plugin.Log(LogSystem.Buff, LogLevel.Info,
+                    Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info,
                         $"Item not equipped by PC: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
                     continue;
                 }
@@ -160,23 +160,23 @@ public class ModifyUnitStatBuffSystem_Destroy_Patch
                     !__instance.EntityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
                 {
                     // Item equipped on a non-pc entity.
-                    Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Item not equipped by PC: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+                    Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"Item not equipped by PC: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
                     continue;
                 }
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Post: Prefab is: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
+                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"Post: Prefab is: {Helper.GetPrefabName(prefabGuid)} ({prefabGuid.GuidHash})");
                 ExperienceSystem.SetLevel(owner, playerCharacter.UserEntity, user.PlatformId);
             }
             
             if (!entityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entity, out var buffer))
             {
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, "Post: entity did not have buffer");
+                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Post: entity did not have buffer");
                 return;
             }
             
             for (int i = 0; i < buffer.Length; i++)
             {
                 var data = buffer[i];
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, $"Post: B[{i}]: {data.StatType} {data.Value} {data.ModificationType} {data.Id.Id} {data.Priority} {data.ValueByStacks} {data.IncreaseByStacks}");
+                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"Post: B[{i}]: {data.StatType} {data.Value} {data.ModificationType} {data.Id.Id} {data.Priority} {data.ValueByStacks} {data.IncreaseByStacks}");
             }
         }
     }
@@ -261,13 +261,13 @@ public class DebugBuffSystem_Patch
         // - Buff_OutOfCombat only seems to be sent once.
         var inCombat = Cache.GetCombatStart(steamID) > Cache.GetCombatEnd(steamID);
         if (combatStart && !inCombat) {
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat start");
+            Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat start");
             Cache.playerCombatStart[steamID] = DateTime.Now;
 
             // Actions to check on combat start
             if (Plugin.WantedSystemActive) WantedSystem.CheckForAmbush(ownerEntity);
         } else if (combatEnd) {
-            Plugin.Log(LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat end");
+            Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"{steamID}: Combat end");
             Cache.playerCombatEnd[steamID] = DateTime.Now;
         }
     }

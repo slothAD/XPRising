@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using ProjectM.Network;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
 using Unity.Entities;
 using VampireCommandFramework;
+using XPRising.Systems;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands {
+namespace XPRising.Commands {
     [CommandGroup("mastery", "m")]
     public static class MasteryCommands {
         private static EntityManager _entityManager = Plugin.Server.EntityManager;

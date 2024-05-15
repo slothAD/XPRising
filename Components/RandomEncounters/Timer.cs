@@ -1,10 +1,10 @@
 ﻿using System;
 using BepInEx.Logging;
-using OpenRPG.Utils.RandomEncounters;
 using Unity.Entities;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Utils.RandomEncounters;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Components.RandomEncounters
+namespace XPRising.Components.RandomEncounters
 {
     public class Timer : IDisposable
     {
@@ -55,12 +55,12 @@ namespace OpenRPG.Components.RandomEncounters
             _isRunning = true;
             try
             {
-                Plugin.Log(LogSystem.RandomEncounter, LogLevel.Debug, "Executing timer.");
+                Plugin.Log(Plugin.LogSystem.RandomEncounter, LogLevel.Debug, "Executing timer.");
                 _action.Invoke(world);
             }
             catch (Exception ex)
             {
-                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Timer failed {ex}");
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Timer failed {ex}");
             }
             finally
             {

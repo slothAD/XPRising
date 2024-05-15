@@ -1,25 +1,26 @@
-﻿using OpenRPG.Systems;
-using OpenRPG.Utils;
-using System;
+﻿using System;
 using System.Linq;
 using BepInEx.Logging;
-using OpenRPG.Configuration;
-using OpenRPG.Models;
 using ProjectM;
 using ProjectM.Shared;
 using Unity.Collections;
 using Unity.Entities;
 using VampireCommandFramework;
-using Faction = OpenRPG.Utils.Prefabs.Faction;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Configuration;
+using XPRising.Models;
+using XPRising.Systems;
+using XPRising.Utils;
+using Faction = XPRising.Utils.Prefabs.Faction;
+using LogSystem = XPRising.Plugin.LogSystem;
+using Prefabs_Faction = XPRising.Utils.Prefabs.Faction;
 
-namespace OpenRPG.Commands
+namespace XPRising.Commands
 {
     [CommandGroup("wanted", "w")]
     public static class WantedCommands {
         private static void SendFactionWantedMessage(PlayerHeatData heatData, Entity userEntity, bool userIsAdmin) {
             bool isWanted = false;
-            foreach (Faction faction in FactionHeat.ActiveFactions) {
+            foreach (Prefabs_Faction faction in FactionHeat.ActiveFactions) {
                 var heat = heatData.heat[faction];
                 // Don't display this faction's heat level if the wanted level is 0.
                 if (heat.level < FactionHeat.HeatLevels[0] && !userIsAdmin) continue;
@@ -27,7 +28,7 @@ namespace OpenRPG.Commands
                 
                 Output.SendLore(userEntity, FactionHeat.GetFactionStatus(faction, heat.level));
                 
-                if (userIsAdmin && DebugLoggingConfig.IsLogging(LogSystem.Wanted))
+                if (userIsAdmin && DebugLoggingConfig.IsLogging(Plugin.LogSystem.Wanted))
                 {
                     var sinceAmbush = DateTime.Now - heat.lastAmbushed;
                     var nextAmbush = Math.Max((int)(WantedSystem.ambush_interval - sinceAmbush.TotalSeconds), 0);
@@ -66,7 +67,7 @@ namespace OpenRPG.Commands
                 return;
             }
 
-            if (!Enum.TryParse(faction, true, out Faction heatFaction) || !FactionHeat.ActiveFactions.Contains(heatFaction)) {
+            if (!Enum.TryParse(faction, true, out Prefabs_Faction heatFaction) || !FactionHeat.ActiveFactions.Contains(heatFaction)) {
                 var supportedFactions = String.Join(", ", FactionHeat.ActiveFactions);
                 ctx.Reply($"Faction not yet supported. Supported factions: {supportedFactions}");
                 return;
@@ -141,14 +142,14 @@ namespace OpenRPG.Commands
                     // component, but we can't test for this case by any means other than checking the string generated
                     // by Plugin.Server.EntityManager.Debug.GetEntityInfo(entity). We can't test for this case as the
                     // GetBuffer or HasBuffer commands fail with an AOT code exception.
-                    Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"destroying minion {unitName}");
+                    Plugin.Log(Plugin.LogSystem.Wanted, LogLevel.Info, $"destroying minion {unitName}");
                     
                     DestroyUtility.CreateDestroyEvent(Plugin.Server.EntityManager, entity, DestroyReason.Default, DestroyDebugReason.None);
                     DestroyUtility.Destroy(Plugin.Server.EntityManager, entity);
                     removedCount++;
                 }
                 catch (Exception e) {
-                    Plugin.Log(LogSystem.Wanted, LogLevel.Info, "error doing test other: " + e.Message);
+                    Plugin.Log(Plugin.LogSystem.Wanted, LogLevel.Info, "error doing test other: " + e.Message);
                     hasErrors = true;
                 }
             }

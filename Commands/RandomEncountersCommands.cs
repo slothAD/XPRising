@@ -1,8 +1,8 @@
-﻿using OpenRPG.Systems;
-using OpenRPG.Utils;
-using VampireCommandFramework;
+﻿using VampireCommandFramework;
+using XPRising.Systems;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands
+namespace XPRising.Commands
 {
     [CommandGroup("re")]
     internal class RandomEncountersCommands

@@ -1,9 +1,9 @@
 ﻿using System;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using OpenRPG.Utils;
+using XPRising.Utils;
 
-namespace OpenRPG.Configuration;
+namespace XPRising.Configuration;
 
 public static class DebugLoggingConfig
 {

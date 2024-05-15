@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
 using BepInEx.Logging;
-using OpenRPG.Systems;
 using Unity.Mathematics;
-using Faction = OpenRPG.Utils.Prefabs.Faction;
+using XPRising.Systems;
+using Faction = XPRising.Utils.Prefabs.Faction;
 using Random = System.Random;
-using Units = OpenRPG.Utils.Prefabs.Units;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using Units = XPRising.Utils.Prefabs.Units;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace OpenRPG.Utils
+namespace XPRising.Utils
 {
+    using Faction = Prefabs.Faction;
+    using Units = Prefabs.Units;
+
     public static class SquadList {
 
         private static Random generate = new();
@@ -67,7 +70,7 @@ namespace OpenRPG.Utils
             var squadUnits = new List<UnitDetails>();
 
             var remainingSquadValue = wantedLevel * 5;
-            Plugin.Log(LogSystem.SquadSpawn, LogLevel.Info, $"Generate squad (spawn value: {remainingSquadValue})");
+            Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"Generate squad (spawn value: {remainingSquadValue})");
 
             while (remainingSquadValue > 0) {
                 var nextUnitIndex = generate.Next(0, units.Count);
@@ -90,7 +93,7 @@ namespace OpenRPG.Utils
         private static Squad GetSquad(Faction faction, int playerLevel, int wantedLevel) {
             var chance = generate.Next(100);
 
-            Plugin.Log(LogSystem.SquadSpawn, LogLevel.Info, $"GetSquad for {faction} (RNG: {chance})");
+            Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"GetSquad for {faction} (RNG: {chance})");
 
             // Very small change unique squads
             switch (chance) {
@@ -222,7 +225,7 @@ namespace OpenRPG.Utils
                             new(Units.CHAR_Farmlands_HostileVillager_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
                         });
                 default:
-                    Plugin.Log(LogSystem.Core, LogLevel.Warning, $"No specific squad generation handling has been added for {faction}");
+                    Plugin.Log(Plugin.LogSystem.Core, LogLevel.Warning, $"No specific squad generation handling has been added for {faction}");
                     break;
             }
 
@@ -237,10 +240,10 @@ namespace OpenRPG.Utils
             foreach (var unit in squad.units) {
                 var lifetime = SpawnUnit.EncodeLifetime((int)WantedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
                 SpawnUnit.Spawn(unit.type, position, unit.count, unit.range, unit.range + 4f, lifetime);
-                Plugin.Log(LogSystem.SquadSpawn, LogLevel.Info, $"Spawning: {unit.count}*{unit.type}");
+                Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"Spawning: {unit.count}*{unit.type}");
             }
 
-            Plugin.Log(LogSystem.SquadSpawn, LogLevel.Info, $"Spawn finished");
+            Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"Spawn finished");
 
             return squad.message;
         }

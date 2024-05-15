@@ -4,7 +4,7 @@ using Stunlock.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace OpenRPG.Utils; 
+namespace XPRising.Utils; 
 
 public class SpawnUnit {
     private static Entity emptyEntity = new();

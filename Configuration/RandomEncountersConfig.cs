@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
-using OpenRPG.Utils;
-using OpenRPG.Utils.RandomEncounters;
+using XPRising.Utils;
+using XPRising.Utils.RandomEncounters;
 
-namespace OpenRPG.Configuration
+namespace XPRising.Configuration
 {
     internal class RandomEncountersConfig
     {

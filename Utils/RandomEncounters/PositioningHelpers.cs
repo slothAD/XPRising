@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using Random = System.Random;
 
-namespace RandomEncounters.Utils
+namespace XPRising.Utils.RandomEncounters
 {
     // Credit: https://github.com/AviiNL/vrising-troublemaker
     internal class PositioningHelpers

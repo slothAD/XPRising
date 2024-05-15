@@ -1,23 +1,24 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using OpenRPG.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BepInEx.Logging;
-using OpenRPG.Models;
 using Unity.Entities;
 using Unity.Transforms;
-using Faction = OpenRPG.Utils.Prefabs.Faction;
-using LogSystem = OpenRPG.Plugin.LogSystem;
+using XPRising.Models;
+using XPRising.Utils;
+using Faction = XPRising.Utils.Prefabs.Faction;
+using LogSystem = XPRising.Plugin.LogSystem;
+using Prefabs_Faction = XPRising.Utils.Prefabs.Faction;
 
-namespace OpenRPG.Systems
+namespace XPRising.Systems
 {
     public static class WantedSystem {
         private static EntityManager entityManager = Plugin.Server.EntityManager;
 
-        private const LogSystem LoggingSystem = LogSystem.Faction;
+        private const Plugin.LogSystem LoggingSystem = Plugin.LogSystem.Faction;
 
         public static int heat_cooldown = 10;
         public static int ambush_interval = 60;
@@ -45,20 +46,20 @@ namespace OpenRPG.Systems
                 LoggingSystem,
                 LogLevel.Warning,
                 () => $"Player killed: Entity: {Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(victimEntity))} Faction: {victimFaction.GuidHash} {Enum.GetName(faction)}",
-                faction == Faction.Unknown);
+                faction == Utils.Prefabs.Faction.Unknown);
 
-            if (activeFaction == Faction.Unknown || heatValue == 0) return;
+            if (activeFaction == Utils.Prefabs.Faction.Unknown || heatValue == 0) return;
 
             foreach (var ally in closeAllies) {
                 HandlePlayerKill(ally.userEntity, activeFaction, heatValue);
             }
         }
 
-        private static void HandlePlayerKill(Entity userEntity, Faction victimFaction, int heatValue) {
+        private static void HandlePlayerKill(Entity userEntity, Prefabs_Faction victimFaction, int heatValue) {
             HeatManager(userEntity, out var heatData, out var steamID);
 
             // If the faction is vampire hunters, reduce the heat level of all other active factions
-            if (victimFaction == Faction.VampireHunters) {
+            if (victimFaction == Prefabs_Faction.VampireHunters) {
                 foreach (var (key, value) in heatData.heat) {
                     var heat = value;
                     var oldHeatLevel = FactionHeat.GetWantedLevel(heat.level);
@@ -75,7 +76,7 @@ namespace OpenRPG.Systems
             }
             else {
                 if (!heatData.heat.TryGetValue(victimFaction, out var heat)) {
-                    Plugin.Log(LogSystem.Wanted, LogLevel.Warning, $"Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
+                    Plugin.Log(Plugin.LogSystem.Wanted, LogLevel.Warning, $"Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
                     return;
                 }
 
@@ -145,7 +146,7 @@ namespace OpenRPG.Systems
             // Note: We could do this in the loop above, but it is likely quicker to iterate over them separately if
             // alliesInCombat is true.
             var heatList = new List<AllyHeat>();
-            var ambushFactions = new Dictionary<Faction, int>();
+            var ambushFactions = new Dictionary<Prefabs_Faction, int>();
             foreach (var ally in closeAllies) {
                 HeatManager(ally.userEntity, out var heatData, out var steamID);
                 heatList.Add(new AllyHeat(ally, heatData));
@@ -172,7 +173,7 @@ namespace OpenRPG.Systems
             // Sort DESC so that we prioritise the highest wanted level
             sortedFactionList.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
             bool isAmbushing = false;
-            var ambushingFaction = Faction.Unknown;
+            var ambushingFaction = Prefabs_Faction.Unknown;
             var ambushingTime = DateTime.Now;
             foreach (var faction in sortedFactionList) {
                 if (rand.Next(0, 100) <= ambush_chance) {
@@ -207,7 +208,7 @@ namespace OpenRPG.Systems
             return heatData;
         }
 
-        public static PlayerHeatData SetPlayerHeat(Entity userEntity, Faction heatFaction, int value, DateTime lastAmbushed) {
+        public static PlayerHeatData SetPlayerHeat(Entity userEntity, Prefabs_Faction heatFaction, int value, DateTime lastAmbushed) {
             HeatManager(userEntity, out var heatData, out var steamID);
 
             // Update faction heat

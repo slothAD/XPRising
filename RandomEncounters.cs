@@ -1,11 +1,11 @@
-﻿using OpenRPG.Components.RandomEncounters;
-using OpenRPG.Configuration;
-using OpenRPG.Systems;
-using OpenRPG.Utils.RandomEncounters;
-using System;
+﻿using System;
 using BepInEx.Logging;
+using XPRising.Components.RandomEncounters;
+using XPRising.Configuration;
+using XPRising.Systems;
+using XPRising.Utils.RandomEncounters;
 
-namespace OpenRPG
+namespace XPRising
 {
     internal static class RandomEncounters
     {

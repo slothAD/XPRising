@@ -1,17 +1,17 @@
-﻿using OpenRPG.Utils;
-using VampireCommandFramework;
+﻿using VampireCommandFramework;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands
+namespace XPRising.Commands
 {
     public static class CacheCommands {
-        [Command("db save", usage: "[saveBackup]", description: "Force the plugin to write OpenRPG DB to file. Use saveBackup to additionally save to the backup directory.", adminOnly: true)]
+        [Command("db save", usage: "[saveBackup]", description: "Force the plugin to write XPRising DB to file. Use saveBackup to additionally save to the backup directory.", adminOnly: true)]
         public static void SaveCommand(ChatCommandContext ctx, bool saveBackup = false){
             ctx.Reply($"Saving data....");
             if (AutoSaveSystem.SaveDatabase(true, saveBackup)) ctx.Reply($"Data save complete.");
             else ctx.Reply($"Error saving data. See server BepInEx log for details.");
         }
         
-        [Command("db load", usage: "[loadBackup]", description: "Force the plugin to load OpenRPG DB from file. Use loadBackup to load from the backup directory instead of the main directory.", adminOnly: true)]
+        [Command("db load", usage: "[loadBackup]", description: "Force the plugin to load XPRising DB from file. Use loadBackup to load from the backup directory instead of the main directory.", adminOnly: true)]
         public static void LoadCommand(ChatCommandContext ctx, bool loadBackup = false){
             ctx.Reply($"Loading data....");
             if (AutoSaveSystem.LoadDatabase(loadBackup)) ctx.Reply($"Data load complete.");

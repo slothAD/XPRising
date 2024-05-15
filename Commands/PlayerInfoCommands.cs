@@ -1,12 +1,12 @@
 ﻿using Bloodstone.API;
-using OpenRPG.Systems;
-using OpenRPG.Utils;
 using ProjectM.Network;
 using Unity.Entities;
 using Unity.Transforms;
 using VampireCommandFramework;
+using XPRising.Systems;
+using XPRising.Utils;
 
-namespace OpenRPG.Commands
+namespace XPRising.Commands
 {
     public static class PlayerInfoCommands
     {
