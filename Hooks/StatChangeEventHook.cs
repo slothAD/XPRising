@@ -1,9 +1,12 @@
 ﻿using HarmonyLib;
+using ProjectM.Gameplay.Systems;
 using Unity.Entities;
 using System;
-using ProjectM.Gameplay.Systems;
+using BepInEx.Logging;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace RPGMods.Hooks {
+namespace XPRising.Hooks
+{
     public delegate void OnUpdateEventHandler(World world);
     [HarmonyPatch(typeof(StatChangeSystem), nameof(StatChangeSystem.OnUpdate))]
     public class SCSHook {
@@ -12,7 +15,7 @@ namespace RPGMods.Hooks {
             try {
                 OnUpdate?.Invoke(__instance.World);
             } catch (Exception e) {
-                Plugin.Logger.LogError(e);
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"SCSHook: {e}");
             }
         }
     }

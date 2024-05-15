@@ -1,18 +1,21 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using RPGMods.Systems;
-using Unity.Entities;
+using BepInEx.Logging;
 using Unity.Mathematics;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using XPRising.Systems;
+using Faction = XPRising.Utils.Prefabs.Faction;
 using Random = System.Random;
-using Units = RPGMods.Utils.Prefabs.Units;
+using Units = XPRising.Utils.Prefabs.Units;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace RPGMods.Utils {
+namespace XPRising.Utils
+{
+    using Faction = Prefabs.Faction;
+    using Units = Prefabs.Units;
+
     public static class SquadList {
 
-        private static EntityManager entityManager = Plugin.Server.EntityManager;
         private static Random generate = new();
-        public static bool showDebugLogs = false;
 
         private struct UnitDetails {
             public Units type;
@@ -67,8 +70,7 @@ namespace RPGMods.Utils {
             var squadUnits = new List<UnitDetails>();
 
             var remainingSquadValue = wantedLevel * 5;
-            if (showDebugLogs)
-                Plugin.Logger.LogWarning($"{DateTime.Now}: Generate squad (spawn value: {remainingSquadValue})");
+            Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"Generate squad (spawn value: {remainingSquadValue})");
 
             while (remainingSquadValue > 0) {
                 var nextUnitIndex = generate.Next(0, units.Count);
@@ -91,7 +93,7 @@ namespace RPGMods.Utils {
         private static Squad GetSquad(Faction faction, int playerLevel, int wantedLevel) {
             var chance = generate.Next(100);
 
-            if (showDebugLogs) Plugin.Logger.LogWarning($"GetSquad for {faction} (RNG: {chance})");
+            Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"GetSquad for {faction} (RNG: {chance})");
 
             // Very small change unique squads
             switch (chance) {
@@ -220,10 +222,10 @@ namespace RPGMods.Utils {
                 case Faction.Werewolf:
                     return new Squad($"A {faction} squad is ambushing you!",
                         new List<UnitDetails>() {
-                            new(Units.CHAR_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
+                            new(Units.CHAR_Farmlands_HostileVillager_Werewolf, 3 * wantedLevel, Math.Max(playerLevel - 1, 1), 5)
                         });
                 default:
-                    Plugin.Logger.LogWarning($"No specific squad generation handling has been added for {faction}");
+                    Plugin.Log(Plugin.LogSystem.Core, LogLevel.Warning, $"No specific squad generation handling has been added for {faction}");
                     break;
             }
 
@@ -236,12 +238,12 @@ namespace RPGMods.Utils {
             var squad = GetSquad(faction, playerLevel, wantedLevel);
             
             foreach (var unit in squad.units) {
-                var lifetime = SpawnUnit.EncodeLifetime((int)HunterHuntedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
+                var lifetime = SpawnUnit.EncodeLifetime((int)WantedSystem.ambush_despawn_timer, unit.level, SpawnUnit.SpawnFaction.VampireHunters);
                 SpawnUnit.Spawn(unit.type, position, unit.count, unit.range, unit.range + 4f, lifetime);
-                if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawning: {unit.count}*{unit.type}");
+                Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"Spawning: {unit.count}*{unit.type}");
             }
 
-            if (showDebugLogs) Plugin.Logger.LogWarning($"{DateTime.Now}: Spawn finished");
+            Plugin.Log(Plugin.LogSystem.SquadSpawn, LogLevel.Info, $"Spawn finished");
 
             return squad.message;
         }

@@ -1,21 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BepInEx.Logging;
 using ProjectM.Network;
-using RPGMods.Systems;
 using Unity.Entities;
 using Unity.Mathematics;
-using Faction = RPGMods.Utils.Prefabs.Faction;
+using XPRising.Systems;
+using XPRising.Utils.Prefabs;
+using Faction = XPRising.Utils.Prefabs.Faction;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace RPGMods.Utils;
+namespace XPRising.Utils;
+
+using Faction = Prefabs.Faction;
 
 public static class FactionHeat {
     public static readonly Faction[] ActiveFactions = {
-        Faction.Militia,
         Faction.Bandits,
-        Faction.Undead,
-        Faction.Gloomrot,
         Faction.Critters,
+        Faction.Gloomrot,
+        Faction.Militia,
+        Faction.Undead,
         Faction.Werewolf
     };
     
@@ -23,7 +28,11 @@ public static class FactionHeat {
 
     public static readonly int[] HeatLevels = { 150, 250, 500, 1000, 1500, 3000 };
     
-    public static void GetActiveFactionHeatValue(Faction faction, bool isVBlood, out int heatValue, out Faction activeFaction) {
+    // Units that generate extra heat.
+    private static HashSet<Units> ExtraHeatUnits = new HashSet<Units>(
+        FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
+    
+    public static void GetActiveFactionHeatValue(Faction faction, Utils.Prefabs.Units victim, bool isVBlood, out int heatValue, out Faction activeFaction) {
         switch (faction) {
             // Bandit
             case Faction.Traders_T01:
@@ -103,13 +112,14 @@ public static class FactionHeat {
                 activeFaction = Faction.Unknown;
                 break;
             default:
-                Plugin.Logger.LogWarning($"Faction not handled for active faction: {Enum.GetName(faction)}");
+                Plugin.Log(Plugin.LogSystem.Wanted, LogLevel.Warning, $"Faction not handled for active faction: {Enum.GetName(faction)}");
                 heatValue = 0;
                 activeFaction = Faction.Unknown;
                 break;
         }
-
-        if (isVBlood) heatValue *= HunterHuntedSystem.vBloodMultiplier;
+        
+        if (isVBlood) heatValue *= WantedSystem.vBloodMultiplier;
+        else if (ExtraHeatUnits.Contains(victim)) heatValue = (int)(heatValue * 1.5);
     }
 
     public static string GetFactionStatus(Faction faction, int heat) {
@@ -130,23 +140,20 @@ public static class FactionHeat {
         
         var steamID = Plugin.Server.EntityManager.GetComponentData<User>(userEntity).PlatformId;
         var playerLevel = 0;
-        if (Database.player_experience.TryGetValue(steamID, out int exp)) {
-            playerLevel = ExperienceSystem.convertXpToLevel(exp);
+        if (Database.PlayerExperience.TryGetValue(steamID, out int exp)) {
+            playerLevel = ExperienceSystem.ConvertXpToLevel(exp);
         }
         
         var squadMessage = SquadList.SpawnSquad(playerLevel, position, faction, wantedLevel);
         Output.SendLore(userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");
     }
 
-    public static void Ambush(List<Alliance.CloseAlly> closeAllies, Faction faction, int wantedLevel) {
+    public static void Ambush(float3 position, List<Alliance.ClosePlayer> closeAllies, Faction faction, int wantedLevel) {
         if (wantedLevel < 1 || closeAllies.Count == 0) return;
 
-        // Currently sorting DESC -> ambushing highest level
-        // The lower level will generally have more difficulty than the higher level so chose the highest to make it
-        // better for them.
-        closeAllies.Sort((ally1, ally2) => ally2.playerLevel.CompareTo(ally1.playerLevel));
-        var chosenAlly = closeAllies[0];
-        var squadMessage = SquadList.SpawnSquad(chosenAlly.playerLevel, chosenAlly.position, faction, wantedLevel);
+        // Grab the player based on the highest player level
+        var chosenAlly = closeAllies.MaxBy(ally => ally.playerLevel);
+        var squadMessage = SquadList.SpawnSquad(chosenAlly.playerLevel, position, faction, wantedLevel);
         
         foreach (var ally in closeAllies) {
             Output.SendLore(ally.userEntity, $"<color=#{ColourGradient[wantedLevel - 1]}>{squadMessage}</color>");

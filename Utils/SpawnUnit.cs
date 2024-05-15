@@ -1,9 +1,10 @@
 ﻿using System;
 using ProjectM;
+using Stunlock.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace RPGMods.Utils; 
+namespace XPRising.Utils; 
 
 public class SpawnUnit {
     private static Entity emptyEntity = new();
@@ -76,7 +77,7 @@ public class SpawnUnit {
     }
 
     public static void Spawn(Prefabs.Units type, float3 position, int count, float minRange, float maxRange, float lifetime) {
-        Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(
+        Plugin.Server.GetExistingSystemManaged<UnitSpawnerUpdateSystem>().SpawnUnit(
             emptyEntity, new PrefabGUID((int)type), position, count, minRange, maxRange, lifetime);
     }
 }

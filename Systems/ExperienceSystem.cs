@@ -2,493 +2,280 @@
 using ProjectM.Network;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 using Unity.Entities;
-using Unity.Transforms;
-using Unity.Mathematics;
-using RPGMods.Utils;
 using System.Linq;
-using Cache = RPGMods.Utils.Cache;
+using BepInEx.Logging;
+using Unity.Collections;
+using XPRising.Models;
+using XPRising.Utils;
+using XPRising.Utils.Prefabs;
+using Cache = XPRising.Utils.Cache;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace RPGMods.Systems
+namespace XPRising.Systems
 {
     public class ExperienceSystem
     {
-        private static EntityManager entityManager = Plugin.Server.EntityManager;
+        private static EntityManager _entityManager = Plugin.Server.EntityManager;
 
-        public static bool isEXPActive = true;
-        public static float EXPMultiplier = 1;
+        public static float ExpMultiplier = 1.5f;
         public static float VBloodMultiplier = 15;
-        public static float EXPConstant = 0.1f;
-        public static int EXPPower = 2;
-        public static int MaxLevel = 80;
-        public static double GroupModifier = 0.75;
+        public static int MaxLevel = 100;
         public static float GroupMaxDistance = 50;
         public static bool ShouldAllowGearLevel = true;
         public static bool LevelRewardsOn = true;
-        public static bool easyLvl15 = true;
 
-        public static float pvpXPLoss = 0;
-        public static float pvpXPLossPerLevel = 0;
-        public static float pvpXPLossPercent = 0;
-        public static float pvpXPLossPercentPerLevel = 0;
-        public static float pvpXPLossMultPerLvlDiff = 0;
-        public static float pvpXPLossMultPerLvlDiffSq = 0;
-        public static float pveXPLoss = 0;
-        public static float pveXPLossPerLevel = 0;
-        public static float pveXPLossPercent = 10;
-        public static float pveXPLossPercentPerLevel = 0;
-        public static float pveXPLossMultPerLvlDiff = 0;
-        public static float pveXPLossMultPerLvlDiffSq = 0;
-
-        public static bool xpLostOnDown = false;
-        public static bool xpLostOnRelease = false;
-
-        public static double EXPLostOnDeath = 0.10;
+        public static float PvpXpLossPercent = 0;
+        public static float PveXpLossPercent = 10;
         
-        public enum GroupLevelScheme {
-            None = 0,
-            Average = 1,
-            Max = 2,
-            EachPlayer = 3,
-            Killer = 4,
-        }
+        /*
+         * The following values have been tweaked to have the following stats:
+         * Total xp: 355,085
+         * Last level xp: 7,7765
+         *
+         * Assuming:
+         * - ExpMultiplier = 1.5
+         * - Ignoring VBlood bonus (2x in last column)
+         * - MaxLevel = 100 (and assuming that the max mob level matches)
+         * 
+         *    mob level=> | same   | +5   |  -5  | +5 => -5 | same (VBlood only) |
+         * _______________|________|______|______|__________|____________________|
+         * Total kills    | 4258   | 2720 | 8644 | 4891     | 2129               |
+         * lvl 0 kills    | 10     | 2    | 10   | 2        | 5                  |
+         * Last lvl kills | 52     | 52   | 164  | 91       | 26                 |
+         *
+         * +5/-5 offset to levels in the above table as still clamped to the range [1, 100].
+         * 
+         * To increase the kill counts across the board, reduce ExpMultiplier.
+         * If you want to tweak the curve, lowering ExpConstant and raising ExpPower can be done in tandem to flatten the
+         * curve (attempting to ensure that the total kills or last lvl kills stay the same).
+         *
+         * VBlood entry in the table (naively) assumes that the player is killing a VBlood at the same level (when some
+         * of those do not exist).
+         * 
+         */
+        private const float ExpConstant = 0.3f;
+        private const float ExpPower = 2.2f;
+        private const float ExpLevelDiffMultiplier = 0.08f;
 
-        public static GroupLevelScheme groupLevelScheme = GroupLevelScheme.Average;
-
-        public static bool xpLogging = false;
+        private static HashSet<Units> _noExpUnits = new HashSet<Units>(
+            FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
         
-        private struct CloseAlly {
-            public Entity userEntity;
-            public User userComponent;
-            public int currentXp;
-            public int playerLevel;
-            public ulong steamID;
-            public bool isKiller;
-        }
+        // Encourage group play by buffing XP for groups
+        private const double GroupXpBuffGrowth = 0.2;
+        private const double MaxGroupXpBuff = 1.5;
         
-        private static bool ConvertToAlly(Entity entity, out CloseAlly ally) {
-            if (!entityManager.TryGetComponentData(entity, out PlayerCharacter pc)) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Player Character Component unavailable, available components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
-                ally = new CloseAlly();
-                return false;
-            } 
-            var user = pc.UserEntity;
-            if (!entityManager.TryGetComponentData(user, out User userComponent)) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": User Component unavailable, available components from pc.UserEntity are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(user));
-                // Can't really do anything at this point
-                ally = new CloseAlly();
-                return false;
-            }
-                        
-            var steamID = userComponent.PlatformId;
-            var playerLevel = 0;
-            if (Database.player_experience.TryGetValue(steamID, out int currentXp))
-            {
-                playerLevel = convertXpToLevel(currentXp);
-            }
-                        
-            ally = new CloseAlly() {
-                currentXp = currentXp,
-                playerLevel = playerLevel,
-                steamID = steamID,
-                userEntity = user,
-                userComponent = userComponent
-            };
-            return true;
-        }
-
-        public static void EXPMonitor(Entity killerEntity, Entity victimEntity)
+        // We can add various mobs/groups/factions here to reduce or increase XP gain
+        private static float ExpValueMultiplier(Entity entity, bool isVBlood)
         {
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Kill Found, Handling XP");
+            if (isVBlood) return VBloodMultiplier;
+            var unit = Helper.ConvertGuidToUnit(Helper.GetPrefabGUID(entity));
+            if (_noExpUnits.Contains(unit)) return 0;
             
-            //-- Check victim is not a summon
-            if (entityManager.HasComponent<Minion>(victimEntity)) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Minion killed, exiting XP");
-                return;
-            }
-            
-            //-- Check victim has a level
-            if (!entityManager.HasComponent<UnitLevel>(victimEntity)) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Has no level, exiting XP");
-                return;
-            }
-
-            if (xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Killer entity: {killerEntity}");
-            
-            //-- Must be executed from main thread
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Fetching allies...");
-            List<CloseAlly> closeAllies = new();
-            if (groupLevelScheme == GroupLevelScheme.None || GroupModifier == 0) {
-                // If we are using a scheme of None or the Group Modifier is 0, we are our only ally
-                if (ConvertToAlly(killerEntity, out var ally)) {
-                    ally.isKiller = true;
-                    closeAllies.Add(ally);
-                }
-            }
-            else {
-                Helper.GetAllies(killerEntity, out var playerGroup);
-                
-                if (xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Getting close allies");
-                
-                var killerLocation = entityManager.GetComponentData<LocalToWorld>(killerEntity);
-                foreach (var ally in playerGroup.Allies) {
-                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Iterating over allies, ally is " + ally.GetHashCode());
-                    if (!Cache.PlayerLocations.TryGetValue(ally.Value, out var allyPos)) {
-                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Could not get position, update the cache!");
-                        continue;
-                    }
-                    if (xpLogging) Plugin.Logger.LogInfo(   DateTime.Now + ": Got Ally Position");
-                    var distance = math.distance(killerLocation.Position.xz, allyPos.Position.xz);
-                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Distance is " + distance + ", Max Distance is " + GroupMaxDistance);
-                    if (!(distance <= GroupMaxDistance)) continue;
-                    if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Converting entity to ally...");
-
-                    if (ConvertToAlly(ally.Key, out var closeAlly)) {
-                        closeAlly.isKiller = killerEntity.Equals(ally.Key);
-                        closeAllies.Add(closeAlly);
-                    }
-                }
-            }
-            
-            //-- ---------------------------------
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Allies Fetched, Total ally count of " + closeAllies.Count);
-            
-            var unitLevel = entityManager.GetComponentData<UnitLevel>(victimEntity);
-
-            bool isVBlood;
-            if (entityManager.HasComponent<BloodConsumeSource>(victimEntity))
-            {
-                var bloodSource = entityManager.GetComponentData<BloodConsumeSource>(victimEntity);
-                isVBlood = bloodSource.UnitBloodType.Equals(Helper.vBloodType);
-            }
-            else
-            {
-                isVBlood = false;
-            }
-            UpdateEXP(unitLevel.Level, isVBlood, closeAllies);
+            return 1;
+        }
+        
+        public static bool IsPlayerLoggingExperience(ulong steamId)
+        {
+            return Database.PlayerLogConfig[steamId].LoggingExp;
         }
 
-        private static void UpdateEXP(int mobLevel, bool isVBlood, List<CloseAlly> closeAllies) {
-            // Calculate the modified player level
-            var modifiedPlayerLevel = 0;
-            switch (groupLevelScheme) {
-                case GroupLevelScheme.Average:
-                    modifiedPlayerLevel += (int)closeAllies.Average(x => x.playerLevel);
-                    break;
-                case GroupLevelScheme.Max:
-                    modifiedPlayerLevel = closeAllies.Max(x => x.playerLevel);
-                    break;
-                case GroupLevelScheme.Killer:
-                    // If the killer is not found, use MaxLevel
-                    modifiedPlayerLevel = closeAllies.Where(x => x.isKiller).Select(x => x.playerLevel).FirstOrDefault(MaxLevel);
-                    break;
-                case GroupLevelScheme.EachPlayer:
-                case GroupLevelScheme.None:
-                    // Do nothing to modify the player level
-                    break;
-                default:
-                    Plugin.Logger.LogWarning($"{DateTime.Now}: Group level scheme unknown");
-                    break;
-            }
+        public static void ExpMonitor(List<Alliance.ClosePlayer> closeAllies, Entity victimEntity, bool isVBlood)
+        {
+            var unitLevel = _entityManager.GetComponentData<UnitLevel>(victimEntity);
+            var multiplier = ExpValueMultiplier(victimEntity, isVBlood);
+            
+            var sumGroupLevel = (double)closeAllies.Sum(x => x.playerLevel);
+            // TODO consider exposing option to use either average or max functions for group level
+            var avgGroupLevel = (int)Math.Ceiling(closeAllies.Average(x => x.playerLevel));
 
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Running Assign EXP for all close allied players");
-            var isGroup = closeAllies.Count > 1 && groupLevelScheme != GroupLevelScheme.None;
+            // Calculate an XP bonus that grows as groups get larger
+            var baseGroupXpBonus = Math.Min(Math.Pow(1 + GroupXpBuffGrowth, closeAllies.Count - 1), MaxGroupXpBuff);
+
+            Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info, "Running Assign EXP for all close allied players");
             foreach (var teammate in closeAllies) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Assigning EXP to " + teammate.GetHashCode());
-                switch (groupLevelScheme) {
-                    case GroupLevelScheme.Average:
-                    case GroupLevelScheme.Max:
-                    case GroupLevelScheme.Killer:
-                        // modifiedPlayerLevel already up to date
-                        break;
-                    case GroupLevelScheme.EachPlayer:
-                        modifiedPlayerLevel = teammate.playerLevel;
-                        break;
-                    case GroupLevelScheme.None:
-                        modifiedPlayerLevel = teammate.playerLevel;
-                        break;
-                }
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + $": IsKiller: {teammate.isKiller} LVL: {teammate.playerLevel} M_LVL: {modifiedPlayerLevel} {groupLevelScheme}");
-                AssignExp(teammate, mobLevel, modifiedPlayerLevel, isVBlood, isGroup);
+                Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info, $"Assigning EXP to {teammate.steamID}: LVL: {teammate.playerLevel}, IsKiller: {teammate.isTrigger}, IsVBlood: {isVBlood}");
+                
+                // Calculate the portion of the total XP that this player should get.
+                var groupMultiplier = GroupMaxDistance > 0 ? baseGroupXpBonus * (teammate.playerLevel / sumGroupLevel) : 1.0;
+                AssignExp(teammate, avgGroupLevel, unitLevel.Level, multiplier * groupMultiplier);
             }
         }
 
-        private static void AssignExp(CloseAlly ally, int mobLevel, int modifiedPlayerLevel, bool isVBlood, bool isGroup) {
-            if (ally.currentXp >= convertLevelToXp(MaxLevel)) return;
+        private static void AssignExp(Alliance.ClosePlayer player, int groupLevel, int mobLevel, double multiplier) {
+            if (player.currentXp >= ConvertLevelToXp(MaxLevel)) return;
+            
+            var xpGained = CalculateXp(groupLevel, mobLevel, multiplier);
 
-            var xpGained = CalculateXp(modifiedPlayerLevel, mobLevel, isVBlood);
+            var newXp = Math.Max(player.currentXp, 0) + xpGained;
+            Database.PlayerExperience[player.steamID] = newXp;
 
-            if (isGroup) {
-                xpGained = (int)(xpGained * GroupModifier);
-            }
-
-            var newXp = Math.Max(ally.currentXp, 0) + xpGained;
-            Database.player_experience[ally.steamID] = newXp;
-
-            if (Database.player_log_exp.TryGetValue(ally.steamID, out bool isLogging))
+            GetLevelAndProgress(newXp, out _, out var earned, out var needed);
+            Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info, $"Gained {xpGained} from Lv.{mobLevel} [{earned}/{needed} (total {newXp})]");
+            if (IsPlayerLoggingExperience(player.steamID))
             {
-                if (isLogging) {
-                    GetLevelAndProgress(newXp, out int progress, out int earned, out int needed);
-                    Output.SendLore(ally.userEntity, $"<color=#ffdd00>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
-                }
+                Output.SendLore(player.userEntity, $"<color={Output.LightYellow}>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
             }
             
-            SetLevel(ally.userComponent.LocalCharacter._Entity, ally.userEntity, ally.steamID);
+            SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
         }
 
-        private static int CalculateXp(int playerLevel, int mobLevel, bool isVBlood) {
-            var xpGained = isVBlood ? (int)(mobLevel * VBloodMultiplier) : mobLevel;
-
+        private static int CalculateXp(int playerLevel, int mobLevel, double multiplier) {
             var levelDiff = mobLevel - playerLevel;
+
+            Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info, $"--- Max(1, {mobLevel} * {multiplier} * (1 + {levelDiff} * 0.1))*{ExpMultiplier}");
+            return (int)(Math.Max(1, mobLevel * multiplier * (1 + levelDiff * ExpLevelDiffMultiplier))*ExpMultiplier);
+        }
+        
+        public static void DeathXpLoss(Entity playerEntity, Entity killerEntity) {
+            var pvpKill = !playerEntity.Equals(killerEntity) && _entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out _);
+            var xpLossPercent = pvpKill ? PvpXpLossPercent : PveXpLossPercent;
             
-            if (levelDiff >= 0) xpGained = (int)(xpGained * (1 + levelDiff * 0.1) * EXPMultiplier);
-            else{
-                float xpMult = levelDiff * -1.0f;
-                xpMult /= (xpMult + 10.0f);
-                xpGained = (int)(xpGained * (1-xpMult));
+            if (xpLossPercent == 0)
+            {
+                Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info, $"xpLossPercent is 0. No lost XP. (PvP: {pvpKill})");
+                return;
             }
+            
+            var player = _entityManager.GetComponentData<PlayerCharacter>(playerEntity);
+            var userEntity = player.UserEntity;
+            var user = _entityManager.GetComponentData<User>(userEntity);
+            var steamID = user.PlatformId;
 
-            return xpGained;
+            Database.PlayerExperience.TryGetValue(steamID, out var exp);
+            
+            var calculatedNewXp = exp * (1 - xpLossPercent/100);
+
+            // The minimum our XP is allowed to drop to
+            // TODO consider allowing "iron man" mode, which would set xp to 0 on death (or maybe even kick player and force them to create a new character)
+            var minXp = ConvertLevelToXp(ConvertXpToLevel(exp)) + 1; // 1 more XP than the start of the level
+            var currentXp = Math.Max((int)Math.Ceiling(calculatedNewXp), minXp);
+            var xpLost = exp - currentXp;
+            Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info, $"Calculated XP: {steamID}: {currentXp} = Max({exp} * {xpLossPercent/100}, {minXp}) [lost {xpLost}]");
+            Database.PlayerExperience[steamID] = currentXp;
+
+            SetLevel(playerEntity, userEntity, steamID);
+            GetLevelAndProgress(currentXp, out _, out var earned, out var needed);
+            Output.SendLore(userEntity, $"You've been defeated, <color={Output.White}>{xpLost}</color> XP is lost. [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
         }
 
-        public static void loseEXP(Entity playerEntity, int xpLost) {
-            PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
-            Entity userEntity = player.UserEntity;
-            User user = entityManager.GetComponentData<User>(userEntity);
-            ulong SteamID = user.PlatformId;
-            Database.player_experience.TryGetValue(SteamID, out int xp);
-            Database.player_experience[SteamID] = xp - xpLost;
-
-            SetLevel(playerEntity, userEntity, SteamID);
-        }
-        public static void deathXPLoss(Entity playerEntity, Entity killerEntity) {
-            PlayerCharacter player = entityManager.GetComponentData<PlayerCharacter>(playerEntity);
-            Entity userEntity = player.UserEntity;
-            User user = entityManager.GetComponentData<User>(userEntity);
-            ulong SteamID = user.PlatformId;
-            float xpLost;
-            Database.player_experience.TryGetValue(SteamID, out int exp);
-            int pLvl = convertXpToLevel(exp);
-            int killerLvl = pLvl;
-            bool pvpKill = false;
-            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(killerEntity, out PlayerCharacter killer);
-            if (entityManager.TryGetComponentData<UnitLevel>(killerEntity, out UnitLevel killerUnitLevel)) killerLvl = killerUnitLevel.Level;
-            else {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(killerEntity));
-                if (entityManager.TryGetComponentData<EntityOwner>(killerEntity, out EntityOwner eOwn)) {
-                    if (entityManager.TryGetComponentData<UnitLevel>(eOwn, out killerUnitLevel)) {
-                        killerLvl = killerUnitLevel.Level;
-                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityOwner has level: " + killerLvl);
-                        if (!pvpKill) {
-                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eOwn, out killer);
-                        }
-                    }
-                    else if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityOwner has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eOwn));
-                }
-                if (entityManager.TryGetComponentData<EntityCreator>(killerEntity, out EntityCreator eCreator)) {
-                    if (entityManager.TryGetComponentData<UnitLevel>(eCreator.Creator._Entity, out killerUnitLevel)) {
-                        killerLvl = killerUnitLevel.Level;
-                        if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityCreator has level: " + killerLvl);
-                        if (!pvpKill) {
-                            pvpKill = entityManager.TryGetComponentData<PlayerCharacter>(eCreator.Creator._Entity, out killer);
-                        }
-                    } else if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": EntityCreator has no level to be found. Components are: " + Plugin.Server.EntityManager.Debug.GetEntityInfo(eCreator.Creator._Entity));
-                }
-            }
-            float xpLossPerLevel = pveXPLossPerLevel;
-            float xpLossPercentPerLevel = pveXPLossPercentPerLevel;
-            float xpLoss = pveXPLoss;
-            float xpLossPercent = pveXPLossPercent;
-            int lvlDiff = pLvl - killerLvl;
-            float lossMultPerDiff = pveXPLossMultPerLvlDiff;
-            float lossMultPerDiffsq = pveXPLossMultPerLvlDiffSq;
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Level Difference of " + lvlDiff + " (PLvl: "+ pLvl + " - Killer Lvl:" + killerLvl +")");
-
-            if (pvpKill) {
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": PvP Kill");
-                xpLossPerLevel = pvpXPLossPerLevel;
-                xpLossPercentPerLevel = pvpXPLossPercentPerLevel;
-                xpLoss = pvpXPLoss;
-                xpLossPercent = pvpXPLossPercent;
-                lossMultPerDiff = pvpXPLossMultPerLvlDiff;
-                lossMultPerDiffsq = pvpXPLossMultPerLvlDiffSq;
-            }
-            float xpLossMult = 1 - (lvlDiff * lossMultPerDiff + lvlDiff * lvlDiff * lossMultPerDiffsq);
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": xpLossMult per level " + lossMultPerDiff + " xpLossMultPerDiffSquared: " + lossMultPerDiffsq);
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": results in XPLossMult of " + xpLossMult + " (PLvl: " + pLvl + " - Killer Lvl:" + killerLvl + ")");
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Flat Loss: " + xpLoss + ", Loss per level: " + xpLossPerLevel + ", Percent Loss: " + xpLossPercent + ", Percent Loss Per Level: " + xpLossPercentPerLevel);
-
-
-            if (exp <= 0 || xpLossMult <= 0) xpLost = 0;
-            else {
-                int lvlXP = convertLevelToXp(pLvl + 1) - convertLevelToXp(pLvl);
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": lvlXP is "+ lvlXP);
-                xpLost = xpLoss + (xpLossPerLevel * pLvl);
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": so our static XP Loss is " + xpLost);
-                xpLost += (lvlXP * xpLossPercent + lvlXP * xpLossPercentPerLevel * pLvl) / 100;
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": adding on the percentile loss we have " + xpLost);
-                xpLost *= xpLossMult;
-                if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": then multiplying by the loss mult we get " + xpLost);
-
-            }
-
-            int currentXp = exp - (int)xpLost;
-            if (xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": subtracing that from our " + exp + " we get " + currentXp);
-            Database.player_experience[SteamID] = currentXp;
-
-            SetLevel(playerEntity, userEntity, SteamID);
-            GetLevelAndProgress(currentXp, out int progress, out int earned, out int needed);
-            Output.SendLore(userEntity, $"You've been defeated,<color=#fffffffe> {xpLost}</color> XP is lost. [ XP: <color=#fffffffe> {earned}</color>/<color=#fffffffe>{needed}</color> ]");
-        }
-
-        public static void BuffReceiver(Entity buffEntity)
+        public static void SetLevel(Entity entity, Entity user, ulong steamID)
         {
-            PrefabGUID GUID = entityManager.GetComponentData<PrefabGUID>(buffEntity);
-            if (GUID.Equals(Database.Buff.LevelUp_Buff)) {
-                Entity Owner = entityManager.GetComponentData<EntityOwner>(buffEntity).Owner;
-                if (entityManager.HasComponent<PlayerCharacter>(Owner))
-                {
-                    LifeTime lifetime = entityManager.GetComponentData<LifeTime>(buffEntity);
-                    lifetime.Duration = 0.0001f;
-                    entityManager.SetComponentData(buffEntity, lifetime);
-                }
+            var level = ConvertXpToLevel(Database.PlayerExperience[steamID]);
+            if (level < 0)
+            {
+                level = 1;
+                Database.PlayerExperience[steamID] = ConvertLevelToXp(level);
             }
-        }
-
-        public static void SetLevel(Entity entity, Entity user, ulong SteamID)
-        {
-            Database.player_experience.TryAdd(SteamID, 0);
-            Database.player_abilityIncrease.TryAdd(SteamID, 0);
-
-            float level = convertXpToLevel(Database.player_experience[SteamID]);
-            if (level < 0) return;
-            if (level > MaxLevel){
+            else if (level > MaxLevel)
+            {
                 level = MaxLevel;
-                Database.player_experience[SteamID] = convertLevelToXp(MaxLevel);
+                Database.PlayerExperience[steamID] = ConvertLevelToXp(MaxLevel);
             }
 
-            bool levelDataExists = Cache.player_level.TryGetValue(SteamID, out var storedLevel);
-            if (levelDataExists){
-                if (storedLevel < level) 
+            if (Cache.player_level.TryGetValue(steamID, out var storedLevel))
+            {
+                if (storedLevel < level)
                 {
-                    Cache.player_level[SteamID] = level;
-                    Helper.ApplyBuff(user, entity, Database.Buff.LevelUp_Buff);
-
-                    if (LevelRewardsOn)
+                    Helper.ApplyBuff(user, entity, Helper.LevelUp_Buff);
+                    if (IsPlayerLoggingExperience(steamID))
                     {
-                        //increases by level
-                        for (var i = storedLevel+1; i <= level; i++)
-                        {
-                            //default rewards for leveling up
-                            Database.player_abilityIncrease[SteamID] += 1;
-                            Database.player_level_stats[SteamID][UnitStatType.MaxHealth] += .5f;
-
-                            Helper.ApplyBuff(user, entity, Helper.appliedBuff);
-
-                            //extra ability point rewards to spend for achieve certain level milestones
-                            switch (i)
-                            {
-                                case 1:
-                                    Database.player_abilityIncrease[SteamID] += 1;
-                                    break;
-                            }
-                        }
+                        Output.SendLore(user,
+                            $"<color={Output.LightYellow}>Level up! You're now level</color> <color={Output.White}>{level}</color><color={Output.LightYellow}>!</color>");
                     }
-
-                    if (Database.player_log_exp.TryGetValue(SteamID, out bool isLogging))
-                    {
-                        if (isLogging) 
-                        {
-                            var userData = entityManager.GetComponentData<User>(user);
-                            Output.SendLore(user, $"<color=#ffdd00>Level up! You're now level</color><color=#fffffffe> {level}</color><color=#ffdd00ff>!</color>");
-                        }
-                    }
-                    
                 }
+
+                Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info,
+                    $"Set player level: LVL: {level} (stored: {storedLevel}) XP: {Database.PlayerExperience[steamID]}");
             }
             else
             {
-                Cache.player_level[SteamID] = level;
+                Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Info,
+                    $"Player logged in: LVL: {level} (stored: {storedLevel}) XP: {Database.PlayerExperience[steamID]}");
             }
-            Equipment eq_comp = entityManager.GetComponentData<Equipment>(entity);
-            
-            eq_comp.SpellLevel._Value = level;
 
-            entityManager.SetComponentData(entity, eq_comp);
+            Cache.player_level[steamID] = level;
+                
+            Equipment equipment = _entityManager.GetComponentData<Equipment>(entity);
+            Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, $"Current gear levels: {equipment.ArmorLevel.Value} {equipment.SpellLevel.Value} {equipment.WeaponLevel.Value}");
+            var halfOfLevel = level / 2;
+            equipment.ArmorLevel._Value = MathF.Floor(halfOfLevel);
+            equipment.WeaponLevel._Value = MathF.Ceiling(halfOfLevel);
+            equipment.SpellLevel._Value = 0;
+
+            _entityManager.SetComponentData(entity, equipment);
         }
 
         /// <summary>
         /// For use with the LevelUpRewards buffing system.
         /// </summary>
-        /// <param name="Buffer"></param>
-        /// <param name="Owner"></param>
-        /// <param name="SteamID"></param>
-        public static void BuffReceiver(DynamicBuffer<ModifyUnitStatBuff_DOTS> Buffer, Entity Owner, ulong SteamID)
+        /// <param name="buffer"></param>
+        /// <param name="owner"></param>
+        /// <param name="steamID"></param>
+        public static void BuffReceiver(ref LazyDictionary<UnitStatType, float> statBonus, Entity owner, ulong steamID)
         {
             if (!LevelRewardsOn) return;
             float multiplier = 1;
             try
             {
-                foreach (var gearType in Database.player_level_stats[SteamID])
-                {
-                    //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
-                    //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
-                    //Maybe im just dumb, but I checked the array and tried that approach thinking i was double buffing due to logical error                    
-                    if (WeaponMasterSystem.GetWeaponType(Owner) == WeaponType.None) multiplier = 2; 
-
-                    Buffer.Add(new ModifyUnitStatBuff_DOTS()
-                    {
-                        StatType = gearType.Key,
-                        Value = gearType.Value * multiplier,
-                        ModificationType = ModificationType.AddToBase,
-                        Id = ModificationId.NewId(0)
-                    });
-                }
+                // foreach (var gearType in Database.PlayerLevelStats[steamID])
+                // {
+                //     // TODO is this still true?
+                //     //we have to hack unequipped players and give them double bonus because the buffer array does not contain the buff, but they get an additional 
+                //     //buff of the same type when they are equipped! This will make them effectively the same effect, equipped or not.
+                //     //Maybe im just dumb, but I checked the array and tried that approach thinking i was double buffing due to logical error                    
+                //     if (WeaponMasterySystem.GetWeaponType(owner) == WeaponType.None) multiplier = 2; 
+                //
+                //     buffer.Add(new ModifyUnitStatBuff_DOTS()
+                //     {
+                //         StatType = gearType.Key,
+                //         Value = gearType.Value * multiplier,
+                //         ModificationType = ModificationType.AddToBase,
+                //         Id = ModificationId.NewId(0)
+                //     });
+                // }
+                var playerLevel = GetLevel(steamID);
+                var healthBuff = 2f * playerLevel * multiplier;
+                statBonus[UnitStatType.MaxHealth] = healthBuff;
             }
             catch (Exception ex)
             {
-                Plugin.Logger.LogError($"Could not apply buff, I'm sad for you! {ex.ToString()} ");
+                Plugin.Log(Plugin.LogSystem.Xp, LogLevel.Error, $"Could not apply XP buff!\n{ex} ");
             }
         }
 
-        public static int convertXpToLevel(int xp)
+        public static int ConvertXpToLevel(int xp)
         {
-            // Level = 0.05 * sqrt(xp)
-            int lvl = (int)Math.Floor(EXPConstant * Math.Sqrt(xp));
-            if(lvl < 15 && easyLvl15){
-                lvl = Math.Min(15, (int)Math.Sqrt(xp));
-            }
+            // Shortcut for exceptional cases
+            if (xp < 1) return 1;
+            // Level = CONSTANT * (xp)^1/POWER
+            int lvl = 1 + (int)Math.Floor(ExpConstant * Math.Pow(xp, 1 / ExpPower));
             return lvl;
         }
 
-        public static int convertLevelToXp(int level)
+        public static int ConvertLevelToXp(int level)
         {
-            // XP = (Level / 0.05) ^ 2
-            int xp = (int)Math.Pow(level / EXPConstant, EXPPower);
-            if (level <= 15 && easyLvl15)
-            {
-                xp = level * level;
-            }
+            // Shortcut for exceptional cases
+            if (level < 1) return 1;
+            // XP = (Level / CONSTANT) ^ POWER
+            int xp = (int)Math.Pow((level - 1) / ExpConstant, ExpPower);
             return xp;
         }
 
-        public static int getXp(ulong SteamID)
+        public static int GetXp(ulong steamID)
         {
-            if (Database.player_experience.TryGetValue(SteamID, out int exp)) return exp;
-            return 0;
+            return Database.PlayerExperience.GetValueOrDefault(steamID, 0);
         }
 
-        public static int getLevel(ulong SteamID)
+        public static int GetLevel(ulong steamID)
         {
-            return convertXpToLevel(getXp(SteamID));
+            return ConvertXpToLevel(GetXp(steamID));
         }
 
         public static void GetLevelAndProgress(int currentXp, out int progressPercent, out int earnedXp, out int neededXp) {
-            var currentLevel = convertXpToLevel(currentXp);
-            var currentLevelXp = convertLevelToXp(currentLevel);
-            var nextLevelXp = convertLevelToXp(currentLevel + 1);
+            var currentLevel = ConvertXpToLevel(currentXp);
+            var currentLevelXp = ConvertLevelToXp(currentLevel);
+            var nextLevelXp = ConvertLevelToXp(currentLevel + 1);
 
             neededXp = nextLevelXp - currentLevelXp;
             earnedXp = currentXp - currentLevelXp;
@@ -496,120 +283,26 @@ namespace RPGMods.Systems
             progressPercent = (int)Math.Floor((double)earnedXp / neededXp * 100.0);
         }
 
-        public static void SaveEXPData(string saveFolder)
+        public static LazyDictionary<string, LazyDictionary<UnitStatType, float>> DefaultExperienceClassStats()
         {
-            File.WriteAllText(saveFolder + "player_experience.json", JsonSerializer.Serialize(Database.player_experience, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_log_exp.json", JsonSerializer.Serialize(Database.player_log_exp, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_abilitypoints.json", JsonSerializer.Serialize(Database.player_abilityIncrease, Database.JSON_options));
-            File.WriteAllText(saveFolder+"player_level_stats.json", JsonSerializer.Serialize(Database.player_level_stats, Database.JSON_options));
-            if (!Database.ErrorOnLoadingExperienceClasses) File.WriteAllText(saveFolder+"experience_class_stats.json", JsonSerializer.Serialize(Database.experience_class_stats, Database.JSON_options));
-        }
-
-        public static void LoadEXPData() {
-            string specificName = "player_experience.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                if (Database.player_experience == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_experience = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                }
-                Plugin.Logger.LogWarning("PlayerEXP DB Populated.");
-            }
-            catch
+            var classes = new LazyDictionary<string, LazyDictionary<UnitStatType, float>>();
+            classes["health"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.MaxHealth, 0.5f } };
+            classes["ppower"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.PhysicalPower, 0.75f } };
+            classes["spower"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.SpellPower, 0.75f } };
+            classes["presist"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.PhysicalResistance, 0.05f } };
+            classes["sresist"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.SpellResistance, 0.05f } };
+            classes["beasthunter"] = new LazyDictionary<UnitStatType, float>()
+                { { UnitStatType.DamageVsBeasts, 0.04f }, { UnitStatType.ResistVsBeasts, 4f } };
+            classes["undeadhunter"] = new LazyDictionary<UnitStatType, float>()
+                { { UnitStatType.DamageVsUndeads, 0.02f }, { UnitStatType.ResistVsUndeads, 2 } };
+            classes["manhunter"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.DamageVsHumans, 0.02f}, { UnitStatType.ResistVsHumans, 2 } };
+            classes["demonhunter"] = new LazyDictionary<UnitStatType, float>() { { UnitStatType.DamageVsDemons, 0.02f}, { UnitStatType.ResistVsDemons, 2 } };
+            classes["farmer"] = new LazyDictionary<UnitStatType, float>()
             {
-                Database.player_experience = new Dictionary<ulong, int>();
-                Plugin.Logger.LogWarning("PlayerEXP DB Created.");
-            }
-
-            //we have to know the difference here between a deserialization failure or initialization since if the file is there we don't 
-            //want to overwrite it in case we typoed a unitstattype or some other typo in the experience class config file.
-            var wasExperienceClassesCreated = false;
-            specificName = "experience_class_stats.json";
-            if (!File.Exists(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json")){
-                FileStream stream = File.Create(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
-                wasExperienceClassesCreated = true;
-                stream.Dispose();
-            }
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+"experience_class_stats.json");
-            try{
-                Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
-                if (Database.experience_class_stats == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.experience_class_stats = JsonSerializer.Deserialize<Dictionary<string, Dictionary<UnitStatType, float>>>(json);
-                }
-                Plugin.Logger.LogWarning("Experience class stats DB Populated.");
-                Database.ErrorOnLoadingExperienceClasses = false;
-            }
-            catch (Exception ex){
-                initializeClassData();
-                if (wasExperienceClassesCreated) Plugin.Logger.LogWarning("Experience class stats DB Created.");
-                else{
-                    Plugin.Logger.LogError($"Problem loading experience classes from file. {ex.Message}");
-                    Database.ErrorOnLoadingExperienceClasses = true;
-                }
-            }
-
-            specificName = "player_abilitypoints.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                if (Database.player_abilityIncrease == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_abilityIncrease = JsonSerializer.Deserialize<Dictionary<ulong, int>>(json);
-                }
-                Plugin.Logger.LogWarning("PlayerAbilities DB Populated.");
-            }
-            catch{
-                Database.player_abilityIncrease = new Dictionary<ulong, int>();                
-                Plugin.Logger.LogWarning("PlayerAbilities DB Created.");
-            }
-
-
-            specificName = "player_level_stats.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType,float>>>(json);
-                if (Database.player_level_stats == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_level_stats = JsonSerializer.Deserialize<LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>>(json);
-                }
-                Plugin.Logger.LogWarning("Player level Stats DB Populated.");
-            }
-            catch{
-                Database.player_level_stats = new LazyDictionary<ulong, LazyDictionary<UnitStatType, float>>();
-                Plugin.Logger.LogWarning("Player level stats DB Created.");
-            }
-
-            specificName = "player_log_exp.json";
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder,specificName);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder,specificName);
-            json = File.ReadAllText(AutoSaveSystem.mainSaveFolder+ specificName);
-            try{
-                Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                if (Database.player_log_exp == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificName);
-                    Database.player_log_exp = JsonSerializer.Deserialize<Dictionary<ulong, bool>>(json);
-                }
-                Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Populated.");
-            }
-            catch{
-                Database.player_log_exp = new Dictionary<ulong, bool>();
-                Plugin.Logger.LogWarning("PlayerEXP_Log_Switch DB Created.");
-            }
-        }
-
-        private static void initializeClassData()
-        {
-            Database.experience_class_stats = new Dictionary<string, Dictionary<UnitStatType, float>>();
-            //maybe someday we'll have a default
+                { UnitStatType.ResourceYield, 0.1f }, { UnitStatType.PhysicalPower, -1f },
+                { UnitStatType.SpellPower, -0.5f }
+            };
+            return classes;
         }
     }
 }

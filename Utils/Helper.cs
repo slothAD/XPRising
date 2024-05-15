@@ -1,230 +1,102 @@
 ﻿using ProjectM;
 using ProjectM.Network;
 using System;
-using System.Globalization;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using RPGMods.Hooks;
-using RPGMods.Systems;
 using System.Text.RegularExpressions;
 using ProjectM.Scripting;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using BepInEx.Logging;
 using VampireCommandFramework;
-using System.IO;
-using System.Reflection;
-using System.Collections;
-using System.Text.Json;
-using Epic.OnlineServices.Stats;
-using RPGMods.Commands;
-using Unity.Entities.UniversalDelegates;
+using Bloodstone.API;
+using ProjectM.CastleBuilding;
+using Stunlock.Core;
+using Unity.Transforms;
+using XPRising.Hooks;
+using XPRising.Models;
+using XPRising.Utils.Prefabs;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace RPGMods.Utils
+namespace XPRising.Utils
 {
-    public class LazyDictionary<TKey,TValue> : Dictionary<TKey,TValue> where TValue : new()
-    {
-        public new TValue this[TKey key]
-        {
-            get 
-            {
-                if (!base.ContainsKey(key)) base.Add(key, new TValue());
-                return base[key];
-            }
-            set 
-            {
-                if (!base.ContainsKey(key)) base.Add(key, value);
-                else base[key] = value;
-            }
-        }
-    }
+    // TODO test wanted level display in game
     public static class Helper
     {
         private static Entity empty_entity = new Entity();
         private static System.Random rand = new System.Random();
+        
+        private static IsSystemInitialised<ServerGameManager> _serverGameManager = default;
 
-        public static ServerGameSettings SGS = default;
-        public static ServerGameManager SGM = default;
-        public static UserActivityGridSystem UAGS = default;
-        public static int groupRange = 50;
+        public static PrefabGUID SeverePunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Fever);          //-- Using this for PvP Punishment debuff
+        public static PrefabGUID MinorPunishmentDebuff = new PrefabGUID((int)Buffs.Buff_General_Garlic_Area_Inside);
 
-        public static int buffGUID = 1444835872;
-        public static int forbiddenBuffGUID = -161632603;
-        public static bool buffLogging = false;
-        public static bool deathLogging = true;
-        public static PrefabGUID appliedBuff = Database.Buff.Buff_4pT2;
+        //-- LevelUp Buff
+        public static PrefabGUID LevelUp_Buff = new PrefabGUID((int)Effects.AB_ChurchOfLight_Priest_HealBomb_Buff);
+        public static PrefabGUID HostileMark_Buff = new PrefabGUID((int)Buffs.Buff_Cultist_BloodFrenzy_Buff);
+
+        //-- Fun
+        public static PrefabGUID HolyNuke = new PrefabGUID((int)Effects.AB_Paladin_HolyNuke_Buff);
+        public static PrefabGUID Pig_Transform_Debuff = new PrefabGUID((int)Remainders.Witch_PigTransformation_Buff);
+        
+        // TODO are either of these a better applied buff/forbidden buff?
+        public static PrefabGUID AB_BloodBuff_VBlood_0 = new PrefabGUID((int)Effects.AB_BloodBuff_VBlood_0);
+        public static PrefabGUID AB_BloodBuff_Base = new PrefabGUID((int)Effects.AB_BloodBuff_Base);
+        
+        //public static int buffGUID = (int)SetBonus.SetBonus_Damage_Minor_Buff_01;
+        //public static PrefabGUID AppliedBuff = new PrefabGUID(buffGUID);
+        public static int buffGUID = (int)Effects.AB_BloodBuff_VBlood_0;
+        public static int ForbiddenBuffGuid = (int)SetBonus.SetBonus_MaxHealth_Minor_Buff_01;
+        public static PrefabGUID AppliedBuff = AB_BloodBuff_VBlood_0;
 
         public static Regex rxName = new Regex(@"(?<=\])[^\[].*");
         
-        public static bool GetUserActivityGridSystem(out UserActivityGridSystem uags)
+        public static bool humanReadablePercentageStats = false;
+        public static bool inverseMultipersDisplayReduction = true;
+        
+        public static bool GetServerGameManager(out ServerGameManager serverGameManager)
         {
-            uags = Plugin.Server.GetExistingSystem<AiPrioritizationSystem>()?._UserActivityGridSystem;
+            serverGameManager = _serverGameManager.system;
+            if (!_serverGameManager.isInitialised)
+            {
+                var ssm = Plugin.Server.GetExistingSystemManaged<ServerScriptMapper>();
+                if (ssm == null) return false;
+                _serverGameManager.system = ssm._ServerGameManager;
+                _serverGameManager.isInitialised = true;
+                serverGameManager = _serverGameManager.system;
+            }
             return true;
         }
 
-        public static bool GetServerGameManager(out ServerGameManager sgm)
-        {
-            sgm = (ServerGameManager)Plugin.Server.GetExistingSystem<ServerScriptMapper>()?._ServerGameManager;
-            return true;
-        }
-
-        public static ModifyUnitStatBuff_DOTS makeBuff(int statID, double strength) {
+        public static ModifyUnitStatBuff_DOTS MakeBuff(UnitStatType type, double strength) {
             ModifyUnitStatBuff_DOTS buff;
 
             var modType = ModificationType.Add;
-            if (Helper.inverseMultiplierStats.Contains(statID)) {
-                if (statID == (int)UnitStatType.CooldownModifier && !WeaponMasterSystem.CDRStacks) {
-                    modType = ModificationType.Set;
-                } else if (Helper.multiplierStats.Contains(statID)) {
-                    modType = ModificationType.Multiply;
-                }
+            if (Helper.multiplierStats.Contains(type)) {
+                modType = ModificationType.Multiply;
             }
             buff = (new ModifyUnitStatBuff_DOTS() {
-                StatType = (UnitStatType)statID,
+                StatType = type,
                 Value = (float)strength,
                 ModificationType = modType,
+                Modifier = 1,
                 Id = ModificationId.NewId(0)
             });
             return buff;
         }
-        public static bool humanReadablePercentageStats = false;
-        public static bool inverseMultipersDisplayReduction = true;
-        public static double calcBuffValue(double strength, double effectiveness, double rate, int statID) {
-
-            if (Helper.percentageStats.Contains(statID) && humanReadablePercentageStats) {
-                rate /= 100;
-            }
-                double value = strength * rate * effectiveness;
-            if (Helper.inverseMultiplierStats.Contains(statID)) {
-                if (WeaponMasterSystem.linearCDR) {
-                    value = strength * effectiveness;
-                    value = value / (value + rate);
-                } else {
-                    value = (strength * effectiveness) / (rate * 2);
-                }
-                value = 1 - value;
-            }
-            return value;
-        }
-
-        public static bool GetServerGameSettings(out ServerGameSettings settings)
+        
+        public static double CalcBuffValue(double strength, double effectiveness, double rate, UnitStatType type)
         {
-            settings = Plugin.Server.GetExistingSystem<ServerGameSettingsSystem>()?._Settings;
-            return true;
+            effectiveness = Math.Max(effectiveness, 1);
+            if (Helper.inverseMultiplierStats.Contains(type)) {
+                var value = strength * effectiveness;
+                return 1 - value / (value + rate);
+            }
+            return strength * rate * effectiveness;
         }
 
-        // Get allies for PlayerCharacter (ie, every vampire in the clan), cached for 5 minutes
-        // The list of allies includes PlayerCharacter.
-        public static int GetAllies(Entity playerCharacter, out PlayerGroup playerGroup) {
-            if (!Plugin.Server.EntityManager.HasComponent<PlayerCharacter>(playerCharacter)) {
-                if (ExperienceSystem.xpLogging) {
-                    Plugin.Logger.LogInfo($"{DateTime.Now}: Entity is not user: {playerCharacter}");
-                    Plugin.Logger.LogInfo($"{DateTime.Now}: Components for Player Character are: {Plugin.Server.EntityManager.Debug.GetEntityInfo(playerCharacter)}");
-                }
-
-                playerGroup = new PlayerGroup {
-                    Allies = new Dictionary<Entity, Entity>()
-                };
-                return 0;
-            }
-
-            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Beginning To Parse Player Group");
-            if (Cache.PlayerAllies.TryGetValue(playerCharacter, out playerGroup)) {
-                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Allies Found in Cache, timestamp is {playerGroup.TimeStamp}");
-                TimeSpan CacheAge = DateTime.Now - playerGroup.TimeStamp;
-                if (CacheAge.TotalSeconds < 300) return playerGroup.AllyCount;
-                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Refreshing cached allies");
-            }
-            
-            // Check if the player has a team
-            if (!Plugin.Server.EntityManager.TryGetComponentData(playerCharacter, out Team playerTeam)) {
-                if (ExperienceSystem.xpLogging) {
-                    Plugin.Logger.LogInfo($"{DateTime.Now}: Could not get team for Player Character: {playerCharacter}");
-                    Plugin.Logger.LogInfo($"{DateTime.Now}: Components for Player Character are: {Plugin.Server.EntityManager.Debug.GetEntityInfo(playerCharacter)}");
-                }
-
-                playerGroup = new PlayerGroup {
-                    Allies = new Dictionary<Entity, Entity>()
-                };
-                return 0;
-            } else if (ExperienceSystem.xpLogging) {
-                Plugin.Logger.LogInfo($"{DateTime.Now}: Player Character Found Value: {playerTeam.Value} - Faction Index: {playerTeam.FactionIndex}");
-            }
-            
-            playerGroup.TimeStamp = DateTime.Now;
-
-            Dictionary<Entity, Entity> group = new();
-
-            var query = Plugin.Server.EntityManager.CreateEntityQuery(new EntityQueryDesc()
-            {
-                All = new ComponentType[]
-                    {
-                        ComponentType.ReadOnly<PlayerCharacter>(),
-                        ComponentType.ReadOnly<IsConnected>()
-                    },
-                Options = EntityQueryOptions.IncludeDisabled
-            });
-            var allyBuffer = query.ToEntityArray(Allocator.Temp);
-            if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: got connected PC entities buffer of length {allyBuffer.Length}");
-            
-            foreach (var entity in allyBuffer) {
-                if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": got Entity " + entity);
-                if (Plugin.Server.EntityManager.HasComponent<PlayerCharacter>(entity)) {
-                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is User " + entity);
-                    if (entity.Equals(playerCharacter)) {
-                        if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Entity is self");
-                        // We are an ally of ourself.
-                        group[entity] = entity;
-                        continue;
-                    }
-
-                    bool allies = false;
-                    try {
-                        if (ExperienceSystem.xpLogging)
-                            Plugin.Logger.LogInfo(DateTime.Now + ": Trying to get teams ");
-                        bool teamFound = Plugin.Server.EntityManager.TryGetComponentData(entity, out Team entityTeam);
-                        if (ExperienceSystem.xpLogging) {
-                            if (teamFound)
-                                Plugin.Logger.LogInfo(DateTime.Now + ": Team Value:" + entityTeam.Value +
-                                                      " - Faction Index: " + entityTeam.FactionIndex);
-                            else {
-                                Plugin.Logger.LogInfo(DateTime.Now + ": Could not get team for entity: " + entity);
-                                Plugin.Logger.LogInfo(DateTime.Now + ": Components for entity are: " +
-                                                      Plugin.Server.EntityManager.Debug.GetEntityInfo(entity));
-                            }
-                        }
-
-                        allies = teamFound && entityTeam.Value == playerTeam.Value;
-                    }
-                    catch (Exception e) {
-                        if (ExperienceSystem.xpLogging)
-                            Plugin.Logger.LogInfo(DateTime.Now + ": IsAllies Failed " + e.Message);
-                    }
-
-                    if (allies) {
-                        if (ExperienceSystem.xpLogging)
-                            Plugin.Logger.LogInfo($"{DateTime.Now}: Allies: {playerCharacter} - {entity}");
-                        group[entity] = entity;
-                    }
-                    else {
-                        if (ExperienceSystem.xpLogging)
-                            Plugin.Logger.LogInfo($"{DateTime.Now}: Not allies: {playerCharacter} - {entity}");
-
-                    }
-                }
-                else {
-                    if (ExperienceSystem.xpLogging) Plugin.Logger.LogInfo(DateTime.Now + ": No Associated User!");
-                }
-            }
-
-
-            playerGroup.Allies = group;
-            playerGroup.AllyCount = group.Count;
-            Cache.PlayerAllies[playerCharacter] = playerGroup;
-
-            return playerGroup.AllyCount;
-        }
-
-        public static FixedString64 GetTrueName(string name)
+        public static FixedString64Bytes GetTrueName(string name)
         {
             MatchCollection match = rxName.Matches(name);
             if (match.Count > 0)
@@ -248,119 +120,39 @@ namespace RPGMods.Utils
             var userEntities = query.ToEntityArray(Allocator.Temp);
             foreach (var entity in userEntities) {
                 var userData = Plugin.Server.EntityManager.GetComponentData<User>(entity);
-                PlayerData playerData = new PlayerData(userData.CharacterName, userData.PlatformId, userData.IsConnected, entity, userData.LocalCharacter._Entity);
+                PlayerData playerData = new PlayerData(
+                    userData.CharacterName,
+                    userData.PlatformId,
+                    userData.IsConnected,
+                    userData.IsAdmin,
+                    entity,
+                    userData.LocalCharacter._Entity);
 
                 Cache.NamePlayerCache.TryAdd(GetTrueName(userData.CharacterName.ToString().ToLower()), playerData);
                 Cache.SteamPlayerCache.TryAdd(userData.PlatformId, playerData);
 
             }
 
-            Plugin.Logger.LogWarning("Player Cache Created.");
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "Player Cache Created.");
         }
-
-        public static Dictionary<TKey, TVal> LoadDB<TKey,TVal>(string specificFile) {
-            Dictionary<TKey, TVal> dict;
-            Helper.confirmFile(AutoSaveSystem.mainSaveFolder, specificFile);
-            Helper.confirmFile(AutoSaveSystem.backupSaveFolder, specificFile);
-            string json = File.ReadAllText(AutoSaveSystem.mainSaveFolder + specificFile);
-            try {
-                dict = JsonSerializer.Deserialize<Dictionary<TKey, TVal>>(json);
-                if (dict == null) {
-                    json = File.ReadAllText(AutoSaveSystem.backupSaveFolder + specificFile);
-                    dict = JsonSerializer.Deserialize<Dictionary<TKey, TVal>>(json);
-                }
-            } catch {
-                dict = new Dictionary<TKey, TVal>();
-                Plugin.Logger.LogWarning(DateTime.Now+ ": DB Created for " + specificFile);
-            }
-            return dict;
-        }
-        public static void TeleportTo(ChatCommandContext ctx, Tuple<float,float,float> position) {
-
-            var entity = Plugin.Server.EntityManager.CreateEntity(
-                    ComponentType.ReadWrite<FromCharacter>(),
-                    ComponentType.ReadWrite<PlayerTeleportDebugEvent>()
-                );
-
-            Plugin.Server.EntityManager.SetComponentData<FromCharacter>(entity, new() {
-                User = ctx.Event.SenderUserEntity,
-                Character = ctx.Event.SenderCharacterEntity
-            });
-
-            Plugin.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new() {
-                Position = new float3(position.Item1, position.Item2, position.Item3),
-                Target = PlayerTeleportDebugEvent.TeleportTarget.Self
-            });
-        }
-        public static void UpdatePlayerCache(Entity userEntity, string oldName, string newName, bool forceOffline = false)
+        
+        public static void UpdatePlayerCache(Entity userEntity, User userData, bool forceOffline = false)
         {
-            var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
-            Cache.NamePlayerCache.Remove(GetTrueName(oldName.ToLower()));
+            PlayerData playerData = new PlayerData(
+                userData.CharacterName,
+                userData.PlatformId,
+                !forceOffline && userData.IsConnected,
+                userData.IsAdmin,
+                userEntity,
+                userData.LocalCharacter._Entity);
 
-            if (forceOffline) userData.IsConnected = false;
-            PlayerData playerData = new PlayerData(newName, userData.PlatformId, userData.IsConnected, userEntity, userData.LocalCharacter._Entity);
-
-            Cache.NamePlayerCache[GetTrueName(newName.ToLower())] = playerData;
+            Cache.NamePlayerCache[GetTrueName(userData.CharacterName.ToString().ToLower())] = playerData;
             Cache.SteamPlayerCache[userData.PlatformId] = playerData;
-        }
-
-        public static bool RenamePlayer(Entity userEntity, Entity charEntity, FixedString64 newName)
-        {
-            //-- Max Char Length for FixedString64 is 61 bytes.
-            //if (newName.utf8LengthInBytes > 61)
-            //{
-            //    return false;
-            //}
-
-            var userData = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
-            UpdatePlayerCache(userEntity, userData.CharacterName.ToString(), newName.ToString());
-
-            var des = Plugin.Server.GetExistingSystem<DebugEventsSystem>();
-            var networkId = Plugin.Server.EntityManager.GetComponentData<NetworkId>(userEntity);
-            var renameEvent = new RenameUserDebugEvent
-            {
-                NewName = newName,
-                Target = networkId
-            };
-            var fromCharacter = new FromCharacter
-            {
-                User = userEntity,
-                Character = charEntity
-            };
-            des.RenameUser(fromCharacter, renameEvent);
-            return true;
-        }
-
-        public static bool ValidateName(string name, out CreateCharacterFailureReason invalidReason)
-        {
-            if (Regex.IsMatch(name, @"[^a-zA-Z0-9]"))
-            {
-                invalidReason = CreateCharacterFailureReason.InvalidName;
-                return false;
-            }
-
-            //-- The game default max byte length is 20.
-            //-- The max legth assignable is actually 61 bytes.
-            FixedString64 charName = name;
-            if (charName.utf8LengthInBytes > 20)
-            {
-                invalidReason = CreateCharacterFailureReason.InvalidName;
-                return false;
-            }
-
-            if (Cache.NamePlayerCache.TryGetValue(name.ToLower(), out _))
-            {
-                invalidReason = CreateCharacterFailureReason.NameTaken;
-                return false;
-            }
-
-            invalidReason = CreateCharacterFailureReason.None;
-            return true;
         }
 
         public static void ApplyBuff(Entity User, Entity Char, PrefabGUID GUID)
         {
-            var des = Plugin.Server.GetExistingSystem<DebugEventsSystem>();
+            var des = Plugin.Server.GetExistingSystemManaged<DebugEventsSystem>();
             var fromCharacter = new FromCharacter()
             {
                 User = User,
@@ -369,32 +161,21 @@ namespace RPGMods.Utils
             var buffEvent = new ApplyBuffDebugEvent()
             {
                 BuffPrefabGUID = GUID
-            }
-            ;
-            Database.playerBuffs.Add(buffEvent);
+            };
             des.ApplyBuff(fromCharacter, buffEvent);
-            
         }
 
         public static void RemoveBuff(Entity Char, PrefabGUID GUID)
         {
-            if (BuffUtility.HasBuff(Plugin.Server.EntityManager, Char, GUID))
+            if (BuffUtility.HasBuff(Plugin.Server.EntityManager, Char, GUID) &&
+                BuffUtility.TryGetBuff(Plugin.Server.EntityManager, Char, GUID, out var buffEntity))
             {
-                BuffUtility.TryGetBuff(Plugin.Server.EntityManager, Char, GUID, out var BuffEntity_);
-                Plugin.Server.EntityManager.AddComponent<DestroyTag>(BuffEntity_);
-                return;
+                Plugin.Server.EntityManager.AddComponent<DestroyTag>(buffEntity);
             }
         }
 
         public static string GetNameFromSteamID(ulong SteamID)
         {
-            //var UserEntities = Plugin.Server.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<User>()).ToEntityArray(Allocator.Temp);
-            //foreach (var Entity in UserEntities)
-            //{
-            //    var EntityData = Plugin.Server.EntityManager.GetComponentData<User>(Entity);
-            //    if (EntityData.PlatformId == SteamID) return EntityData.CharacterName.ToString();
-            //}
-            //return null;
             if (Cache.SteamPlayerCache.TryGetValue(SteamID, out var data))
             {
                 return data.CharacterName.ToString();
@@ -405,109 +186,62 @@ namespace RPGMods.Utils
             }
         }
 
-        public static PrefabGUID GetGUIDFromName(string name)
+        public static ulong GetSteamIDFromName(string name)
         {
-            var gameDataSystem = Plugin.Server.GetExistingSystem<GameDataSystem>();
-            var managed = gameDataSystem.ManagedDataRegistry;
-
-            foreach (var entry in gameDataSystem.ItemHashLookupMap)
+            if (Cache.NamePlayerCache.TryGetValue(name.ToLower(), out var data))
             {
-                try
-                {
-                    var item = managed.GetOrDefault<ManagedItemData>(entry.Key);
-                    if (item.PrefabName.StartsWith("Item_VBloodSource") || item.PrefabName.StartsWith("GM_Unit_Creature_Base") || item.PrefabName == "Item_Cloak_ShadowPriest") continue;
-                    if (item.Name.ToString().ToLower().Equals( name.ToLower())){
-                        return entry.Key;
-                    }
-                    if (item.PrefabName.ToLower().Equals(name.ToLower())) { return entry.Key; }
-                    //if (item.PrefabName.Substring(item.PrefabName.IndexOf("_"+1)).ToLower().Equals(name.ToLower())) { return entry.Key; }
-                }
-                catch { }
+                return data.SteamID;
             }
-
-            return new PrefabGUID(0);
-        }
-
-        public static void KickPlayer(Entity userEntity)
-        {
-            EntityManager em = Plugin.Server.EntityManager;
-            var userData = em.GetComponentData<User>(userEntity);
-            int index = userData.Index;
-            NetworkId id = em.GetComponentData<NetworkId>(userEntity);
-
-            var entity = em.CreateEntity(
-                ComponentType.ReadOnly<NetworkEventType>(),
-                ComponentType.ReadOnly<SendEventToUser>(),
-                ComponentType.ReadOnly<KickEvent>()
-            );
-
-            var KickEvent = new KickEvent()
+            else
             {
-                PlatformId = userData.PlatformId
-            };
-
-            em.SetComponentData<SendEventToUser>(entity, new()
-            {
-                UserIndex = index
-            });
-            em.SetComponentData<NetworkEventType>(entity, new()
-            {
-                EventId = NetworkEvents.EventId_KickEvent,
-                IsAdminEvent = false,
-                IsDebugEvent = false
-            });
-
-            em.SetComponentData(entity, KickEvent);
+                return 0;
+            }
         }
 
         public static void AddItemToInventory(ChatCommandContext ctx, PrefabGUID guid, int amount)
         {
-            /*
-            unsafe
-            {
-                var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
-                var bytes = stackalloc byte[Marshal.SizeOf<FakeNull>()];
-                var bytePtr = new IntPtr(bytes);
-                Marshal.StructureToPtr<FakeNull>(new()
-                {
-                    value = 7,
-                    has_value = true
-                }, bytePtr, false);
-                var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
-                var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
-                var sets = new AddItemSettings();
-                sets.DropRemainder = true;
-                sets.EquipIfPossible = true;
-                var hasAdded = InventoryUtilitiesServer.TryAddItem(sets,ctx.Event.SenderCharacterEntity, guid ,amount);
-            }*/
-
-            var gameData = Plugin.Server.GetExistingSystem<GameDataSystem>();
+            var gameData = Plugin.Server.GetExistingSystemManaged<GameDataSystem>();
             var itemSettings = AddItemSettings.Create(Plugin.Server.EntityManager, gameData.ItemHashLookupMap);
             var inventoryResponse = InventoryUtilitiesServer.TryAddItem(itemSettings, ctx.Event.SenderCharacterEntity, guid, amount);
-            //return inventoryResponse.NewEntity;
         }
 
-        public static BloodType GetBloodTypeFromName(string name)
+        private struct FakeNull
         {
-            BloodType type = BloodType.Frailed;
-            if (Enum.IsDefined(typeof(BloodType), CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name)))
-                Enum.TryParse(name, true, out type);
-            return type;
+            public int value;
+            public bool has_value;
+        }
+        public static bool TryGiveItem(Entity characterEntity, PrefabGUID itemGuid, int amount, out Entity itemEntity)
+        {
+            itemEntity = Entity.Null;
+            
+            var gameData = Plugin.Server.GetExistingSystemManaged<GameDataSystem>();
+            var itemSettings = AddItemSettings.Create(Plugin.Server.EntityManager, gameData.ItemHashLookupMap);
+            
+            unsafe
+            {
+                var bytes = stackalloc byte[Marshal.SizeOf<FakeNull>()];
+                var bytePtr = new IntPtr(bytes);
+                Marshal.StructureToPtr(new FakeNull { value = 0, has_value = true }, bytePtr, false);
+                var boxedBytePtr = IntPtr.Subtract(bytePtr, 0x10);
+                var hack = new Il2CppSystem.Nullable<int>(boxedBytePtr);
+                var inventoryResponse = InventoryUtilitiesServer.TryAddItem(
+                    itemSettings,
+                    characterEntity,
+                    itemGuid,
+                    amount);
+                if (inventoryResponse.Success)
+                {
+                    itemEntity = inventoryResponse.NewEntity;
+                    return true;
+                }
+
+                return false;
+            }
         }
 
-        public static PrefabGUID GetSourceTypeFromName(string name)
+        public static void DropItemNearby(Entity characterEntity, PrefabGUID itemGuid, int amount)
         {
-            PrefabGUID type;
-            name = name.ToLower();
-            if (name.Equals("brute")) type = new PrefabGUID(-1464869978);
-            else if (name.Equals("warrior")) type = new PrefabGUID(-1128238456);
-            else if (name.Equals("rogue")) type = new PrefabGUID(-1030822544);
-            else if (name.Equals("scholar")) type = new PrefabGUID(-700632469);
-            else if (name.Equals("creature")) type = new PrefabGUID(1897056612);
-            else if (name.Equals("worker")) type = new PrefabGUID(-1342764880);
-            else if (name.Equals("mutant")) type = new PrefabGUID(-2017994753);
-            else type = new PrefabGUID();
-            return type;
+            InventoryUtilitiesServer.CreateDropItem(Plugin.Server.EntityManager, characterEntity, itemGuid, amount, new Entity());
         }
 
         public static bool FindPlayer(string name, bool mustOnline, out Entity playerEntity, out Entity userEntity)
@@ -535,29 +269,8 @@ namespace RPGMods.Utils
                 userEntity = empty_entity;
                 return false;
             }
-
-            //-- Way of the Query
-            //foreach (var UsersEntity in entityManager.CreateEntityQuery(ComponentType.ReadOnly<User>()).ToEntityArray(Allocator.Temp))
-            //{
-            //    var target_component = entityManager.GetComponentData<User>(UsersEntity);
-            //    if (mustOnline)
-            //    {
-            //        if (!target_component.IsConnected) continue;
-            //    }
-
-
-            //    string CharName = target_component.CharacterName.ToString();
-            //    if (CharName.Equals(name))
-            //    {
-            //        userEntity = UsersEntity;
-            //        playerEntity = target_component.LocalCharacter._Entity;
-            //        return true;
-            //    }
-            //}
-            //playerEntity = empty_entity;
-            //userEntity = empty_entity;
-            //return false;
         }
+        
         public static bool FindPlayer(ulong steamid, bool mustOnline, out Entity playerEntity, out Entity userEntity)
         {
             EntityManager entityManager = Plugin.Server.EntityManager;
@@ -585,23 +298,9 @@ namespace RPGMods.Utils
             }
         }
 
-        public static bool IsPlayerInCombat(Entity player)
-        {
-            return BuffUtility.HasBuff(Plugin.Server.EntityManager, player, Database.Buff.InCombat) || BuffUtility.HasBuff(Plugin.Server.EntityManager, player, Database.Buff.InCombat_PvP);
-        }
-
         public static bool HasBuff(Entity player, PrefabGUID BuffGUID)
         {
             return BuffUtility.HasBuff(Plugin.Server.EntityManager, player, BuffGUID);
-        }
-
-        public static void SetPvPShield(Entity character, bool value)
-        {
-            var em = Plugin.Server.EntityManager;
-            var cUnitStats = em.GetComponentData<UnitStats>(character);
-            var cBuffer = em.GetBuffer<BoolModificationBuffer>(character);
-            cUnitStats.PvPProtected.SetBaseValue(value, cBuffer);
-            em.SetComponentData(character, cUnitStats);
         }
 
         public static bool SpawnNPCIdentify(out float identifier, string name, float3 position, float minRange = 1, float maxRange = 2, float duration = -1)
@@ -616,7 +315,7 @@ namespace RPGMods.Utils
             if (UniqueID == 0.0) UniqueID += 0.00001f;
             else if (UniqueID == 1.0f) UniqueID -= 0.00001f;
             duration_final = default_duration + UniqueID;
-            
+
             while (Cache.spawnNPC_Listen.ContainsKey(duration))
             {
                 UniqueID = (float)rand.NextDouble();
@@ -625,23 +324,21 @@ namespace RPGMods.Utils
                 duration_final = default_duration + UniqueID;
             }
 
-            UnitSpawnerReactSystem_Patch.listen = true;
+            UnitSpawnerReactSystemPatch.listen = true;
             identifier = duration_final;
-            var Data = new SpawnNPCListen(duration, default, default, default, false);
+            var Data = new SpawnNpcListen(duration, default, default, default, false);
             Cache.spawnNPC_Listen.Add(duration_final, Data);
 
-            Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, new PrefabGUID((int)unit), position, 1, minRange, maxRange, duration_final);
+            Plugin.Server.GetExistingSystemManaged<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, new PrefabGUID((int)unit), position, 1, minRange, maxRange, duration_final);
             return true;
         }
 
         public static bool SpawnAtPosition(Entity user, Prefabs.Units unit, int count, float3 position, float minRange = 1, float maxRange = 2, float duration = -1) {
             var guid = new PrefabGUID((int)unit);
 
-            //var translation = Plugin.Server.EntityManager.GetComponentData<Translation>(user);
-            //var f3pos = new float3(position.x, translation.Value.y, position.y);
             try
             {
-                Plugin.Server.GetExistingSystem<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, guid, position, count, minRange, maxRange, duration);
+                Plugin.Server.GetExistingSystemManaged<UnitSpawnerUpdateSystem>().SpawnUnit(empty_entity, guid, position, count, minRange, maxRange, duration);
             }
             catch
             {
@@ -653,21 +350,17 @@ namespace RPGMods.Utils
         public static PrefabGUID GetPrefabGUID(Entity entity)
         {
             var entityManager = Plugin.Server.EntityManager;
-            PrefabGUID guid;
-            try
+            if (entity == Entity.Null || !entityManager.TryGetComponentData<PrefabGUID>(entity, out var prefabGuid))
             {
-                guid = entityManager.GetComponentData<PrefabGUID>(entity);
+                prefabGuid = new PrefabGUID(0);
             }
-            catch
-            {
-                guid.GuidHash = 0;
-            }
-            return guid;
+
+            return prefabGuid;
         }
 
         public static string GetPrefabName(PrefabGUID hashCode)
         {
-            var s = Plugin.Server.GetExistingSystem<PrefabCollectionSystem>();
+            var s = Plugin.Server.GetExistingSystemManaged<PrefabCollectionSystem>();
             string name = "Nonexistent";
             if (hashCode.GuidHash == 0)
             {
@@ -683,6 +376,11 @@ namespace RPGMods.Utils
             }
             return name;
         }
+
+        public static string GetPrefabName(Entity entity)
+        {
+            return GetPrefabName(GetPrefabGUID(entity));
+        }
         
         public static Prefabs.Faction ConvertGuidToFaction(PrefabGUID guid) {
             if (Enum.IsDefined(typeof(Prefabs.Faction), guid.GetHashCode())) return (Prefabs.Faction)guid.GetHashCode();
@@ -694,144 +392,212 @@ namespace RPGMods.Utils
             return Prefabs.Units.Unknown;
         }
 
-        /*
-        public static void TeleportTo(Context ctx, float3 position)
+        public static void TeleportTo(ChatCommandContext ctx, float3 position)
         {
-            var entity = ctx.EntityManager.CreateEntity(
+            var entity = VWorld.Server.EntityManager.CreateEntity(
                     ComponentType.ReadWrite<FromCharacter>(),
                     ComponentType.ReadWrite<PlayerTeleportDebugEvent>()
                 );
 
-            ctx.EntityManager.SetComponentData<FromCharacter>(entity, new()
+            VWorld.Server.EntityManager.SetComponentData<FromCharacter>(entity, new()
             {
                 User = ctx.Event.SenderUserEntity,
                 Character = ctx.Event.SenderCharacterEntity
             });
 
-            ctx.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
+            VWorld.Server.EntityManager.SetComponentData<PlayerTeleportDebugEvent>(entity, new()
             {
                 Position = new float3(position.x, position.y, position.z),
                 Target = PlayerTeleportDebugEvent.TeleportTarget.Self
             });
-        }*/
-        /*
-        struct FakeNull
-        {
-            public int value;
-            public bool has_value;
-        }*/
-
-        public enum BloodType {
-            Frailed = -899826404,
-            Creature = -77658840,
-            Warrior = -1094467405,
-            Rogue = 793735874,
-            Brute = 581377887,
-            Scholar = -586506765,
-            Worker = -540707191,
-            Mutant = -2017994753,
         }
         
-        public static PrefabGUID vBloodType = new(1557174542);
+        public static bool IsInCastle(Entity user)
+        {
+            // TODO check if these can better check if someone is in a castle:
+            // Helper.ismounted || helper.isInCastle 
+            // ProjectM.Mounter
+            // ProjectM.Resident
+            // ProjectM.Residency
+            
+            var userLocalToWorld = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(user);
+            var userPosition = userLocalToWorld.Position;
+            var query = Plugin.Server.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<PrefabGUID>(),
+                ComponentType.ReadOnly<LocalToWorld>(),
+                ComponentType.ReadOnly<UserOwner>(),
+                ComponentType.ReadOnly<CastleFloor>());
+            
+            foreach (var entityModel in query.ToEntityArray(Allocator.Temp))
+            {
+                if (!Plugin.Server.EntityManager.TryGetComponentData<LocalToWorld>(entityModel, out var localToWorld))
+                {
+                    continue;
+                }
+                var position = localToWorld.Position;
+                if (Math.Abs(userPosition.x - position.x) < 3 && Math.Abs(userPosition.z - position.z) < 3)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        public static bool IsVBlood(BloodConsumeSource bloodSource)
+        {
+            var guidHash = bloodSource.UnitBloodType._Value.GuidHash;
+            return guidHash == (int)Remainders.BloodType_VBlood ||
+                   guidHash == (int)Remainders.BloodType_GateBoss ||
+                   guidHash == (int)Remainders.BloodType_DraculaTheImmortal;
+        }
+        
+        public static bool IsItemEquipBuff(PrefabGUID prefabGuid)
+        {
+            switch ((Items)prefabGuid.GuidHash)
+            {
+                case Items.Item_EquipBuff_Armor_Base:
+                case Items.Item_EquipBuff_Base:
+                case Items.Item_EquipBuff_Clothes_Base:
+                case Items.Item_EquipBuff_MagicSource_Base:
+                case Items.Item_EquipBuff_MagicSource_BloodKey_T01:
+                case Items.Item_EquipBuff_MagicSource_General:
+                case Items.Item_EquipBuff_MagicSource_NoAbility_Base:
+                case Items.Item_EquipBuff_MagicSource_Soulshard:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_Dracula:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_Manticore:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_Solarus:
+                case Items.Item_EquipBuff_MagicSource_Soulshard_TheMonster:
+                case Items.Item_EquipBuff_MagicSource_T06_Blood:
+                case Items.Item_EquipBuff_MagicSource_T06_Chaos:
+                case Items.Item_EquipBuff_MagicSource_T06_Frost:
+                case Items.Item_EquipBuff_MagicSource_T06_Illusion:
+                case Items.Item_EquipBuff_MagicSource_T06_Storm:
+                case Items.Item_EquipBuff_MagicSource_T06_Unholy:
+                case Items.Item_EquipBuff_MagicSource_T08_Blood:
+                case Items.Item_EquipBuff_MagicSource_T08_Chaos:
+                case Items.Item_EquipBuff_MagicSource_T08_Frost:
+                case Items.Item_EquipBuff_MagicSource_T08_Illusion:
+                case Items.Item_EquipBuff_MagicSource_T08_Storm:
+                case Items.Item_EquipBuff_MagicSource_T08_Unholy:
+                case Items.Item_EquipBuff_MagicSource_TriggerBuffOnPrimaryHit:
+                case Items.Item_EquipBuff_MagicSource_TriggerCastOnPrimaryHit:
+                case Items.Item_EquipBuff_MagicSource_Utility_Base:
+                case Items.Item_EquipBuff_Shared_General:
+                case Items.Item_EquipBuff_Weapon_Base:
+                    // Item was equipped, set level.
+                    return true;
+                default:
+                    if (Enum.IsDefined((EquipBuffs)prefabGuid.GuidHash))
+                    {
+                        return true;
+                    }
+                    break;
+            }
+
+            return false;
+        }
+
+        public static void LogEntityDebugInfo(Entity entity)
+        {
+            var sb = new Il2CppSystem.Text.StringBuilder();
+            ProjectM.EntityDebuggingUtility.DumpEntity(Plugin.Server, entity, true, sb);
+            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Debug entity: {sb.ToString()}", true);
+        }
 
         // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the stat, and 0.75 quarters it.
         // I do this so that we can compute linear increases to a formula of X/(X+Y) where Y is the amount for +100% effectivness and X is the stat value
-        public static HashSet<int> inverseMultiplierStats = new HashSet<int> {
-            {(int)UnitStatType.CooldownModifier },
-            {(int)UnitStatType.PrimaryCooldownModifier }/*,
-            {(int)UnitStatType.PhysicalResistance },
-            {(int)UnitStatType.SpellResistance },
-            {(int)UnitStatType.ResistVsBeasts },
-            {(int)UnitStatType.ResistVsCastleObjects },
-            {(int)UnitStatType.ResistVsDemons },
-            {(int)UnitStatType.ResistVsHumans },
-            {(int)UnitStatType.ResistVsMechanical },
-            {(int)UnitStatType.ResistVsPlayerVampires },
-            {(int)UnitStatType.ResistVsUndeads },
-            {(int)UnitStatType.BloodDrain },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss }*/
-        };
+        public static HashSet<UnitStatType> inverseMultiplierStats = new()
+            {
+                // TODO check these, but the latest patch notes suggest that there are no longer any inverse stats
+                // UnitStatType.PrimaryCooldownModifier,
+                // UnitStatType.WeaponCooldownRecoveryRate,
+                // UnitStatType.SpellCooldownRecoveryRate,
+                // UnitStatType.UltimateCooldownRecoveryRate
+                /*,
+                UnitStatType.PhysicalResistance,
+                UnitStatType.SpellResistance,
+                UnitStatType.ResistVsBeasts,
+                UnitStatType.ResistVsCastleObjects,
+                UnitStatType.ResistVsDemons,
+                UnitStatType.ResistVsHumans,
+                UnitStatType.ResistVsMechanical,
+                UnitStatType.ResistVsPlayerVampires,
+                UnitStatType.ResistVsUndeads,
+                UnitStatType.BloodDrain,
+                UnitStatType.ReducedResourceDurabilityLoss
+                */
+            };
 
-        //
-        public static HashSet<int> percentageStats = new HashSet<int> {
-            {(int)UnitStatType.PhysicalCriticalStrikeChance },
-            {(int)UnitStatType.SpellCriticalStrikeChance },
-            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
-            {(int)UnitStatType.SpellCriticalStrikeDamage },
-            {(int)UnitStatType.PhysicalLifeLeech },
-            {(int)UnitStatType.PrimaryLifeLeech },
-            {(int)UnitStatType.SpellLifeLeech },
-            {(int)UnitStatType.AttackSpeed },
-            {(int)UnitStatType.PrimaryAttackSpeed },
-            {(int)UnitStatType.PassiveHealthRegen},
-            {(int)UnitStatType.ResourceYield }
+        public static HashSet<UnitStatType> percentageStats = new()
+            {
+                UnitStatType.PhysicalCriticalStrikeChance,
+                UnitStatType.SpellCriticalStrikeChance,
+                UnitStatType.PhysicalCriticalStrikeDamage,
+                UnitStatType.SpellCriticalStrikeDamage,
+                UnitStatType.PhysicalLifeLeech,
+                UnitStatType.PrimaryLifeLeech,
+                UnitStatType.SpellLifeLeech,
+                UnitStatType.AttackSpeed,
+                UnitStatType.PrimaryAttackSpeed,
+                UnitStatType.PassiveHealthRegen,
+                UnitStatType.ResourceYield
+            };
 
-        };
+        //This should be a dictionary lookup for the stats to what mod type they should use
+        public static HashSet<UnitStatType> multiplierStats = new()
+            {
+                UnitStatType.PrimaryCooldownModifier,
+                UnitStatType.WeaponCooldownRecoveryRate,
+                UnitStatType.SpellCooldownRecoveryRate,
+                UnitStatType.UltimateCooldownRecoveryRate, /*
+                {UnitStatType.PhysicalResistance },
+                {UnitStatType.SpellResistance },
+                {UnitStatType.ResistVsBeasts },
+                {UnitStatType.ResistVsCastleObjects },
+                {UnitStatType.ResistVsDemons },
+                {UnitStatType.ResistVsHumans },
+                {UnitStatType.ResistVsMechanical },
+                {UnitStatType.ResistVsPlayerVampires },
+                {UnitStatType.ResistVsUndeads },
+                {UnitStatType.ReducedResourceDurabilityLoss },
+                {UnitStatType.BloodDrain },*/
+                UnitStatType.ResourceYield
+            };
 
-        //This should be a dictionary lookup for the stats to what mod type they should use, and i should put the name strings in here, i might do it later.
-        public static HashSet<int> multiplierStats = new HashSet<int> {
-            {(int)UnitStatType.CooldownModifier },
-            {(int)UnitStatType.PrimaryCooldownModifier },/*
-            {(int)UnitStatType.PhysicalResistance },
-            {(int)UnitStatType.SpellResistance },
-            {(int)UnitStatType.ResistVsBeasts },
-            {(int)UnitStatType.ResistVsCastleObjects },
-            {(int)UnitStatType.ResistVsDemons },
-            {(int)UnitStatType.ResistVsHumans },
-            {(int)UnitStatType.ResistVsMechanical },
-            {(int)UnitStatType.ResistVsPlayerVampires },
-            {(int)UnitStatType.ResistVsUndeads },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss },
-            {(int)UnitStatType.BloodDrain },*/
-            {(int)UnitStatType.ResourceYield }
-
-        };
-
-        public static HashSet<int> baseStatsSet = new HashSet<int> {
-            {(int)UnitStatType.PhysicalPower },
-            {(int)UnitStatType.ResourcePower },
-            {(int)UnitStatType.SiegePower },
-            {(int)UnitStatType.AttackSpeed },
-            {(int)UnitStatType.FireResistance },
-            {(int)UnitStatType.GarlicResistance },
-            {(int)UnitStatType.SilverResistance },
-            {(int)UnitStatType.HolyResistance },
-            {(int)UnitStatType.SunResistance },
-            {(int)UnitStatType.SpellResistance },
-            {(int)UnitStatType.PhysicalResistance },
-            {(int)UnitStatType.SpellCriticalStrikeDamage },
-            {(int)UnitStatType.SpellCriticalStrikeChance },
-            {(int)UnitStatType.PhysicalCriticalStrikeDamage },
-            {(int)UnitStatType.PhysicalCriticalStrikeChance },
-            {(int)UnitStatType.PassiveHealthRegen },
-            {(int)UnitStatType.ResourceYield },
-            {(int)UnitStatType.PvPResilience },
-            {(int)UnitStatType.ReducedResourceDurabilityLoss }
-
-        };
-
-        public static void confirmFile (string address, string file) {
-            try {
-                Directory.CreateDirectory(address);
-            }
-            catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now +": Error creating directory at " + address + "\n Error is: " + e.Message);
-            }
-            try {
-                if (!File.Exists(address + file)) {
-                    FileStream stream = File.Create(address + file);
-                    stream.Dispose();
-                }
-            } catch (Exception e) {
-                Plugin.Logger.LogWarning(DateTime.Now + ": Error creating file at " + address + "\n Error is: " + e.Message);
-            }
-        }
-        public static string statTypeToString(UnitStatType type) {
+        public static HashSet<UnitStatType> baseStatsSet = new()
+            {
+                UnitStatType.PhysicalPower,
+                UnitStatType.ResourcePower,
+                UnitStatType.SiegePower,
+                UnitStatType.AttackSpeed,
+                UnitStatType.FireResistance,
+                UnitStatType.GarlicResistance,
+                UnitStatType.SilverResistance,
+                UnitStatType.HolyResistance,
+                UnitStatType.SunResistance,
+                UnitStatType.SpellResistance,
+                UnitStatType.PhysicalResistance,
+                UnitStatType.SpellCriticalStrikeDamage,
+                UnitStatType.SpellCriticalStrikeChance,
+                UnitStatType.PhysicalCriticalStrikeDamage,
+                UnitStatType.PhysicalCriticalStrikeChance,
+                UnitStatType.PassiveHealthRegen,
+                UnitStatType.ResourceYield,
+                UnitStatType.PvPResilience,
+                UnitStatType.ReducedResourceDurabilityLoss
+            };
+        
+        public static string CamelCaseToSpaces(UnitStatType type) {
             var name = Enum.GetName(type);
             // Split words by camel case
             // ie, PhysicalPower => "Physical Power"
             return Regex.Replace(name, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
+        }
+
+        private struct IsSystemInitialised<T>()
+        {
+            public bool isInitialised = false;
+            public T system = default;
         }
     }
 }

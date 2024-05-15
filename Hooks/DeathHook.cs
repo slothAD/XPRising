@@ -1,85 +1,100 @@
-
+using BepInEx.Logging;
 using HarmonyLib;
-using System;
 using ProjectM;
 using ProjectM.Network;
-using RPGMods.Systems;
-using RPGMods.Utils;
 using Unity.Collections;
-using Unity.Entities;
+using Unity.Transforms;
+using XPRising.Systems;
+using XPRising.Utils;
+using LogSystem = XPRising.Plugin.LogSystem;
 
-namespace RPGMods.Hooks {
-    [HarmonyPatch]
-    public class DeathEventListenerSystem_Patch {
-        [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
-        [HarmonyPostfix]
-        public static void Postfix(DeathEventListenerSystem __instance) {
-            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": beginning Death Tracking");
-            NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
-            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Death events converted successfully, length is " + deathEvents.Length);
-            foreach (DeathEvent ev in deathEvents) {
-                if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Death Event occured");
-                //-- Just track whatever died...
-                if (WorldDynamicsSystem.isFactionDynamic) WorldDynamicsSystem.MobKillMonitor(ev.Died);
+namespace XPRising.Hooks;
 
-                //-- Player Creature Kill Tracking
-                var killer = ev.Killer;
+[HarmonyPatch]
+public class DeathEventListenerSystem_Patch {
+    [HarmonyPatch(typeof(DeathEventListenerSystem), "OnUpdate")]
+    public static void Postfix(DeathEventListenerSystem __instance) {
+        NativeArray<DeathEvent> deathEvents = __instance._DeathEventQuery.ToComponentDataArray<DeathEvent>(Allocator.Temp);
+        foreach (DeathEvent ev in deathEvents) {
+            Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, () => $"Death Event occured for: {ev.Died} - {Helper.GetPrefabName(ev.Died)}");
 
-                // If the entity killing is a minion, switch the killer to the owner of the minion.
-                if (__instance.EntityManager.HasComponent<Minion>(killer)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Minion killed entity. Getting owner...");
-                    if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner)) {
-                        killer = entityOwner.Owner;
-                        if (Helper.deathLogging) Plugin.Logger.LogInfo($"{DateTime.Now}: Owner found, switching killer to owner.");
+            //-- Player Creature Kill Tracking
+            var killer = ev.Killer;
+            
+            //-- Check if victim is a minion
+            var ignoreAsKill = false;
+            if (__instance.EntityManager.HasComponent<Minion>(ev.Died)) {
+                Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, "Minion killed, ignoring as kill");
+                ignoreAsKill = true;
+            }
+            
+            //-- Check victim has a level
+            if (!__instance.EntityManager.HasComponent<UnitLevel>(ev.Died)) {
+                Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, "Has no level, ignoring as kill");
+                ignoreAsKill = true;
+            }
+
+            if (!__instance.EntityManager.HasComponent<Movement>(ev.Died))
+            {
+                Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, "Entity doesn't move, ignoring as kill");
+                ignoreAsKill = true;
+            }
+
+            // If the entity killing is a minion, switch the killer to the owner of the minion.
+            if (__instance.EntityManager.HasComponent<Minion>(killer))
+            {
+                Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, $"Minion killed entity. Getting owner...");
+                if (__instance.EntityManager.TryGetComponentData<EntityOwner>(killer, out var entityOwner))
+                {
+                    killer = entityOwner.Owner;
+                    Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, $"Owner found, switching killer to owner.");
+                }
+            }
+            Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, () => $"[{ev.Source},{ev.Killer},{ev.Died}] => [{Helper.GetPrefabName(ev.Source)},{Helper.GetPrefabName(ev.Killer)},{Helper.GetPrefabName(ev.Died)}]");
+            
+            // If the killer is the victim, then we can skip trying to add xp, heat, mastery, bloodline.
+            if (!ignoreAsKill && !killer.Equals(ev.Died))
+            {
+                if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer))
+                {
+                    Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info,
+                        $"Killer ({killer}) is a player, running xp and heat and the like");
+
+                    if (Plugin.ExperienceSystemActive || Plugin.WantedSystemActive)
+                    {
+                        var isVBlood = Plugin.Server.EntityManager.TryGetComponentData(ev.Died, out BloodConsumeSource victimBlood) && Helper.IsVBlood(victimBlood);
+
+                        var useGroup = ExperienceSystem.GroupMaxDistance > 0;
+
+                        var triggerLocation = Plugin.Server.EntityManager.GetComponentData<LocalToWorld>(ev.Died);
+                        var closeAllies = Alliance.GetClosePlayers(
+                            triggerLocation.Position, killer, ExperienceSystem.GroupMaxDistance, true, useGroup,
+                            Plugin.LogSystem.Death);
+
+                        // If you get experience for the kill, you get heat for the kill
+                        if (Plugin.ExperienceSystemActive) ExperienceSystem.ExpMonitor(closeAllies, ev.Died, isVBlood);
+                        if (Plugin.WantedSystemActive) WantedSystem.PlayerKillEntity(closeAllies, ev.Died, isVBlood);
+                    }
+
+                    if (Plugin.WeaponMasterySystemActive) WeaponMasterySystem.UpdateMastery(killer, ev.Died);
+                    if (Plugin.BloodlineSystemActive) BloodlineSystem.UpdateBloodline(killer, ev.Died);
+                    
+                    //-- Random Encounters
+                    if (Plugin.RandomEncountersSystemActive && Plugin.IsInitialized)
+                    {
+                        var userEntity = Plugin.Server.EntityManager.GetComponentData<PlayerCharacter>(killer).UserEntity;
+                        var userModel = Plugin.Server.EntityManager.GetComponentData<User>(userEntity);
+                        RandomEncountersSystem.ServerEvents_OnDeath(ev, userModel);
                     }
                 }
-
-                if (__instance.EntityManager.HasComponent<PlayerCharacter>(killer) && __instance.EntityManager.HasComponent<Movement>(ev.Died)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Killer is a player, running xp and heat and the like");
-                    if (ExperienceSystem.isEXPActive) ExperienceSystem.EXPMonitor(killer, ev.Died);
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.startPlayerKill(killer, ev.Died);
-                    if (WeaponMasterSystem.isMasteryEnabled) WeaponMasterSystem.UpdateMastery(killer, ev.Died);
-                    if (Bloodlines.areBloodlinesEnabled) Bloodlines.UpdateBloodline(killer, ev.Died);
-
-                }
-
-                //-- Auto Respawn & HunterHunted System Begin
-                if (__instance.EntityManager.HasComponent<PlayerCharacter>(ev.Died)) {
-                    if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": the dead person is a player, running xp loss and heat dumping");
-                    if (HunterHuntedSystem.isActive) HunterHuntedSystem.PlayerDied(ev.Died);
-
-                    PlayerCharacter player = __instance.EntityManager.GetComponentData<PlayerCharacter>(ev.Died);
-                    Entity userEntity = player.UserEntity;
-                    User user = __instance.EntityManager.GetComponentData<User>(userEntity);
-                    ulong SteamID = user.PlatformId;
-                    //-- ----------------------------------
-
-                    if (ExperienceSystem.isEXPActive && ExperienceSystem.xpLostOnRelease) {
-                        if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Ready to check Kill Map");
-                        if (Database.killMap.TryGetValue(ev.Died, out Entity trueKiller)) {
-                            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Kill Map has killer");
-                            ExperienceSystem.deathXPLoss(ev.Died, trueKiller);
-                        } else {
-                            if (Helper.deathLogging) Plugin.Logger.LogInfo(DateTime.Now + ": Player not found in the kill map");
-                            ExperienceSystem.deathXPLoss(ev.Died, ev.Killer);
-                        }
-                    }
-
-                    //-- Check for AutoRespawn
-                    if (user.IsConnected) {
-                        bool isServerWide = Database.autoRespawn.ContainsKey(1);
-                        bool doRespawn;
-                        if (!isServerWide) {
-                            doRespawn = Database.autoRespawn.ContainsKey(SteamID);
-                        } else { doRespawn = true; }
-
-                        if (doRespawn) {
-                            Utils.RespawnCharacter.Respawn(ev.Died, player, userEntity);
-                        }
-                    }
-
-                    //-- ----------------------------------------
-                }
+            }
+            
+            // Player death
+            if (__instance.EntityManager.TryGetComponentData<RespawnCharacter>(ev.Died, out var respawnData))
+            {
+                Plugin.Log(Plugin.LogSystem.Death, LogLevel.Info, $"the deceased ({ev.Died}) is a player, running xp loss and heat dumping");
+                if (Plugin.WantedSystemActive) WantedSystem.PlayerDied(ev.Died);
+                if (Plugin.ExperienceSystemActive) ExperienceSystem.DeathXpLoss(ev.Died, respawnData.KillerEntity._Entity);
             }
         }
     }
