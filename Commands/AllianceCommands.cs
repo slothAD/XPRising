@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using ProjectM;
 using ProjectM.Network;
 using Unity.Entities;
@@ -20,6 +21,7 @@ public static class AllianceCommands
             throw ctx.Error("Player groups not allowed.");
         }
         var playerCharacter = ctx.Event.SenderCharacterEntity;
+        var steamID = ctx.User.PlatformId;
 
         var groupDetails = "You are not currently in a group.";
         if (Cache.AlliancePlayerToGroupId.TryGetValue(playerCharacter, out var currentGroupId))
@@ -27,16 +29,16 @@ public static class AllianceCommands
             groupDetails = Cache.AlliancePlayerGroups[currentGroupId].PrintAllies();
         }
         
-        var prefs = Database.AlliancePlayerPrefs[playerCharacter];
+        var alliancePreferences = Database.AlliancePlayerPrefs[steamID];
 
         var pendingInviteDetails = "You currently have no pending group invites.";
-        if (Cache.AlliancePendingInvites.TryGetValue(playerCharacter, out var pendingInvites))
+        if (Cache.AlliancePendingInvites.TryGetValue(playerCharacter, out var pendingInvites) && pendingInvites.Count > 0)
         {
             var invitesList = pendingInvites.OrderBy(x => x.InvitedAt).Select((invite, i) => $"{i}: {invite.InviterName} at {invite.InvitedAt}");
             pendingInviteDetails = $"Current invites:\n{string.Join("\n", invitesList)}";
         }
         
-        ctx.Reply($"{pendingInviteDetails}\n{prefs.ToString()}\n{groupDetails}");
+        ctx.Reply($"{pendingInviteDetails}\n\nPreferences:\n{alliancePreferences.ToString()}\n\n{groupDetails}");
     }
 
     [Command("group ignore", "gi", "", "Toggles ignoring group invites for yourself.", adminOnly: false)]
@@ -47,12 +49,13 @@ public static class AllianceCommands
             throw ctx.Error("Player groups not allowed.");
         }
         var playerCharacter = ctx.Event.SenderCharacterEntity;
+        var steamID = ctx.User.PlatformId;
 
-        var prefs = Database.AlliancePlayerPrefs[playerCharacter];
-        prefs.IgnoringInvites = !prefs.IgnoringInvites;
-        Database.AlliancePlayerPrefs[playerCharacter] = prefs;
+        var preferences = Database.AlliancePlayerPrefs[steamID];
+        preferences.IgnoringInvites = !preferences.IgnoringInvites;
+        Database.AlliancePlayerPrefs[steamID] = preferences;
         
-        if (prefs.IgnoringInvites)
+        if (preferences.IgnoringInvites)
         {
             ctx.Reply("You are now ignoring all group invites.");
         }
@@ -78,6 +81,10 @@ public static class AllianceCommands
             {
                 throw ctx.Error($"Could not find specified player \"{playerName}\".");
             }
+            else if (targetEntity.Equals(playerCharacter))
+            {
+                throw ctx.Error($"You cannot add yourself to your group");
+            }
             
             newPlayerGroup = new Alliance.PlayerGroup();
             newPlayerGroup.Allies.Add(targetEntity);
@@ -88,35 +95,38 @@ public static class AllianceCommands
 
             if (newPlayerGroup.Allies.Count < 2)
             {
-                throw ctx.Error($"Could not detect any other nearby players to make a group with.");
+                ctx.Reply($"No nearby players detected to make a group with.");
+                return;
             }
         }
 
-        var groupId = Cache.AlliancePlayerToGroupId[playerCharacter];
+        if (!Cache.AlliancePlayerToGroupId.TryGetValue(playerCharacter, out var groupId))
+        {
+            groupId = Guid.NewGuid();
+            
+            // Create a new group and ensure that we are in it.
+            Cache.AlliancePlayerToGroupId[playerCharacter] = groupId;
+            Cache.AlliancePlayerGroups[groupId] = new Alliance.PlayerGroup() { Allies = { playerCharacter } };
+        }
 
         var currentGroup = Cache.AlliancePlayerGroups[groupId];
-        // Add ourselves to the group. This will not cause a duplication because it is a set.
-        // It ensures that it will correctly skip trying to run checks to see if we can add ourselves.
-        currentGroup.Allies.Add(playerCharacter);
         foreach (var newAlly in newPlayerGroup.Allies)
         {
+            var allyPlayerCharacter = _entityManager.GetComponentData<PlayerCharacter>(newAlly);
+            var allyName = allyPlayerCharacter.Name.ToString();
+            var allySteamID = _entityManager.GetComponentData<User>(allyPlayerCharacter.UserEntity).PlatformId;
+            
             if (currentGroup.Allies.Contains(newAlly))
             {
                 // Player already in current group, skipping.
+                ctx.Reply($"{allyName} is already in your group.");
                 continue;
             }
-            var allyUser = _entityManager.GetComponentData<User>(newAlly);
-            var allyName = allyUser.CharacterName.ToString();
 
-            var newAllyAlliancePrefs = Database.AlliancePlayerPrefs[newAlly];
+            var newAllyAlliancePrefs = Database.AlliancePlayerPrefs[allySteamID];
             if (newAllyAlliancePrefs.IgnoringInvites)
             {
                 ctx.Reply($"{allyName} is currently ignoring group invites. Ask them to change this setting before attempting to make a group.");
-                continue;
-            }
-            else if (Cache.AlliancePlayerToGroupId.ContainsKey(newAlly))
-            {
-                ctx.Reply($"{allyName} is already in a group. They should leave their current one first.");
                 continue;
             }
             else if (Cache.AlliancePlayerToGroupId.ContainsKey(newAlly))
@@ -139,8 +149,7 @@ public static class AllianceCommands
                 $"Type \".group yes\" to accept or \".group no\" to reject." :
                 $"Type \".group yes {inviteId}\" to accept or \".group no {inviteId}\" to reject.";
             
-            var allyUserEntity = _entityManager.GetComponentData<PlayerCharacter>(newAlly).UserEntity;
-            Output.SendLore(allyUserEntity, $"{ctx.User.CharacterName} has invited you to join their group! {inviteString} No further messages will be sent about this invite.");
+            Output.SendLore(allyPlayerCharacter.UserEntity, $"{ctx.User.CharacterName} has invited you to join their group! {inviteString} No further messages will be sent about this invite.");
         }
     }
 
@@ -179,7 +188,7 @@ public static class AllianceCommands
         {
             if (ally == playerCharacter)
             {
-                ctx.Reply($"You have successfully joined the group! Other members: {group}");
+                ctx.Reply($"You have successfully joined the group!\n{group.PrintAllies()}");
             }
             else
             {

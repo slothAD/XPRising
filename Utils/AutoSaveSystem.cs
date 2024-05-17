@@ -37,11 +37,11 @@ namespace XPRising.Utils
         private const string UserPermissionJson = "userPermission.json";
         private const string AlliancePreferencesJson = "alliancePreferences.json";
 
-        private static int _saveCount = 0;
-        private static int _autoSaveCount = 0;
-        public static int AutoSaveFrequency = 1;
-        public static int BackupFrequency = 0;
-        
+        private static DateTime _timeSinceLastAutoSave = DateTime.Now;
+        private static DateTime _timeSinceLastBackupSave = DateTime.Now;
+        public static TimeSpan AutoSaveFrequency { get; set; } = TimeSpan.FromMinutes(2);
+        public static TimeSpan BackupFrequency { get; set; } = TimeSpan.Zero;
+
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = false,
@@ -73,26 +73,24 @@ namespace XPRising.Utils
         public static bool SaveDatabase(bool forceSave, bool forceBackup = false)
         {
             var anyErrors = false;
-            if (forceSave)
+            
+            var now = DateTime.Now;
+            var autoSave = (now - _timeSinceLastAutoSave) > AutoSaveFrequency;
+            if (forceSave || autoSave)
             {
+                var message = forceSave ? "Saving DB..." : "Autosaving DB...";
+                Plugin.Log(LogSystem.Core, LogLevel.Info, message, true);
                 anyErrors |= !InternalSaveDatabase(SavesPath);
-                if (forceBackup) anyErrors |= !InternalSaveDatabase(BackupsPath);
+                _timeSinceLastAutoSave = now;
             }
-            else
+            
+            var saveBackup = !BackupFrequency.Equals(TimeSpan.Zero) && (now - _timeSinceLastBackupSave) > BackupFrequency;
+            if (forceBackup || saveBackup)
             {
-                var autoSave = AutoSaveFrequency > 0 && _saveCount % AutoSaveFrequency == 0;
-                if (autoSave)
-                {
-                    anyErrors |= !InternalSaveDatabase(SavesPath);
-                    var saveBackup = BackupFrequency > 0 && _autoSaveCount % BackupFrequency == 0;
-                    if (forceBackup || saveBackup) anyErrors |= !InternalSaveDatabase(BackupsPath);
-                    
-                    // Just ensure that it wraps around. No need to support ludicrously high save count numbers
-                    _autoSaveCount = (_autoSaveCount + 1) % 100;
-                }
-                
-                // Just ensure that it wraps around. No need to support ludicrously high save count numbers
-                _saveCount = (_saveCount + 1) % 100;
+                var message = forceSave ? "Saving DB backup..." : "Autosaving DB backup...";
+                Plugin.Log(LogSystem.Core, LogLevel.Info, message, true);
+                anyErrors |= !InternalSaveDatabase(BackupsPath);
+                _timeSinceLastBackupSave = now;
             }
 
             return !anyErrors;
@@ -134,7 +132,7 @@ namespace XPRising.Utils
 
             if (Plugin.PlayerGroupsActive) anyErrors |= !SaveDB(saveFolder, AlliancePreferencesJson, Database.AlliancePlayerPrefs, JsonOptions);
 
-            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"All databases saved to: {saveFolder}");
             return !anyErrors;
         }
 
@@ -187,7 +185,7 @@ namespace XPRising.Utils
             
             if (Plugin.PlayerGroupsActive) anyErrors |= !LoadDB(AlliancePreferencesJson, loadMethod, useInitialiser, ref Database.AlliancePlayerPrefs);
 
-            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
+            Plugin.Log(LogSystem.Core, LogLevel.Info, "All database data is now loaded.", true);
             return !anyErrors;
         }
         
@@ -199,12 +197,12 @@ namespace XPRising.Utils
             {
                 var outputFile = Path.Combine(saveFolder, specificFile);
                 File.WriteAllText(outputFile, JsonSerializer.Serialize(data, options));
-                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"{specificFile} Saved.");
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"{specificFile} Saved.");
                 return true;
             }
             catch (Exception e)
             {
-                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not save DB {specificFile}: {e.Message}", true);
                 return false;
             }
         }
@@ -229,7 +227,7 @@ namespace XPRising.Utils
                     }
                     break;
                 case LoadMethod.None:
-                    Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Initialising DB for {specificFile}");
+                    Plugin.Log(LogSystem.Core, LogLevel.Info, $"Initialising DB for {specificFile}");
                     currentRef = initialiser == null ? new TData() : initialiser();
                     return true;
             }
@@ -237,7 +235,7 @@ namespace XPRising.Utils
             // If nothing loaded correctly, check if we should use the initialiser or just return the current value.
             if (!useInitialiser) return false;
             
-            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
+            Plugin.Log(LogSystem.Core, LogLevel.Warning, $"Initialising DB for {specificFile}");
             currentRef = initialiser == null ? new TData() : initialiser();
             return false;
         }
@@ -254,10 +252,10 @@ namespace XPRising.Utils
                 var saveFile = ConfirmFile(folder, specificFile, defaultContents);
                 var json = File.ReadAllText(saveFile);
                 data = JsonSerializer.Deserialize<TData>(json, JsonOptions);
-                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Main DB Loaded for {specificFile}");
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"Main DB Loaded for {specificFile}");
                 return true;
             } catch (Exception e) {
-                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Error, $"Could not load main {specificFile}: {e.Message}", true);
                 return false;
             }
         }

@@ -357,30 +357,6 @@ namespace XPRising.Utils
 
             return prefabGuid;
         }
-
-        public static string GetPrefabName(PrefabGUID hashCode)
-        {
-            var s = Plugin.Server.GetExistingSystemManaged<PrefabCollectionSystem>();
-            string name = "Nonexistent";
-            if (hashCode.GuidHash == 0)
-            {
-                return name;
-            }
-            try
-            {
-                name = s.PrefabGuidToNameDictionary[hashCode];
-            }
-            catch
-            {
-                name = "NoPrefabName";
-            }
-            return name;
-        }
-
-        public static string GetPrefabName(Entity entity)
-        {
-            return GetPrefabName(GetPrefabGUID(entity));
-        }
         
         public static Prefabs.Faction ConvertGuidToFaction(PrefabGUID guid) {
             if (Enum.IsDefined(typeof(Prefabs.Faction), guid.GetHashCode())) return (Prefabs.Faction)guid.GetHashCode();
@@ -495,13 +471,6 @@ namespace XPRising.Utils
             }
 
             return false;
-        }
-
-        public static void LogEntityDebugInfo(Entity entity)
-        {
-            var sb = new Il2CppSystem.Text.StringBuilder();
-            ProjectM.EntityDebuggingUtility.DumpEntity(Plugin.Server, entity, true, sb);
-            Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"Debug entity: {sb.ToString()}", true);
         }
 
         // For stats that reduce as a multiplier of 1 - their value, so that a value of 0.5 halves the stat, and 0.75 quarters it.

@@ -1,16 +1,19 @@
 using System;
+using System.Collections.Generic;
 using BepInEx;
 using VampireCommandFramework;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using System.Reflection;
+using ProjectM;
 using Unity.Entities;
 using UnityEngine;
 using Stunlock.Core;
 using XPRising.Commands;
 using XPRising.Components.RandomEncounters;
 using XPRising.Configuration;
+using XPRising.Systems;
 using XPRising.Utils;
 using XPRising.Utils.Prefabs;
 
@@ -34,7 +37,7 @@ namespace XPRising
         public static bool WeaponMasterySystemActive = false;
         public static bool WantedSystemActive = true;
         public static bool WaypointsActive = false;
-        
+
         private static bool _adminCommandsRequireAdmin = false;
 
         private static ManualLogSource _logger;
@@ -91,9 +94,16 @@ namespace XPRising
             {
                 WaypointCommands.WaypointLimit = Config.Bind("Config", "Waypoint Limit", 2, "Set a waypoint limit for per non-admin user.").Value;
             }
+
+            Config.SaveOnConfigSet = true;
+            var autoSaveFrequency = Config.Bind("Auto-save", "Frequency", 10, "Request the frequency for auto-saving the database. Value is in minutes. Minimum is 2.");
+            var backupSaveFrequency = Config.Bind("Auto-save", "Backup", 0, "Enable and request the frequency for saving to the backup folder. Value is in minutes. 0 to disable.");
+            if (autoSaveFrequency.Value < 2) autoSaveFrequency.Value = 10;
+            if (backupSaveFrequency.Value < 0) backupSaveFrequency.Value = 0;
             
-            AutoSaveSystem.AutoSaveFrequency = Config.Bind("Auto-save", "Frequency", 5, "Enable and set the frequency for auto-saving the database. 0 is disabled, 1 is every time the server saves, 2 is every second time, etc.").Value;
-            AutoSaveSystem.BackupFrequency = Config.Bind("Auto-save", "Backup", 0, "Enable and set the frequency for saving to the backup folder. The backup save will run every X saves. 0 to disable.").Value;
+            // Save frequency is set to a TimeSpan of 30s less than specified, so that the auto-save won't miss being triggered by seconds.
+            AutoSaveSystem.AutoSaveFrequency = TimeSpan.FromMinutes(autoSaveFrequency.Value * 60 - 30);
+            AutoSaveSystem.BackupFrequency = backupSaveFrequency.Value < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(backupSaveFrequency.Value * 60 - 30);
         }
 
         public override void Load()
@@ -113,17 +123,14 @@ namespace XPRising
             
             // Load command registry for systems that are active
             // Note: Displaying these in alphabetical order for ease of maintenance
-            if (PlayerGroupsActive) CommandRegistry.RegisterCommandType(typeof(AllianceCommands));
-            if (BloodlineSystemActive) CommandRegistry.RegisterCommandType(typeof(BloodlineCommands));
-            CommandRegistry.RegisterCommandType(typeof(CacheCommands));
-            if (ExperienceSystemActive) CommandRegistry.RegisterCommandType(typeof(ExperienceCommands));
-            if (WeaponMasterySystemActive) CommandRegistry.RegisterCommandType(typeof(MasteryCommands));
-            CommandRegistry.RegisterCommandType(typeof(PermissionCommands));
-            CommandRegistry.RegisterCommandType(typeof(PlayerInfoCommands));
-            if (PowerUpCommandsActive) CommandRegistry.RegisterCommandType(typeof(PowerUpCommands)); // Currently unused.
-            if (RandomEncountersSystemActive) CommandRegistry.RegisterCommandType(typeof(RandomEncountersCommands));
-            if (WantedSystemActive) CommandRegistry.RegisterCommandType(typeof(WantedCommands));
-            if (WaypointsActive) CommandRegistry.RegisterCommandType(typeof(WaypointCommands));
+            Command.AddCommandType(typeof(AllianceCommands), PlayerGroupsActive);
+            Command.AddCommandType(typeof(BloodlineCommands), BloodlineSystemActive);
+            Command.AddCommandType(typeof(CacheCommands));
+            Command.AddCommandType(typeof(ExperienceCommands), ExperienceSystemActive);
+            Command.AddCommandType(typeof(MasteryCommands), WeaponMasterySystemActive);
+            Command.AddCommandType(typeof(PermissionCommands));
+            Command.AddCommandType(typeof(PlayerInfoCommands));
+            Command.AddCommandType(typeof(WantedCommands), WantedSystemActive);
             
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -146,9 +153,16 @@ namespace XPRising
             
             //-- Initialize System
             // Pre-initialise some constants
-            // Helper.GetServerGameSettings(out _);
             Helper.GetServerGameManager(out _);
-            // Helper.GetUserActivityGridSystem(out _);
+            
+            // Ensure that there is a consistent starting level to the server settings
+            if (ExperienceSystemActive)
+            {
+                var serverSettings = Plugin.Server.GetExistingSystemManaged<ServerGameSettingsSystem>();
+                var startingXpLevel = serverSettings.Settings.StartingProgressionLevel;
+                ExperienceSystem.StartingExp = ExperienceSystem.ConvertLevelToXp(startingXpLevel) + 1; // Add 1 to make it show start of this level, rather than end of last.
+                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Starting XP level set to {startingXpLevel} to match server settings", true);
+            }
             
             DebugLoggingConfig.Initialize();
             if (BloodlineSystemActive) BloodlineConfig.Initialize();
@@ -168,6 +182,22 @@ namespace XPRising
             // Note for devs: To regenerate Command.md and PermissionSystem.DefaultCommandPermissions, uncomment the following:
             // Command.GenerateCommandMd(commands);
             // Command.GenerateDefaultCommandPermissions(commands);
+            var assemblyConfigurationAttribute = typeof(Plugin).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
+            var buildConfigurationName = assemblyConfigurationAttribute?.Configuration;
+            if (buildConfigurationName == "Debug")
+            {
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"****** WARNING ******* Build configuration: {buildConfigurationName}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"THIS IS ADDING SOME DEBUG COMMANDS. JUST SO THAT YOU ARE AWARE.", true);
+                
+                PowerUpCommandsActive = true;
+                RandomEncountersSystemActive = true;
+                WaypointsActive = true;
+                Command.AddCommandType(typeof(PowerUpCommands), PowerUpCommandsActive);
+                Command.AddCommandType(typeof(RandomEncountersCommands), RandomEncountersSystemActive);
+                Command.AddCommandType(typeof(WaypointCommands), WaypointsActive);
+                // Reload DB to ensure these commands work as intended.
+                AutoSaveSystem.LoadOrInitialiseDatabase();
+            }
             
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Setting CommandRegistry middleware");
             if (!_adminCommandsRequireAdmin)
@@ -208,13 +238,30 @@ namespace XPRising
         public new static void Log(LogSystem system, LogLevel logLevel, string message, bool forceLog = false)
         {
             var isLogging = forceLog || DebugLoggingConfig.IsLogging(system);
-            if (isLogging) _logger.Log(logLevel, $"{DateTime.Now.ToString("u")}: [{Enum.GetName(system)}] {message}");
+            if (isLogging) _logger.Log(logLevel, ToLogMessage(system, message));
         }
         
         // Log overload to allow potentially more computationally expensive logs to be hidden when not being logged
         public new static void Log(LogSystem system, LogLevel logLevel, Func<string> messageGenerator, bool forceLog = false)
         {
-            Log(system, logLevel, messageGenerator(), forceLog);
+            var isLogging = forceLog || DebugLoggingConfig.IsLogging(system);
+            if (isLogging) _logger.Log(logLevel, ToLogMessage(system, messageGenerator()));
+        }
+        
+        // Log overload to allow enumerations to only be iterated over if logging
+        public new static void Log(LogSystem system, LogLevel logLevel, IEnumerable<string> messages, bool forceLog = false)
+        {
+            var isLogging = forceLog || DebugLoggingConfig.IsLogging(system);
+            if (!isLogging) return;
+            foreach (var message in messages)
+            {
+                _logger.Log(logLevel, ToLogMessage(system, message));
+            }
+        }
+
+        private static string ToLogMessage(LogSystem logSystem, string message)
+        {
+            return $"{DateTime.Now:u}: [{Enum.GetName(logSystem)}] {message}";
         }
     }
 }
