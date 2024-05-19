@@ -38,6 +38,8 @@ namespace XPRising
         public static bool WantedSystemActive = true;
         public static bool WaypointsActive = false;
 
+        public static bool IsDebug { get; private set; } = false;
+
         private static bool _adminCommandsRequireAdmin = false;
 
         private static ManualLogSource _logger;
@@ -96,14 +98,19 @@ namespace XPRising
             }
 
             Config.SaveOnConfigSet = true;
-            var autoSaveFrequency = Config.Bind("Auto-save", "Frequency", 10, "Request the frequency for auto-saving the database. Value is in minutes. Minimum is 2.");
+            var autoSaveFrequency = Config.Bind("Auto-save", "Frequency", 2, "Request the frequency for auto-saving the database. Value is in minutes. Minimum is 2.");
             var backupSaveFrequency = Config.Bind("Auto-save", "Backup", 0, "Enable and request the frequency for saving to the backup folder. Value is in minutes. 0 to disable.");
-            if (autoSaveFrequency.Value < 2) autoSaveFrequency.Value = 10;
+            if (autoSaveFrequency.Value < 2) autoSaveFrequency.Value = 2;
             if (backupSaveFrequency.Value < 0) backupSaveFrequency.Value = 0;
             
-            // Save frequency is set to a TimeSpan of 30s less than specified, so that the auto-save won't miss being triggered by seconds.
-            AutoSaveSystem.AutoSaveFrequency = TimeSpan.FromMinutes(autoSaveFrequency.Value * 60 - 30);
-            AutoSaveSystem.BackupFrequency = backupSaveFrequency.Value < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(backupSaveFrequency.Value * 60 - 30);
+            AutoSaveSystem.AutoSaveFrequency = TimeSpan.FromMinutes(autoSaveFrequency.Value);
+            AutoSaveSystem.BackupFrequency = backupSaveFrequency.Value < 1 ? TimeSpan.Zero : TimeSpan.FromMinutes(backupSaveFrequency.Value);
+            
+            Plugin.Log(LogSystem.Core, LogLevel.Info, $"Auto-save frequency set to {AutoSaveSystem.AutoSaveFrequency.ToString()}", true);
+            var backupFrequencyMessage = AutoSaveSystem.BackupFrequency == TimeSpan.Zero
+                ? $"Auto-save backups disabled."
+                : $"Auto-save backup frequency set to {AutoSaveSystem.BackupFrequency.ToString()}";
+            Plugin.Log(LogSystem.Core, LogLevel.Info, backupFrequencyMessage, true);
         }
 
         public override void Load()
@@ -116,6 +123,10 @@ namespace XPRising
                 return;
             }
             
+            var assemblyConfigurationAttribute = typeof(Plugin).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
+            var buildConfigurationName = assemblyConfigurationAttribute?.Configuration;
+            IsDebug = buildConfigurationName == "Debug";
+            
             InitCoreConfig();
             
             Instance = this;
@@ -123,14 +134,27 @@ namespace XPRising
             
             // Load command registry for systems that are active
             // Note: Displaying these in alphabetical order for ease of maintenance
-            Command.AddCommandType(typeof(AllianceCommands), PlayerGroupsActive);
-            Command.AddCommandType(typeof(BloodlineCommands), BloodlineSystemActive);
-            Command.AddCommandType(typeof(CacheCommands));
-            Command.AddCommandType(typeof(ExperienceCommands), ExperienceSystemActive);
-            Command.AddCommandType(typeof(MasteryCommands), WeaponMasterySystemActive);
-            Command.AddCommandType(typeof(PermissionCommands));
-            Command.AddCommandType(typeof(PlayerInfoCommands));
-            Command.AddCommandType(typeof(WantedCommands), WantedSystemActive);
+            CommandUtility.AddCommandType(typeof(AllianceCommands), PlayerGroupsActive);
+            CommandUtility.AddCommandType(typeof(BloodlineCommands), BloodlineSystemActive);
+            CommandUtility.AddCommandType(typeof(CacheCommands));
+            CommandUtility.AddCommandType(typeof(ExperienceCommands), ExperienceSystemActive);
+            CommandUtility.AddCommandType(typeof(MasteryCommands), WeaponMasterySystemActive);
+            CommandUtility.AddCommandType(typeof(PermissionCommands));
+            CommandUtility.AddCommandType(typeof(PlayerInfoCommands));
+            CommandUtility.AddCommandType(typeof(WantedCommands), WantedSystemActive);
+            
+            if (IsDebug)
+            {
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"****** WARNING ******* Build configuration: {buildConfigurationName}", true);
+                Plugin.Log(LogSystem.Core, LogLevel.Info, $"THIS IS ADDING SOME DEBUG COMMANDS. JUST SO THAT YOU ARE AWARE.", true);
+                
+                PowerUpCommandsActive = true;
+                RandomEncountersSystemActive = true;
+                WaypointsActive = true;
+                CommandUtility.AddCommandType(typeof(PowerUpCommands), PowerUpCommandsActive);
+                CommandUtility.AddCommandType(typeof(RandomEncountersCommands), RandomEncountersSystemActive);
+                CommandUtility.AddCommandType(typeof(WaypointCommands), WaypointsActive);
+            }
             
             harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -177,27 +201,11 @@ namespace XPRising
             AutoSaveSystem.LoadOrInitialiseDatabase();
             
             // Validate any potential change in permissions
-            var commands = Command.GetAllCommands();
-            Command.ValidatedCommandPermissions(commands);
+            var commands = CommandUtility.GetAllCommands();
+            CommandUtility.ValidatedCommandPermissions(commands);
             // Note for devs: To regenerate Command.md and PermissionSystem.DefaultCommandPermissions, uncomment the following:
-            // Command.GenerateCommandMd(commands);
-            // Command.GenerateDefaultCommandPermissions(commands);
-            var assemblyConfigurationAttribute = typeof(Plugin).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
-            var buildConfigurationName = assemblyConfigurationAttribute?.Configuration;
-            if (buildConfigurationName == "Debug")
-            {
-                Plugin.Log(LogSystem.Core, LogLevel.Info, $"****** WARNING ******* Build configuration: {buildConfigurationName}", true);
-                Plugin.Log(LogSystem.Core, LogLevel.Info, $"THIS IS ADDING SOME DEBUG COMMANDS. JUST SO THAT YOU ARE AWARE.", true);
-                
-                PowerUpCommandsActive = true;
-                RandomEncountersSystemActive = true;
-                WaypointsActive = true;
-                Command.AddCommandType(typeof(PowerUpCommands), PowerUpCommandsActive);
-                Command.AddCommandType(typeof(RandomEncountersCommands), RandomEncountersSystemActive);
-                Command.AddCommandType(typeof(WaypointCommands), WaypointsActive);
-                // Reload DB to ensure these commands work as intended.
-                AutoSaveSystem.LoadOrInitialiseDatabase();
-            }
+            // CommandUtility.GenerateCommandMd(commands);
+            // CommandUtility.GenerateDefaultCommandPermissions(commands);
             
             Plugin.Log(LogSystem.Core, LogLevel.Info, $"Setting CommandRegistry middleware");
             if (!_adminCommandsRequireAdmin)
@@ -205,7 +213,7 @@ namespace XPRising
                 Plugin.Log(LogSystem.Core, LogLevel.Info, "Removing admin privilege requirements");
                 CommandRegistry.Middlewares.Clear();                
             }
-            CommandRegistry.Middlewares.Add(new Command.PermissionMiddleware());
+            CommandRegistry.Middlewares.Add(new CommandUtility.PermissionMiddleware());
 
             if (RandomEncountersSystemActive)
             {
@@ -226,6 +234,7 @@ namespace XPRising
             Buff,
             Core,
             Death,
+            Debug,
             Faction,
             Mastery,
             PowerUp,
