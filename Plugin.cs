@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using BepInEx;
 using VampireCommandFramework;
 using BepInEx.Logging;
@@ -32,6 +33,7 @@ namespace XPRising
         public static bool BloodlineSystemActive = false;
         public static bool ExperienceSystemActive = true;
         public static bool PlayerGroupsActive = true;
+        public static int MaxPlayerGroupSize = 5;
         public static bool PowerUpCommandsActive = false;
         public static bool RandomEncountersSystemActive = false;
         public static bool WeaponMasterySystemActive = false;
@@ -39,6 +41,9 @@ namespace XPRising
         public static bool WaypointsActive = false;
 
         public static bool IsDebug { get; private set; } = false;
+        
+        public static bool ShouldApplyBuffs =>
+            ExperienceSystemActive || BloodlineSystemActive || WeaponMasterySystemActive || PowerUpCommandsActive;
 
         private static bool _adminCommandsRequireAdmin = false;
 
@@ -83,6 +88,7 @@ namespace XPRising
             BloodlineSystemActive = Config.Bind("System", "Enable Bloodline Mastery system", false,  "Enable/disable the bloodline mastery system.").Value;
             ExperienceSystemActive = Config.Bind("System", "Enable Experience system", true,  "Enable/disable the experience system.").Value;
             PlayerGroupsActive = Config.Bind("System", "Enable Player Groups", true,  "Enable/disable the player group system.").Value;
+            MaxPlayerGroupSize = Config.Bind("System", "Maximum player group size", 5,  "Set a maximum value for player group size.").Value;
             // Disabling this for now as it needs more attention.
             //RandomEncountersSystemActive = Config.Bind("System", "Enable Random Encounters system", false,  "Enable/disable the random encounters system.").Value;
             WeaponMasterySystemActive = Config.Bind("System", "Enable Weapon Mastery system", false,  "Enable/disable the weapon mastery system.").Value;
@@ -178,14 +184,14 @@ namespace XPRising
             // Pre-initialise some constants
             Helper.GetServerGameManager(out _);
             
-            // Ensure that there is a consistent starting level to the server settings
-            if (ExperienceSystemActive)
-            {
-                var serverSettings = Plugin.Server.GetExistingSystemManaged<ServerGameSettingsSystem>();
-                var startingXpLevel = serverSettings.Settings.StartingProgressionLevel;
-                ExperienceSystem.StartingExp = ExperienceSystem.ConvertLevelToXp(startingXpLevel);
-                Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Starting XP level set to {startingXpLevel} to match server settings", true);
-            }
+            var configFolderName = string.Join("_", ("XPRising_" + SettingsManager.ServerHostSettings.Name).Split(Path.GetInvalidFileNameChars()));
+            AutoSaveSystem.ConfigFolder = configFolderName;
+            
+            // Ensure that internal settings are consistent with server settings
+            var serverSettings = Plugin.Server.GetExistingSystemManaged<ServerGameSettingsSystem>();
+            var startingXpLevel = serverSettings.Settings.StartingProgressionLevel;
+            ExperienceSystem.StartingExp = ExperienceSystem.ConvertLevelToXp(startingXpLevel);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Starting XP level set to {startingXpLevel} to match server settings", ExperienceSystemActive);
             
             DebugLoggingConfig.Initialize();
             if (BloodlineSystemActive) BloodlineConfig.Initialize();
@@ -196,7 +202,7 @@ namespace XPRising
             //-- Apply configs
             
             Plugin.Log(LogSystem.Core, LogLevel.Info, "Initialising player cache and internal database...");
-            Helper.CreatePlayerCache();
+            PlayerCache.CreatePlayerCache();
             AutoSaveSystem.LoadOrInitialiseDatabase();
             
             // Validate any potential change in permissions

@@ -19,13 +19,15 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 {
     private static void Prefix(ModifyUnitStatBuffSystem_Spawn __instance)
     {
+        if (!Plugin.ShouldApplyBuffs) return;
+        
         EntityManager entityManager = __instance.EntityManager;
         NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
         
         foreach (var entity in entities)
         {
             var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
-            DebugTool.LogPrefabGuid(prefabGuid, "Buff:", LogSystem.Buff);
+            DebugTool.LogPrefabGuid(prefabGuid, "ModStats_Spawn:", LogSystem.Buff);
             if (prefabGuid.GuidHash == Helper.ForbiddenBuffGuid)
             {
                 Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + prefabGuid.GuidHash);
@@ -78,74 +80,56 @@ public class ModifyUnitStatBuffSystem_Spawn_Patch
 
         Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Done Adding, Buffer length: " + buffer.Length);
     }
+}
 
-    private static void Postfix(ModifyUnitStatBuffSystem_Spawn __instance)
+[HarmonyPatch(typeof(BuffSystem_Spawn_Server), nameof(BuffSystem_Spawn_Server.OnUpdate))]
+public class BuffSystem_Spawn_Server_Patch {
+    private static void Prefix(BuffSystem_Spawn_Server __instance)
     {
-        EntityManager entityManager = __instance.EntityManager;
-        NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
-
-        foreach (var entity in entities)
-        {
-            var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
-
-            if (!__instance.EntityManager.TryGetComponentData<EntityOwner>(entity, out var owner) ||
-                !__instance.EntityManager.TryGetComponentData<PlayerCharacter>(owner.Owner, out var playerCharacter) ||
-                !__instance.EntityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
-            {
-                DebugTool.LogPrefabGuid(prefabGuid, "Not PC buff (spawn):", LogSystem.Buff);
-                continue;
-            }
+        if (!Plugin.BloodlineSystemActive) return;
+        
+        var entities = __instance.__query_401358634_0.ToEntityArray(Allocator.Temp);
+        foreach (var entity in entities) {
+            var prefabGuid = DebugTool.GetAndLogPrefabGuid(entity, "BuffSystem_Spawn_Server:", LogSystem.Buff);
             
-            ExperienceSystem.SetLevel(owner.Owner, playerCharacter.UserEntity, user.PlatformId);
+            switch (prefabGuid.GuidHash)
+            {
+                case (int)Effects.AB_Feed_02_Bite_Abort_Trigger:
+                    SendPlayerUpdate(__instance.EntityManager, entity, true);
+                    break;
+                case (int)Effects.AB_Feed_03_Complete_Trigger:
+                case (int)Effects.AB_FeedBoss_03_Complete_Trigger:
+                    SendPlayerUpdate(__instance.EntityManager, entity, false);
+                    break;
+            }
         }
     }
-}
-[HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Destroy), nameof(ModifyUnitStatBuffSystem_Destroy.OnUpdate))]
-public class ModifyUnitStatBuffSystem_Destroy_Patch
-{
-    private static void Postfix(ModifyUnitStatBuffSystem_Destroy __instance)
+
+    private static void SendPlayerUpdate(EntityManager em, Entity entity, bool killOnly)
     {
-        EntityManager entityManager = __instance.EntityManager;
-        NativeArray<Entity> entities = __instance.__query_1735840524_0.ToEntityArray(Allocator.Temp);
-
-        foreach (var entity in entities)
+        if (em.TryGetComponentData<SpellTarget>(entity, out var target))
         {
-            var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
-            var itemEquipped = Helper.IsItemEquipBuff(prefabGuid);
-            
-            if (!__instance.EntityManager.TryGetComponentData<EntityOwner>(entity, out var owner) ||
-                !__instance.EntityManager.TryGetComponentData<PlayerCharacter>(owner.Owner, out var playerCharacter) ||
-                !__instance.EntityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user))
-            {
-                // Item equipped on a non-pc entity.
-                DebugTool.LogPrefabGuid(prefabGuid, "Not PC buff (destroy):", LogSystem.Buff);
-                continue;
-            }
-            
-            ExperienceSystem.SetLevel(owner.Owner, playerCharacter.UserEntity, user.PlatformId);
+            // If the owner is not a player character, ignore this entity
+            if (!em.TryGetComponentData<EntityOwner>(entity, out var entityOwner)) return;
+            if (!em.TryGetComponentData<PlayerCharacter>(entityOwner.Owner, out var playerCharacter)) return;
 
-            if (itemEquipped) DebugTool.LogPrefabGuid(prefabGuid, "Destroy:", LogSystem.Buff);
-            
-            if (!entityManager.TryGetBuffer<ModifyUnitStatBuff_DOTS>(entity, out var buffer))
-            {
-                Plugin.Log(Plugin.LogSystem.Buff, LogLevel.Info, "Destroy: entity did not have buffer");
-                return;
-            }
-            
-            DebugTool.LogStatsBuffer(buffer, "Destroy:", LogSystem.Buff);
+            PlayerCache.FindPlayer(playerCharacter.Name.ToString(), true, out _, out var userEntity);
+            // target.BloodConsumeSource can buff/debuff the blood quality
+            if (Plugin.IsDebug) Output.SendMessage(userEntity, $"{(killOnly ? "Killed" : "Consumed")}: {DebugTool.GetPrefabName(target.Target._Entity)}");
+            BloodlineSystem.UpdateBloodline(entityOwner.Owner, target.Target._Entity, killOnly);
         }
     }
 }
 
 [HarmonyPatch(typeof(BuffDebugSystem), nameof(BuffDebugSystem.OnUpdate))]
-public class DebugBuffSystem_Patch
+public class BuffDebugSystem_Patch
 {
     private static void Prefix(BuffDebugSystem __instance)
     {
         var entities = __instance.__query_401358786_0.ToEntityArray(Allocator.Temp);
         foreach (var entity in entities) {
             var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-            DebugTool.LogPrefabGuid(guid, "BuffDebugSystem:");
+            DebugTool.LogPrefabGuid(guid, "BuffDebugSystem:", LogSystem.Buff);
 
             var combatStart = false;
             var combatEnd = false;
@@ -183,11 +167,11 @@ public class DebugBuffSystem_Patch
 
             if (newPlayer)
             {
-                Helper.UpdatePlayerCache(userEntity, userData);
-                ExperienceSystem.SetLevel(ownerEntity, userEntity, steamID);
+                PlayerCache.PlayerOnline(userEntity, userData);
+                if (Plugin.ExperienceSystemActive) ExperienceSystem.ApplyLevel(ownerEntity, userEntity, steamID);
             }
             if (combatStart || combatEnd) TriggerCombatUpdate(ownerEntity, steamID, combatStart, combatEnd);
-            if (addingBloodBuff)
+            if (addingBloodBuff && Plugin.ShouldApplyBuffs)
             {
                 // We are intending to use the AB_BloodBuff_VBlood_0 buff as our internal adding stats buff, but
                 // it doesn't usually have a unit stat mod buffer. Add this buffer now.

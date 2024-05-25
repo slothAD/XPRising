@@ -17,12 +17,14 @@ namespace XPRising.Systems
     {
         private static EntityManager _entityManager = Plugin.Server.EntityManager;
 
+        public static bool ShouldAllowGearLevel = true;
+        public static bool LevelRewardsOn = true;
+        
         public static float ExpMultiplier = 1.5f;
         public static float VBloodMultiplier = 15;
         public static int MaxLevel = 100;
         public static float GroupMaxDistance = 50;
-        public static bool ShouldAllowGearLevel = true;
-        public static bool LevelRewardsOn = true;
+        public static float MaxXpGainPercentage = 50f;
 
         public static float PvpXpLossPercent = 0;
         public static float PveXpLossPercent = 10;
@@ -67,7 +69,7 @@ namespace XPRising.Systems
 
         private static HashSet<Units> _minimalExpUnits = new()
         {
-            Units.CHAR_Farmlands_Nun_Servant,
+            Units.CHAR_Militia_Nun,
             Units.CHAR_Mutant_RatHorror
         };
 
@@ -97,7 +99,7 @@ namespace XPRising.Systems
             var multiplier = ExpValueMultiplier(victimEntity, isVBlood);
             
             var sumGroupLevel = (double)closeAllies.Sum(x => x.playerLevel);
-            var avgGroupLevel = (int)Math.Ceiling(closeAllies.Average(x => x.playerLevel));
+            var maxGroupLevel = closeAllies.Max(x => x.playerLevel);
 
             // Calculate an XP bonus that grows as groups get larger
             var baseGroupXpBonus = Math.Min(Math.Pow(1 + GroupXpBuffGrowth, closeAllies.Count - 1), MaxGroupXpBuff);
@@ -108,7 +110,8 @@ namespace XPRising.Systems
                 
                 // Calculate the portion of the total XP that this player should get.
                 var groupMultiplier = GroupMaxDistance > 0 ? baseGroupXpBonus * (teammate.playerLevel / sumGroupLevel) : 1.0;
-                AssignExp(teammate, avgGroupLevel, unitLevel.Level, multiplier * groupMultiplier);
+                // Assign XP to the player as if they were at the same level as the highest in the group.
+                AssignExp(teammate, maxGroupLevel, unitLevel.Level, multiplier * groupMultiplier);
             }
         }
 
@@ -127,14 +130,18 @@ namespace XPRising.Systems
                 Output.SendMessage(player.userEntity, $"<color={Output.LightYellow}>You gain {xpGained} XP by slaying a Lv.{mobLevel} enemy.</color> [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
             }
             
-            SetLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
+            ApplyLevel(player.userComponent.LocalCharacter._Entity, player.userEntity, player.steamID);
         }
 
         private static int CalculateXp(int playerLevel, int mobLevel, double multiplier) {
             var levelDiff = mobLevel - playerLevel;
+            
+            var baseXpGain = (int)(Math.Max(1, mobLevel * multiplier * (1 + levelDiff * ExpLevelDiffMultiplier))*ExpMultiplier);
+            var maxGain = MaxXpGainPercentage > 0 ? (int)Math.Ceiling((ConvertLevelToXp(playerLevel + 1) - ConvertLevelToXp(playerLevel)) * (MaxXpGainPercentage * 0.01f)) : int.MaxValue;
 
-            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"--- Max(1, {mobLevel} * {multiplier} * (1 + {levelDiff} * 0.1))*{ExpMultiplier}");
-            return (int)(Math.Max(1, mobLevel * multiplier * (1 + levelDiff * ExpLevelDiffMultiplier))*ExpMultiplier);
+            Plugin.Log(LogSystem.Xp, LogLevel.Info, $"--- Max(1, {mobLevel} * {multiplier} * (1 + {levelDiff} * 0.1))*{ExpMultiplier}, Clamped between [1,{maxGain}]");
+            // Clamp the XP gain to be at most half of the current level.
+            return Math.Clamp(baseXpGain, 1, maxGain);
         }
         
         public static void DeathXpLoss(Entity playerEntity, Entity killerEntity) {
@@ -163,12 +170,13 @@ namespace XPRising.Systems
             Plugin.Log(LogSystem.Xp, LogLevel.Info, $"Calculated XP: {steamID}: {currentXp} = Max({exp} * {xpLossPercent/100}, {minXp}) [lost {xpLost}]");
             SetXp(steamID, currentXp);
 
-            SetLevel(playerEntity, userEntity, steamID);
+            // We likely don't need to use ApplyLevel() here (as it shouldn't drop below the current level) but do it anyway as XP has changed.
+            ApplyLevel(playerEntity, userEntity, steamID);
             GetLevelAndProgress(currentXp, out _, out var earned, out var needed);
             Output.SendMessage(userEntity, $"You've been defeated, <color={Output.White}>{xpLost}</color> XP is lost. [ XP: <color={Output.White}>{earned}</color>/<color={Output.White}>{needed}</color> ]");
         }
 
-        public static void SetLevel(Entity entity, Entity user, ulong steamID)
+        public static void ApplyLevel(Entity entity, Entity user, ulong steamID)
         {
             var level = ConvertXpToLevel(GetXp(steamID));
             if (level < MinLevel)
@@ -214,6 +222,9 @@ namespace XPRising.Systems
             equipment.SpellLevel._Value = MathF.Floor(halfOfLevel);
 
             _entityManager.SetComponentData(entity, equipment);
+            
+            // Re-apply the buff now that we have set the level.
+            Helper.ApplyBuff(user, entity, Helper.AppliedBuff);
         }
 
         /// <summary>
@@ -223,7 +234,7 @@ namespace XPRising.Systems
         /// <param name="steamID"></param>
         public static void BuffReceiver(ref LazyDictionary<UnitStatType, float> statBonus, ulong steamID)
         {
-            if (!LevelRewardsOn) return;
+            if (!Plugin.ExperienceSystemActive || !LevelRewardsOn) return;
             const float multiplier = 1;
             var playerLevel = GetLevel(steamID);
             var healthBuff = 2f * playerLevel * multiplier;
@@ -233,9 +244,9 @@ namespace XPRising.Systems
         public static int ConvertXpToLevel(int xp)
         {
             // Shortcut for exceptional cases
-            if (xp < 1) return 1;
+            if (xp < 1) return 0;
             // Level = CONSTANT * (xp)^1/POWER
-            int lvl = 1 + (int)Math.Floor(ExpConstant * Math.Pow(xp, 1 / ExpPower));
+            int lvl = (int)Math.Floor(ExpConstant * Math.Pow(xp, 1 / ExpPower));
             return lvl;
         }
 
@@ -244,24 +255,32 @@ namespace XPRising.Systems
             // Shortcut for exceptional cases
             if (level < 1) return 1;
             // XP = (Level / CONSTANT) ^ POWER
-            int xp = (int)Math.Pow((level - 1) / ExpConstant, ExpPower);
+            int xp = (int)Math.Pow(level / ExpConstant, ExpPower);
             // Add 1 to make it show start of this level, rather than end of the previous level.
             return xp + 1;
         }
 
         public static int GetXp(ulong steamID)
         {
-            return Math.Max(Database.PlayerExperience.GetValueOrDefault(steamID, StartingExp), StartingExp);
+            return Plugin.ExperienceSystemActive ? Math.Max(Database.PlayerExperience.GetValueOrDefault(steamID, StartingExp), StartingExp) : 0;
         }
         
         public static void SetXp(ulong steamID, int exp)
         {
-            Database.PlayerExperience[steamID] = Math.Min(exp, MaxXp);
+            Database.PlayerExperience[steamID] = Math.Clamp(exp, 0, MaxXp);
         }
 
         public static int GetLevel(ulong steamID)
         {
-            return ConvertXpToLevel(GetXp(steamID));
+            if (Plugin.ExperienceSystemActive)
+            {
+                return ConvertXpToLevel(GetXp(steamID));
+            }
+            // Otherwise return the current gear score.
+            if (!PlayerCache.FindPlayer(steamID, true, out var playerEntity, out _)) return 0;
+            
+            Equipment equipment = _entityManager.GetComponentData<Equipment>(playerEntity);
+            return (int)(equipment.ArmorLevel.Value + equipment.WeaponLevel.Value + equipment.SpellLevel.Value);
         }
 
         public static void GetLevelAndProgress(int currentXp, out int progressPercent, out int earnedXp, out int neededXp) {

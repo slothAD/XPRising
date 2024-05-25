@@ -81,7 +81,7 @@ namespace XPRising.Hooks
 
                 if (!isNewVampire)
                 {
-                    Helper.UpdatePlayerCache(userEntity, userData);
+                    PlayerCache.PlayerOnline(userEntity, userData);
                     if ((WeaponMasterySystem.IsDecaySystemEnabled && Plugin.WeaponMasterySystemActive) ||
                         BloodlineSystem.IsDecaySystemEnabled && Plugin.BloodlineSystemActive)
                     {
@@ -91,21 +91,28 @@ namespace XPRising.Hooks
                             BloodlineSystem.DecayBloodline(userEntity, playerLogout);
                         }
                     }
-                    
-                    // Enforce armor level changes on log in
-                    FixEquipmentArmorLevel(__instance.EntityManager, userData.LocalCharacter._Entity);
 
-                    ExperienceSystem.SetLevel(userData.LocalCharacter._Entity, userEntity, userData.PlatformId);
-                    Helper.ApplyBuff(userEntity, userData.LocalCharacter._Entity, Helper.AppliedBuff);
+                    if (Plugin.ExperienceSystemActive)
+                    {
+                        // Enforce gear level changes on log in
+                        FixEquipmentLevel(__instance.EntityManager, userData.LocalCharacter._Entity);
+
+                        ExperienceSystem.ApplyLevel(userData.LocalCharacter._Entity, userEntity, userData.PlatformId);
+                    }
+                    else
+                    {
+                        // We don't need to do this when ExperienceSystemActive, as ApplyLevel() does it as well.
+                        Helper.ApplyBuff(userEntity, userData.LocalCharacter._Entity, Helper.AppliedBuff);
+                    }
                 }
             }
             catch (Exception e)
             {
-                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Failed OnUserConnected_Patch: {e.Message}");
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Error, $"Failed OnUserConnected_Patch: {e.Message}", true);
             }
         }
 
-        private static void FixEquipmentArmorLevel(EntityManager entityManager, Entity entity)
+        private static void FixEquipmentLevel(EntityManager entityManager, Entity entity)
         {
             if (!entityManager.TryGetBuffer<BuffBuffer>(entity, out var buffer))
             {
@@ -120,6 +127,16 @@ namespace XPRising.Hooks
                     armorLevel.Level = 0;
                     entityManager.SetComponentData(buff.Entity, armorLevel);
                 }
+                if (entityManager.TryGetComponentData<WeaponLevel>(buff.Entity, out var weaponLevel))
+                {
+                    weaponLevel.Level = 0;
+                    entityManager.SetComponentData(buff.Entity, weaponLevel);
+                }
+                if (entityManager.TryGetComponentData<SpellLevel>(buff.Entity, out var spellLevel))
+                {
+                    spellLevel.Level = 0;
+                    entityManager.SetComponentData(buff.Entity, spellLevel);
+                }
             }
         }
     }
@@ -133,16 +150,12 @@ namespace XPRising.Hooks
             {
                 var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
                 var serverClient = __instance._ApprovedUsersLookup[userIndex];
-                var userData = __instance.EntityManager.GetComponentData<User>(serverClient.UserEntity);
 
-                Helper.UpdatePlayerCache(serverClient.UserEntity, userData, true);
-                Database.PlayerLogout[userData.PlatformId] = DateTime.Now;
-                
-                Alliance.RemoveUserOnLogout(userData.LocalCharacter._Entity, userData.CharacterName.ToString());
+                PlayerCache.PlayerOffline(serverClient.PlatformId);
             }
             catch (Exception e)
             {
-                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"OnUserDisconnected failed: {e}", true);
+                Plugin.Log(Plugin.LogSystem.Core, LogLevel.Info, $"OnUserDisconnected failed: {e.Message}", true);
             }
         }
     }
