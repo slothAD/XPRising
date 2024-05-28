@@ -19,7 +19,7 @@ readme = "./README_TS.md"
 outdir = "./build"
 
 [[build.copy]]
-source = "./dist/XPRising.dll"
+source = "./dist"
 target = ""
 
 [publish]
