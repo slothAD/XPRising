@@ -69,7 +69,9 @@ namespace XPRising.Systems
         private static int MaxXp => ConvertLevelToXp(MaxLevel);
 
         private static HashSet<Units> _noExpUnits = new(
-            FactionUnits.farmNonHostile.Select(u => u.type).Union(FactionUnits.farmFood.Select(u => u.type)));
+            FactionUnits.farmNonHostile.Select(u => u.type)
+                .Union(FactionUnits.farmFood.Select(u => u.type))
+                .Union(FactionUnits.otherNonHostile.Select(u => u.type)));
 
         private static HashSet<Units> _minimalExpUnits = new()
         {
@@ -94,7 +96,7 @@ namespace XPRising.Systems
         
         public static bool IsPlayerLoggingExperience(ulong steamId)
         {
-            return Database.PlayerLogConfig[steamId].LoggingExp;
+            return Database.PlayerPreferences[steamId].LoggingExp;
         }
 
         public static void ExpMonitor(List<Alliance.ClosePlayer> closeAllies, PrefabGUID victimPrefab, int victimLevel, bool isVBlood)
@@ -262,20 +264,6 @@ namespace XPRising.Systems
             equipment.SpellLevel._Value = level;
 
             Plugin.Server.EntityManager.SetComponentData(entity, equipment);
-        }
-
-        /// <summary>
-        /// For use with the LevelUpRewards buffing system.
-        /// </summary>
-        /// <param name="statBonus"></param>
-        /// <param name="steamID"></param>
-        public static void BuffReceiver(ref LazyDictionary<UnitStatType, float> statBonus, ulong steamID)
-        {
-            if (!Plugin.ExperienceSystemActive || !LevelRewardsOn) return;
-            const float multiplier = 1;
-            var playerLevel = GetLevel(steamID);
-            var healthBuff = 2f * playerLevel * multiplier;
-            statBonus[UnitStatType.MaxHealth] += healthBuff;
         }
 
         public static int ConvertXpToLevel(int xp)

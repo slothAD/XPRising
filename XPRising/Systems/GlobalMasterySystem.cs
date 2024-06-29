@@ -7,6 +7,7 @@ using System.Text.Json;
 using BepInEx.Logging;
 using ProjectM.Network;
 using Unity.Entities;
+using Unity.Mathematics;
 using XPRising.Configuration;
 using XPRising.Extensions;
 using XPRising.Models;
@@ -24,8 +25,10 @@ public static class GlobalMasterySystem
     public static bool DecaySubSystemEnabled = false;
     public static bool SpellMasteryRequiresUnarmed = false;
     public static int DecayInterval = 60;
-    public static string MasteryConfigPreset = "none";
     public static readonly string CustomPreset = "custom";
+    public const string NonePreset = "none";
+    
+    public static string MasteryConfigPreset = NonePreset;
         
     public enum MasteryType
     {
@@ -107,6 +110,7 @@ public static class GlobalMasterySystem
     private static LazyDictionary<MasteryType, GlobalMasteryConfig.MasteryConfig> _masteryConfig;
     private static List<GlobalMasteryConfig.SkillTree> _skillTrees;
     private static LazyDictionary<ulong, LazyDictionary<Entity, LazyDictionary<MasteryType, double>>> _masteryBank;
+    private static GlobalMasteryConfig.MasteryConfig _xpBuffConfig; 
     
     public static MasteryCategory GetMasteryCategory(MasteryType type)
     {
@@ -155,6 +159,14 @@ public static class GlobalMasterySystem
         _skillTrees = globalMasteryConfig.SkillTrees ?? new List<GlobalMasteryConfig.SkillTree>();
         _masteryConfig = new LazyDictionary<MasteryType, GlobalMasteryConfig.MasteryConfig>();
         _masteryBank = new LazyDictionary<ulong, LazyDictionary<Entity, LazyDictionary<MasteryType, double>>>();
+        _xpBuffConfig = globalMasteryConfig.XpBuffConfig;
+
+        Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery config preset set to \"{MasteryConfigPreset}\"");
+        if (MasteryConfigPreset == NonePreset)
+        {
+            Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Warning, "Skipping mastery config calculations as the preset is set to none.");
+            return true;
+        } 
 
         // Load mastery data
         foreach (var masteryType in Enum.GetValues<MasteryType>())
@@ -292,7 +304,7 @@ public static class GlobalMasterySystem
     {
         foreach (var player in closeAllies)
         {
-            var loggingMastery = Database.PlayerLogConfig[player.steamID].LoggingMastery;
+            var loggingMastery = Database.PlayerPreferences[player.steamID].LoggingMastery;
             if (!_masteryBank[player.steamID].TryRemove(targetEntity, out var masteryToStore)) continue;
             var masteryChanges = new List<L10N.LocalisableString>();
             foreach (var (masteryType, changeInMastery) in masteryToStore)
@@ -384,7 +396,21 @@ public static class GlobalMasterySystem
 
     public static void BuffReceiver(ref LazyDictionary<UnitStatType, float> statBonus, Entity owner, ulong steamID)
     {
+        if (Plugin.ExperienceSystemActive)
+        {
+            var currentLevel = ExperienceSystem.GetLevel(steamID);
+            foreach (var data in _xpBuffConfig.BaseBonus.Where(data => currentLevel >= data.RequiredMastery))
+            {
+                var bonus = CalculateBonusValue(data.BonusType, data.Value, data.Range, currentLevel, 1.0f);
+                if (bonus != 0) statBonus[data.StatType] += bonus;
+            }
+        }
+        
         if (!Plugin.WeaponMasterySystemActive && !Plugin.BloodlineSystemActive) return;
+        
+        // Don't worry about doing this if the preset is set to none.
+        if (MasteryConfigPreset == NonePreset) return;
+        
         var activeWeaponMastery = WeaponMasterySystem.WeaponToMasteryType(WeaponMasterySystem.GetWeaponType(owner, out var weaponEntity));
         var activeBloodMastery = BloodlineSystem.BloodMasteryType(owner);
         var playerMastery = Database.PlayerMastery[steamID];
@@ -399,7 +425,7 @@ public static class GlobalMasterySystem
             if (masteryCategory == MasteryCategory.Weapon && !Plugin.WeaponMasterySystemActive) continue;
             if (masteryCategory == MasteryCategory.Blood && !Plugin.BloodlineSystemActive) continue;
             
-            var masteryPercentage = masteryData.Mastery / 100 * (EffectivenessSubSystemEnabled ? masteryData.Effectiveness : 1);
+            var effectivenessMultiplier = EffectivenessSubSystemEnabled ? (float)masteryData.Effectiveness : 1f;
             var isMasteryActive = false;
             if (masteryType == activeWeaponMastery)
             {
@@ -409,8 +435,10 @@ public static class GlobalMasterySystem
                     {
                         foreach (var statModifier in statBuffer)
                         {
-                            var bonus = CalculateActiveBonus(config.ActiveBonus, statModifier, (float)masteryPercentage);
-                            statBonus[statModifier.StatType] += bonus;
+                            var bonus = config.ActiveBonus
+                                .Where(data => masteryData.Mastery >= data.RequiredMastery)
+                                .Sum(data => CalculateActiveBonus(data, statModifier, masteryData.CalculateMasteryPercentage(data.RequiredMastery)));
+                            if (bonus != 0) statBonus[statModifier.StatType] += bonus * effectivenessMultiplier;
                         }
                     }
                 }
@@ -431,18 +459,16 @@ public static class GlobalMasterySystem
                 {
                     foreach (var data in config.BaseBonus.Where(data => masteryData.Mastery >= data.RequiredMastery))
                     {
-                        statBonus[data.StatType] += data.BonusType == GlobalMasteryConfig.BonusData.Type.Fixed
-                            ? data.Value
-                            : data.Value * (float)masteryPercentage;
+                        var bonus = CalculateBonusValue(data.BonusType, data.Value, data.Range, masteryData.CalculateMasteryPercentage(data.RequiredMastery), 1.0f);
+                        if (bonus != 0) statBonus[data.StatType] += bonus * effectivenessMultiplier;
                     }
                 }
                 else
                 {
                     foreach (var data in config.BaseBonus.Where(data => masteryData.Mastery >= data.RequiredMastery))
                     {
-                        statBonus[data.StatType] += (data.BonusType == GlobalMasteryConfig.BonusData.Type.Fixed
-                            ? data.Value
-                            : data.Value * (float)masteryPercentage) * data.InactiveMultiplier;
+                         var bonus = CalculateBonusValue(data.BonusType, data.Value, data.Range, masteryData.CalculateMasteryPercentage(data.RequiredMastery), data.InactiveMultiplier);
+                         if (bonus != 0) statBonus[data.StatType] += bonus * effectivenessMultiplier;
                     }
                 }
             }
@@ -466,41 +492,63 @@ public static class GlobalMasterySystem
         return false;
     }
 
-    private static float CalculateActiveBonus(List<GlobalMasteryConfig.ActiveBonusData> activeBonusData, ModifyUnitStatBuff_DOTS statBuffDots, float masteryPercentage)
+    private static float CalculateActiveBonus(GlobalMasteryConfig.ActiveBonusData data, ModifyUnitStatBuff_DOTS statBuffDots, float masteryPercentage)
     {
-        var statBonus = 0f;
-        activeBonusData.ForEach(data =>
+        var applyBonus = false;
+        switch (data.StatCategory)
         {
-            var applyBonus = false;
-            switch (data.StatCategory)
-            {
-                case UnitStatTypeExtensions.Category.None:
-                    break;
-                case UnitStatTypeExtensions.Category.Offensive:
-                    applyBonus = statBuffDots.StatType.IsOffensiveStat();
-                    break;
-                case UnitStatTypeExtensions.Category.Defensive:
-                    applyBonus = statBuffDots.StatType.IsDefensiveStat();
-                    break;
-                case UnitStatTypeExtensions.Category.Resource:
-                    applyBonus = statBuffDots.StatType.IsResourceStat();
-                    break;
-                case UnitStatTypeExtensions.Category.Other:
-                    break;
-                case UnitStatTypeExtensions.Category.Any:
-                    applyBonus = true;
-                    break;
-            }
+            case UnitStatTypeExtensions.Category.None:
+                break;
+            case UnitStatTypeExtensions.Category.Offensive:
+                applyBonus = statBuffDots.StatType.IsOffensiveStat();
+                break;
+            case UnitStatTypeExtensions.Category.Defensive:
+                applyBonus = statBuffDots.StatType.IsDefensiveStat();
+                break;
+            case UnitStatTypeExtensions.Category.Resource:
+                applyBonus = statBuffDots.StatType.IsResourceStat();
+                break;
+            case UnitStatTypeExtensions.Category.Any:
+                applyBonus = true;
+                break;
+            case UnitStatTypeExtensions.Category.Other:
+            default:
+                break;
+        }
 
-            if (applyBonus)
-            {
-                statBonus += data.BonusType == GlobalMasteryConfig.BonusData.Type.Fixed
-                    ? data.Value
-                    : data.Value * statBuffDots.Value * masteryPercentage;
-            }
-        });
-        
-        return statBonus;
+        return applyBonus ? CalculateBonusValue(data.BonusType, data.Value, null, masteryPercentage, statBuffDots.Value) : 0f;
+    }
+
+    private static float CalculateBonusValue(GlobalMasteryConfig.BonusData.Type type, float value, List<float> range, float masteryPercentage, float baseValue)
+    {
+        switch (type)
+        {
+            case GlobalMasteryConfig.BonusData.Type.Fixed:
+            default: // Default to fixed
+                return value * baseValue;
+            case GlobalMasteryConfig.BonusData.Type.Ratio:
+                return value * baseValue * masteryPercentage;
+            case GlobalMasteryConfig.BonusData.Type.Range:
+                if (range == null || range.Count == 0)
+                {
+                    return value * baseValue;
+                }
+                else if (range.Count == 1 || masteryPercentage == 0)
+                {
+                    return range[0];
+                }
+                else if (masteryPercentage >= 1) // Should only ever be at most 1
+                {
+                    return range[^1];
+                }
+                else
+                {
+                    var internalRange = masteryPercentage * (range.Count - 1);
+                    var index = (int)Math.Floor(internalRange);
+                    internalRange -= index;
+                    return math.lerp(range[index], range[index + 1], internalRange) * baseValue;
+                }
+        }
     }
 
     public static GlobalMasteryConfig DefaultMasteryConfig()
@@ -511,11 +559,13 @@ public static class GlobalMasterySystem
                 return DefaultBasicMasteryConfig();
             case "fixed":
                 return DefaultFixedMasteryConfig();
+            case "range":
+                return DefaultRangeMasteryConfig();
             case "decay":
                 return DefaultDecayMasteryConfig();
             case "decay-op":
                 return DefaultOPDecayMasteryConfig();
-            case "none":
+            case NonePreset:
             default:
                 return DefaultNoneMasteryConfig();
         }
@@ -523,7 +573,15 @@ public static class GlobalMasterySystem
     
     public static GlobalMasteryConfig DefaultNoneMasteryConfig()
     {
-        return new GlobalMasteryConfig {};
+        return new GlobalMasteryConfig {
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 2}
+                }
+            }
+        };
     }
 
     public static GlobalMasteryConfig DefaultBasicMasteryConfig()
@@ -566,6 +624,13 @@ public static class GlobalMasterySystem
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 50, Value = 0.03f, InactiveMultiplier = 0.1f},
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.CooldownRecoveryRate, RequiredMastery = 70, Value = 3, InactiveMultiplier = 0.1f},
                 }
+            },
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 2}
+                }
             }
         };
     }
@@ -592,7 +657,8 @@ public static class GlobalMasterySystem
             {
                 ActiveBonus = new List<GlobalMasteryConfig.ActiveBonusData>
                 {
-                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatCategory = UnitStatTypeExtensions.Category.Any, Value = 5}
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatCategory = UnitStatTypeExtensions.Category.Offensive, RequiredMastery = 20, Value = 2},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatCategory = UnitStatTypeExtensions.Category.Defensive, Value = 2}
                 }
             },
             DefaultBloodMasteryConfig = new GlobalMasteryConfig.MasteryConfig()
@@ -603,6 +669,64 @@ public static class GlobalMasterySystem
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 10, Value = 0.02f, InactiveMultiplier = 0.1f},
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 50, Value = 0.03f, InactiveMultiplier = 0.1f},
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.CooldownRecoveryRate, RequiredMastery = 70, Value = 3, InactiveMultiplier = 0.1f},
+                }
+            },
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 2}
+                }
+            }
+        };
+    }
+
+    public static GlobalMasteryConfig DefaultRangeMasteryConfig()
+    {
+        return new GlobalMasteryConfig
+        {
+            Mastery = new LazyDictionary<MasteryType, GlobalMasteryConfig.MasteryConfig>
+            {
+                {
+                    MasteryType.Spell, new GlobalMasteryConfig.MasteryConfig 
+                    {
+                        BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                        {
+                            new(){BonusType = GlobalMasteryConfig.BonusData.Type.Range, StatType = UnitStatType.SpellPower, RequiredMastery = 0, Value = 0, Range = new List<float>() {0, 0, 20, 30}, InactiveMultiplier = 0.1f},
+                            new(){BonusType = GlobalMasteryConfig.BonusData.Type.Range, StatType = UnitStatType.SpellCriticalStrikeDamage, RequiredMastery = 30, Value = 0, Range = new List<float>() {0.3f, 0.4f}, InactiveMultiplier = 0.1f},
+                            new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.SpellCriticalStrikeChance, RequiredMastery = 60, Value = 0.1f, InactiveMultiplier = 0.1f},
+                        }
+                    }
+                }
+            },
+            DefaultWeaponMasteryConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.PhysicalPower, RequiredMastery = 0, Value = 30, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.PhysicalCriticalStrikeDamage, RequiredMastery = 30, Value = 0.3f, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.PhysicalCriticalStrikeChance, RequiredMastery = 60, Value = 0.15f, InactiveMultiplier = 0.1f},
+                },
+                ActiveBonus = new List<GlobalMasteryConfig.ActiveBonusData>
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatCategory = UnitStatTypeExtensions.Category.Any, Value = 2}
+                }
+            },
+            DefaultBloodMasteryConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.MovementSpeed, RequiredMastery = 30, Value = 2, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 10, Value = 0.02f, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 50, Value = 0.03f, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.CooldownRecoveryRate, RequiredMastery = 70, Value = 3, InactiveMultiplier = 0.1f},
+                }
+            },
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 2}
                 }
             }
         };
@@ -633,7 +757,7 @@ public static class GlobalMasterySystem
             {
                 ActiveBonus = new List<GlobalMasteryConfig.ActiveBonusData>
                 {
-                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatCategory = UnitStatTypeExtensions.Category.Any, Value = 5}
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatCategory = UnitStatTypeExtensions.Category.Any, Value = 2}
                 },
                 DecayValue = 0.1f,
                 MaxEffectiveness = 1,
@@ -651,6 +775,13 @@ public static class GlobalMasterySystem
                 DecayValue = 0.1f,
                 MaxEffectiveness = 1,
                 GrowthPerEffectiveness = 1
+            },
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 2}
+                }
             }
         };
     }
@@ -703,6 +834,13 @@ public static class GlobalMasterySystem
                 DecayValue = 0.1f,
                 MaxEffectiveness = 5,
                 GrowthPerEffectiveness = 1
+            },
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 4}
+                }
             }
         };
     }
