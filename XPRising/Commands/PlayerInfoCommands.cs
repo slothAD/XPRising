@@ -163,11 +163,10 @@ namespace XPRising.Commands
         public static void GenerateXPStatus(PlayerData playerData, ref List<L10N.LocalisableString> messages)
         {
             var currentXp = ExperienceSystem.GetXp(playerData.SteamID);
-            var currentLevel = ExperienceSystem.ConvertXpToLevel(currentXp);
-            ExperienceSystem.GetLevelAndProgress(currentXp, out var progress, out var xpEarned, out var xpNeeded);
+            ExperienceSystem.GetLevelAndProgress(currentXp, out var level, out var progress, out var xpEarned, out var xpNeeded);
             var message = L10N.Get(L10N.TemplateKey.XpLevel)
-                .AddField("{level}", currentLevel.ToString())
-                .AddField("{progress}", progress.ToString())
+                .AddField("{level}", level.ToString())
+                .AddField("{progress}", $"{(progress * 100):N1}")
                 .AddField("{earned}", xpEarned.ToString())
                 .AddField("{needed}", xpNeeded.ToString());
             messages.Add(message);

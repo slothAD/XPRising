@@ -2,15 +2,20 @@ XPRising is a server mod that replaces the gear level system with a more traditi
 
 It also includes some systems for gaining mastery over weapons and bloodlines, as well a "Wanted" system that tracks how negative a faction perceives the player.
 
+It now also supports driving the XPRising ClientUI mod to display XP/Mastery/Wanted bars in the client UI.
+
 ### Installation
 
-- Install [BepInEx](https://v-rising.thunderstore.io/package/BepInEx/BepInExPack_V_Rising/).
+- Install [BepInEx](https://thunderstore.io/c/v-rising/p/BepInEx/BepInExPack_V_Rising/).
 - Install [VCF](https://thunderstore.io/c/v-rising/p/deca/VampireCommandFramework/).
+- Install [Bloodstone](https://thunderstore.io/c/v-rising/p/deca/Bloodstone/).
+- Install [XPShared](https://thunderstore.io/c/v-rising/p/XPRising/XPShared/).
 - Extract `XPRising.dll` into `(VRising folder)/BepInEx/plugins`.
 
 ### Configuration
 
 The base configuration and data files will be generated after the game launches the first time.
+You can use the chat commands listed in [Commands.md](https://github.com/aontas/XPRising/blob/main/Command.md) for some admin tasks and for users to display more data/logging.   
 
 #### Main config: `(VRising folder)/BepInEx/config/XPRising.cfg`
 This file can be used to enable/disable the systems in this mod. See the config file for more documentation.

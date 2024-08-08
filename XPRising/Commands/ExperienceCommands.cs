@@ -27,14 +27,12 @@ public static class ExperienceCommands {
     {
         CheckXPSystemActive(ctx);
         var user = ctx.Event.User;
-        var characterName = user.CharacterName.ToString();
         var steamID = user.PlatformId;
-        int userXp = ExperienceSystem.GetXp(steamID);
-        ExperienceSystem.GetLevelAndProgress(userXp, out int progress, out int earnedXp, out int neededXp);
-        int userLevel = ExperienceSystem.ConvertXpToLevel(userXp);
+        var userXp = ExperienceSystem.GetXp(steamID);
+        ExperienceSystem.GetLevelAndProgress(userXp, out var level, out var progress, out var earnedXp, out var neededXp);
         var message = L10N.Get(L10N.TemplateKey.XpLevel)
-            .AddField("{level}", userLevel.ToString())
-            .AddField("{progress}", progress.ToString())
+            .AddField("{level}", level.ToString())
+            .AddField("{progress}", $"{(progress * 100):N1}")
             .AddField("{earned}", earnedXp.ToString())
             .AddField("{needed}", neededXp.ToString());
         Output.ChatReply(ctx, message);

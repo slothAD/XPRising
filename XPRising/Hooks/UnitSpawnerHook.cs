@@ -3,6 +3,8 @@ using BepInEx.Logging;
 using ProjectM;
 using ProjectM.Shared;
 using HarmonyLib;
+using ProjectM.Scripting;
+using ProjectM.Sequencer;
 using Stunlock.Core;
 using Unity.Entities;
 using XPRising.Systems;
@@ -33,6 +35,9 @@ public static class UnitSpawnerReactSystemPatch
                 {
                     __state.Add(entity, level);
                 }
+                
+                // Add this buff for fast spawning?
+                // Buff_General_Spawn_Unit_Fast = 507944752,
             }
 
             if (listen)

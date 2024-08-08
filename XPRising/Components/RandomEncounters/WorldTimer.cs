@@ -1,12 +1,10 @@
-﻿using System;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using Unity.Entities;
 using XPRising.Utils.RandomEncounters;
-using LogSystem = XPRising.Plugin.LogSystem;
 
 namespace XPRising.Components.RandomEncounters
 {
-    public class Timer : IDisposable
+    public class WorldTimer : IDisposable
     {
         private bool _enabled;
         private bool _isRunning;
@@ -23,8 +21,7 @@ namespace XPRising.Components.RandomEncounters
             _enabled = true;
             GameFrame.OnUpdate += GameFrame_OnUpdate;
         }
-
-
+        
         public void Start(Action<World> action, Func<object, TimeSpan> delayAction)
         {
             _delayAction = delayAction;

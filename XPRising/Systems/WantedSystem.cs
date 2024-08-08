@@ -1,8 +1,5 @@
 ﻿using ProjectM;
 using ProjectM.Network;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using BepInEx.Logging;
 using Unity.Collections;
@@ -10,6 +7,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using XPRising.Models;
+using XPRising.Transport;
 using XPRising.Utils;
 using Faction = XPRising.Utils.Prefabs.Faction;
 using LogSystem = XPRising.Plugin.LogSystem;
@@ -76,10 +74,12 @@ namespace XPRising.Systems
                 }
             }
             else {
-                if (!heatData.heat.TryGetValue(victimFaction, out var heat)) {
+                if (!FactionHeat.ActiveFactions.Contains(victimFaction)) {
                     Plugin.Log(LogSystem.Wanted, LogLevel.Warning, $"Attempted to load non-active faction heat data: {Enum.GetName(victimFaction)}");
                     return;
                 }
+
+                var heat = heatData.heat[victimFaction];
 
                 // Update the heat value for this faction
                 var randHeatValue = rand.Next(1, heatValue);
@@ -104,6 +104,7 @@ namespace XPRising.Systems
             Cache.heatCache[steamID] = heatData;
 
             LogHeatData(steamID, heatData, userEntity, "kill");
+            heatData.StartCooldownTimer(steamID);
         }
 
         public static void PlayerDied(Entity victimEntity) {
@@ -113,7 +114,8 @@ namespace XPRising.Systems
             var steamID = user.PlatformId;
 
             // Reset player heat to 0
-            var heatData = new PlayerHeatData();
+            var heatData = Cache.heatCache[steamID];
+            heatData.Clear();
             Cache.heatCache[steamID] = heatData;
             LogHeatData(steamID, heatData, userEntity, "died");
         }
@@ -158,16 +160,18 @@ namespace XPRising.Systems
                 heatList.Add(new AllyHeat(ally, heatData));
 
                 foreach (var faction in FactionHeat.ActiveFactions) {
-                    var heat = heatData.heat[faction];
-                    TimeSpan timeSinceAmbush = DateTime.Now - heat.lastAmbushed;
-                    var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
+                    if (heatData.heat.TryGetValue(faction, out var heat))
+                    {
+                        TimeSpan timeSinceAmbush = DateTime.Now - heat.lastAmbushed;
+                        var wantedLevel = FactionHeat.GetWantedLevel(heat.level);
 
-                    if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
-                        Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"{faction} can ambush");
+                        if (timeSinceAmbush.TotalSeconds > ambush_interval && wantedLevel > 0) {
+                            Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"{faction} can ambush");
 
-                        // If there is no stored wanted level yet, or if this ally's wanted level is higher, then set it.
-                        if (!ambushFactions.TryGetValue(faction, out var highestWantedLevel) || wantedLevel > highestWantedLevel) {
-                            ambushFactions[faction] = wantedLevel;
+                            // If there is no stored wanted level yet, or if this ally's wanted level is higher, then set it.
+                            if (!ambushFactions.TryGetValue(faction, out var highestWantedLevel) || wantedLevel > highestWantedLevel) {
+                                ambushFactions[faction] = wantedLevel;
+                            }
                         }
                     }
                 }
@@ -261,53 +265,21 @@ namespace XPRising.Systems
 
         private static void HeatManager(Entity userEntity, out PlayerHeatData heatData, out ulong steamID) {
             steamID = entityManager.GetComponentData<User>(userEntity).PlatformId;
-            var cooldownPerSecond = (double)heat_cooldown / 60;
 
             if (!Cache.heatCache.TryGetValue(steamID, out heatData)) {
                 heatData = new PlayerHeatData();
             }
-            
-            // If there has been less than 5 seconds since the last heat manager update, just skip calculations
-            if ((DateTime.Now - heatData.lastCooldown).TotalSeconds < 5) return;
-
-            var lastCombatStart = Cache.GetCombatStart(steamID);
-            var lastCombatEnd = Cache.GetCombatEnd(steamID);
-
-            var elapsedTime = CooldownPeriod(heatData.lastCooldown, lastCombatStart, lastCombatEnd);
-            Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"Heat CD period: {elapsedTime:F1}s (L:{heatData.lastCooldown:u}|S:{lastCombatStart:u}|E:{lastCombatEnd:u})");
-
-            if (elapsedTime > 0) {
-                var cooldownValue = (int)Math.Floor(elapsedTime * cooldownPerSecond);
-                Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"Heat cooldown: {cooldownValue} ({cooldownPerSecond:F1}c/s)");
-
-                // Update all heat levels
-                foreach (var faction in FactionHeat.ActiveFactions) {
-                    var heat = heatData.heat[faction];
-                    var newHeatLevel = Math.Max(heat.level - cooldownValue, 0);
-                    heat.level = newHeatLevel;
-                    heatData.heat[faction] = heat;
-                }
-            }
-
-            heatData.lastCooldown = DateTime.Now;
-                
-            // Store updated heatData
-            Cache.heatCache[steamID] = heatData;
         }
 
-        private static double CooldownPeriod(DateTime lastCooldown, DateTime lastCombatStart, DateTime lastCombatEnd) {
+        public static bool CanCooldownHeat(DateTime lastCombatStart, DateTime lastCombatEnd) {
             // If we have started combat more recently than we have finished, then we are in combat.
-            var inCombat = lastCombatStart >= lastCombatEnd;
+            // There are some edge cases (such as player disconnecting during this period) that can mean the combat end
+            // was never set correctly. As combat start should be logged about once every 10s, if we are well past this point
+            // without a new combat start, just consider it ended.
+            var inCombat = lastCombatStart >= lastCombatEnd && lastCombatStart + TimeSpan.FromSeconds(15) > DateTime.Now;
             Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"Heat CD period: combat: {inCombat}");
-            
-            // cdPeriodStart is the max of (lastCooldown, lastCombatEnd + offset)
-            var cdPeriodStartAfterCombat = lastCombatEnd + TimeSpan.FromSeconds(20);
-            var cdPeriodStart = lastCooldown > cdPeriodStartAfterCombat ? lastCooldown : cdPeriodStartAfterCombat;
 
-            // If we are in combat, cdPeriodEnd is the start of combat;
-            var cdPeriodEnd = inCombat ? lastCombatStart : DateTime.Now;
-            
-            return (cdPeriodEnd - cdPeriodStart).TotalSeconds;
+            return !inCombat && (lastCombatEnd + TimeSpan.FromSeconds(20)) < DateTime.Now;
         }
 
         private static string HeatDataString(PlayerHeatData heatData, bool useColor) {
@@ -332,6 +304,14 @@ namespace XPRising.Systems
                         : new L10N.LocalisableString(heatDataString));
             }
             Plugin.Log(LogSystem.Wanted, LogLevel.Info, $"Heat({origin}): {HeatDataString(heatData, false)}");
+            
+            if (Plugin.Server.EntityManager.TryGetComponentData<User>(userEntity, out var user))
+            {
+                foreach (var (faction, heat) in heatData.heat)
+                {
+                    ClientActionHandler.SendWantedData(user, faction, heat.level);
+                }
+            }
         }
     }
 }
