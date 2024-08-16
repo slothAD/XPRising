@@ -32,6 +32,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update versions in toml files
+        run: |
+          sed -i "s/__VERSION__/${RELEASE_TAG:1}/g" ./XPRising/thunderstore.toml
+          sed -i "s/__VERSION__/${RELEASE_TAG:1}/g" ./XPShared/thunderstore.toml
+          sed -i "s/__VERSION__/${RELEASE_TAG:1}/g" ./ClientUI/thunderstore.toml
+
       - name: Install Thunderstore CLI (tcli)
         run: dotnet tool install --global tcli
 
