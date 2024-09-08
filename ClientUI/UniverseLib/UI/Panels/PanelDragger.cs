@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using BepInEx.Logging;
 using ClientUI.UI;
 using UnityEngine;
 
@@ -20,11 +19,15 @@ public class PanelDragger
     public RectTransform Rect { get; set; }
     public event Action? OnFinishResize;
     public event Action? OnFinishDrag;
+    
+    // Common
+
+    private Vector2 _initialMousePos;
+    private Vector2 _initialValue;
 
     // Dragging
     public RectTransform DraggableArea { get; set; }
     public bool WasDragging { get; set; }
-    private Vector2 _lastDragPosition;
 
     // Resizing
     public bool WasResizing { get; internal set; }
@@ -33,7 +36,6 @@ public class PanelDragger
         PanelManager.resizeCursor.activeInHierarchy;
 
     private ResizeTypes _currentResizeType = ResizeTypes.None;
-    private Vector2 _lastResizePos;
     private ResizeTypes _lastResizeHoverType;
     private Rect _totalResizeRect;
 
@@ -48,78 +50,80 @@ public class PanelDragger
 
     protected internal virtual void Update(MouseState.ButtonState state, Vector3 rawMousePos)
     {
-        ResizeTypes type;
+        if (!AllowDragAndResize) return;
+        
         Vector3 resizePos = Rect.InverseTransformPoint(rawMousePos);
-        bool inResizePos = MouseInResizeArea(resizePos);
+        ResizeTypes type = GetResizeType(resizePos);
+        bool inResizePos = type != ResizeTypes.None;
 
         Vector3 dragPos = DraggableArea.InverseTransformPoint(rawMousePos);
         bool inDragPos = DraggableArea.rect.Contains(dragPos);
-
-        if (WasHoveringResize && PanelManager.resizeCursor)
-            UpdateHoverImagePos();
-
+        
         if (state.HasFlag(MouseState.ButtonState.Clicked))
         {
             if (inDragPos || inResizePos)
                 UIPanel.SetActive(true);
 
-            if (inDragPos)
-            {
-                if (AllowDragAndResize)
-                    OnBeginDrag();
-                PanelManager.draggerHandledThisFrame = true;
-                return;
-            }
-
+            // Resize with priority as actually shows an icon change (maybe show an icon for drag as well?)
             if (inResizePos)
             {
-                type = GetResizeType(resizePos);
-                if (type != ResizeTypes.None)
-                    OnBeginResize(type);
-
-                PanelManager.draggerHandledThisFrame = true;
+                OnBeginResize(type);
             }
-        } else if (state.HasFlag(MouseState.ButtonState.Down))
+            else if (inDragPos)
+            {
+                OnBeginDrag();
+            }
+        }
+        else if (state.HasFlag(MouseState.ButtonState.Down))
         {
             if (WasDragging)
             {
                 OnDrag();
-                PanelManager.draggerHandledThisFrame = true;
             }
             else if (WasResizing)
             {
                 OnResize();
-                PanelManager.draggerHandledThisFrame = true;
             }
         }
-        else
+        else if (state.HasFlag(MouseState.ButtonState.Released))
         {
-            if (AllowDragAndResize && inDragPos)
+            if (WasDragging)
             {
-                if (WasDragging)
-                    OnEndDrag();
-
-                if (WasHoveringResize)
-                    OnHoverResizeEnd();
-
-                PanelManager.draggerHandledThisFrame = true;
+                OnEndDrag();
             }
-            else if (inResizePos || WasResizing)
+            else if (WasResizing)
             {
-                if (WasResizing)
-                    OnEndResize();
-
-                type = GetResizeType(resizePos);
-                if (type != ResizeTypes.None)
+                OnEndResize();
+            }
+            
+            if (WasHoveringResize)
+            {
+                if (inResizePos)
+                {
                     OnHoverResize(type);
-                else if (WasHoveringResize)
+                }
+                else
+                {
                     OnHoverResizeEnd();
-
-                PanelManager.draggerHandledThisFrame = true;
+                }
             }
-            else if (WasHoveringResize)
-                OnHoverResizeEnd();
         }
+        else // mouse moving when not clicked
+        {
+            if (inResizePos)
+            {
+                OnHoverResize(type);
+            }
+            else if (!WasResizing)
+            {
+                OnHoverResizeEnd();
+            }
+        }
+        
+        if (WasHoveringResize && PanelManager.resizeCursor)
+            UpdateHoverImagePos();
+        
+        PanelManager.draggerHandledThisFrame = true;
     }
 
     #region DRAGGING
@@ -128,17 +132,17 @@ public class PanelDragger
     {
         PanelManager.wasAnyDragging = true;
         WasDragging = true;
-        _lastDragPosition = UIPanel.Owner.Panels.MousePosition;
+        _initialMousePos = UIPanel.Owner.Panels.MousePosition;
+        _initialValue = Rect.anchoredPosition;
     }
 
     public virtual void OnDrag()
     {
-        Vector3 mousePos = UIPanel.Owner.Panels.MousePosition;
+        var mousePos = (Vector2)UIPanel.Owner.Panels.MousePosition;
 
-        Vector2 diff = (Vector2)mousePos - _lastDragPosition;
-        _lastDragPosition = mousePos;
+        var diff = mousePos - _initialMousePos;
 
-        Rect.localPosition = Rect.localPosition + (Vector3)diff;
+        Rect.anchoredPosition = _initialValue + diff / UIPanel.Owner.Canvas.scaleFactor;
 
         UIPanel.EnsureValidPosition();
     }
@@ -223,7 +227,7 @@ public class PanelDragger
     {
         // Calculate which part of the resize area we're in, if any.
 
-        ResizeTypes mask = 0;
+        var mask = ResizeTypes.None;
 
         if (_resizeMask[ResizeTypes.Top].Contains(mousePos))
             mask |= ResizeTypes.Top;
@@ -299,58 +303,45 @@ public class PanelDragger
     public virtual void OnBeginResize(ResizeTypes resizeType)
     {
         _currentResizeType = resizeType;
-        _lastResizePos = UIPanel.Owner.Panels.MousePosition;
+        _initialMousePos = UIPanel.Owner.Panels.MousePosition;
+        _initialValue = new Vector2(Rect.rect.width, Rect.rect.height);
         WasResizing = true;
         PanelManager.Resizing = true;
+
+        var newPivot = new Vector2(
+            _currentResizeType.HasFlag(ResizeTypes.Left) ? 1 : 0,
+            _currentResizeType.HasFlag(ResizeTypes.Bottom) ? 1 : 0
+        );
+
+        Rect.SetPivot(newPivot);
     }
 
     public virtual void OnResize()
     {
         Vector3 mousePos = UIPanel.Owner.Panels.MousePosition;
-        Vector2 diff = _lastResizePos - (Vector2)mousePos;
+        Vector2 diff = (_initialMousePos - (Vector2)mousePos) / UIPanel.Owner.Canvas.scaleFactor;
 
-        if ((Vector2)mousePos == _lastResizePos)
-            return;
-
-        Vector2 screenDimensions = UIPanel.Owner.Panels.ScreenDimensions;
-
-        if (mousePos.x < 0 || mousePos.y < 0 || mousePos.x > screenDimensions.x || mousePos.y > screenDimensions.y)
-            return;
-
-        _lastResizePos = mousePos;
-
-        float diffX = (float)((decimal)diff.x / (decimal)screenDimensions.x);
-        float diffY = (float)((decimal)diff.y / (decimal)screenDimensions.y);
-
-        Vector2 anchorMin = Rect.anchorMin;
-        Vector2 anchorMax = Rect.anchorMax;
-
+        var width = _initialValue.x;
+        var height = _initialValue.y;
         if (_currentResizeType.HasFlag(ResizeTypes.Left))
-            anchorMin.x -= diffX;
+        {
+            width = Math.Max(width + diff.x, UIPanel.MinWidth);
+        }
         else if (_currentResizeType.HasFlag(ResizeTypes.Right))
-            anchorMax.x -= diffX;
+        {
+            width = Math.Max(width - diff.x, UIPanel.MinWidth);
+        }
 
         if (_currentResizeType.HasFlag(ResizeTypes.Top))
-            anchorMax.y -= diffY;
+        {
+            height = Math.Max(height - diff.y, UIPanel.MinHeight);
+        }
         else if (_currentResizeType.HasFlag(ResizeTypes.Bottom))
-            anchorMin.y -= diffY;
-
-        Vector2 prevMin = Rect.anchorMin;
-        Vector2 prevMax = Rect.anchorMax;
-
-        Rect.anchorMin = new Vector2(anchorMin.x, anchorMin.y);
-        Rect.anchorMax = new Vector2(anchorMax.x, anchorMax.y);
-
-        if (Rect.rect.width < UIPanel.MinWidth)
         {
-            Rect.anchorMin = new Vector2(prevMin.x, Rect.anchorMin.y);
-            Rect.anchorMax = new Vector2(prevMax.x, Rect.anchorMax.y);
+            height = Math.Max(height + diff.y, UIPanel.MinHeight);
         }
-        if (Rect.rect.height < UIPanel.MinHeight)
-        {
-            Rect.anchorMin = new Vector2(Rect.anchorMin.x, prevMin.y);
-            Rect.anchorMax = new Vector2(Rect.anchorMax.x, prevMax.y);
-        }
+
+        Rect.sizeDelta = new Vector2(width, height);
     }
 
     public virtual void OnEndResize()
@@ -358,6 +349,8 @@ public class PanelDragger
         WasResizing = false;
         PanelManager.Resizing = false;
         try { OnHoverResizeEnd(); } catch { }
+
+        Rect.SetPivot(new Vector2(0.5f, 0.5f));
         UpdateResizeCache();
         OnFinishResize?.Invoke();
     }
