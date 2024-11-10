@@ -25,6 +25,7 @@ public static class GlobalMasterySystem
     private static EntityManager _em = Plugin.Server.EntityManager;
 
     public static bool EffectivenessSubSystemEnabled = false;
+    public static double MasteryThreshold = 0f;
     public static bool DecaySubSystemEnabled = false;
     public static bool SpellMasteryRequiresUnarmed = false;
     public static int DecayInterval = 60;
@@ -106,6 +107,22 @@ public static class GlobalMasterySystem
         { "worker", MasteryType.BloodWorker },
         { "dracula", MasteryType.BloodDracula },
         { "draculin", MasteryType.BloodDraculin }
+    };
+    
+    // This is a "potential" name to mastery category map. Multiple keywords map to the same mastery
+    public static readonly Dictionary<string, MasteryCategory> KeywordToMasteryCategoryMap = new()
+    {
+        { "blood", MasteryCategory.Blood },
+        { "bl", MasteryCategory.Blood },
+        { "b", MasteryCategory.Blood },
+        { "weapon", MasteryCategory.Weapon },
+        { "weap", MasteryCategory.Weapon },
+        { "wep", MasteryCategory.Weapon },
+        { "wp", MasteryCategory.Weapon },
+        { "w", MasteryCategory.Weapon },
+        { "spell", MasteryCategory.Weapon },
+        { "s", MasteryCategory.Weapon },
+        { "all", MasteryCategory.All },
     };
 
     public static string MasteryGainFormat = $"<color={Output.DarkYellow}>[ {{masteryType}}: {{currentMastery}}% (<color={Output.Green}>{{masteryChange}}%</color>) ]</color>";
@@ -399,7 +416,7 @@ public static class GlobalMasterySystem
             if (PlayerCache.FindPlayer(steamID, true, out _, out _, out var user))
             {
                 var preferences = Database.PlayerPreferences[steamID];
-                ClientActionHandler.SendMasteryData(user, type, (float)mastery.Mastery, preferences.Language, ProgressSerialisedMessage.ActiveState.Unchanged, (float)actualMasteryChange);
+                ClientActionHandler.SendMasteryData(user, type, (float)mastery.Mastery, (float)mastery.Effectiveness, preferences.Language, ProgressSerialisedMessage.ActiveState.Unchanged, (float)actualMasteryChange);
             }
         }
 
@@ -413,17 +430,59 @@ public static class GlobalMasterySystem
         }
         if (Database.PlayerMastery.TryGetValue(steamID, out var playerMastery))
         {
+            var preferences = Database.PlayerPreferences[steamID];
+            PlayerCache.FindPlayer(steamID, true, out _, out _, out var user);
             foreach (var (masteryType, masteryData) in playerMastery)
             {
                 var masteryCategory = GetMasteryCategory(masteryType);
-                // Reset mastery if the category matches and the mastery is actually above 0.
-                if (masteryData.Mastery > 0 && (category & masteryCategory) != MasteryCategory.None)
+                // If the mastery is 0, the user hasn't started mastering, so we can skip
+                if (masteryData.Mastery == 0) continue;
+                // Reset mastery if the category matches and the mastery is above the threshold.
+                if (masteryData.Mastery > MasteryThreshold && (category & masteryCategory) != MasteryCategory.None)
                 {
                     var config = _masteryConfig[masteryType];
                     playerMastery[masteryType] = masteryData.ResetMastery(config.MaxEffectiveness, config.GrowthPerEffectiveness);
                     Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery reset: {steamID} {Enum.GetName(masteryType)}: {masteryData}");
+                    Database.PlayerMastery[steamID] = playerMastery;
+                    
+                    Output.SendMessage(steamID, L10N.Get(L10N.TemplateKey.MasteryReset).AddField("{masteryType}", ClientActionHandler.MasteryTooltip(masteryType, preferences.Language)));
+                    if (user.IsConnected)
+                    {
+                        ClientActionHandler.SendMasteryData(user, masteryType, (float)masteryData.Mastery, (float)masteryData.Effectiveness, preferences.Language);
+                    }
                 }
+            }
+        }
+    }
+
+    public static void ResetMastery(ulong steamID, MasteryType masteryType) {
+        if (!EffectivenessSubSystemEnabled) {
+            Output.SendMessage(steamID, L10N.Get(L10N.TemplateKey.SystemEffectivenessDisabled).AddField("{system}", "mastery"));
+            return;
+        }
+        if (Database.PlayerMastery.TryGetValue(steamID, out var playerMastery) && playerMastery.TryGetValue(masteryType, out var masteryData))
+        {
+            var preferences = Database.PlayerPreferences[steamID];
+            PlayerCache.FindPlayer(steamID, true, out _, out _, out var user);
+            // Reset mastery if the mastery is above the threshold.
+            if (masteryData.Mastery > MasteryThreshold)
+            {
+                var config = _masteryConfig[masteryType];
+                playerMastery[masteryType] = masteryData.ResetMastery(config.MaxEffectiveness, config.GrowthPerEffectiveness);
+                Plugin.Log(Plugin.LogSystem.Mastery, LogLevel.Info, $"Mastery reset: {steamID} {Enum.GetName(masteryType)}: {masteryData}");
                 Database.PlayerMastery[steamID] = playerMastery;
+                Output.SendMessage(steamID, L10N.Get(L10N.TemplateKey.MasteryReset).AddField("{masteryType}", ClientActionHandler.MasteryTooltip(masteryType, preferences.Language)));
+                if (user.IsConnected)
+                {
+                    ClientActionHandler.SendMasteryData(user, masteryType, (float)masteryData.Mastery, (float)masteryData.Effectiveness, preferences.Language);
+                }
+            }
+            else
+            {
+                var message = L10N.Get(L10N.TemplateKey.MasteryResetFail)
+                    .AddField("{masteryType}", Enum.GetName(masteryType))
+                    .AddField("{value}", $"{MasteryThreshold:F0}");
+                Output.SendMessage(steamID, message);
             }
         }
     }
@@ -599,6 +658,8 @@ public static class GlobalMasterySystem
                 return DefaultDecayMasteryConfig();
             case "decay-op":
                 return DefaultOPDecayMasteryConfig();
+            case "effectiveness":
+                return DefaultEffectivenessMasteryConfig();
             case NonePreset:
             default:
                 return DefaultNoneMasteryConfig();
@@ -658,6 +719,66 @@ public static class GlobalMasterySystem
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 50, Value = 0.03f, InactiveMultiplier = 0.1f},
                     new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.CooldownRecoveryRate, RequiredMastery = 70, Value = 3, InactiveMultiplier = 0.1f},
                 }
+            },
+            XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.MaxHealth, Value = 2}
+                }
+            }
+        };
+    }
+
+    public static GlobalMasteryConfig DefaultEffectivenessMasteryConfig()
+    {
+        return new GlobalMasteryConfig
+        {
+            Mastery = new LazyDictionary<MasteryType, GlobalMasteryConfig.MasteryConfig>
+            {
+                {
+                    MasteryType.Spell, new GlobalMasteryConfig.MasteryConfig 
+                    {
+                        BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                        {
+                            new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.SpellPower, RequiredMastery = 0, Value = 30, InactiveMultiplier = 0.1f},
+                            new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.SpellCriticalStrikeDamage, RequiredMastery = 30, Value = 0.3f, InactiveMultiplier = 0.1f},
+                            new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.SpellCriticalStrikeChance, RequiredMastery = 60, Value = 0.1f, InactiveMultiplier = 0.1f},
+                        },
+                        DecayValue = 0.0f,
+                        MaxEffectiveness = 5,
+                        GrowthPerEffectiveness = 1
+                    }
+                }
+            },
+            DefaultWeaponMasteryConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.PhysicalPower, RequiredMastery = 0, Value = 30, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.PhysicalCriticalStrikeDamage, RequiredMastery = 30, Value = 0.3f, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatType = UnitStatType.PhysicalCriticalStrikeChance, RequiredMastery = 60, Value = 0.15f, InactiveMultiplier = 0.1f},
+                },
+                ActiveBonus = new List<GlobalMasteryConfig.ActiveBonusData>
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Ratio, StatCategory = UnitStatTypeExtensions.Category.Any, Value = 5}
+                },
+                DecayValue = 0.0f,
+                MaxEffectiveness = 5,
+                GrowthPerEffectiveness = 1
+            },
+            DefaultBloodMasteryConfig = new GlobalMasteryConfig.MasteryConfig()
+            {
+                BaseBonus = new List<GlobalMasteryConfig.BonusData>()
+                {
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.MovementSpeed, RequiredMastery = 30, Value = 2, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 10, Value = 0.02f, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.PrimaryAttackSpeed, RequiredMastery = 50, Value = 0.03f, InactiveMultiplier = 0.1f},
+                    new(){BonusType = GlobalMasteryConfig.BonusData.Type.Fixed, StatType = UnitStatType.CooldownRecoveryRate, RequiredMastery = 70, Value = 3, InactiveMultiplier = 0.1f},
+                },
+                DecayValue = 0.0f,
+                MaxEffectiveness = 5,
+                GrowthPerEffectiveness = 1
             },
             XpBuffConfig = new GlobalMasteryConfig.MasteryConfig()
             {
