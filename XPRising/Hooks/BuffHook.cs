@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using HarmonyLib;
 using ProjectM;
 using ProjectM.Gameplay.Scripting;
@@ -19,51 +17,7 @@ namespace XPRising.Hooks;
 [HarmonyPatch]
 public class ModifyUnitStatBuffSystemPatch
 {
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Destroy), nameof(ModifyUnitStatBuffSystem_Destroy.OnUpdate))]
-    private static void MUSBS_D_Post_FixSpellLevel(ModifyUnitStatBuffSystem_Destroy __instance)
-    {
-        if (!Plugin.ShouldApplyBuffs) return;
-        
-        var entityManager = __instance.EntityManager;
-        var entities = __instance.__query_1735840524_0.ToEntityArray(Allocator.Temp);
-        
-        foreach (var entity in entities)
-        {
-            DebugTool.LogEntity(entity, "ModStats_Destroy POST:", LogSystem.Buff);
-            if (!entityManager.HasComponent<SpellLevel>(entity)) continue;
-
-            EnforceSpellLevel(entityManager, entity);
-        }
-    }
-    
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Spawn), nameof(ModifyUnitStatBuffSystem_Spawn.OnUpdate))]
-    private static void MUSBS_S_Post_FixSpellLevel(ModifyUnitStatBuffSystem_Spawn __instance)
-    {
-        if (!Plugin.ShouldApplyBuffs) return;
-        
-        var entityManager = __instance.EntityManager;
-        var entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
-        
-        foreach (var entity in entities)
-        {
-            DebugTool.LogEntity(entity, "ModStats_Spawn POST:", LogSystem.Buff);
-            if (!entityManager.HasComponent<SpellLevel>(entity)) continue;
-
-            EnforceSpellLevel(entityManager, entity);
-        }
-    }
-
-    private static void EnforceSpellLevel(EntityManager entityManager, Entity entity)
-    {
-        if (!entityManager.TryGetComponentData<EntityOwner>(entity, out var entityOwner) ||
-            !entityManager.TryGetComponentData<PlayerCharacter>(entityOwner.Owner, out var playerCharacter) ||
-            !entityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user)) return;
-
-        Task.Delay(50).ContinueWith(_ =>
-            ExperienceSystem.ApplyLevel(entityOwner.Owner, ExperienceSystem.GetLevel(user.PlatformId)));
-    }
+    private static EntityManager EntityManager => Plugin.Server.EntityManager;
     
     [HarmonyPrefix]
     [HarmonyPatch(typeof(ModifyUnitStatBuffSystem_Spawn), nameof(ModifyUnitStatBuffSystem_Spawn.OnUpdate))]
@@ -71,20 +25,15 @@ public class ModifyUnitStatBuffSystemPatch
     {
         if (!Plugin.ShouldApplyBuffs) return;
         
-        EntityManager entityManager = __instance.EntityManager;
-        NativeArray<Entity> entities = __instance.__query_1735840491_0.ToEntityArray(Allocator.Temp);
+        NativeArray<Entity> entities = __instance.__query_35557666_0.ToEntityArray(Allocator.Temp);
         
         foreach (var entity in entities)
         {
-            var prefabGuid = entityManager.GetComponentData<PrefabGUID>(entity);
+            var prefabGuid = EntityManager.GetComponentData<PrefabGUID>(entity);
             DebugTool.LogPrefabGuid(prefabGuid, "ModStats_Spawn Pre:", LogSystem.Buff);
-            if (prefabGuid.GuidHash == BuffUtil.ForbiddenBuffGuid)
+            if (prefabGuid == BuffUtil.AppliedBuff)
             {
-                Plugin.Log(LogSystem.Buff, LogLevel.Info, "Forbidden buff found with GUID of " + prefabGuid.GuidHash);
-            }
-            else if (prefabGuid == BuffUtil.AppliedBuff)
-            {
-                ApplyBuffs(entity, entityManager);
+                ApplyBuffs(entity, EntityManager);
             }
         }
     }
@@ -180,10 +129,10 @@ public class BuffDebugSystemPatch
     [HarmonyPatch(typeof(BuffDebugSystem), nameof(BuffDebugSystem.OnUpdate))]
     private static void Prefix(BuffDebugSystem __instance)
     {
-        var entities = __instance.__query_401358786_0.ToEntityArray(Allocator.Temp);
+        var entities = __instance.__query_401358787_0.ToEntityArray(Allocator.Temp);
         foreach (var entity in entities) {
             var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
-            DebugTool.LogPrefabGuid(guid, "BuffDebugSystem:", LogSystem.Buff);
+            DebugTool.LogPrefabGuid(guid, "BuffDebugSystemPre:", LogSystem.Buff);
 
             var combatStart = false;
             var combatEnd = false;
@@ -242,6 +191,41 @@ public class BuffDebugSystemPatch
                 }
             }
         }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(BuffDebugSystem), nameof(BuffDebugSystem.OnUpdate))]
+    private static void Postfix(BuffDebugSystem __instance)
+    {
+        if (Plugin.ExperienceSystemActive)
+        {
+            var entities = __instance.__query_401358787_0.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities)
+            {
+                var guid = __instance.EntityManager.GetComponentData<PrefabGUID>(entity);
+                DebugTool.LogPrefabGuid(guid, "BuffDebugSystemPost:", LogSystem.Buff);
+
+                switch (guid.GuidHash)
+                {
+                    // Detect equipping a spell source (ring/necklace) so we can reapply the player level correctly
+                    case (int)Items.Item_EquipBuff_Shared_General:
+                    case (int)Items.Item_EquipBuff_MagicSource_BloodKey_T01:
+                        ApplyPlayerLevel(__instance.EntityManager, entity);
+                        continue;
+                    default:
+                        continue;
+                }
+            }
+        }
+    }
+
+    private static void ApplyPlayerLevel(EntityManager entityManager, Entity entity)
+    {
+        if (!entityManager.TryGetComponentData<EntityOwner>(entity, out var entityOwner) ||
+            !entityManager.TryGetComponentData<PlayerCharacter>(entityOwner.Owner, out var playerCharacter) ||
+            !entityManager.TryGetComponentData<User>(playerCharacter.UserEntity, out var user)) return;
+        // As this is a player, re-apply the player level
+        ExperienceSystem.ApplyLevel(entityOwner.Owner, ExperienceSystem.GetLevel(user.PlatformId));
     }
 
     private static void TriggerCombatUpdate(Entity ownerEntity, ulong steamID, bool combatStart, bool combatEnd)

@@ -30,7 +30,6 @@ public static class UnitStatTypeExtensions
             case UnitStatType.PhysicalCriticalStrikeDamage:
             case UnitStatType.SpellCriticalStrikeChance:
             case UnitStatType.SpellCriticalStrikeDamage:
-            case UnitStatType.AttackSpeed:
             case UnitStatType.DamageVsUndeads:
             case UnitStatType.DamageVsHumans:
             case UnitStatType.DamageVsDemons:
@@ -50,6 +49,11 @@ public static class UnitStatTypeExtensions
             case UnitStatType.WeaponCooldownRecoveryRate:
             case UnitStatType.UltimateCooldownRecoveryRate:
             case UnitStatType.MinionDamage:
+            case UnitStatType.AbilityAttackSpeed:
+            case UnitStatType.UltimateEfficiency:
+            case UnitStatType.SpellFreeCast:
+            case UnitStatType.WeaponFreeCast:
+            case UnitStatType.WeaponSkillPower:
                 return Category.Offensive;
             case UnitStatType.MaxHealth:
             case UnitStatType.PhysicalResistance:
@@ -76,17 +80,26 @@ public static class UnitStatTypeExtensions
             case UnitStatType.DamageReduction:
             case UnitStatType.HealingReceived:
             case UnitStatType.SilverCoinResistance:
-            case UnitStatType.ShieldAbsorb:
+            case UnitStatType.IncreasedShieldEfficiency:
+            case UnitStatType.BonusMaxHealth:
+            case UnitStatType.DemountProtection:
+            case UnitStatType.CorruptionDamageReduction:
                 return Category.Defensive;
             case UnitStatType.MovementSpeed:
-            case UnitStatType.EnergyGain:
-            case UnitStatType.MaxEnergy:
             case UnitStatType.Vision:
             case UnitStatType.ReducedResourceDurabilityLoss:
             case UnitStatType.FallGravity:
             case UnitStatType.BloodDrain:
             case UnitStatType.BloodEfficiency:
             case UnitStatType.InventorySlots:
+            case UnitStatType.TravelCooldownRecoveryRate:
+            case UnitStatType.ReducedBloodDrain:
+            case UnitStatType.BonusMovementSpeed:
+            case UnitStatType.BonusShapeshiftMovementSpeed:
+            case UnitStatType.BonusMountMovementSpeed:
+            case UnitStatType.FeedCooldownRecoveryRate:
+            case UnitStatType.BloodMendHealEfficiency:
+            case UnitStatType.BloodDrainMultiplier:
                 return Category.Other;
             case UnitStatType.ResourcePower:
             case UnitStatType.ResourceYield:

@@ -16,6 +16,24 @@ public static class ClientActionHandler
     private static readonly List<GlobalMasterySystem.MasteryType> DefaultMasteryList =
         Enum.GetValues<GlobalMasterySystem.MasteryType>().Where(type => type != GlobalMasterySystem.MasteryType.None).ToList();
 
+    public static void InternalRegisterClient(ulong steamId, User user)
+    {
+        // Enable UI for client
+        Cache.PlayerClientUICache[steamId] = true;
+        
+        // Send acknowledgement of connection
+        MessageHandler.ServerSendToClient(user, new ConnectedMessage());
+    }
+    
+    public static void HandleClientRegistered(ulong steamId)
+    {
+        var player = Cache.SteamPlayerCache[steamId];
+        var user = player.UserEntity.GetUser();
+        
+        InternalRegisterClient(steamId, user);
+        SendUIData(user, true, true);
+    }
+    
     private const string BarToggleAction = "XPRising.BarMode";
     public static void HandleClientAction(User user, ClientAction action)
     {
@@ -27,9 +45,7 @@ public static class ClientActionHandler
             case ClientAction.ActionType.Connect:
                 sendPlayerData = true;
                 sendActionData = true;
-                Cache.PlayerClientUICache[user.PlatformId] = true;
-                // Send acknowledgement of connection
-                MessageHandler.ServerSendToClient(user, new ConnectedMessage());
+                InternalRegisterClient(user.PlatformId, user);
                 break;
             case ClientAction.ActionType.ButtonClick:
                 switch (action.Value)
@@ -88,7 +104,7 @@ public static class ClientActionHandler
                 masteries.Add(activeBloodMastery);
                 
                 if (!GlobalMasterySystem.SpellMasteryRequiresUnarmed ||
-                    activeWeaponMastery == GlobalMasterySystem.MasteryType.WeaponUnarmed)
+                    activeWeaponMastery == GlobalMasterySystem.MasteryType.None)
                 {
                     masteries.Add(GlobalMasterySystem.MasteryType.Spell);
                 }
@@ -152,7 +168,6 @@ public static class ClientActionHandler
     {
         var message = type switch
         {
-            GlobalMasterySystem.MasteryType.WeaponUnarmed => L10N.Get(L10N.TemplateKey.BarWeaponUnarmed),
             GlobalMasterySystem.MasteryType.WeaponSpear => L10N.Get(L10N.TemplateKey.BarWeaponSpear),
             GlobalMasterySystem.MasteryType.WeaponSword => L10N.Get(L10N.TemplateKey.BarWeaponSword),
             GlobalMasterySystem.MasteryType.WeaponScythe => L10N.Get(L10N.TemplateKey.BarWeaponScythe),
@@ -166,6 +181,9 @@ public static class ClientActionHandler
             GlobalMasterySystem.MasteryType.WeaponGreatSword => L10N.Get(L10N.TemplateKey.BarWeaponGreatSword),
             GlobalMasterySystem.MasteryType.WeaponLongBow => L10N.Get(L10N.TemplateKey.BarWeaponLongBow),
             GlobalMasterySystem.MasteryType.WeaponWhip => L10N.Get(L10N.TemplateKey.BarWeaponWhip),
+            GlobalMasterySystem.MasteryType.WeaponDaggers => L10N.Get(L10N.TemplateKey.BarWeaponDaggers),
+            GlobalMasterySystem.MasteryType.WeaponClaws => L10N.Get(L10N.TemplateKey.BarWeaponClaws),
+            GlobalMasterySystem.MasteryType.WeaponTwinblades => L10N.Get(L10N.TemplateKey.BarWeaponTwinBlades),
             GlobalMasterySystem.MasteryType.Spell => L10N.Get(L10N.TemplateKey.BarSpell),
             GlobalMasterySystem.MasteryType.BloodNone => L10N.Get(L10N.TemplateKey.BarBloodNone),
             GlobalMasterySystem.MasteryType.BloodBrute => L10N.Get(L10N.TemplateKey.BarBloodBrute),
@@ -177,6 +195,7 @@ public static class ClientActionHandler
             GlobalMasterySystem.MasteryType.BloodScholar => L10N.Get(L10N.TemplateKey.BarBloodScholar),
             GlobalMasterySystem.MasteryType.BloodWarrior => L10N.Get(L10N.TemplateKey.BarBloodWarrior),
             GlobalMasterySystem.MasteryType.BloodWorker => L10N.Get(L10N.TemplateKey.BarBloodWorker),
+            GlobalMasterySystem.MasteryType.BloodCorruption => L10N.Get(L10N.TemplateKey.BarBloodCorruption),
             // Note: GlobalMasterySystem.MasteryType.None will also hit default, but there should be no bar for this.
             _ => new L10N.LocalisableString("Unknown")
         };
@@ -189,6 +208,8 @@ public static class ClientActionHandler
         var message = type switch
         {
             Faction.Bandits => L10N.Get(L10N.TemplateKey.BarFactionBandits),
+            Faction.Blackfangs => L10N.Get(L10N.TemplateKey.BarFactionBlackFangs),
+            Faction.Corrupted => L10N.Get(L10N.TemplateKey.BarFactionCorrupted),
             Faction.Critters => L10N.Get(L10N.TemplateKey.BarFactionCritters),
             Faction.Gloomrot => L10N.Get(L10N.TemplateKey.BarFactionGloomrot),
             Faction.Legion => L10N.Get(L10N.TemplateKey.BarFactionLegion),
@@ -295,7 +316,7 @@ public static class ClientActionHandler
                 SendPlayerData(user);
                 // Remove the timer and dispose of it
                 if (FrameTimers.Remove(user.PlatformId, out timer)) timer.Stop();
-            }, TimeSpan.FromMilliseconds(200), true).Start();
+            }, TimeSpan.FromMilliseconds(200), 1).Start();
             
             FrameTimers.Add(user.PlatformId, newTimer);
         }
