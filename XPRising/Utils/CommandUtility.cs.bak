@@ -27,7 +27,7 @@ public static class CommandUtility
 
             if (!Database.CommandPermission.TryGetValue(permissionKey, out var requiredPrivilege))
             {
-                if (Plugin.IsDebug) ctx.Reply($"除錯：找不到指令 {permissionKey}");
+                if (Plugin.IsDebug) ctx.Reply($"DEBUG: COMMAND NOT FOUND {permissionKey}");
                 // If it doesn't exist it may be a command belonging to a different mod.
                 // As far as we know, it should have permission.
                 return true;
@@ -47,7 +47,7 @@ public static class CommandUtility
 
             if (hasPermission) return true;
             
-            ctx.Reply($"<color={Color.Red}>[權限不足]</color> {permissionKey}");
+            ctx.Reply($"<color={Color.Red}>[permission denied]</color> {permissionKey}");
             return false;
         }
     }

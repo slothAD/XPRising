@@ -40,7 +40,7 @@ namespace XPRising.Commands
 
             Database.PowerUpList[steamID] = powerUpData;
             BuffUtil.ApplyStatBuffOnDelay(ctx.User, userEntity, playerEntity);
-            ctx.Reply($"強化已添加至 {name}。");
+            ctx.Reply($"PowerUp added to {name}.");
         }
         
         [Command("powerdown", "pd", "<playerName>", "Remove power up buff from the player.", adminOnly: false)]
@@ -63,7 +63,7 @@ namespace XPRising.Commands
 
             Database.PowerUpList.Remove(steamID);
             BuffUtil.ApplyStatBuffOnDelay(ctx.User, userEntity, playerEntity);
-            ctx.Reply($"已從 {name} 移除強化。");
+            ctx.Reply($"PowerUp removed from {name}.");
         }
     }
 }

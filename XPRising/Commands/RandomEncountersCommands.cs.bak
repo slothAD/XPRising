@@ -11,7 +11,7 @@ namespace XPRising.Commands
         public static void StartCommand(ChatCommandContext ctx)
         {
             RandomEncountersSystem.StartEncounter();
-            ctx.Reply("狩獵開始了……");
+            ctx.Reply("The hunt has begun...");
             return;
         }
 
@@ -24,7 +24,7 @@ namespace XPRising.Commands
             }
             
             RandomEncountersSystem.StartEncounter(playerData);
-            ctx.Reply("準備迎戰……");
+            ctx.Reply("Prepare for the fight...");
             return;
         }
 
@@ -40,7 +40,7 @@ namespace XPRising.Commands
                 throw ctx.Error($"Could not find an online player with name {playerName}");
             }
             RandomEncountersSystem.StartEncounter(playerData);
-            ctx.Reply($"正在派出埋伏攻擊 {playerName}。");
+            ctx.Reply($"Sending an ambush to {playerName}.");
         }
 
         [Command("enable", usage: "", description: "Enables the random encounter timer.", adminOnly: false)]
@@ -64,7 +64,7 @@ namespace XPRising.Commands
             }
             Plugin.RandomEncountersSystemActive = false;
             RandomEncounters.EncounterTimer.Stop();
-            ctx.Reply("已停用。");
+            ctx.Reply("Disabled.");
         }
     }
 }
